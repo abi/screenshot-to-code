@@ -1,5 +1,7 @@
 # Load environment variables first
 from dotenv import load_dotenv
+import os
+from datetime import datetime
 
 from prompts import assemble_prompt
 
@@ -24,8 +26,15 @@ async def stream_code_test(websocket: WebSocket):
     messages = assemble_prompt("")
     print(messages)
 
-    # Write the messages dict into a file for debugging
-    with open("messages.json", "w") as f:
+    # Create run_logs directory if it doesn't exist
+    if not os.path.exists('run_logs'):
+        os.makedirs('run_logs')
+
+    # Generate a unique filename using the current timestamp
+    filename = datetime.now().strftime('run_logs/messages_%Y%m%d_%H%M%S.json')
+
+    # Write the messages dict into a new file for each run
+    with open(filename, "w") as f:
         f.write(str(messages))
 
     await stream_openai_response(
