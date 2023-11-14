@@ -1,12 +1,15 @@
 import toast from "react-hot-toast";
 
-const WS_BACKEND_URL = "ws://localhost:8000";
+const WS_BACKEND_URL = import.meta.env.VITE_WS_BACKEND_URL;
 
 export function generateCode(
   imageUrl: string,
   onChange: (chunk: string) => void
 ) {
-  const ws = new WebSocket(`${WS_BACKEND_URL}/generate-code`);
+  const wsUrl = `${WS_BACKEND_URL}/generate-code`;
+  console.log("Connecting to backend @ ", wsUrl);
+
+  const ws = new WebSocket(wsUrl);
 
   ws.addEventListener("open", () => {
     ws.send(
