@@ -4,9 +4,6 @@ from openai import AsyncOpenAI
 
 MODEL_GPT_4_VISION = "gpt-4-vision-preview"
 
-# TODO: Remove after testing
-MODEL_GPT_4_VISION = "gpt-3.5-turbo-1106"
-
 client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 

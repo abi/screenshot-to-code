@@ -1,6 +1,8 @@
 import toast from "react-hot-toast";
 
 const WS_BACKEND_URL = import.meta.env.VITE_WS_BACKEND_URL;
+const ERROR_MESSAGE =
+  "Error generating code. Check the Developer Console for details. Feel free to open a Github ticket";
 
 export function generateCode(
   imageUrl: string,
@@ -31,9 +33,7 @@ export function generateCode(
     console.log("Connection closed", event.code, event.reason);
     if (event.code != 1000) {
       console.error("WebSocket error code", event);
-      toast.error(
-        "We ran into an error. Try again or contact support at support@picoapps.xyz"
-      );
+      toast.error(ERROR_MESSAGE);
     } else {
       onComplete();
     }
@@ -41,8 +41,6 @@ export function generateCode(
 
   ws.addEventListener("error", (error) => {
     console.error("WebSocket error", error);
-    toast.error(
-      "We ran into an error. Try again or contact support at support@picoapps.xyz"
-    );
+    toast.error(ERROR_MESSAGE);
   });
 }

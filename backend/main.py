@@ -32,12 +32,12 @@ def write_logs(prompt_messages, completion):
 async def stream_code_test(websocket: WebSocket):
     await websocket.accept()
 
-    result = await websocket.receive_json()
+    params = await websocket.receive_json()
 
     async def process_chunk(content):
         await websocket.send_json({"type": "chunk", "value": content})
 
-    prompt_messages = assemble_prompt("")
+    prompt_messages = assemble_prompt(params["image"])
 
     completion = await stream_openai_response(
         prompt_messages,

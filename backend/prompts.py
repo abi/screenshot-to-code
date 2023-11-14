@@ -24,9 +24,25 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+USER_PROMPT = """
+Generate code for a web page that looks exactly like this.
+"""
 
-def assemble_prompt(screenshot_url):
+
+def assemble_prompt(image_data_url):
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": "Build a hello world app"},
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": image_data_url, "detail": "high"},
+                },
+                {
+                    "type": "text",
+                    "text": USER_PROMPT,
+                },
+            ],
+        },
     ]
