@@ -10,6 +10,13 @@ function App() {
   );
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
+  const [blobUrl, setBlobUrl] = useState("");
+
+  const createBlobUrl = () => {
+    const blob = new Blob([generatedCode], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    setBlobUrl(url);
+  };
 
   function startCodeGeneration(referenceImages: string[]) {
     setAppState("CODING");
@@ -40,6 +47,11 @@ function App() {
           <img className="w-[300px]" src={referenceImages[0]} alt="Reference" />
           {/* Show code preview only when coding */}
           {appState === "CODING" && <CodePreview code={generatedCode} />}
+          {appState === "CODE_READY" && (
+            <a onClick={createBlobUrl} href={blobUrl} download="index.html">
+              Download code
+            </a>
+          )}
           <Preview code={generatedCode} />
         </>
       )}
