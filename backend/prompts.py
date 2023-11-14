@@ -15,10 +15,9 @@ padding, margin, border, etc. Match the colors and sizes exactly.
 
 In terms of libraries,
 
-- Use this script to include Tailwind: 
-  <script src="https://cdn.tailwindcss.com"></script>
+- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
 - You can use Google Fonts
-- Font Awesome for icons: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css) as needed.
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
 
 Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
