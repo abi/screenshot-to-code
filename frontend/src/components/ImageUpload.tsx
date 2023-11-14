@@ -46,8 +46,7 @@ type FileWithPreview = {
 } & File;
 
 interface Props {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setReferenceImages: React.Dispatch<React.SetStateAction<any[]>>;
+  setReferenceImages: (referenceImages: string[]) => void;
 }
 
 function ImageUpload({ setReferenceImages }: Props) {
@@ -74,12 +73,7 @@ function ImageUpload({ setReferenceImages }: Props) {
         // Convert images to data URLs and set the prompt images state
         Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
           .then((dataUrls) => {
-            setReferenceImages(
-              dataUrls.map((dataUrl, index) => ({
-                filename: acceptedFiles[index].name,
-                data: dataUrl as string,
-              }))
-            );
+            setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
           })
           .catch((error) => {
             // TODO: Display error to user

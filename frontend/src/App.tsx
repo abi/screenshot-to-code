@@ -19,11 +19,7 @@ function App() {
     <div className="mx-auto mt-10 max-w-2xl">
       <h1 className="text-2xl mb-4">Drag & Drop a Screenshot</h1>
       {referenceImages.length > 0 && (
-        <img
-          className="w-[300px]"
-          src={referenceImages[0].data}
-          alt="Reference"
-        />
+        <img className="w-[300px]" src={referenceImages[0]} alt="Reference" />
       )}
 
       {referenceImages.length === 0 && (
@@ -32,7 +28,7 @@ function App() {
         </>
       )}
 
-      <CodePreview content={generatedCode} />
+      <CodePreview code={generatedCode} />
       <Preview />
     </div>
   );

@@ -1,17 +1,17 @@
 import { useRef, useEffect } from "react";
 
 interface Props {
-  content: string;
+  code: string;
 }
 
-function CodePreview({ content }: Props) {
+function CodePreview({ code }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
     }
-  }, [content]);
+  }, [code]);
 
   return (
     <div
@@ -19,7 +19,7 @@ function CodePreview({ content }: Props) {
       className="w-full px-2 bg-black text-green-400 whitespace-nowrap flex 
       overflow-x-auto font-mono text-[10px]"
     >
-      {content}
+      {code}
     </div>
   );
 }
