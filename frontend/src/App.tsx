@@ -3,6 +3,7 @@ import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
 import { generateCode } from "./generateCode";
+import Spinner from "./components/Spinner";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -37,8 +38,11 @@ function App() {
   }
 
   return (
-    <div className="mx-auto mt-10 max-w-[1000px]">
-      <h1 className="text-2xl mb-4">Drag & Drop a Screenshot</h1>
+    <div className="mx-auto mt-6 max-w-[1000px]">
+      <h1 className="text-4xl mb-2 text-center">Screenshot to Code</h1>
+      <h1 className="text-base text-gray-500 mb-2 text-center">
+        drag & drop a screenshot below
+      </h1>
 
       {appState === "INITIAL" && (
         <>
@@ -54,12 +58,12 @@ function App() {
               src={referenceImages[0]}
               alt="Reference"
             />
-            <div className="bg-gray-200 px-4 py-2 rounded text-sm font-mono">
+            <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
               <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
               {console.map((line, index) => (
                 <div
                   key={index}
-                  className="border-b border-gray-400 mb-2 text-gray-600"
+                  className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
                 >
                   {line}
                 </div>
@@ -67,7 +71,15 @@ function App() {
             </div>
           </div>
           {/* Show code preview only when coding */}
-          {appState === "CODING" && <CodePreview code={generatedCode} />}
+          {appState === "CODING" && (
+            <>
+              <div className="flex items-center gap-x-1">
+                <Spinner />
+                Generating...
+              </div>
+              <CodePreview code={generatedCode} />
+            </>
+          )}
           {appState === "CODE_READY" && (
             <a onClick={createBlobUrl} href={blobUrl} download="index.html">
               Download code

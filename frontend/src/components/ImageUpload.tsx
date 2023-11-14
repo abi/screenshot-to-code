@@ -5,9 +5,13 @@ import { toast } from "react-hot-toast";
 
 const baseStyle = {
   flex: 1,
+  width: "50%",
+  margin: "0 auto",
+  minHeight: "400px",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
+  justifyContent: "center",
   padding: "20px",
   borderWidth: 2,
   borderRadius: 2,
@@ -104,7 +108,7 @@ function ImageUpload({ setReferenceImages }: Props) {
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div {...getRootProps({ style: style as any })}>
         <input {...getInputProps()} />
-        <p>Drag and drop a screenshot or mock up here, or click to select</p>
+        <p>Drop a screenshot here, or click to select</p>
       </div>
     </section>
   );
