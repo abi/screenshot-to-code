@@ -1,4 +1,6 @@
-### Setup Instructions
+[Video Demo]
+
+### Instructions
 
 Run the backend
 
@@ -13,6 +15,10 @@ Run the frontend,
 yarn
 yarn dev
 ```
+
+## Hosted Version
+
+Hosted version coming soon at https://picoapps.xyz
 
 ### Environment Variables
 
