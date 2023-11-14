@@ -1,6 +1,8 @@
 # Load environment variables first
 from dotenv import load_dotenv
 
+from prompts import assemble_prompt
+
 load_dotenv()
 
 
@@ -19,10 +21,10 @@ async def stream_code_test(websocket: WebSocket):
     async def process_chunk(content):
         await websocket.send_json({"type": "chunk", "value": content})
 
+    messages = assemble_prompt("")
+    print(messages)
+
     await stream_openai_response(
-        [
-            {"role": "system", "content": "Build a webapp"},
-            {"role": "user", "content": "Build a hello world app"},
-        ],
+        messages,
         lambda x: process_chunk(x),
     )

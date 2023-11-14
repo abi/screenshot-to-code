@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 MODEL_GPT_4_VISION = "gpt-4-vision-preview"
 
 # TODO: Remove after testing
-MODEL_GPT_4_VISION = "gpt-3.5-turbo-0613"
+MODEL_GPT_4_VISION = "gpt-3.5-turbo-1106"
 
 client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -18,8 +18,7 @@ async def stream_openai_response(messages, callback: Callable[[str], Awaitable[N
 
     # Add 'max_tokens' only if the model is a GPT4 vision model
     if model == MODEL_GPT_4_VISION:
-        # TODO: Remove after testing
-        # params["max_tokens"] = 4096
+        params["max_tokens"] = 4096
         params["temperature"] = 0
 
     completion = await client.chat.completions.create(**params)
