@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
+import Preview from "./components/Preview";
 
 function App() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
@@ -16,13 +17,14 @@ function App() {
         />
       )}
 
-      <CodePreview content="Hello World" />
-
       {referenceImages.length === 0 && (
         <>
           <ImageUpload setReferenceImages={setReferenceImages} />
         </>
       )}
+
+      <CodePreview content="Hello World" />
+      <Preview />
     </div>
   );
 }
