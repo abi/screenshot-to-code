@@ -88,9 +88,26 @@ function App() {
             </>
           )}
           {appState === "CODE_READY" && (
-            <a onClick={createBlobUrl} href={blobUrl} download="index.html">
-              Download code
-            </a>
+            <div className="flex items-center gap-x-2 mb-4 justify-end">
+              <a
+                className="bg-button/70 hover:bg-highlight text-black
+ py-2 px-4 rounded transition duration-300"
+                onClick={createBlobUrl}
+                href={blobUrl}
+                download="index.html"
+              >
+                Download code
+              </a>
+              <a
+                className="bg-button/70 hover:bg-highlight text-black
+ py-2 px-4 rounded transition duration-300"
+                onClick={createBlobUrl}
+                href={blobUrl}
+                download="index.html"
+              >
+                Reset
+              </a>
+            </div>
           )}
           <Preview code={generatedCode} />
         </>
