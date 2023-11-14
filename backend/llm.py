@@ -22,7 +22,10 @@ async def stream_openai_response(messages, callback: Callable[[str], Awaitable[N
         params["temperature"] = 0
 
     completion = await client.chat.completions.create(**params)
-
+    full_response = ""
     async for chunk in completion:
         content = chunk.choices[0].delta.content or ""
+        full_response += content
         await callback(content)
+
+    return full_response
