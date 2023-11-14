@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface Props {
   code: string;
 }
 
 function Preview({ code }: Props) {
-  const [blobUrl, setBlobUrl] = useState('');
+  const [blobUrl, setBlobUrl] = useState("");
 
   const createBlobUrl = () => {
-    const blob = new Blob([code], { type: 'text/html' });
+    const blob = new Blob([code], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     setBlobUrl(url);
   };
@@ -21,9 +21,9 @@ function Preview({ code }: Props) {
         className="border-[5px] border-black rounded-[33px] p-4 shadow-lg 
         transform scale-[0.8] origin-top-left w-[1280px] h-[832px]"
       ></iframe>
-      <button onClick={createBlobUrl} href={blobUrl} download="index.html">
+      <a onClick={createBlobUrl} href={blobUrl} download="index.html">
         Download code
-      </button>
+      </a>
     </div>
   );
 }
