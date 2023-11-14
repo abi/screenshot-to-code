@@ -4,7 +4,8 @@ const WS_BACKEND_URL = import.meta.env.VITE_WS_BACKEND_URL;
 
 export function generateCode(
   imageUrl: string,
-  onChange: (chunk: string) => void
+  onChange: (chunk: string) => void,
+  onComplete: () => void
 ) {
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
@@ -33,6 +34,8 @@ export function generateCode(
       toast.error(
         "We ran into an error. Try again or contact support at support@picoapps.xyz"
       );
+    } else {
+      onComplete();
     }
   });
 

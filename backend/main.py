@@ -46,3 +46,5 @@ async def stream_code_test(websocket: WebSocket):
 
     # Write the messages dict into a log so that we can debug later
     write_logs(prompt_messages, completion)
+
+    await websocket.close()
