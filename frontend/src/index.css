@@ -5,3 +5,29 @@
 body {
   @apply bg-gray-200;
 }
+
+.scanning::after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 5px;
+  height: 100%;
+  background-image: linear-gradient(
+    to right,
+    rgba(19, 161, 14, 0.2),
+    /* Darker matrix green with full transparency */ rgba(19, 161, 14, 0.8)
+      /* The same green with 80% opacity */
+  );
+  animation: scanning 3s ease-in-out infinite;
+}
+
+@keyframes scanning {
+  0%,
+  100% {
+    transform: translateX(0px);
+  }
+  50% {
+    transform: translateX(300px);
+  }
+}

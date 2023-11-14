@@ -4,6 +4,7 @@ import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
 import { generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
+import classNames from "classnames";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -53,11 +54,17 @@ function App() {
       {(appState === "CODING" || appState === "CODE_READY") && (
         <>
           <div className="flex gap-x-2 justify-around">
-            <img
-              className="w-[300px]"
-              src={referenceImages[0]}
-              alt="Reference"
-            />
+            <div
+              className={classNames({
+                "scanning relative": appState === "CODING",
+              })}
+            >
+              <img
+                className="w-[300px]"
+                src={referenceImages[0]}
+                alt="Reference"
+              />
+            </div>
             <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
               <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
               {console.map((line, index) => (
