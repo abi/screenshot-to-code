@@ -2,9 +2,18 @@ import { useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
+import { generateCode } from "./generateCode";
 
 function App() {
+  const [generatedCode, setGeneratedCode] = useState<string>("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
+
+  function startCodeGeneration(referenceImages: string[]) {
+    setReferenceImages(referenceImages);
+    generateCode(referenceImages[0], function (token) {
+      setGeneratedCode((prev) => prev + token);
+    });
+  }
 
   return (
     <div className="mx-auto mt-10 max-w-2xl">
@@ -19,11 +28,11 @@ function App() {
 
       {referenceImages.length === 0 && (
         <>
-          <ImageUpload setReferenceImages={setReferenceImages} />
+          <ImageUpload setReferenceImages={startCodeGeneration} />
         </>
       )}
 
-      <CodePreview content="Hello World" />
+      <CodePreview content={generatedCode} />
       <Preview />
     </div>
   );
