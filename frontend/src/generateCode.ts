@@ -7,6 +7,7 @@ const ERROR_MESSAGE =
 export function generateCode(
   imageUrl: string,
   onChange: (chunk: string) => void,
+  onStatusUpdate: (status: string) => void,
   onComplete: () => void
 ) {
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
@@ -26,6 +27,8 @@ export function generateCode(
     const response = JSON.parse(event.data);
     if (response.type === "chunk") {
       onChange(response.value);
+    } else if (response.type === "status") {
+      onStatusUpdate(response.value);
     }
   });
 

@@ -34,6 +34,8 @@ async def stream_code_test(websocket: WebSocket):
 
     params = await websocket.receive_json()
 
+    await websocket.send_json({"type": "status", "value": "Generating code..."})
+
     async def process_chunk(content):
         await websocket.send_json({"type": "chunk", "value": content})
 
@@ -46,5 +48,7 @@ async def stream_code_test(websocket: WebSocket):
 
     # Write the messages dict into a log so that we can debug later
     write_logs(prompt_messages, completion)
+
+    await websocket.send_json({"type": "status", "value": "Code generation complete."})
 
     await websocket.close()

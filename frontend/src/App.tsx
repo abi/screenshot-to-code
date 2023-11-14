@@ -10,6 +10,7 @@ function App() {
   );
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
+  const [console, setConsole] = useState<string[]>([]);
   const [blobUrl, setBlobUrl] = useState("");
 
   const createBlobUrl = () => {
@@ -25,6 +26,9 @@ function App() {
       referenceImages[0],
       function (token) {
         setGeneratedCode((prev) => prev + token);
+      },
+      function (line) {
+        setConsole((prev) => [...prev, line]);
       },
       function () {
         setAppState("CODE_READY");
@@ -44,7 +48,24 @@ function App() {
 
       {(appState === "CODING" || appState === "CODE_READY") && (
         <>
-          <img className="w-[300px]" src={referenceImages[0]} alt="Reference" />
+          <div className="flex gap-x-2 justify-around">
+            <img
+              className="w-[300px]"
+              src={referenceImages[0]}
+              alt="Reference"
+            />
+            <div className="bg-gray-200 px-4 py-2 rounded text-sm font-mono">
+              <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
+              {console.map((line, index) => (
+                <div
+                  key={index}
+                  className="border-b border-gray-400 mb-2 text-gray-600"
+                >
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
           {/* Show code preview only when coding */}
           {appState === "CODING" && <CodePreview code={generatedCode} />}
           {appState === "CODE_READY" && (
