@@ -24,6 +24,10 @@ async def stream_code_test(websocket: WebSocket):
     messages = assemble_prompt("")
     print(messages)
 
+    # Write the messages dict into a file for debugging
+    with open("messages.json", "w") as f:
+        f.write(str(messages))
+
     await stream_openai_response(
         messages,
         lambda x: process_chunk(x),
