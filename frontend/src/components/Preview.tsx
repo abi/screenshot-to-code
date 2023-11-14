@@ -1,11 +1,15 @@
-function Preview() {
+interface Props {
+  code: string;
+}
+
+function Preview({ code }: Props) {
   return (
     <div className="w-[704px]">
       <iframe
         title="Iframe Example"
-        srcDoc={"<h1>Hello World</h1>"}
+        srcDoc={code}
         className="border-[5px] border-black rounded-[33px] p-4 shadow-lg 
-        transform scale-[0.55] origin-top-left w-[1280px] h-[832px]"
+        transform scale-[0.8] origin-top-left w-[1280px] h-[832px]"
       ></iframe>
     </div>
   );
