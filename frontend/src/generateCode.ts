@@ -5,8 +5,14 @@ const WS_BACKEND_URL =
 const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console for details. Feel free to open a Github ticket";
 
+export interface CodeGenerationParams {
+  generationType: "create" | "update";
+  image: string;
+  history?: string[];
+}
+
 export function generateCode(
-  imageUrl: string,
+  params: CodeGenerationParams,
   onChange: (chunk: string) => void,
   onSetCode: (code: string) => void,
   onStatusUpdate: (status: string) => void,
@@ -18,11 +24,7 @@ export function generateCode(
   const ws = new WebSocket(wsUrl);
 
   ws.addEventListener("open", () => {
-    ws.send(
-      JSON.stringify({
-        image: imageUrl,
-      })
-    );
+    ws.send(JSON.stringify(params));
   });
 
   ws.addEventListener("message", async (event: MessageEvent) => {

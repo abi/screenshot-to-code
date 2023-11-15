@@ -48,6 +48,13 @@ async def stream_code_test(websocket: WebSocket):
 
     prompt_messages = assemble_prompt(params["image"])
 
+    if params["generationType"] == "update":
+        # Transform into message format
+        for index, text in enumerate(params["history"]):
+            prompt_messages += [
+                {"role": "assistant" if index % 2 == 0 else "user", "content": text}
+            ]
+
     if SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(process_chunk)
     else:

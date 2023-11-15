@@ -2,7 +2,7 @@ import { useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
-import { generateCode } from "./generateCode";
+import { CodeGenerationParams, generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
 import { FaDownload, FaUndo } from "react-icons/fa";
@@ -17,6 +17,8 @@ function App() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [blobUrl, setBlobUrl] = useState("");
+  const [updateInstruction, setUpdateInstruction] = useState("");
+  const [history, setHistory] = useState<string[]>([]);
 
   const createBlobUrl = () => {
     const blob = new Blob([generatedCode], { type: "text/html" });
@@ -32,24 +34,39 @@ function App() {
     setBlobUrl("");
   };
 
-  function startCodeGeneration(referenceImages: string[]) {
+  function doGenerateCode(params: CodeGenerationParams) {
     setAppState("CODING");
-    setReferenceImages(referenceImages);
     generateCode(
-      referenceImages[0],
-      function (token) {
-        setGeneratedCode((prev) => prev + token);
-      },
-      function (code) {
-        setGeneratedCode(code);
-      },
-      function (line) {
-        setExecutionConsole((prev) => [...prev, line]);
-      },
-      function () {
-        setAppState("CODE_READY");
-      }
+      params,
+      (token) => setGeneratedCode((prev) => prev + token),
+      (code) => setGeneratedCode(code),
+      (line) => setExecutionConsole((prev) => [...prev, line]),
+      () => setAppState("CODE_READY")
     );
+  }
+
+  // Initial version creation
+  function doCreate(referenceImages: string[]) {
+    setReferenceImages(referenceImages);
+    doGenerateCode({
+      generationType: "create",
+      image: referenceImages[0],
+    });
+  }
+
+  // Subsequent updates
+  function doUpdate() {
+    const updatedHistory = [...history, generatedCode, updateInstruction];
+
+    doGenerateCode({
+      generationType: "update",
+      image: referenceImages[0],
+      history: updatedHistory,
+    });
+
+    setHistory(updatedHistory);
+    setGeneratedCode("");
+    setUpdateInstruction("");
   }
 
   return (
@@ -122,8 +139,12 @@ function App() {
                     </button>
                   </div>
                   <div className="grid w-full gap-2">
-                    <Textarea placeholder="Describe what the AI missed the first time around" />
-                    <Button>Update</Button>
+                    <Textarea
+                      placeholder="Describe what the AI missed the first time around"
+                      onChange={(e) => setUpdateInstruction(e.target.value)}
+                      value={updateInstruction}
+                    />
+                    <Button onClick={doUpdate}>Update</Button>
                   </div>
                 </div>
               )}
@@ -135,7 +156,7 @@ function App() {
       <main className="py-2 lg:pl-96">
         {appState === "INITIAL" && (
           <>
-            <ImageUpload setReferenceImages={startCodeGeneration} />
+            <ImageUpload setReferenceImages={doCreate} />
           </>
         )}
 
