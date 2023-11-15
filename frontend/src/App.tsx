@@ -6,6 +6,8 @@ import { generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
 import { FaDownload, FaUndo } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -99,24 +101,30 @@ function App() {
               </div>
 
               {appState === "CODE_READY" && (
-                <div className="flex items-center gap-x-2 mb-4">
-                  <a
-                    className="bg-button/70 hover:bg-highlight text-black
+                <div>
+                  <div className="flex items-center gap-x-2 mb-4">
+                    <a
+                      className="bg-button/70 hover:bg-highlight text-black
  py-2 px-3 rounded transition duration-300 flex gap-x-2 items-center text-sm"
-                    onClick={createBlobUrl}
-                    href={blobUrl}
-                    download="index.html"
-                  >
-                    <FaDownload /> Download
-                  </a>
-                  <button
-                    className="bg-button/70 hover:bg-highlight text-black
+                      onClick={createBlobUrl}
+                      href={blobUrl}
+                      download="index.html"
+                    >
+                      <FaDownload /> Download
+                    </a>
+                    <button
+                      className="bg-button/70 hover:bg-highlight text-black
  py-2 px-3 rounded transition duration-300 flex gap-x-2 items-center text-sm"
-                    onClick={reset}
-                  >
-                    <FaUndo />
-                    Reset
-                  </button>
+                      onClick={reset}
+                    >
+                      <FaUndo />
+                      Reset
+                    </button>
+                  </div>
+                  <div className="grid w-full gap-2">
+                    <Textarea placeholder="Describe what the AI missed the first time around" />
+                    <Button>Update</Button>
+                  </div>
                 </div>
               )}
             </>

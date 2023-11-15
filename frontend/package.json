@@ -10,15 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-icons": "^1.3.0",
+    "@radix-ui/react-slot": "^1.0.2",
+    "class-variance-authority": "^0.7.0",
     "classnames": "^2.3.2",
+    "clsx": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^4.12.0",
+    "tailwind-merge": "^2.0.0",
+    "tailwindcss-animate": "^1.0.7",
     "vite-plugin-checker": "^0.6.2"
   },
   "devDependencies": {
+    "@types/node": "^20.9.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
