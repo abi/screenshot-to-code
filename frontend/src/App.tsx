@@ -5,6 +5,7 @@ import Preview from "./components/Preview";
 import { generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
+import { FaDownload, FaUndo } from "react-icons/fa";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -101,18 +102,19 @@ function App() {
                 <div className="flex items-center gap-x-2 mb-4">
                   <a
                     className="bg-button/70 hover:bg-highlight text-black
- py-2 px-4 rounded transition duration-300"
+ py-2 px-3 rounded transition duration-300 flex gap-x-2 items-center text-sm"
                     onClick={createBlobUrl}
                     href={blobUrl}
                     download="index.html"
                   >
-                    Download
+                    <FaDownload /> Download
                   </a>
                   <button
                     className="bg-button/70 hover:bg-highlight text-black
- py-2 px-4 rounded transition duration-300"
+ py-2 px-3 rounded transition duration-300 flex gap-x-2 items-center text-sm"
                     onClick={reset}
                   >
+                    <FaUndo />
                     Reset
                   </button>
                 </div>
