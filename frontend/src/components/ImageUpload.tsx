@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 
 const baseStyle = {
   flex: 1,
-  width: "50%",
+  width: "80%",
   margin: "0 auto",
   minHeight: "400px",
   display: "flex",

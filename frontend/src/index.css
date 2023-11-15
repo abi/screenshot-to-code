@@ -28,6 +28,6 @@ body {
     transform: translateX(0px);
   }
   50% {
-    transform: translateX(300px);
+    transform: translateX(340px);
   }
 }
