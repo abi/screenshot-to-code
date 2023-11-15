@@ -10,14 +10,19 @@ https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8
 
 The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API.
 
-In the root directory,
+Run the backend (make sure you have poetry installed on your system):
 
 ```bash
 cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
 poetry install
+poetry shell
 poetry run uvicorn main:app --reload --port 7000
-cd ..
+```
+
+Run the frontend:
+
+```bash
 cd frontend
 yarn
 yarn dev
