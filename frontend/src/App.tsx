@@ -16,14 +16,24 @@ function App() {
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
-  const [blobUrl, setBlobUrl] = useState("");
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
 
-  const createBlobUrl = () => {
+  const downloadCode = () => {
+    // Create a blob from the generated code
     const blob = new Blob([generatedCode], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    setBlobUrl(url);
+
+    // Create an anchor element and set properties for download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "index.html"; // Set the file name for download
+    document.body.appendChild(a); // Append to the document
+    a.click(); // Programmatically click the anchor to trigger download
+
+    // Clean up by removing the anchor and revoking the Blob URL
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const reset = () => {
@@ -31,7 +41,7 @@ function App() {
     setGeneratedCode("");
     setReferenceImages([]);
     setExecutionConsole([]);
-    setBlobUrl("");
+    setHistory([]);
   };
 
   function doGenerateCode(params: CodeGenerationParams) {
@@ -119,25 +129,6 @@ function App() {
 
               {appState === "CODE_READY" && (
                 <div>
-                  <div className="flex items-center gap-x-2 mb-4">
-                    <a
-                      className="bg-button/70 hover:bg-highlight text-black
- py-2 px-3 rounded transition duration-300 flex gap-x-2 items-center text-sm"
-                      onClick={createBlobUrl}
-                      href={blobUrl}
-                      download="index.html"
-                    >
-                      <FaDownload /> Download
-                    </a>
-                    <button
-                      className="bg-button/70 hover:bg-highlight text-black
- py-2 px-3 rounded transition duration-300 flex gap-x-2 items-center text-sm"
-                      onClick={reset}
-                    >
-                      <FaUndo />
-                      Reset
-                    </button>
-                  </div>
                   <div className="grid w-full gap-2">
                     <Textarea
                       placeholder="Describe what the AI missed the first time around"
@@ -145,6 +136,21 @@ function App() {
                       value={updateInstruction}
                     />
                     <Button onClick={doUpdate}>Update</Button>
+                  </div>
+                  <div className="flex items-center gap-x-2 mt-2">
+                    <Button
+                      onClick={downloadCode}
+                      className="flex items-center gap-x-2"
+                    >
+                      <FaDownload /> Download
+                    </Button>
+                    <Button
+                      onClick={reset}
+                      className="flex items-center gap-x-2"
+                    >
+                      <FaUndo />
+                      Reset
+                    </Button>
                   </div>
                 </div>
               )}
