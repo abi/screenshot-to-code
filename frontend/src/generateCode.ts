@@ -7,6 +7,7 @@ const ERROR_MESSAGE =
 export function generateCode(
   imageUrl: string,
   onChange: (chunk: string) => void,
+  onSetCode: (code: string) => void,
   onStatusUpdate: (status: string) => void,
   onComplete: () => void
 ) {
@@ -29,6 +30,8 @@ export function generateCode(
       onChange(response.value);
     } else if (response.type === "status") {
       onStatusUpdate(response.value);
+    } else if (response.type === "setCode") {
+      onSetCode(response.value);
     }
   });
 

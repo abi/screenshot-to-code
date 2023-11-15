@@ -1,18 +1,25 @@
 # Load environment variables first
-import json
 from dotenv import load_dotenv
-import os
-from datetime import datetime
-
-from prompts import assemble_prompt
 
 load_dotenv()
 
 
+import json
+import os
+import traceback
+from datetime import datetime
 from fastapi import FastAPI, WebSocket
+
 from llm import stream_openai_response
+from mock import MOCK_HTML, mock_completion
+from image_generation import generate_images
+from prompts import assemble_prompt
 
 app = FastAPI()
+
+# Useful for debugging purposes when you don't want to waste GPT4-Vision credits
+# Setting to True will stream a mock response instead of calling the OpenAI API
+SHOULD_MOCK_AI_RESPONSE = False
 
 
 def write_logs(prompt_messages, completion):
@@ -41,14 +48,31 @@ async def stream_code_test(websocket: WebSocket):
 
     prompt_messages = assemble_prompt(params["image"])
 
-    completion = await stream_openai_response(
-        prompt_messages,
-        lambda x: process_chunk(x),
-    )
+    if SHOULD_MOCK_AI_RESPONSE:
+        completion = await mock_completion(process_chunk)
+    else:
+        completion = await stream_openai_response(
+            prompt_messages,
+            lambda x: process_chunk(x),
+        )
 
     # Write the messages dict into a log so that we can debug later
     write_logs(prompt_messages, completion)
 
-    await websocket.send_json({"type": "status", "value": "Code generation complete."})
+    # Generate images
+    await websocket.send_json({"type": "status", "value": "Generating images..."})
 
-    await websocket.close()
+    try:
+        updated_html = await generate_images(completion)
+        await websocket.send_json({"type": "setCode", "value": updated_html})
+        await websocket.send_json(
+            {"type": "status", "value": "Code generation complete."}
+        )
+    except Exception as e:
+        traceback.print_exc()
+        print("Image generation failed", e)
+        await websocket.send_json(
+            {"type": "status", "value": "Image generation failed but code is complete."}
+        )
+    finally:
+        await websocket.close()

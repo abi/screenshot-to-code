@@ -12,7 +12,7 @@ function App() {
   );
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
-  const [console, setConsole] = useState<string[]>([]);
+  const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [blobUrl, setBlobUrl] = useState("");
 
   const createBlobUrl = () => {
@@ -29,8 +29,11 @@ function App() {
       function (token) {
         setGeneratedCode((prev) => prev + token);
       },
+      function (code) {
+        setGeneratedCode(code);
+      },
       function (line) {
-        setConsole((prev) => [...prev, line]);
+        setExecutionConsole((prev) => [...prev, line]);
       },
       function () {
         setAppState("CODE_READY");
@@ -67,7 +70,7 @@ function App() {
             </div>
             <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
               <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
-              {console.map((line, index) => (
+              {executionConsole.map((line, index) => (
                 <div
                   key={index}
                   className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
@@ -82,7 +85,7 @@ function App() {
             <>
               <div className="flex items-center gap-x-1">
                 <Spinner />
-                Generating...
+                {executionConsole.slice(-1)[0]}
               </div>
               <CodePreview code={generatedCode} />
             </>
