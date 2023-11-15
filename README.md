@@ -27,6 +27,10 @@ Open http://localhost:5173 to use the app.
 
 If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL in `frontend/.env.local`
 
+## Feedback
+
+If you have feature requests, bug reports or other feedback, open an issue or ping me on [Twitter](https://twitter.com/_abi_). 
+
 ## Hosted Version
 
-Hosted version coming soon at http://makewithpico.com
+Hosted version coming soon on [Pico](https://picoapps.xyz?ref=github).
