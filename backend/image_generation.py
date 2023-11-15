@@ -47,15 +47,33 @@ def extract_dimensions(url):
         return (100, 100)
 
 
-async def generate_images(code):
-    # Find all images and extract their alt texts
+def create_alt_url_mapping(code):
     soup = BeautifulSoup(code, "html.parser")
     images = soup.find_all("img")
 
+    mapping = {}
+
+    for image in images:
+        if not image["src"].startswith("https://placehold.co"):
+            mapping[image["alt"]] = image["src"]
+
+    return mapping
+
+
+async def generate_images(code, image_cache):
+    # Find all images
+    soup = BeautifulSoup(code, "html.parser")
+    images = soup.find_all("img")
+
+    # Extract alt texts as image prompts
     alts = []
     for img in images:
         # Only include URL if the image starts with https://placehold.co
-        if img["src"].startswith("https://placehold.co"):
+        # and it's not already in the image_cache
+        if (
+            img["src"].startswith("https://placehold.co")
+            and image_cache.get(img.get("alt")) is None
+        ):
             alts.append(img.get("alt", None))
 
     # Exclude images with no alt text
@@ -69,6 +87,9 @@ async def generate_images(code):
 
     # Create a dict mapping alt text to image URL
     mapped_image_urls = dict(zip(prompts, results))
+
+    # Merge with image_cache
+    mapped_image_urls = {**mapped_image_urls, **image_cache}
 
     # Replace old image URLs with the generated URLs
     for img in images:

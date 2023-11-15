@@ -12,7 +12,7 @@ from fastapi import FastAPI, WebSocket
 
 from llm import stream_openai_response
 from mock import MOCK_HTML, mock_completion
-from image_generation import generate_images
+from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_prompt
 
 app = FastAPI()
@@ -48,12 +48,18 @@ async def stream_code_test(websocket: WebSocket):
 
     prompt_messages = assemble_prompt(params["image"])
 
+    # Image cache for updates so that we don't have to regenerate images
+    image_cache = {}
+
     if params["generationType"] == "update":
         # Transform into message format
+        # TODO: Move this to frontend
         for index, text in enumerate(params["history"]):
             prompt_messages += [
                 {"role": "assistant" if index % 2 == 0 else "user", "content": text}
             ]
+
+        image_cache = create_alt_url_mapping(params["history"][-2])
 
     if SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(process_chunk)
@@ -70,7 +76,7 @@ async def stream_code_test(websocket: WebSocket):
     await websocket.send_json({"type": "status", "value": "Generating images..."})
 
     try:
-        updated_html = await generate_images(completion)
+        updated_html = await generate_images(completion, image_cache=image_cache)
         await websocket.send_json({"type": "setCode", "value": updated_html})
         await websocket.send_json(
             {"type": "status", "value": "Code generation complete."}
