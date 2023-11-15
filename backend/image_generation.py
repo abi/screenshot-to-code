@@ -51,7 +51,12 @@ async def generate_images(code):
     # Find all images and extract their alt texts
     soup = BeautifulSoup(code, "html.parser")
     images = soup.find_all("img")
-    alts = [img.get("alt", None) for img in images]
+
+    alts = []
+    for img in images:
+        # Only include URL if the image starts with https://placehold.co
+        if img["src"].startswith("https://placehold.co"):
+            alts.append(img.get("alt", None))
 
     # Exclude images with no alt text
     alts = [alt for alt in alts if alt is not None]
@@ -65,8 +70,12 @@ async def generate_images(code):
     # Create a dict mapping alt text to image URL
     mapped_image_urls = dict(zip(prompts, results))
 
-    # Replace alt text with image URLs
+    # Replace old image URLs with the generated URLs
     for img in images:
+        # Skip images that don't start with https://placehold.co (leave them alone)
+        if not img["src"].startswith("https://placehold.co"):
+            continue
+
         new_url = mapped_image_urls[img.get("alt")]
 
         if new_url:
