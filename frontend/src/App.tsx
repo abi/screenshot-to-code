@@ -45,6 +45,7 @@ function App() {
   };
 
   function doGenerateCode(params: CodeGenerationParams) {
+    setExecutionConsole([]);
     setAppState("CODING");
     generateCode(
       params,
