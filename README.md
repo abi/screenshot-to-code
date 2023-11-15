@@ -2,7 +2,9 @@
 
 This is a simple app that converts a screenshot to HTML/Tailwind CSS. It uses GPT-4 Vision to generate the code.
 
-[Video GIF]
+
+https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
+
 
 ## Getting Started
 
