@@ -8,6 +8,7 @@ import classNames from "classnames";
 import { FaDownload, FaUndo } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -101,18 +102,24 @@ function App() {
                   <CodePreview code={generatedCode} />
                 </div>
               )}
-              <div className="flex gap-x-2">
-                <div
-                  className={classNames({
-                    "scanning relative": appState === "CODING",
-                  })}
-                >
-                  <img
-                    className="w-[340px]"
-                    src={referenceImages[0]}
-                    alt="Reference"
-                  />
+              <div className="flex gap-x-2 mt-2">
+                <div className="flex flex-col">
+                  <div
+                    className={classNames({
+                      "scanning relative": appState === "CODING",
+                    })}
+                  >
+                    <img
+                      className="w-[340px] border border-gray-200 rounded-md"
+                      src={referenceImages[0]}
+                      alt="Reference"
+                    />
+                  </div>
+                  <div className="text-gray-400 uppercase text-sm text-center mt-1">
+                    Original Screenshot
+                  </div>
                 </div>
+
                 <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
                   <h2 className="text-lg mb-4 border-b border-gray-800">
                     Console
@@ -128,11 +135,13 @@ function App() {
                 </div>
               </div>
 
+              <Separator className="mt-1 mb-2" />
+
               {appState === "CODE_READY" && (
                 <div>
                   <div className="grid w-full gap-2">
                     <Textarea
-                      placeholder="Describe what the AI missed the first time around"
+                      placeholder="Tell the AI what to change..."
                       onChange={(e) => setUpdateInstruction(e.target.value)}
                       value={updateInstruction}
                     />
