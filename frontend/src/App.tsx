@@ -5,9 +5,11 @@ import Preview from "./components/Preview";
 import { CodeGenerationParams, generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
-import { FaDownload, FaUndo } from "react-icons/fa";
+import { FaCode, FaDownload, FaEye, FaUndo } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import CodeMirror from "./components/CodeMirror";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -179,7 +181,25 @@ function App() {
 
         {(appState === "CODING" || appState === "CODE_READY") && (
           <div className="ml-4">
-            <Preview code={generatedCode} />
+            <Tabs defaultValue="preview">
+              <div className="flex justify-end mr-8">
+                <TabsList>
+                  <TabsTrigger value="preview" className="flex gap-x-2">
+                    <FaEye /> Preview
+                  </TabsTrigger>
+                  <TabsTrigger value="code" className="flex gap-x-2">
+                    <FaCode />
+                    Code
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="preview">
+                <Preview code={generatedCode} />
+              </TabsContent>
+              <TabsContent value="code">
+                <CodeMirror code={generatedCode} />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </main>
