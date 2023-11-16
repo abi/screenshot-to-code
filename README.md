@@ -5,6 +5,8 @@ This is a simple app that converts a screenshot to HTML/Tailwind CSS. It uses GP
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
+See Examples section below for more demos.
+
 ## Updates
 
 * Nov 16 - View code directly within the app
