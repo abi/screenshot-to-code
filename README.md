@@ -8,6 +8,7 @@ See Examples section below for more demos.
 
 ## Updates
 
+* Nov 16 - Toggle between desktop & mobile preview
 * Nov 16 - View code directly within the app
 * Nov 15 - 🔥 You can now instruct the AI to update the code as you wish. Useful if the AI messed up some styles or missed a section.
 
