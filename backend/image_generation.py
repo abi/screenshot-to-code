@@ -110,4 +110,5 @@ async def generate_images(code, image_cache):
             print("Image generation failed for alt text:" + img.get("alt"))
 
     # Return the modified HTML
-    return str(soup)
+    # (need to prettify it because BeautifulSoup messes up the formatting)
+    return soup.prettify()
