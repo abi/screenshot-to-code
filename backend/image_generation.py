@@ -82,6 +82,10 @@ async def generate_images(code, image_cache):
     # Remove duplicates
     prompts = list(set(alts))
 
+    # Return early if there are no images to replace
+    if len(prompts) == 0:
+        return code
+
     # Generate images
     results = await process_tasks(prompts)
 

@@ -11,7 +11,7 @@ from datetime import datetime
 from fastapi import FastAPI, WebSocket
 
 from llm import stream_openai_response
-from mock import MOCK_HTML, mock_completion
+from mock import mock_completion
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_prompt
 
@@ -41,6 +41,7 @@ async def stream_code_test(websocket: WebSocket):
 
     params = await websocket.receive_json()
 
+    print("generating code...")
     await websocket.send_json({"type": "status", "value": "Generating code..."})
 
     async def process_chunk(content):
