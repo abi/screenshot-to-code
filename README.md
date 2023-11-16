@@ -41,6 +41,14 @@ If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL
 
 If you have feature requests, bug reports or other feedback, open an issue or ping me on [Twitter](https://twitter.com/_abi_). 
 
+## Examples
+
+Hacker News but it gets the colors wrong at first so we nudge it
+
+https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-ac7410315e5d
+
+
+
 ## Hosted Version
 
 Hosted version coming soon on [Pico](https://picoapps.xyz?ref=github).
