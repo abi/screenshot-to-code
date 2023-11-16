@@ -4,10 +4,12 @@ from openai import AsyncOpenAI
 
 MODEL_GPT_4_VISION = "gpt-4-vision-preview"
 
-client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+async def stream_openai_response(
+    messages, api_key: str, callback: Callable[[str], Awaitable[None]]
+):
+    client = AsyncOpenAI(api_key=api_key)
 
-async def stream_openai_response(messages, callback: Callable[[str], Awaitable[None]]):
     model = MODEL_GPT_4_VISION
 
     # Base parameters

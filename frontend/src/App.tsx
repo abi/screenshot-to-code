@@ -29,6 +29,7 @@ function App() {
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [settings, setSettings] = useState<Settings>({
+    openAiApiKey: null,
     isImageGenerationEnabled: true,
   });
 

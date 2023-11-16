@@ -36,6 +36,9 @@ export function generateCode(
       onStatusUpdate(response.value);
     } else if (response.type === "setCode") {
       onSetCode(response.value);
+    } else if (response.type === "error") {
+      console.error("Error generating code", response.value);
+      toast.error(response.value);
     }
   });
 

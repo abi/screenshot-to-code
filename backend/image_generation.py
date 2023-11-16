@@ -5,8 +5,8 @@ from openai import AsyncOpenAI
 from bs4 import BeautifulSoup
 
 
-async def process_tasks(prompts):
-    tasks = [generate_image(prompt) for prompt in prompts]
+async def process_tasks(prompts, api_key):
+    tasks = [generate_image(prompt, api_key) for prompt in prompts]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     processed_results = []
@@ -20,8 +20,8 @@ async def process_tasks(prompts):
     return processed_results
 
 
-async def generate_image(prompt):
-    client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+async def generate_image(prompt, api_key):
+    client = AsyncOpenAI(api_key=api_key)
     image_params = {
         "model": "dall-e-3",
         "quality": "standard",
@@ -60,7 +60,7 @@ def create_alt_url_mapping(code):
     return mapping
 
 
-async def generate_images(code, image_cache):
+async def generate_images(code, api_key, image_cache):
     # Find all images
     soup = BeautifulSoup(code, "html.parser")
     images = soup.find_all("img")
@@ -87,7 +87,7 @@ async def generate_images(code, image_cache):
         return code
 
     # Generate images
-    results = await process_tasks(prompts)
+    results = await process_tasks(prompts, api_key)
 
     # Create a dict mapping alt text to image URL
     mapped_image_urls = dict(zip(prompts, results))
