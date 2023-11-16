@@ -5,7 +5,13 @@ import Preview from "./components/Preview";
 import { CodeGenerationParams, generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
-import { FaCode, FaDownload, FaEye, FaUndo } from "react-icons/fa";
+import {
+  FaCode,
+  FaDesktop,
+  FaDownload,
+  FaMobile,
+  FaUndo,
+} from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
@@ -83,7 +89,7 @@ function App() {
   }
 
   return (
-    <div className="mt-6">
+    <div className="mt-2">
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
           <h1 className="text-2xl mt-10">Screenshot to Code</h1>
@@ -181,11 +187,14 @@ function App() {
 
         {(appState === "CODING" || appState === "CODE_READY") && (
           <div className="ml-4">
-            <Tabs defaultValue="preview">
-              <div className="flex justify-end mr-8">
+            <Tabs defaultValue="desktop">
+              <div className="flex justify-end mr-8 mb-4">
                 <TabsList>
-                  <TabsTrigger value="preview" className="flex gap-x-2">
-                    <FaEye /> Preview
+                  <TabsTrigger value="desktop" className="flex gap-x-2">
+                    <FaDesktop /> Desktop
+                  </TabsTrigger>
+                  <TabsTrigger value="mobile" className="flex gap-x-2">
+                    <FaMobile /> Mobile
                   </TabsTrigger>
                   <TabsTrigger value="code" className="flex gap-x-2">
                     <FaCode />
@@ -193,8 +202,11 @@ function App() {
                   </TabsTrigger>
                 </TabsList>
               </div>
-              <TabsContent value="preview">
-                <Preview code={generatedCode} />
+              <TabsContent value="desktop">
+                <Preview code={generatedCode} device="desktop" />
+              </TabsContent>
+              <TabsContent value="mobile">
+                <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
                 <CodeMirror code={generatedCode} />
