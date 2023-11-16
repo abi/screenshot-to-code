@@ -8,7 +8,7 @@ export function useThrottle(value: string, interval = 500) {
   const lastUpdated = React.useRef<number | null>(null);
 
   React.useEffect(() => {
-    const now = Date.now();
+    const now = performance.now();
 
     if (!lastUpdated.current || now >= lastUpdated.current + interval) {
       lastUpdated.current = now;
