@@ -41,6 +41,12 @@ async def stream_code_test(websocket: WebSocket):
 
     params = await websocket.receive_json()
 
+    should_generate_images = (
+        params["isImageGenerationEnabled"]
+        if "isImageGenerationEnabled" in params
+        else True
+    )
+
     print("generating code...")
     await websocket.send_json({"type": "status", "value": "Generating code..."})
 
@@ -73,11 +79,14 @@ async def stream_code_test(websocket: WebSocket):
     # Write the messages dict into a log so that we can debug later
     write_logs(prompt_messages, completion)
 
-    # Generate images
-    await websocket.send_json({"type": "status", "value": "Generating images..."})
-
     try:
-        updated_html = await generate_images(completion, image_cache=image_cache)
+        if should_generate_images:
+            await websocket.send_json(
+                {"type": "status", "value": "Generating images..."}
+            )
+            updated_html = await generate_images(completion, image_cache=image_cache)
+        else:
+            updated_html = completion
         await websocket.send_json({"type": "setCode", "value": updated_html})
         await websocket.send_json(
             {"type": "status", "value": "Code generation complete."}

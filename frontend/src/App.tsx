@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
+import SettingsDialog from "./components/SettingsDialog";
+import { Settings } from "./types";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -26,6 +28,9 @@ function App() {
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+  const [settings, setSettings] = useState<Settings>({
+    isImageGenerationEnabled: true,
+  });
 
   const downloadCode = () => {
     // Create a blob from the generated code
@@ -55,8 +60,12 @@ function App() {
   function doGenerateCode(params: CodeGenerationParams) {
     setExecutionConsole([]);
     setAppState("CODING");
+
+    // Merge settings with params
+    const updatedParams = { ...params, ...settings };
+
     generateCode(
-      params,
+      updatedParams,
       (token) => setGeneratedCode((prev) => prev + token),
       (code) => setGeneratedCode(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
@@ -92,7 +101,10 @@ function App() {
     <div className="mt-2">
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
-          <h1 className="text-2xl mt-10">Screenshot to Code</h1>
+          <div className="flex items-center justify-between mt-10">
+            <h1 className="text-2xl ">Screenshot to Code</h1>
+            <SettingsDialog settings={settings} setSettings={setSettings} />
+          </div>
           {appState === "INITIAL" && (
             <h2 className="text-sm text-gray-500 mb-2">
               Drag & drop a screenshot to get started.
