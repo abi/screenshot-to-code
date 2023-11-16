@@ -38,6 +38,22 @@ Open http://localhost:5173 to use the app.
 
 If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL in `frontend/.env.local`
 
+## Docker
+
+```bash
+echo "OPENAI_API_KEY=sk-your-key" > .env
+docker-compose up -d --build
+```
+
+If you want to change the backend port to something other than 7000 (default) - for example, 7001. Then:
+
+1. `echo "BACKEND_PORT=7001"`
+2. `echo VITE_WS_BACKEND_URL=ws://127.0.0.1:7001 > frontend/.env.local`
+
+Port 7000 sometimes is used by Airplay if you are on a mac. This will solve the docker error "Ports are not available... address already in use"
+
+Application will be up and running at http://localhost:5173
+
 ## Feedback
 
 If you have feature requests, bug reports or other feedback, open an issue or ping me on [Twitter](https://twitter.com/_abi_). 
