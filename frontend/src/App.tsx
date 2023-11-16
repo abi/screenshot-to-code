@@ -8,7 +8,6 @@ import classNames from "classnames";
 import { FaDownload, FaUndo } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -86,9 +85,11 @@ function App() {
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
           <h1 className="text-2xl mt-10">Screenshot to Code</h1>
-          <h2 className="text-sm text-gray-500 mb-2">
-            Drag & drop a screenshot to get started.
-          </h2>
+          {appState === "INITIAL" && (
+            <h2 className="text-sm text-gray-500 mb-2">
+              Drag & drop a screenshot to get started.
+            </h2>
+          )}
 
           {(appState === "CODING" || appState === "CODE_READY") && (
             <>
@@ -102,6 +103,36 @@ function App() {
                   <CodePreview code={generatedCode} />
                 </div>
               )}
+
+              {appState === "CODE_READY" && (
+                <div>
+                  <div className="grid w-full gap-2">
+                    <Textarea
+                      placeholder="Tell the AI what to change..."
+                      onChange={(e) => setUpdateInstruction(e.target.value)}
+                      value={updateInstruction}
+                    />
+                    <Button onClick={doUpdate}>Update</Button>
+                  </div>
+                  <div className="flex items-center gap-x-2 mt-2">
+                    <Button
+                      onClick={downloadCode}
+                      className="flex items-center gap-x-2"
+                    >
+                      <FaDownload /> Download
+                    </Button>
+                    <Button
+                      onClick={reset}
+                      className="flex items-center gap-x-2"
+                    >
+                      <FaUndo />
+                      Reset
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Reference image display */}
               <div className="flex gap-x-2 mt-2">
                 <div className="flex flex-col">
                   <div
@@ -134,36 +165,6 @@ function App() {
                   ))}
                 </div>
               </div>
-
-              <Separator className="mt-1 mb-2" />
-
-              {appState === "CODE_READY" && (
-                <div>
-                  <div className="grid w-full gap-2">
-                    <Textarea
-                      placeholder="Tell the AI what to change..."
-                      onChange={(e) => setUpdateInstruction(e.target.value)}
-                      value={updateInstruction}
-                    />
-                    <Button onClick={doUpdate}>Update</Button>
-                  </div>
-                  <div className="flex items-center gap-x-2 mt-2">
-                    <Button
-                      onClick={downloadCode}
-                      className="flex items-center gap-x-2"
-                    >
-                      <FaDownload /> Download
-                    </Button>
-                    <Button
-                      onClick={reset}
-                      className="flex items-center gap-x-2"
-                    >
-                      <FaUndo />
-                      Reset
-                    </Button>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
