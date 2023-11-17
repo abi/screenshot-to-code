@@ -23,12 +23,18 @@ SHOULD_MOCK_AI_RESPONSE = False
 
 
 def write_logs(prompt_messages, completion):
-    # Create run_logs directory if it doesn't exist
-    if not os.path.exists("run_logs"):
-        os.makedirs("run_logs")
+    # Get the logs path from environment, default to the current working directory
+    logs_path = os.environ.get("LOGS_PATH", os.getcwd())
 
-    # Generate a unique filename using the current timestamp
-    filename = datetime.now().strftime("run_logs/messages_%Y%m%d_%H%M%S.json")
+    # Create run_logs directory if it doesn't exist within the specified logs path
+    logs_directory = os.path.join(logs_path, "run_logs")
+    if not os.path.exists(logs_directory):
+        os.makedirs(logs_directory)
+
+    print("Writing to logs directory:", logs_directory)
+
+    # Generate a unique filename using the current timestamp within the logs directory
+    filename = datetime.now().strftime(f"{logs_directory}/messages_%Y%m%d_%H%M%S.json")
 
     # Write the messages dict into a new file for each run
     with open(filename, "w") as f:
