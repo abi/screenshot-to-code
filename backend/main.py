@@ -48,7 +48,8 @@ async def stream_code_test(websocket: WebSocket):
         print("Using OpenAI API key from client-side settings dialog")
     else:
         openai_api_key = os.environ.get("OPENAI_API_KEY")
-        print("Using OpenAI API key from environment variable")
+        if openai_api_key:
+            print("Using OpenAI API key from environment variable")
 
     if not openai_api_key:
         print("OpenAI API key not found")
