@@ -6,7 +6,7 @@ https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8
 
 See Examples section below for more demos.
 
-You can now [try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key). Or see Getting Started below for local install instructions.
+🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key). Or see Getting Started below for local install instructions.
 
 ## Updates
 
@@ -16,8 +16,6 @@ You can now [try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (b
 
 
 ## Getting Started
-
-If you don't want to run this locally, you can [try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key).
 
 The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API.
 
