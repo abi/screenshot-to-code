@@ -55,7 +55,7 @@ async def stream_code_test(websocket: WebSocket):
         await websocket.send_json(
             {
                 "type": "error",
-                "value": "OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file.",
+                "value": "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file.",
             }
         )
         return
