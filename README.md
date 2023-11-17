@@ -6,6 +6,8 @@ https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8
 
 See Examples section below for more demos.
 
+🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See FAQ section below for details**). Or see Getting Started below for local install instructions.
+
 ## Updates
 
 * Nov 16 - Added a setting to disable DALL-E image generation if you don't need that
@@ -60,4 +62,4 @@ https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-a
 
 ## Hosted Version
 
-Hosted version coming soon on [Pico](https://picoapps.xyz?ref=github).
+🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See FAQ section below for details**). Or see Getting Started below for local install instructions.
