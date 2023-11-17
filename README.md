@@ -49,16 +49,19 @@ If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL
 
 ## Examples
 
+**NYTimes**
+
+| Original | Replica |
+|----------|---------|
+| ![Original](https://github.com/abi/screenshot-to-code/assets/23818/01b062c2-f39a-46dd-84ca-bec6c986463a) | ![Replica](https://github.com/abi/screenshot-to-code/assets/23818/e1f662b6-68f7-4578-a64d-ea4be52e31f5) |
+
+**Instagram page (with not Taylor Swift pics)**
+
+https://github.com/abi/screenshot-to-code/assets/23818/503eb86a-356e-4dfc-926a-dabdb1ac7ba1
+
 **Hacker News** but it gets the colors wrong at first so we nudge it
 
 https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-ac7410315e5d
-
-**NYTimes**
-
-<img width="300" alt="Screenshot 2023-11-16 at 12 06 09 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/01b062c2-f39a-46dd-84ca-bec6c986463a">
-<img width="300" alt="Screenshot 2023-11-16 at 12 07 25 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/e1f662b6-68f7-4578-a64d-ea4be52e31f5">
-
-
 
 ## Hosted Version
 
