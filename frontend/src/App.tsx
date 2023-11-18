@@ -80,10 +80,12 @@ function App() {
   // Initial version creation
   function doCreate(referenceImages: string[]) {
     setReferenceImages(referenceImages);
-    doGenerateCode({
-      generationType: "create",
-      image: referenceImages[0],
-    });
+    if (referenceImages.length > 0) {
+      doGenerateCode({
+        generationType: "create",
+        image: referenceImages[0],
+      });
+    }
   }
 
   // Subsequent updates

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 // import { PromptImage } from "../../../types";
 import { toast } from "react-hot-toast";
@@ -80,7 +80,7 @@ function ImageUpload({ setReferenceImages }: Props) {
             setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
           })
           .catch((error) => {
-            // TODO: Display error to user
+            toast.error("Error reading files" + error);
             console.error("Error reading files:", error);
           });
       },
@@ -88,6 +88,38 @@ function ImageUpload({ setReferenceImages }: Props) {
         toast.error(rejectedFiles[0].errors[0].message);
       },
     });
+
+  const pasteEvent = useCallback(
+    (event: ClipboardEvent) => {
+      const clipboardData = event.clipboardData;
+      if (!clipboardData) return;
+
+      const items = clipboardData.items;
+      const files = [];
+      for (let i = 0; i < items.length; i++) {
+        const file = items[i].getAsFile();
+        if (file && file.type.startsWith("image/")) {
+          files.push(file);
+        }
+      }
+
+      // Convert images to data URLs and set the prompt images state
+      Promise.all(files.map((file) => fileToDataURL(file)))
+        .then((dataUrls) => {
+          setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
+        })
+        .catch((error) => {
+          // TODO: Display error to user
+          console.error("Error reading files:", error);
+        });
+    },
+    [setReferenceImages]
+  );
+
+  // TODO: Make sure we don't listen to paste events in text input components
+  useEffect(() => {
+    window.addEventListener("paste", pasteEvent);
+  }, [pasteEvent]);
 
   useEffect(() => {
     return () => files.forEach((file) => URL.revokeObjectURL(file.preview));
@@ -108,7 +140,7 @@ function ImageUpload({ setReferenceImages }: Props) {
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div {...getRootProps({ style: style as any })}>
         <input {...getInputProps()} />
-        <p>Drop a screenshot here, or click to select</p>
+        <p>Drop a screenshot here, paste from clipboard, or click to select</p>
       </div>
     </section>
   );
