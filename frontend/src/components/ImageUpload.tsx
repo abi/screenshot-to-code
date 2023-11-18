@@ -80,7 +80,7 @@ function ImageUpload({ setReferenceImages }: Props) {
             setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
           })
           .catch((error) => {
-            // TODO: Display error to user
+            toast.error("Error reading files" + error);
             console.error("Error reading files:", error);
           });
       },
@@ -116,6 +116,7 @@ function ImageUpload({ setReferenceImages }: Props) {
     [setReferenceImages]
   );
 
+  // TODO: Make sure we don't listen to paste events in text input components
   useEffect(() => {
     window.addEventListener("paste", pasteEvent);
   }, [pasteEvent]);
