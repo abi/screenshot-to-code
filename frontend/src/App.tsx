@@ -18,6 +18,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
 import { Settings } from "./types";
+import { IS_RUNNING_ON_CLOUD } from "./config";
+import { PicoBadge } from "./components/PicoBadge";
+import { OnboardingNote } from "./components/OnboardingNote";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -100,6 +103,8 @@ function App() {
 
   return (
     <div className="mt-2">
+      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
+
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
           <div className="flex items-center justify-between mt-10">
@@ -111,6 +116,8 @@ function App() {
               Drag & drop a screenshot to get started.
             </h2>
           )}
+
+          {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
           {(appState === "CODING" || appState === "CODE_READY") && (
             <>
