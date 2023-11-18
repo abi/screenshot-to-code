@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-// import { PromptImage } from "../../../types";
 import { toast } from "react-hot-toast";
+import axios from 'axios';
 
 const baseStyle = {
   flex: 1,
@@ -48,16 +48,28 @@ function fileToDataURL(file: File) {
 type FileWithPreview = {
   preview: string;
 } & File;
-
-interface Props {
-  setReferenceImages: (referenceImages: string[]) => void;
-}
-
-function ImageUpload({ setReferenceImages }: Props) {
-  const [files, setFiles] = useState<FileWithPreview[]>([]);
-  const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
-    useDropzone({
-      maxFiles: 1,
+            );
+    
+            // Convert images to data URLs and set the prompt images state
+            Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
+              .then((dataUrls) => {
+                setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
+                // Make a POST request to the /extract-colors endpoint with the uploaded image
+                axios.post('/extract-colors', { image: dataUrls[0] })
+                  .then((response) => {
+                    // Store the returned colors in the component's state
+                    setColors(response.data.colors);
+                  })
+                  .catch((error) => {
+                    toast.error("Error extracting colors: " + error);
+                    console.error("Error extracting colors:", error);
+                  });
+              })
+              .catch((error) => {
+                toast.error("Error reading files" + error);
+                console.error("Error reading files:", error);
+              });
+          },
       maxSize: 1024 * 1024 * 5, // 5 MB
       accept: {
         "image/png": [".png"],
@@ -65,6 +77,7 @@ function ImageUpload({ setReferenceImages }: Props) {
         "image/jpg": [".jpg"],
       },
       onDrop: (acceptedFiles) => {
+const [colors, setColors] = useState<string[]>([]);
         // Set up the preview thumbnail images
         setFiles(
           acceptedFiles.map((file: File) =>
@@ -147,3 +160,8 @@ function ImageUpload({ setReferenceImages }: Props) {
 }
 
 export default ImageUpload;
+      <div className="colors">
+        {colors.map((color, index) => (
+          <div key={index} style={{ backgroundColor: color, width: '50px', height: '50px' }}></div>
+        ))}
+      </div>
