@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
-import { cobalt } from "thememirror";
+import { espresso } from "thememirror";
 import {
   defaultKeymap,
   history,
@@ -36,7 +36,7 @@ function CodeMirror({ code }: Props) {
           lineNumbers(),
           bracketMatching(),
           html(),
-          cobalt,
+          espresso,
           EditorView.lineWrapping,
         ],
       }),
@@ -60,6 +60,6 @@ function CodeMirror({ code }: Props) {
     }
   }, [code]);
 
-  return <div className="overflow-x-scroll overflow-y-scroll mx-2" ref={ref} />;
+  return <div className="overflow-x-scroll overflow-y-scroll mx-2 border-[4px] border-black rounded-[20px]" ref={ref} />;
 }
 export default CodeMirror;
