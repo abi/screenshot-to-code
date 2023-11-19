@@ -1,0 +1,20 @@
+name: Workflow to execute the full app using Docker Compose
+
+on:
+  push:
+    branches:
+      - main
+      - docker/docker
+
+jobs:
+  docker-compose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build and run Fronted & Backend using Docker
+        run: |
+          docker-compose up -d
+

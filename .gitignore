@@ -1,4 +1,6 @@
 .aider*
+.env
 
 # Run logs
 backend/run_logs/*
+

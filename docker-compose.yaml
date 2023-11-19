@@ -1,0 +1,14 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+  backend:
+    build:
+      context: ./backend  
+    ports:
+      - "7000:7000"  
+    env_file:
+      - backend/.env

@@ -1,0 +1,43 @@
+name: Workflow to execute the full app using Docker Compose
+
+on:
+  push:
+    branches:
+      - main
+      - docker/docker
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Install Trivy
+        run: |
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.18.3/trivy_0.18.3_Linux-64bit.deb
+          sudo dpkg -i trivy_0.18.3_Linux-64bit.deb
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+                    
+      - name: Build Frontend Image
+        run: |
+          cd frontend
+          docker build -t "frontend:$GITHUB_RUN_NUMBER" .
+      
+      - name: Build Backend Image
+        run: |
+          cd backend
+          docker build -t "backend:$GITHUB_RUN_NUMBER" .    
+          
+        
+      - name: Scanning Docker Images for Vulnerabilities
+        run: |
+          trivy image "frontend:$GITHUB_RUN_NUMBER"
+          trivy image "backend:$GITHUB_RUN_NUMBER"
+
+
