@@ -17,7 +17,7 @@ See [Examples](#examples) section below for more demos.
 * Nov 15 - 🔥 You can now instruct the AI to update the code as you wish. Useful if the AI messed up some styles or missed a section.
 
 
-## Getting Started
+## 🛠 Getting Started
 
 The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API.
 
