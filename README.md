@@ -10,7 +10,7 @@ See [Examples](#examples) section below for more demos.
 
 🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#faqs) section below for details**). Or see [Getting Started](#getting-started) below for local install instructions.
 
-## Updates
+## 🌟 Recent Updates
 
 * Nov 16 - Added a setting to disable DALL-E image generation if you don't need that
 * Nov 16 - View code directly within the app
