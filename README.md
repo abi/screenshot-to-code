@@ -43,13 +43,13 @@ Open http://localhost:5173 to use the app.
 
 If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL in `frontend/.env.local`
 
-## FAQs
+## 🙋‍♂️ FAQs
 
 * **I'm running into an error when setting up the backend. How can I fix it?** [Try this](https://github.com/abi/screenshot-to-code/issues/3#issuecomment-1814777959). If that still doesn't work, open an issue.
 * **How do I get an OpenAI API key that has the GPT4 Vision model available?** Create an OpenAI account. And then, you need to buy at least $1 worth of credit on the [Billing dashboard](https://platform.openai.com/account/billing/overview).
 * **How can I provide feedback?** For feedback, feature requests and bug reports, open an issue or ping me on [Twitter](https://twitter.com/_abi_). 
 
-## Examples
+## 📚 Examples
 
 **NYTimes**
 
