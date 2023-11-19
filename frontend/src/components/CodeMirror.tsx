@@ -1,9 +1,7 @@
 import { useRef, useEffect } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
-import { espresso } from "thememirror";
-import { cobalt } from "thememirror";
-
+import { espresso, cobalt } from "thememirror";
 import {
   defaultKeymap,
   history,
@@ -28,7 +26,6 @@ function CodeMirror({ code, editorTheme }: Props) {
     if (editorTheme === "espresso") {
       selectedTheme = espresso;
     }
-
     view.current = new EditorView({
       state: EditorState.create({
         doc: code,
