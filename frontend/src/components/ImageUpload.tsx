@@ -35,7 +35,7 @@ const rejectStyle = {
   borderColor: "#ff1744",
 };
 
-// TODO: Move to a seperate file
+// TODO: Move to a separate file
 function fileToDataURL(file: File) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
