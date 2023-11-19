@@ -1,6 +1,6 @@
-# screenshot-to-code
+# Screenshot-to-Code: Transform Screenshots into HTML & Tailwind CSS
 
-This is a simple app that converts a screenshot to HTML/Tailwind CSS. It uses GPT-4 Vision to generate the code, and DALL-E 3 to generate similar looking images.
+Welcome to Screenshot-to-Code, an innovative application that seamlessly converts screenshots into HTML and Tailwind CSS code. Powered by the cutting-edge GPT-4 Vision and DALL-E 3 technologies, this tool is your go-to solution for rapid web development and design.
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
