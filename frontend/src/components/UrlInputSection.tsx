@@ -71,7 +71,11 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
         <div className="flex space-y-4 bg-slate-200 p-2 rounded text-stone-800 text-sm">
           <span>
             To screenshot a URL, add a{" "}
-            <a href="https://screenshotone.com/" className="underline">
+            <a
+              href="https://screenshotone.com?via=screenshot-to-code"
+              className="underline"
+              target="_blank"
+            >
               ScreenshotOne API key
             </a>{" "}
             in the settings dialog.
