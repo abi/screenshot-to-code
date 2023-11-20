@@ -12,7 +12,7 @@ See the [Examples](#examples) section below for more demos.
 
 ## 🌟 Recent Updates
 
-- Nov 20 - Paste in a URL to screenshot and replicate (requires [ScreenshotOne free API key](https://screenshotone.com?via=screenshot-to-code))
+- Nov 20 - Paste in a URL to screenshot and clone (requires [ScreenshotOne free API key](https://screenshotone.com?via=screenshot-to-code))
 - Nov 19 - Support for dark/light code editor theme - thanks https://github.com/kachbit
 - Nov 16 - Added a setting to disable DALL-E image generation if you don't need that
 - Nov 16 - View code directly within the app
