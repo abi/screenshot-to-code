@@ -23,6 +23,7 @@ import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import { UrlInputSection } from "./components/UrlInputSection";
+import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -113,6 +114,7 @@ function App() {
   return (
     <div className="mt-2">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
+      {IS_RUNNING_ON_CLOUD && <TermsOfServiceDialog />}
 
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
