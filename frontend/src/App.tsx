@@ -21,6 +21,7 @@ import { Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
+import { UrlInputSection } from "./components/UrlInputSection";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -33,8 +34,9 @@ function App() {
   const [history, setHistory] = useState<string[]>([]);
   const [settings, setSettings] = useState<Settings>({
     openAiApiKey: null,
+    screenshotOneApiKey: null,
     isImageGenerationEnabled: true,
-    editorTheme: "cobalt"
+    editorTheme: "cobalt",
   });
 
   const downloadCode = () => {
@@ -202,9 +204,13 @@ function App() {
 
       <main className="py-2 lg:pl-96">
         {appState === "INITIAL" && (
-          <>
+          <div className="flex flex-col justify-center items-center gap-y-10">
             <ImageUpload setReferenceImages={doCreate} />
-          </>
+            <UrlInputSection
+              doCreate={doCreate}
+              screenshotOneApiKey={settings.screenshotOneApiKey}
+            />
+          </div>
         )}
 
         {(appState === "CODING" || appState === "CODE_READY") && (
@@ -231,7 +237,10 @@ function App() {
                 <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
-                <CodeMirror code={generatedCode} editorTheme={settings.editorTheme} />
+                <CodeMirror
+                  code={generatedCode}
+                  editorTheme={settings.editorTheme}
+                />
               </TabsContent>
             </Tabs>
           </div>

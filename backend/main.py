@@ -1,5 +1,6 @@
 # Load environment variables first
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -9,17 +10,33 @@ import os
 import traceback
 from datetime import datetime
 from fastapi import FastAPI, WebSocket
-
+from fastapi.middleware.cors import CORSMiddleware
 from llm import stream_openai_response
 from mock import mock_completion
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_prompt
+from routes import screenshot
 
-app = FastAPI()
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+
+# Configure CORS
+
+# Configure CORS settings
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Useful for debugging purposes when you don't want to waste GPT4-Vision credits
 # Setting to True will stream a mock response instead of calling the OpenAI API
 SHOULD_MOCK_AI_RESPONSE = False
+
+
+app.include_router(screenshot.router)
 
 
 def write_logs(prompt_messages, completion):
