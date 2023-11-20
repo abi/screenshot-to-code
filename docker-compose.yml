@@ -15,9 +15,9 @@ services:
       # - OPENAI_API_KEY=your_openai_api_key
     
     ports:
-      - "${BACKEND_PORT:-7000}:${BACKEND_PORT:-7000}"
+      - "${BACKEND_PORT:-7001}:${BACKEND_PORT:-7001}"
 
-    command: poetry run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT:-7000}
+    command: poetry run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT:-7001}
   
   frontend:
     build:
