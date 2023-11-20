@@ -60,6 +60,6 @@ function CodeMirror({ code }: Props) {
     }
   }, [code]);
 
-  return <div className="overflow-x-scroll overflow-y-scroll" ref={ref} />;
+  return <div className="overflow-x-scroll overflow-y-scroll mx-2" ref={ref} />;
 }
 export default CodeMirror;

@@ -5,11 +5,22 @@ import Preview from "./components/Preview";
 import { CodeGenerationParams, generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
-import { FaCode, FaDownload, FaEye, FaUndo } from "react-icons/fa";
+import {
+  FaCode,
+  FaDesktop,
+  FaDownload,
+  FaMobile,
+  FaUndo,
+} from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
+import SettingsDialog from "./components/SettingsDialog";
+import { Settings } from "./types";
+import { IS_RUNNING_ON_CLOUD } from "./config";
+import { PicoBadge } from "./components/PicoBadge";
+import { OnboardingNote } from "./components/OnboardingNote";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -20,6 +31,10 @@ function App() {
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+  const [settings, setSettings] = useState<Settings>({
+    openAiApiKey: null,
+    isImageGenerationEnabled: true,
+  });
 
   const downloadCode = () => {
     // Create a blob from the generated code
@@ -49,8 +64,12 @@ function App() {
   function doGenerateCode(params: CodeGenerationParams) {
     setExecutionConsole([]);
     setAppState("CODING");
+
+    // Merge settings with params
+    const updatedParams = { ...params, ...settings };
+
     generateCode(
-      params,
+      updatedParams,
       (token) => setGeneratedCode((prev) => prev + token),
       (code) => setGeneratedCode(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
@@ -61,10 +80,12 @@ function App() {
   // Initial version creation
   function doCreate(referenceImages: string[]) {
     setReferenceImages(referenceImages);
-    doGenerateCode({
-      generationType: "create",
-      image: referenceImages[0],
-    });
+    if (referenceImages.length > 0) {
+      doGenerateCode({
+        generationType: "create",
+        image: referenceImages[0],
+      });
+    }
   }
 
   // Subsequent updates
@@ -83,15 +104,22 @@ function App() {
   }
 
   return (
-    <div className="mt-6">
+    <div className="mt-2">
+      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
+
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
-          <h1 className="text-2xl mt-10">Screenshot to Code</h1>
+          <div className="flex items-center justify-between mt-10">
+            <h1 className="text-2xl ">Screenshot to Code</h1>
+            <SettingsDialog settings={settings} setSettings={setSettings} />
+          </div>
           {appState === "INITIAL" && (
             <h2 className="text-sm text-gray-500 mb-2">
               Drag & drop a screenshot to get started.
             </h2>
           )}
+
+          {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
           {(appState === "CODING" || appState === "CODE_READY") && (
             <>
@@ -181,11 +209,14 @@ function App() {
 
         {(appState === "CODING" || appState === "CODE_READY") && (
           <div className="ml-4">
-            <Tabs defaultValue="preview">
-              <div className="flex justify-end mr-8">
+            <Tabs defaultValue="desktop">
+              <div className="flex justify-end mr-8 mb-4">
                 <TabsList>
-                  <TabsTrigger value="preview" className="flex gap-x-2">
-                    <FaEye /> Preview
+                  <TabsTrigger value="desktop" className="flex gap-x-2">
+                    <FaDesktop /> Desktop
+                  </TabsTrigger>
+                  <TabsTrigger value="mobile" className="flex gap-x-2">
+                    <FaMobile /> Mobile
                   </TabsTrigger>
                   <TabsTrigger value="code" className="flex gap-x-2">
                     <FaCode />
@@ -193,8 +224,11 @@ function App() {
                   </TabsTrigger>
                 </TabsList>
               </div>
-              <TabsContent value="preview">
-                <Preview code={generatedCode} />
+              <TabsContent value="desktop">
+                <Preview code={generatedCode} device="desktop" />
+              </TabsContent>
+              <TabsContent value="mobile">
+                <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
                 <CodeMirror code={generatedCode} />

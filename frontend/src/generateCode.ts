@@ -3,12 +3,13 @@ import toast from "react-hot-toast";
 const WS_BACKEND_URL =
   import.meta.env.VITE_WS_BACKEND_URL || "ws://127.0.0.1:7001";
 const ERROR_MESSAGE =
-  "Error generating code. Check the Developer Console for details. Feel free to open a Github ticket";
+  "Error generating code. Check the Developer Console for details. Feel free to open a Github issue";
 
 export interface CodeGenerationParams {
   generationType: "create" | "update";
   image: string;
   history?: string[];
+  // isImageGenerationEnabled: boolean; // TODO: Merge with Settings type in types.ts
 }
 
 export function generateCode(
@@ -35,6 +36,9 @@ export function generateCode(
       onStatusUpdate(response.value);
     } else if (response.type === "setCode") {
       onSetCode(response.value);
+    } else if (response.type === "error") {
+      console.error("Error generating code", response.value);
+      toast.error(response.value);
     }
   });
 
