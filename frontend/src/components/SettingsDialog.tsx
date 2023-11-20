@@ -74,6 +74,33 @@ function SettingsDialog({ settings, setSettings }: Props) {
               }))
             }
           />
+
+          <Label htmlFor="screenshot-one-api-key">
+            <div>ScreenshotOne API key</div>
+            <div className="font-light mt-2">
+              Never stored.{" "}
+              <a
+                href="https://screenshotone.com?via=screenshot-to-code"
+                className="underline"
+                target="_blank"
+              >
+                Get 100 screenshots/mo for free.
+              </a>
+            </div>
+          </Label>
+
+          <Input
+            id="screenshot-one-api-key"
+            placeholder="ScreenshotOne API key"
+            value={settings.screenshotOneApiKey || ""}
+            onChange={(e) =>
+              setSettings((s) => ({
+                ...s,
+                screenshotOneApiKey: e.target.value,
+              }))
+            }
+          />
+
           <Label htmlFor="editor-theme">
             <div>Editor Theme</div>
           </Label>
