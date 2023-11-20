@@ -67,7 +67,7 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 
 | Original                                                                                                 | Replica                                                                                                 |
 | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | 
-| <img width="1238" alt="Screenshot 2023-11-20 at 12 54 03 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/3b644dfa-9ca6-4148-84a7-3405b6671922"> | <img width="1280" alt="Screenshot 2023-11-20 at 12 57 26 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/7b69bbd6-f3bf-4b60-97b0-6eaf5aa21f6c"> |
+| <img width="1238" alt="Screenshot 2023-11-20 at 12 54 03 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/3b644dfa-9ca6-4148-84a7-3405b6671922"> | <img width="1414" alt="Screenshot 2023-11-20 at 12 59 56 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/26201c9f-1a28-4f35-a3b1-1f04e2b8ce2a"> |
 
 
 
