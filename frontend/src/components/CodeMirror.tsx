@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
-import { cobalt } from "thememirror";
+import { espresso, cobalt } from "thememirror";
 import {
   defaultKeymap,
   history,
@@ -14,14 +14,18 @@ import { html } from "@codemirror/lang-html";
 
 interface Props {
   code: string;
+  editorTheme: string;
 }
 
-function CodeMirror({ code }: Props) {
+function CodeMirror({ code, editorTheme }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
 
-  // Initialize the editor when the component mounts
   useEffect(() => {
+    let selectedTheme = cobalt;
+    if (editorTheme === "espresso") {
+      selectedTheme = espresso;
+    }
     view.current = new EditorView({
       state: EditorState.create({
         doc: code,
@@ -36,7 +40,7 @@ function CodeMirror({ code }: Props) {
           lineNumbers(),
           bracketMatching(),
           html(),
-          cobalt,
+          selectedTheme,
           EditorView.lineWrapping,
         ],
       }),
@@ -49,9 +53,8 @@ function CodeMirror({ code }: Props) {
         view.current = null;
       }
     };
-  }, []);
+  }, [code, editorTheme]);
 
-  // Update the contents of the editor when the code changes
   useEffect(() => {
     if (view.current && view.current.state.doc.toString() !== code) {
       view.current.dispatch({
@@ -60,6 +63,9 @@ function CodeMirror({ code }: Props) {
     }
   }, [code]);
 
-  return <div className="overflow-x-scroll overflow-y-scroll mx-2" ref={ref} />;
+  return (
+    <div className="overflow-x-scroll overflow-y-scroll mx-2 border-[4px] border-black rounded-[20px]" ref={ref} />
+  );
 }
+
 export default CodeMirror;
