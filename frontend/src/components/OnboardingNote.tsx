@@ -10,7 +10,8 @@ export function OnboardingNote() {
       credit on the Billing dashboard.
       <br />
       <span>
-        This key is never stored. This app is open source. You can{" "}
+        This key is only stored in your browser. Never stored on servers. This
+        app is open source. You can{" "}
         <a href="https://github.com/abi/screenshot-to-code" className="inline">
           check the code to confirm.
         </a>

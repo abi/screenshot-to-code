@@ -58,8 +58,9 @@ function SettingsDialog({ settings, setSettings }: Props) {
         <div className="flex flex-col space-y-4">
           <Label htmlFor="openai-api-key">
             <div>OpenAI API key</div>
-            <div className="font-light mt-2">
-              Never stored. Overrides your .env config.
+            <div className="font-light mt-2 leading-relaxed">
+              Only stored in your browser. Never stored on servers. Overrides
+              your .env config.
             </div>
           </Label>
 
@@ -77,8 +78,8 @@ function SettingsDialog({ settings, setSettings }: Props) {
 
           <Label htmlFor="screenshot-one-api-key">
             <div>ScreenshotOne API key</div>
-            <div className="font-light mt-2">
-              Never stored.{" "}
+            <div className="font-light mt-2 leading-relaxed">
+              Only stored in your browser. Never stored on servers.{" "}
               <a
                 href="https://screenshotone.com?via=screenshot-to-code"
                 className="underline"
