@@ -21,6 +21,7 @@ import { Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
+import { usePersistedState } from "./hooks/usePersistedState";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -31,11 +32,11 @@ function App() {
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
-  const [settings, setSettings] = useState<Settings>({
+  const [settings, setSettings] = usePersistedState<Settings>({
     openAiApiKey: null,
     isImageGenerationEnabled: true,
     editorTheme: "cobalt"
-  });
+  }, 'setting');
 
   const downloadCode = () => {
     // Create a blob from the generated code
