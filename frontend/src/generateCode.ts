@@ -1,7 +1,6 @@
 import toast from "react-hot-toast";
+import { WS_BACKEND_URL } from "./config";
 
-const WS_BACKEND_URL =
-  import.meta.env.VITE_WS_BACKEND_URL || "ws://127.0.0.1:7001";
 const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console for details. Feel free to open a Github issue";
 

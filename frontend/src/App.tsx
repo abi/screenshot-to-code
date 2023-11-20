@@ -22,6 +22,7 @@ import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
+import { UrlInputSection } from "./components/UrlInputSection";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -32,11 +33,15 @@ function App() {
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
-  const [settings, setSettings] = usePersistedState<Settings>({
-    openAiApiKey: null,
-    isImageGenerationEnabled: true,
-    editorTheme: "cobalt"
-  }, 'setting');
+  const [settings, setSettings] = usePersistedState<Settings>(
+    {
+      openAiApiKey: null,
+      screenshotOneApiKey: null,
+      isImageGenerationEnabled: true,
+      editorTheme: "cobalt",
+    },
+    "setting"
+  );
 
   const downloadCode = () => {
     // Create a blob from the generated code
@@ -203,9 +208,13 @@ function App() {
 
       <main className="py-2 lg:pl-96">
         {appState === "INITIAL" && (
-          <>
+          <div className="flex flex-col justify-center items-center gap-y-10">
             <ImageUpload setReferenceImages={doCreate} />
-          </>
+            <UrlInputSection
+              doCreate={doCreate}
+              screenshotOneApiKey={settings.screenshotOneApiKey}
+            />
+          </div>
         )}
 
         {(appState === "CODING" || appState === "CODE_READY") && (
@@ -232,7 +241,10 @@ function App() {
                 <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
-                <CodeMirror code={generatedCode} editorTheme={settings.editorTheme} />
+                <CodeMirror
+                  code={generatedCode}
+                  editorTheme={settings.editorTheme}
+                />
               </TabsContent>
             </Tabs>
           </div>
