@@ -34,6 +34,7 @@ function App() {
   const [settings, setSettings] = useState<Settings>({
     openAiApiKey: null,
     isImageGenerationEnabled: true,
+    editorTheme: "cobalt"
   });
 
   const downloadCode = () => {
@@ -180,7 +181,6 @@ function App() {
                     Original Screenshot
                   </div>
                 </div>
-
                 <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
                   <h2 className="text-lg mb-4 border-b border-gray-800">
                     Console
@@ -231,7 +231,7 @@ function App() {
                 <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
-                <CodeMirror code={generatedCode} />
+                <CodeMirror code={generatedCode} editorTheme={settings.editorTheme} />
               </TabsContent>
             </Tabs>
           </div>
