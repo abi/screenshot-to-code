@@ -66,8 +66,10 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 **NYTimes**
 
 | Original                                                                                                 | Replica                                                                                                 |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| ![Original](https://github.com/abi/screenshot-to-code/assets/23818/01b062c2-f39a-46dd-84ca-bec6c986463a) | ![Replica](https://github.com/abi/screenshot-to-code/assets/23818/e1f662b6-68f7-4578-a64d-ea4be52e31f5) |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | 
+| <img width="1238" alt="Screenshot 2023-11-20 at 12 54 03 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/3b644dfa-9ca6-4148-84a7-3405b6671922"> | <img width="1280" alt="Screenshot 2023-11-20 at 12 57 26 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/7b69bbd6-f3bf-4b60-97b0-6eaf5aa21f6c"> |
+
+
 
 **Instagram page (with not Taylor Swift pics)**
 
