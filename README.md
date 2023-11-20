@@ -15,7 +15,7 @@ See the [Examples](#examples) section below for more demos.
 - Nov 19 - Support for dark/light code editor theme - thanks https://github.com/kachbit
 - Nov 16 - Added a setting to disable DALL-E image generation if you don't need that
 - Nov 16 - View code directly within the app
-- Nov 15 - 🔥 You can now instruct the AI to update the code as you wish.  It is helpful if the AI messed up some styles or missed a section.
+- Nov 15 - 🔥 You can now instruct the AI to update the code as you wish. It is helpful if the AI messed up some styles or missed a section.
 
 ## 🛠 Getting Started
 
@@ -28,7 +28,7 @@ cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
 poetry install
 poetry shell
-poetry run uvicorn main:app --reload --port 7000
+poetry run uvicorn main:app --reload --port 7001
 ```
 
 Run the frontend:
@@ -42,6 +42,17 @@ yarn dev
 Open http://localhost:5173 to use the app.
 
 If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL in `frontend/.env.local`
+
+## Docker
+
+If you have Docker installed on your system, in the root directory, run:
+
+```bash
+echo "OPENAI_API_KEY=sk-your-key" > .env
+docker-compose up -d --build
+```
+
+The app will be up and running at http://localhost:5173. Note that you can't develop the application with this setup as the file changes won't trigger a rebuild.
 
 ## 🙋‍♂️ FAQs
 
