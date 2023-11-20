@@ -2,5 +2,6 @@
 
 # Run logs
 backend/run_logs/*
-
+backend/backend/*
+frontend/.env.local
 .env
