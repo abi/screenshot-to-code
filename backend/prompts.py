@@ -6,6 +6,7 @@ You might also be given a screenshot of a web page that you have already built, 
 update it to look more like the reference image.
 
 - Make sure the app looks exactly like the screenshot.
+- Make sure the code is responsive and works on a laptop, tablet, and phone.
 - Pay close attention to background color, text color, font size, font family, 
 padding, margin, border, etc. Match the colors and sizes exactly.
 - Use the exact text from the screenshot.
