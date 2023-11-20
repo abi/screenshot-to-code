@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Dialog,
   DialogClose,
@@ -12,6 +13,7 @@ import { Settings } from "../types";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
+import { Select } from "./ui/select";
 
 interface Props {
   settings: Settings;
@@ -19,6 +21,13 @@ interface Props {
 }
 
 function SettingsDialog({ settings, setSettings }: Props) {
+  const handleThemeChange = (theme: string) => {
+    setSettings((s) => ({
+      ...s,
+      editorTheme: theme,
+    }));
+  };
+
   return (
     <Dialog>
       <DialogTrigger>
@@ -65,7 +74,23 @@ function SettingsDialog({ settings, setSettings }: Props) {
               }))
             }
           />
+          <Label htmlFor="editor-theme">
+            <div>Editor Theme</div>
+          </Label>
+          <div>
+            <Select // Use the custom Select component here
+              id="editor-theme"
+              value={settings.editorTheme}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                handleThemeChange(e.target.value)
+              }
+            >
+              <option value="cobalt">Cobalt</option>
+              <option value="espresso">Espresso</option>
+            </Select>
+          </div>
         </div>
+
         <DialogFooter>
           <DialogClose>Save</DialogClose>
         </DialogFooter>
