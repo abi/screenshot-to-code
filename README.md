@@ -45,16 +45,14 @@ If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL
 
 ## Docker
 
-If you have Docker installed on your system, you can get started quickly with:
+If you have Docker installed on your system, in the root directory, run:
 
 ```bash
 echo "OPENAI_API_KEY=sk-your-key" > .env
 docker-compose up -d --build
 ```
 
-Application will be up and running at http://localhost:5173
-
-Note that you can't develop the application with this setup as the file changes won't trigger a rebuild.
+The app will be up and running at http://localhost:5173. Note that you can't develop the application with this setup as the file changes won't trigger a rebuild.
 
 ## 🙋‍♂️ FAQs
 
