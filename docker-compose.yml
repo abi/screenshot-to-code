@@ -11,7 +11,7 @@ services:
     
     # or 
     # environment:
-      #- BACKEND_PORT=7000   # if you change the port, make sure to also change the VITE_WS_BACKEND_URL at frontend/.env.local
+      #- BACKEND_PORT=7001   # if you change the port, make sure to also change the VITE_WS_BACKEND_URL at frontend/.env.local
       # - OPENAI_API_KEY=your_openai_api_key
     
     ports:
