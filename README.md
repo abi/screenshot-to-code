@@ -8,9 +8,8 @@ See Examples section below for more demos.
 
 ## Updates
 
-* Nov 16 - View code directly within the app
-* Nov 15 - 🔥 You can now instruct the AI to update the code as you wish. Useful if the AI messed up some styles or missed a section.
-
+- Nov 16 - View code directly within the app
+- Nov 15 - 🔥 You can now instruct the AI to update the code as you wish. Useful if the AI messed up some styles or missed a section.
 
 ## Getting Started
 
@@ -40,30 +39,26 @@ If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL
 
 ## Docker
 
+If you have Docker installed on your system, you can get started quickly with:
+
 ```bash
 echo "OPENAI_API_KEY=sk-your-key" > .env
 docker-compose up -d --build
 ```
 
-If you want to change the backend port to something other than 7000 (default) - for example, 7001. Then:
-
-1. `echo "BACKEND_PORT=7001"`
-2. `echo VITE_WS_BACKEND_URL=ws://127.0.0.1:7001 > frontend/.env.local`
-
-Port 7000 sometimes is used by Airplay if you are on a mac. This will solve the docker error "Ports are not available... address already in use"
-
 Application will be up and running at http://localhost:5173
+
+Note that you can't develop the application with this setup as the file changes won't trigger a rebuild.
 
 ## Feedback
 
-If you have feature requests, bug reports or other feedback, open an issue or ping me on [Twitter](https://twitter.com/_abi_). 
+If you have feature requests, bug reports or other feedback, open an issue or ping me on [Twitter](https://twitter.com/_abi_).
 
 ## Examples
 
 Hacker News but it gets the colors wrong at first so we nudge it
 
 https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-ac7410315e5d
-
 
 ## Hosted Version
 
