@@ -12,6 +12,7 @@ See the [Examples](#examples) section below for more demos.
 
 ## 🌟 Recent Updates
 
+- Nov 19 - Support for dark/light code editor theme - thanks https://github.com/kachbit
 - Nov 16 - Added a setting to disable DALL-E image generation if you don't need that
 - Nov 16 - View code directly within the app
 - Nov 15 - 🔥 You can now instruct the AI to update the code as you wish.  It is helpful if the AI messed up some styles or missed a section.
