@@ -10,7 +10,7 @@ services:
       - .env
     
     environment:
-      - BACKEND_PORT=7001 # if you change the port, make sure to also change the VITE_WS_BACKEND_URL at frontend/.env.local
+      -  - BACKEND_PORT=${BACKEND_PORT:-7001} # if you change the port, make sure to also change the VITE_WS_BACKEND_URL at frontend/.env.local
       - OPENAI_API_KEY=${OPENAI_API_KEY:-} # works when you have the OPENAI_API_KEY set in your .env file
     
     ports:
