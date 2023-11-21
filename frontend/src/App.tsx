@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { AppStatus, Settings, USER_CLOSE_WEB_SOCKET_CODE } from "./types";
+import { AppStatus, Settings, USER_CLOSE_WEB_SOCKET_CODE } from "@/types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -122,9 +122,8 @@ function App() {
   // Subsequent updates
   async function doUpdate() {
     const updatedHistory = [...history, generatedCode, updateInstruction];
-    let resultImg = referenceImages[0];
     if (isImgCompare) {
-      resultImg = await takeScreenshot();
+      const resultImg = await takeScreenshot();
       doGenerateCode({
         generationType: "update",
         image: referenceImages[0],
