@@ -34,7 +34,6 @@ function App() {
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
-  console.log('history', history)
   const [settings, setSettings] = usePersistedState<Settings>(
     {
       openAiApiKey: null,
