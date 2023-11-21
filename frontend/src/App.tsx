@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -7,11 +7,13 @@ import Spinner from "./components/Spinner";
 import classNames from "classnames";
 import {
   FaCode,
+  FaCopy,
   FaDesktop,
   FaDownload,
   FaMobile,
   FaUndo,
 } from "react-icons/fa";
+import copy from "copy-to-clipboard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
@@ -24,6 +26,7 @@ import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
+import toast from "react-hot-toast";
 
 function App() {
   const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
@@ -110,6 +113,11 @@ function App() {
     setGeneratedCode("");
     setUpdateInstruction("");
   }
+
+  const doCopyCode = useCallback(() => {
+    copy(generatedCode);
+    toast.success("Copied to clipboard");
+  }, [generatedCode]);
 
   return (
     <div className="mt-2">
@@ -243,10 +251,19 @@ function App() {
                 <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
-                <CodeMirror
-                  code={generatedCode}
-                  editorTheme={settings.editorTheme}
-                />
+                <div className="relative">
+                  <CodeMirror
+                    code={generatedCode}
+                    editorTheme={settings.editorTheme}
+                  />
+                  <span
+                    title="Copy Code"
+                    className="flex items-center justify-center w-10 h-10 text-gray-500 hover:bg-gray-100 cursor-pointer rounded-lg text-sm p-2.5 absolute top-[20px] right-[20px]"
+                    onClick={doCopyCode}
+                  >
+                    <FaCopy />
+                  </span>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
