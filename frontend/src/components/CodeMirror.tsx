@@ -15,9 +15,10 @@ import { html } from "@codemirror/lang-html";
 interface Props {
   code: string;
   editorTheme: string;
+  onCodeChange: (code: string) => void;
 }
 
-function CodeMirror({ code, editorTheme }: Props) {
+function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
 
@@ -42,6 +43,11 @@ function CodeMirror({ code, editorTheme }: Props) {
           html(),
           selectedTheme,
           EditorView.lineWrapping,
+          EditorView.updateListener.of(update => {
+            if (update.changes) {
+              onCodeChange(view.current?.state.doc.toString() || "");
+            }
+          }),
         ],
       }),
       parent: ref.current as Element,
@@ -69,3 +75,4 @@ function CodeMirror({ code, editorTheme }: Props) {
 }
 
 export default CodeMirror;
+
