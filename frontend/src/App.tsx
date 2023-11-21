@@ -17,13 +17,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { AppState, Settings, USER_CLOSE_WEB_SOCKET_CODE } from "./types";
+import { AppState, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
+import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
