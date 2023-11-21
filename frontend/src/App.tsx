@@ -246,6 +246,7 @@ function App() {
                 <CodeMirror
                   code={generatedCode}
                   editorTheme={settings.editorTheme}
+                  onCodeChange={setGeneratedCode}
                 />
               </TabsContent>
             </Tabs>
