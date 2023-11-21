@@ -55,6 +55,7 @@ export function generateCode(
     } else {
       console.error("WebSocket error code", event);
       toast.error(ERROR_MESSAGE);
+      onComplete();
     }
   });
 
