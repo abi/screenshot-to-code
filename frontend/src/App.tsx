@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { Settings } from "./types";
+import { Settings, EditorTheme } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -34,12 +34,13 @@ function App() {
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+  console.log('history', history)
   const [settings, setSettings] = usePersistedState<Settings>(
     {
       openAiApiKey: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
-      editorTheme: "cobalt",
+      editorTheme: EditorTheme.COBALT,
     },
     "setting"
   );
