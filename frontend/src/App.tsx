@@ -12,6 +12,7 @@ import {
   FaMobile,
   FaUndo,
 } from "react-icons/fa";
+import { Switch } from "./components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
@@ -24,6 +25,8 @@ import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
+import html2canvas from 'html2canvas';
+
 
 function App() {
   const [appState, setAppState] = useState<AppStatus>(
@@ -43,7 +46,19 @@ function App() {
     },
     "setting"
   );
+  const [isImgCompare, setIsImgCompare] = useState<boolean>(false);
   const wsRef = useRef<WebSocket>(null);
+
+  const takeScreenshot = async (): Promise<string> => {
+		const iframeElement = document.querySelector('#preview-desktop') as HTMLIFrameElement;
+    if (!iframeElement?.contentWindow?.document.body) {
+      return '';
+    }
+
+    const canvas = await html2canvas(iframeElement.contentWindow.document.body);
+		const png = canvas.toDataURL('image/png');
+    return png;
+  }
 
   const downloadCode = () => {
     // Create a blob from the generated code
@@ -72,6 +87,8 @@ function App() {
 
   const stop = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
+    // make sure stop can correct the state even if the websocket is already closed
+    setAppState(AppStatus.CODE_READY);
   }
 
   function doGenerateCode(params: CodeGenerationParams) {
@@ -103,14 +120,24 @@ function App() {
   }
 
   // Subsequent updates
-  function doUpdate() {
+  async function doUpdate() {
     const updatedHistory = [...history, generatedCode, updateInstruction];
-
-    doGenerateCode({
-      generationType: "update",
-      image: referenceImages[0],
-      history: updatedHistory,
-    });
+    let resultImg = referenceImages[0];
+    if (isImgCompare) {
+      resultImg = await takeScreenshot();
+      doGenerateCode({
+        generationType: "update",
+        image: referenceImages[0],
+        resultImg: resultImg,
+        history: updatedHistory,
+      });
+    } else {
+      doGenerateCode({
+        generationType: "update",
+        image: referenceImages[0],
+        history: updatedHistory,
+      });
+    }
 
     setHistory(updatedHistory);
     setGeneratedCode("");
@@ -160,6 +187,15 @@ function App() {
               {appState === AppStatus.CODE_READY && (
                 <div>
                   <div className="grid w-full gap-2">
+                   <div className="flex justify-between items-center gap-x-2">
+                      <div className="font-500">
+                        Auto Image Comparison
+                      </div>
+                      <Switch
+                          checked={isImgCompare}
+                          onCheckedChange={setIsImgCompare}
+                      />
+                    </div>
                     <Textarea
                       placeholder="Tell the AI what to change..."
                       onChange={(e) => setUpdateInstruction(e.target.value)}

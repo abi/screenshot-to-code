@@ -12,6 +12,7 @@ function Preview({ code, device }: Props) {
   return (
     <div className="flex justify-center mx-2">
       <iframe
+        id={`preview-${device}`}
         title="Preview"
         srcDoc={throttledCode}
         className={classNames(
