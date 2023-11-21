@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers, ViewUpdate } from "@codemirror/view";
 import { espresso, cobalt } from "thememirror";
@@ -22,7 +22,7 @@ interface Props {
 function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
-  const editorState = EditorState.create({
+  const editorState = useMemo(() => EditorState.create({
     extensions: [
       history(),
       keymap.of([
@@ -43,7 +43,7 @@ function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
         }
       }),
     ],
-  });
+  }), [editorTheme]);
   useEffect(() => {
     view.current = new EditorView({
       state: editorState,
