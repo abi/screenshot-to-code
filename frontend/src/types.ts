@@ -5,7 +5,7 @@ export interface Settings {
   editorTheme: string;
 }
 
-export enum AppStatus {
+export enum AppState {
   INITIAL = "INITIAL",
   CODING = "CODING",
   CODE_READY = "CODE_READY",

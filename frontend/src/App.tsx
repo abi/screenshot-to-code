@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { AppStatus, Settings, USER_CLOSE_WEB_SOCKET_CODE } from "./types";
+import { AppState, Settings, USER_CLOSE_WEB_SOCKET_CODE } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -26,9 +26,7 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 
 function App() {
-  const [appState, setAppState] = useState<AppStatus>(
-    AppStatus.INITIAL
-  );
+  const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
@@ -63,7 +61,7 @@ function App() {
   };
 
   const reset = () => {
-    setAppState(AppStatus.INITIAL);
+    setAppState(AppState.INITIAL);
     setGeneratedCode("");
     setReferenceImages([]);
     setExecutionConsole([]);
@@ -72,11 +70,11 @@ function App() {
 
   const stop = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
-  }
+  };
 
   function doGenerateCode(params: CodeGenerationParams) {
     setExecutionConsole([]);
-    setAppState(AppStatus.CODING);
+    setAppState(AppState.CODING);
 
     // Merge settings with params
     const updatedParams = { ...params, ...settings };
@@ -87,7 +85,7 @@ function App() {
       (token) => setGeneratedCode((prev) => prev + token),
       (code) => setGeneratedCode(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
-      () => setAppState(AppStatus.CODE_READY)
+      () => setAppState(AppState.CODE_READY)
     );
   }
 
@@ -128,7 +126,7 @@ function App() {
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
-          {appState === AppStatus.INITIAL && (
+          {appState === AppState.INITIAL && (
             <h2 className="text-sm text-gray-500 mb-2">
               Drag & drop a screenshot to get started.
             </h2>
@@ -136,20 +134,18 @@ function App() {
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
-          {(appState === AppStatus.CODING || appState === AppStatus.CODE_READY) && (
+          {(appState === AppState.CODING ||
+            appState === AppState.CODE_READY) && (
             <>
               {/* Show code preview only when coding */}
-              {appState === AppStatus.CODING && (
+              {appState === AppState.CODING && (
                 <div className="flex flex-col">
                   <div className="flex items-center gap-x-1">
                     <Spinner />
                     {executionConsole.slice(-1)[0]}
                   </div>
                   <div className="flex mt-4 w-full">
-                    <Button
-                      onClick={stop}
-                      className="w-full"
-                    >
+                    <Button onClick={stop} className="w-full">
                       Stop
                     </Button>
                   </div>
@@ -157,7 +153,7 @@ function App() {
                 </div>
               )}
 
-              {appState === AppStatus.CODE_READY && (
+              {appState === AppState.CODE_READY && (
                 <div>
                   <div className="grid w-full gap-2">
                     <Textarea
@@ -190,7 +186,7 @@ function App() {
                 <div className="flex flex-col">
                   <div
                     className={classNames({
-                      "scanning relative": appState === AppStatus.CODING,
+                      "scanning relative": appState === AppState.CODING,
                     })}
                   >
                     <img
@@ -223,7 +219,7 @@ function App() {
       </div>
 
       <main className="py-2 lg:pl-96">
-        {appState === AppStatus.INITIAL && (
+        {appState === AppState.INITIAL && (
           <div className="flex flex-col justify-center items-center gap-y-10">
             <ImageUpload setReferenceImages={doCreate} />
             <UrlInputSection
@@ -233,7 +229,7 @@ function App() {
           </div>
         )}
 
-        {(appState === AppStatus.CODING || appState === AppStatus.CODE_READY) && (
+        {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
           <div className="ml-4">
             <Tabs defaultValue="desktop">
               <div className="flex justify-end mr-8 mb-4">
