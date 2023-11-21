@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { AppStatus, Settings } from "./types";
+import { AppStatus, Settings, USER_CLOSE_WEB_SOCKET_CODE } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -43,6 +43,7 @@ function App() {
     },
     "setting"
   );
+  const wsRef = useRef<WebSocket>(null);
 
   const downloadCode = () => {
     // Create a blob from the generated code
@@ -69,6 +70,10 @@ function App() {
     setHistory([]);
   };
 
+  const stop = () => {
+    wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
+  }
+
   function doGenerateCode(params: CodeGenerationParams) {
     setExecutionConsole([]);
     setAppState(AppStatus.CODING);
@@ -77,6 +82,7 @@ function App() {
     const updatedParams = { ...params, ...settings };
 
     generateCode(
+      wsRef,
       updatedParams,
       (token) => setGeneratedCode((prev) => prev + token),
       (code) => setGeneratedCode(code),
@@ -138,6 +144,14 @@ function App() {
                   <div className="flex items-center gap-x-1">
                     <Spinner />
                     {executionConsole.slice(-1)[0]}
+                  </div>
+                  <div className="flex mt-4 w-full">
+                    <Button
+                      onClick={stop}
+                      className="w-full"
+                    >
+                      Stop
+                    </Button>
                   </div>
                   <CodePreview code={generatedCode} />
                 </div>
