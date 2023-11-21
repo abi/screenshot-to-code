@@ -40,6 +40,7 @@ function App() {
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: "cobalt",
+      termOfServiceAccepted: false,
     },
     "setting"
   );
@@ -111,10 +112,17 @@ function App() {
     setUpdateInstruction("");
   }
 
+  const onTermDialogOpenChange = (open: boolean) => {
+    setSettings((s) => ({
+      ...s,
+      termOfServiceAccepted: !open,
+    }));
+  };
+
   return (
     <div className="mt-2">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
-      {IS_RUNNING_ON_CLOUD && <TermsOfServiceDialog />}
+      {IS_RUNNING_ON_CLOUD && <TermsOfServiceDialog open={!settings.termOfServiceAccepted} onOpenChange={onTermDialogOpenChange} />}
 
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">

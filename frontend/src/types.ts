@@ -3,4 +3,5 @@ export interface Settings {
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
   editorTheme: string;
+  termOfServiceAccepted: boolean;
 }

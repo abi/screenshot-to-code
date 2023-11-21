@@ -6,15 +6,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useState } from "react";
 
-const termAcceptedCacheKey = 'term_of_service_accepted';
-
-function TermsOfServiceDialog() {
-  const [isOpen, setIsOpen] = useState(() => !localStorage.getItem(termAcceptedCacheKey));
+const TermsOfServiceDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}> = ({ open, onOpenChange }) => {
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="mb-4">Terms of Service</DialogTitle>
@@ -42,13 +41,11 @@ function TermsOfServiceDialog() {
         </div>
 
         <DialogFooter>
-          <DialogClose onClick={() => {
-            localStorage.setItem(termAcceptedCacheKey, 'true');
-          }}>Agree</DialogClose>
+          <DialogClose>Agree</DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default TermsOfServiceDialog;
