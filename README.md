@@ -8,7 +8,7 @@ See the [Examples](#examples) section below for more demos.
 
 ## 🚀 Try It Out!
 
-🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#faqs) section below for details**). Or see [Getting Started](#getting-started) below for local install instructions.
+🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section below for details**). Or see [Getting Started](#-getting-started) below for local install instructions.
 
 ## 🌟 Recent Updates
 
@@ -81,4 +81,4 @@ https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-a
 
 ## 🌍 Hosted Version
 
-🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#faqs) section for details**). Or see [Getting Started](#getting-started) for local install instructions.
+🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section for details**). Or see [Getting Started](#-getting-started) for local install instructions.
