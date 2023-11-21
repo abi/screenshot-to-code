@@ -76,6 +76,25 @@ function SettingsDialog({ settings, setSettings }: Props) {
             }
           />
 
+          <Label htmlFor="openai-api-key">
+            <div>OpenAI Base URL</div>
+            <div className="font-light mt-2 leading-relaxed">
+              You can replace it for the third api server.
+            </div>
+          </Label>
+
+          <Input
+            id="openai-base-url"
+            placeholder="OpenAI Base Url"
+            value={settings.openAiBaseURL || ""}
+            onChange={(e) =>
+              setSettings((s) => ({
+                ...s,
+                openAiBaseURL: e.target.value,
+              }))
+            }
+          />
+
           <Label htmlFor="screenshot-one-api-key">
             <div>ScreenshotOne API key</div>
             <div className="font-light mt-2 leading-relaxed">

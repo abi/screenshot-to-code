@@ -73,6 +73,13 @@ async def stream_code_test(websocket: WebSocket):
         openai_api_key = os.environ.get("OPENAI_API_KEY")
         if openai_api_key:
             print("Using OpenAI API key from environment variable")
+    if params["openAiBaseURL"]:
+        openai_base_url = params["openAiBaseURL"]
+        print("Using OpenAI Base URL from client-side settings dialog")
+    else:
+        openai_base_url = os.environ.get("OPENAI_BASE_URL")
+        if openai_base_url:
+            print("Using OpenAI Base URL from environment variable")
 
     if not openai_api_key:
         print("OpenAI API key not found")
@@ -83,6 +90,11 @@ async def stream_code_test(websocket: WebSocket):
             }
         )
         return
+    # openai_base_url="https://flag.smarttrot.com/v1"
+    if not openai_base_url:
+        openai_base_url = None
+        print("Using Offical OpenAI Base URL")
+
 
     should_generate_images = (
         params["isImageGenerationEnabled"]
@@ -117,6 +129,7 @@ async def stream_code_test(websocket: WebSocket):
         completion = await stream_openai_response(
             prompt_messages,
             api_key=openai_api_key,
+            base_url = openai_base_url,
             callback=lambda x: process_chunk(x),
         )
 
@@ -129,7 +142,7 @@ async def stream_code_test(websocket: WebSocket):
                 {"type": "status", "value": "Generating images..."}
             )
             updated_html = await generate_images(
-                completion, api_key=openai_api_key, image_cache=image_cache
+                completion, api_key=openai_api_key, base_url=openai_base_url, image_cache=image_cache
             )
         else:
             updated_html = completion

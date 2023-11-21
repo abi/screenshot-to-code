@@ -37,6 +37,7 @@ function App() {
   const [settings, setSettings] = usePersistedState<Settings>(
     {
       openAiApiKey: null,
+      openAiBaseURL: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: "cobalt",
