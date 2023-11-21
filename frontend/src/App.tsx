@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { Settings } from "./types";
+import { AppStatus, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -26,8 +26,8 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 
 function App() {
-  const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
-    "INITIAL"
+  const [appState, setAppState] = useState<AppStatus>(
+    AppStatus.INITIAL
   );
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
@@ -62,7 +62,7 @@ function App() {
   };
 
   const reset = () => {
-    setAppState("INITIAL");
+    setAppState(AppStatus.INITIAL);
     setGeneratedCode("");
     setReferenceImages([]);
     setExecutionConsole([]);
@@ -71,7 +71,7 @@ function App() {
 
   function doGenerateCode(params: CodeGenerationParams) {
     setExecutionConsole([]);
-    setAppState("CODING");
+    setAppState(AppStatus.CODING);
 
     // Merge settings with params
     const updatedParams = { ...params, ...settings };
@@ -81,7 +81,7 @@ function App() {
       (token) => setGeneratedCode((prev) => prev + token),
       (code) => setGeneratedCode(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
-      () => setAppState("CODE_READY")
+      () => setAppState(AppStatus.CODE_READY)
     );
   }
 
@@ -122,7 +122,7 @@ function App() {
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
-          {appState === "INITIAL" && (
+          {appState === AppStatus.INITIAL && (
             <h2 className="text-sm text-gray-500 mb-2">
               Drag & drop a screenshot to get started.
             </h2>
@@ -130,10 +130,10 @@ function App() {
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
-          {(appState === "CODING" || appState === "CODE_READY") && (
+          {(appState === AppStatus.CODING || appState === AppStatus.CODE_READY) && (
             <>
               {/* Show code preview only when coding */}
-              {appState === "CODING" && (
+              {appState === AppStatus.CODING && (
                 <div className="flex flex-col">
                   <div className="flex items-center gap-x-1">
                     <Spinner />
@@ -143,7 +143,7 @@ function App() {
                 </div>
               )}
 
-              {appState === "CODE_READY" && (
+              {appState === AppStatus.CODE_READY && (
                 <div>
                   <div className="grid w-full gap-2">
                     <Textarea
@@ -176,7 +176,7 @@ function App() {
                 <div className="flex flex-col">
                   <div
                     className={classNames({
-                      "scanning relative": appState === "CODING",
+                      "scanning relative": appState === AppStatus.CODING,
                     })}
                   >
                     <img
@@ -209,7 +209,7 @@ function App() {
       </div>
 
       <main className="py-2 lg:pl-96">
-        {appState === "INITIAL" && (
+        {appState === AppStatus.INITIAL && (
           <div className="flex flex-col justify-center items-center gap-y-10">
             <ImageUpload setReferenceImages={doCreate} />
             <UrlInputSection
@@ -219,7 +219,7 @@ function App() {
           </div>
         )}
 
-        {(appState === "CODING" || appState === "CODE_READY") && (
+        {(appState === AppStatus.CODING || appState === AppStatus.CODE_READY) && (
           <div className="ml-4">
             <Tabs defaultValue="desktop">
               <div className="flex justify-end mr-8 mb-4">
