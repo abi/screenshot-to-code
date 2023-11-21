@@ -8,8 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 
+const termAcceptedCacheKey = 'term_of_service_accepted';
+
 function TermsOfServiceDialog() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(() => !localStorage.getItem(termAcceptedCacheKey));
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -40,7 +42,9 @@ function TermsOfServiceDialog() {
         </div>
 
         <DialogFooter>
-          <DialogClose>Agree</DialogClose>
+          <DialogClose onClick={() => {
+            localStorage.setItem(termAcceptedCacheKey, 'true');
+          }}>Agree</DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
