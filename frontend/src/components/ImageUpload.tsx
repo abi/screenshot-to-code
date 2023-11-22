@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import axios from 'axios';
+import ColorThief from 'color-thief';
 
 const baseStyle = {
   flex: 1,
@@ -59,6 +60,15 @@ type FileWithPreview = {
                   .then((response) => {
                     // Store the returned colors in the component's state
                     setColors(response.data.colors);
+                    // Extract the dominant color from the uploaded image
+                    try {
+                      const colorThief = new ColorThief();
+                      const dominantColor = colorThief.getColor(dataUrls[0]);
+                      setDominantColor(dominantColor);
+                    } catch (error) {
+                      toast.error("Error extracting dominant color: " + error);
+                      console.error("Error extracting dominant color:", error);
+                    }
                   })
                   .catch((error) => {
                     toast.error("Error extracting colors: " + error);
@@ -165,3 +175,4 @@ export default ImageUpload;
           <div key={index} style={{ backgroundColor: color, width: '50px', height: '50px' }}></div>
         ))}
       </div>
+      <div className="dominant-color" style={{ backgroundColor: `rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`, width: '50px', height: '50px' }}></div>
