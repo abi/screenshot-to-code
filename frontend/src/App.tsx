@@ -120,22 +120,22 @@ function App() {
     setUpdateInstruction("");
   }
 
-  const onTermDialogOpenChange = (open: boolean) => {
+  const doCopyCode = useCallback(() => {
+    copy(generatedCode);
+    toast.success("Copied to clipboard");
+  }, [generatedCode]);
+
+  const handleTermDialogOpenChange = (open: boolean) => {
     setSettings((s) => ({
       ...s,
       termOfServiceAccepted: !open,
     }));
   };
 
-  const doCopyCode = useCallback(() => {
-    copy(generatedCode);
-    toast.success("Copied to clipboard");
-  }, [generatedCode]);
-
   return (
     <div className="mt-2">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
-      {IS_RUNNING_ON_CLOUD && <TermsOfServiceDialog open={!settings.termOfServiceAccepted} onOpenChange={onTermDialogOpenChange} />}
+      {IS_RUNNING_ON_CLOUD && <TermsOfServiceDialog open={!settings.termOfServiceAccepted} onOpenChange={handleTermDialogOpenChange} />}
 
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
