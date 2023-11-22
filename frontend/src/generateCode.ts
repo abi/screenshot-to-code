@@ -1,6 +1,6 @@
 import toast from "react-hot-toast";
 import { WS_BACKEND_URL } from "./config";
-import { USER_CLOSE_WEB_SOCKET_CODE } from "./types";
+import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 
 const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console for details. Feel free to open a Github issue";
@@ -53,6 +53,7 @@ export function generateCode(
     } else if (event.code !== 1000) {
       console.error("WebSocket error code", event);
       toast.error(ERROR_MESSAGE);
+      onComplete();
     }
     onComplete();
   });
