@@ -42,7 +42,7 @@ function App() {
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
-      termOfServiceAccepted: false,
+      isTermOfServiceAccepted: false,
     },
     "setting"
   );
@@ -128,7 +128,7 @@ function App() {
   const handleTermDialogOpenChange = (open: boolean) => {
     setSettings((s) => ({
       ...s,
-      termOfServiceAccepted: !open,
+      isTermOfServiceAccepted: !open,
     }));
   };
 
@@ -137,7 +137,7 @@ function App() {
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
-          open={!settings.termOfServiceAccepted}
+          open={!settings.isTermOfServiceAccepted}
           onOpenChange={handleTermDialogOpenChange}
         />
       )}
