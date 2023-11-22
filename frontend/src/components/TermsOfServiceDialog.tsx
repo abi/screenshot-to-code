@@ -6,13 +6,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useState } from "react";
 
-function TermsOfServiceDialog() {
-  const [isOpen, setIsOpen] = useState(true);
+const TermsOfServiceDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}> = ({ open, onOpenChange }) => {
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="mb-4">Terms of Service</DialogTitle>
@@ -45,6 +46,6 @@ function TermsOfServiceDialog() {
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default TermsOfServiceDialog;
