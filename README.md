@@ -59,7 +59,7 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 ## 🙋‍♂️ FAQs
 
 - **I'm running into an error when setting up the backend. How can I fix it?** [Try this](https://github.com/abi/screenshot-to-code/issues/3#issuecomment-1814777959). If that still doesn't work, open an issue.
-- **How do I get an OpenAI API key that has the GPT4 Vision model available?** Create an OpenAI account. And then, you need to buy at least $1 worth of credit on the [Billing dashboard](https://platform.openai.com/account/billing/overview).
+- **How do I get an OpenAI API key that has the GPT4 Vision model available?** Create an OpenAI account. And then, you need to buy at least $1 worth of credit on the [Billing dashboard](https://platform.openai.com/account/billing/overview). Also, see [OpenAI docs](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).
 - **How can I provide feedback?** For feedback, feature requests and bug reports, open an issue or ping me on [Twitter](https://twitter.com/_abi_).
 
 ## 📚 Examples
