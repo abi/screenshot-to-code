@@ -31,6 +31,9 @@ echo "OPENAI_API_KEY=sk-your-key" > .env
 poetry install
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
+
+# Useful for debugging purposes when you don't want to waste GPT4-Vision credits
+MOCK=true poetry run uvicorn main:app --reload --port 7001
 ```
 
 Run the frontend:

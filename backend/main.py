@@ -33,7 +33,7 @@ app.add_middleware(
 
 # Useful for debugging purposes when you don't want to waste GPT4-Vision credits
 # Setting to True will stream a mock response instead of calling the OpenAI API
-SHOULD_MOCK_AI_RESPONSE = False
+SHOULD_MOCK_AI_RESPONSE = os.environ.get("MOCK", False)
 
 
 app.include_router(screenshot.router)
