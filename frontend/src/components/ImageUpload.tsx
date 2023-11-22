@@ -49,7 +49,6 @@ function fileToDataURL(file: File) {
 type FileWithPreview = {
   preview: string;
 } & File;
-            );
     
             // Convert images to data URLs and set the prompt images state
             Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
