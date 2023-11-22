@@ -1,8 +1,13 @@
+export enum EditorTheme {
+  ESPRESSO = "espresso",
+  COBALT = "cobalt",
+}
+
 export interface Settings {
   openAiApiKey: string | null;
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
-  editorTheme: string;
+  editorTheme: EditorTheme;
 }
 
 export enum AppState {

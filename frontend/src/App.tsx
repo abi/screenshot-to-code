@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { AppState, Settings } from "./types";
+import { Settings, EditorTheme, AppState } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -41,7 +41,7 @@ function App() {
       openAiApiKey: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
-      editorTheme: "cobalt",
+      editorTheme: EditorTheme.COBALT,
     },
     "setting"
   );
@@ -266,6 +266,7 @@ function App() {
                   <CodeMirror
                     code={generatedCode}
                     editorTheme={settings.editorTheme}
+                    onCodeChange={setGeneratedCode}
                   />
                   <span
                     title="Copy Code"
