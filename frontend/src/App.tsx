@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { AppStatus, Settings } from "@/types";
+import { Settings, EditorTheme, AppState } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -44,7 +44,8 @@ function App() {
       openAiApiKey: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
-      editorTheme: "cobalt",
+      editorTheme: EditorTheme.COBALT,
+      isTermOfServiceAccepted: false,
     },
     "setting"
   );
@@ -150,10 +151,22 @@ function App() {
     toast.success("Copied to clipboard");
   }, [generatedCode]);
 
+  const handleTermDialogOpenChange = (open: boolean) => {
+    setSettings((s) => ({
+      ...s,
+      isTermOfServiceAccepted: !open,
+    }));
+  };
+
   return (
     <div className="mt-2">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
-      {IS_RUNNING_ON_CLOUD && <TermsOfServiceDialog />}
+      {IS_RUNNING_ON_CLOUD && (
+        <TermsOfServiceDialog
+          open={!settings.isTermOfServiceAccepted}
+          onOpenChange={handleTermDialogOpenChange}
+        />
+      )}
 
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
@@ -301,6 +314,7 @@ function App() {
                   <CodeMirror
                     code={generatedCode}
                     editorTheme={settings.editorTheme}
+                    onCodeChange={setGeneratedCode}
                   />
                   <span
                     title="Copy Code"
