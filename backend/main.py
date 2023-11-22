@@ -59,7 +59,7 @@ def write_logs(prompt_messages, completion):
 
 
 @app.websocket("/generate-code")
-async def stream_code_test(websocket: WebSocket):
+async def stream_code(websocket: WebSocket):
     await websocket.accept()
 
     params = await websocket.receive_json()
