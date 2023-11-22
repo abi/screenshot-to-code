@@ -8,6 +8,7 @@ export interface Settings {
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;
+  isTermOfServiceAccepted: boolean; // Only relevant for hosted version
 }
 
 export enum AppState {
