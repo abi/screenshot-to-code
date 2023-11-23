@@ -128,11 +128,11 @@ function App() {
   async function doUpdate() {
     const updatedHistory = [...history, generatedCode, updateInstruction];
     if (isImgCompare) {
-      const resultImg = await takeScreenshot();
+      const resultImage = await takeScreenshot();
       doGenerateCode({
         generationType: "update",
         image: referenceImages[0],
-        resultImg: resultImg,
+        resultImage: resultImage,
         history: updatedHistory,
       });
     } else {

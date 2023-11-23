@@ -10,7 +10,7 @@ const STOP_MESSAGE = "Code generation stopped";
 export interface CodeGenerationParams {
   generationType: "create" | "update";
   image: string;
-  resultImg?: string;
+  resultImage?: string;
   history?: string[];
   // isImageGenerationEnabled: boolean; // TODO: Merge with Settings type in types.ts
 }
