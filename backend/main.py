@@ -98,7 +98,6 @@ async def stream_code(websocket: WebSocket):
 
     if params.get("resultImage") and params["resultImage"]:
         prompt_messages = assemble_prompt(params["image"], params["resultImage"])
-
     else:
         prompt_messages = assemble_prompt(params["image"])
 
