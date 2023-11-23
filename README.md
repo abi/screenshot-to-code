@@ -45,6 +45,12 @@ Open http://localhost:5173 to use the app.
 
 If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL in `frontend/.env.local`
 
+For debugging purposes, if you don't want to waste GPT4-Vision credits, you can run the backend in mock mode (which streams a pre-recorded response):
+
+```bash
+MOCK=true poetry run uvicorn main:app --reload --port 7001
+```
+
 ## Docker
 
 If you have Docker installed on your system, in the root directory, run:
@@ -66,11 +72,9 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 
 **NYTimes**
 
-| Original                                                                                                 | Replica                                                                                                 |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | 
+| Original                                                                                                                                                        | Replica                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | <img width="1238" alt="Screenshot 2023-11-20 at 12 54 03 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/3b644dfa-9ca6-4148-84a7-3405b6671922"> | <img width="1414" alt="Screenshot 2023-11-20 at 12 59 56 PM" src="https://github.com/abi/screenshot-to-code/assets/23818/26201c9f-1a28-4f35-a3b1-1f04e2b8ce2a"> |
-
-
 
 **Instagram page (with not Taylor Swift pics)**
 
