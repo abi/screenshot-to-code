@@ -22,6 +22,7 @@
     "classnames": "^2.3.2",
     "clsx": "^2.0.0",
     "codemirror": "^6.0.1",
+    "html2canvas": "^1.4.1",
     "copy-to-clipboard": "^3.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -23,6 +23,7 @@ function Preview({ code, device }: Props) {
   return (
     <div className="flex justify-center mx-2">
       <iframe
+        id={`preview-${device}`}
         ref={iframeRef}
         title="Preview"
         className={classNames(
