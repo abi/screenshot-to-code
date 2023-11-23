@@ -13,6 +13,8 @@ import {
   FaMobile,
   FaUndo,
 } from "react-icons/fa";
+
+import { Switch } from "./components/ui/switch";
 import copy from "copy-to-clipboard";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
+import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 
 function App() {
@@ -46,7 +49,22 @@ function App() {
     },
     "setting"
   );
+  const [shouldIncludeResultImage, setShouldIncludeResultImage] =
+    useState<boolean>(false);
   const wsRef = useRef<WebSocket>(null);
+
+  const takeScreenshot = async (): Promise<string> => {
+    const iframeElement = document.querySelector(
+      "#preview-desktop"
+    ) as HTMLIFrameElement;
+    if (!iframeElement?.contentWindow?.document.body) {
+      return "";
+    }
+
+    const canvas = await html2canvas(iframeElement.contentWindow.document.body);
+    const png = canvas.toDataURL("image/png");
+    return png;
+  };
 
   const downloadCode = () => {
     // Create a blob from the generated code
@@ -75,6 +93,8 @@ function App() {
 
   const stop = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
+    // make sure stop can correct the state even if the websocket is already closed
+    setAppState(AppState.CODE_READY);
   };
 
   function doGenerateCode(params: CodeGenerationParams) {
@@ -106,14 +126,23 @@ function App() {
   }
 
   // Subsequent updates
-  function doUpdate() {
+  async function doUpdate() {
     const updatedHistory = [...history, generatedCode, updateInstruction];
-
-    doGenerateCode({
-      generationType: "update",
-      image: referenceImages[0],
-      history: updatedHistory,
-    });
+    if (shouldIncludeResultImage) {
+      const resultImage = await takeScreenshot();
+      doGenerateCode({
+        generationType: "update",
+        image: referenceImages[0],
+        resultImage: resultImage,
+        history: updatedHistory,
+      });
+    } else {
+      doGenerateCode({
+        generationType: "update",
+        image: referenceImages[0],
+        history: updatedHistory,
+      });
+    }
 
     setHistory(updatedHistory);
     setGeneratedCode("");
@@ -183,6 +212,15 @@ function App() {
                       onChange={(e) => setUpdateInstruction(e.target.value)}
                       value={updateInstruction}
                     />
+                    <div className="flex justify-between items-center gap-x-2">
+                      <div className="font-500 text-xs text-slate-700">
+                        Include screenshot of current version?
+                      </div>
+                      <Switch
+                        checked={shouldIncludeResultImage}
+                        onCheckedChange={setShouldIncludeResultImage}
+                      />
+                    </div>
                     <Button onClick={doUpdate}>Update</Button>
                   </div>
                   <div className="flex items-center gap-x-2 mt-2">
