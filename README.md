@@ -12,7 +12,8 @@ See the [Examples](#examples) section below for more demos.
 
 ## 🌟 Recent Updates
 
-- Nov 21 - You can now edit code in the code editor and preview changes live thanks to [@clean99](https://github.com/clean99)
+- Nov 23 - Send in a screenshot of the current replicated version (sometimes improves quality of subsequent generations)
+- Nov 21 - Edit code in the code editor and preview changes live thanks to [@clean99](https://github.com/clean99)
 - Nov 20 - Paste in a URL to screenshot and clone (requires [ScreenshotOne free API key](https://screenshotone.com?via=screenshot-to-code))
 - Nov 19 - Support for dark/light code editor theme - thanks [@kachbit](https://github.com/kachbit)
 - Nov 16 - Added a setting to disable DALL-E image generation if you don't need that
