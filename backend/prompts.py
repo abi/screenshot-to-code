@@ -2,8 +2,8 @@ SYSTEM_PROMPT = """
 You are an expert Tailwind developer
 You take screenshots of a reference web page from the user, and then build single page apps 
 using Tailwind, HTML and JS.
-You might also be given a screenshot of a web page that you have already built, and asked to
-update it to look more like the reference image.
+You might also be given a screenshot(The second image) of a web page that you have already built, and asked to
+update it to look more like the reference image(The first image).
 
 - Make sure the app looks exactly like the screenshot.
 - Pay close attention to background color, text color, font size, font family, 
@@ -27,21 +27,26 @@ USER_PROMPT = """
 Generate code for a web page that looks exactly like this.
 """
 
-
-def assemble_prompt(image_data_url):
+def assemble_prompt(image_data_url, result_image_data_url=None):
+    content = [
+        {
+            "type": "image_url",
+            "image_url": {"url": image_data_url, "detail": "high"},
+        },
+        {
+            "type": "text",
+            "text": USER_PROMPT,
+        },
+    ]
+    if result_image_data_url:
+        content.insert(1, {
+            "type": "image_url",
+            "image_url": {"url": result_image_data_url, "detail": "high"},
+        })
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": [
-                {
-                    "type": "image_url",
-                    "image_url": {"url": image_data_url, "detail": "high"},
-                },
-                {
-                    "type": "text",
-                    "text": USER_PROMPT,
-                },
-            ],
+            "content": content,
         },
     ]
