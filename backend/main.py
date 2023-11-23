@@ -96,8 +96,9 @@ async def stream_code(websocket: WebSocket):
     async def process_chunk(content):
         await websocket.send_json({"type": "chunk", "value": content})
 
-    if params.get("resultImg") and params["resultImg"]:
-        prompt_messages = assemble_prompt(params["image"], params["resultImg"])
+    if params.get("resultImage") and params["resultImage"]:
+        prompt_messages = assemble_prompt(params["image"], params["resultImage"])
+
     else:
         prompt_messages = assemble_prompt(params["image"])
 

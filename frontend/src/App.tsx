@@ -49,7 +49,8 @@ function App() {
     },
     "setting"
   );
-  const [isImgCompare, setIsImgCompare] = useState<boolean>(false);
+  const [shouldIncludeResultImage, setShouldIncludeResultImage] =
+    useState<boolean>(false);
   const wsRef = useRef<WebSocket>(null);
 
   const takeScreenshot = async (): Promise<string> => {
@@ -127,7 +128,7 @@ function App() {
   // Subsequent updates
   async function doUpdate() {
     const updatedHistory = [...history, generatedCode, updateInstruction];
-    if (isImgCompare) {
+    if (shouldIncludeResultImage) {
       const resultImage = await takeScreenshot();
       doGenerateCode({
         generationType: "update",
@@ -206,18 +207,20 @@ function App() {
               {appState === AppState.CODE_READY && (
                 <div>
                   <div className="grid w-full gap-2">
-                    <div className="flex justify-between items-center gap-x-2">
-                      <div className="font-500">Auto Image Comparison</div>
-                      <Switch
-                        checked={isImgCompare}
-                        onCheckedChange={setIsImgCompare}
-                      />
-                    </div>
                     <Textarea
                       placeholder="Tell the AI what to change..."
                       onChange={(e) => setUpdateInstruction(e.target.value)}
                       value={updateInstruction}
                     />
+                    <div className="flex justify-between items-center gap-x-2">
+                      <div className="font-500 text-xs text-slate-700">
+                        Include screenshot of current version?
+                      </div>
+                      <Switch
+                        checked={shouldIncludeResultImage}
+                        onCheckedChange={setShouldIncludeResultImage}
+                      />
+                    </div>
                     <Button onClick={doUpdate}>Update</Button>
                   </div>
                   <div className="flex items-center gap-x-2 mt-2">
