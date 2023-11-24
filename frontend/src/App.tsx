@@ -211,7 +211,8 @@ function App() {
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
           {(appState === AppState.CODING ||
-            appState === AppState.CODE_READY) && (
+            appState === AppState.CODE_READY ||
+            appState === AppState.INSTRUCTION_GENERATING) && (
             <>
               {/* Show code preview only when coding */}
               {appState === AppState.CODING && (
@@ -229,13 +230,14 @@ function App() {
                 </div>
               )}
 
-              {appState === AppState.CODE_READY && (
+              {(appState === AppState.CODE_READY || appState === AppState.INSTRUCTION_GENERATING) && (
                 <div>
                   <div className="grid w-full gap-2">
                     <Textarea
                       placeholder="Tell the AI what to change..."
                       onChange={(e) => setUpdateInstruction(e.target.value)}
                       value={updateInstruction}
+                      disabled={appState === AppState.INSTRUCTION_GENERATING}
                     />
                     <div className="flex justify-between items-center gap-x-2">
                       <div className="font-500 text-xs text-slate-700">
@@ -244,15 +246,17 @@ function App() {
                       <Switch
                         checked={shouldIncludeResultImage}
                         onCheckedChange={setShouldIncludeResultImage}
+                        disabled={appState === AppState.INSTRUCTION_GENERATING}
                       />
                     </div>
                     <Button
                       onClick={instructionGenerate}
                       className="flex items-center gap-x-2"
+                      disabled={appState === AppState.INSTRUCTION_GENERATING}
                     >
                       Generate Instruction
                     </Button>
-                    <Button onClick={doUpdate}>Update</Button>
+                    <Button onClick={doUpdate} disabled={appState === AppState.INSTRUCTION_GENERATING}>Update</Button>
                   </div>
                   <div className="flex items-center gap-x-2 mt-2">
                     <Button
