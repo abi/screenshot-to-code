@@ -47,7 +47,7 @@ Return only the JSON array in this format:
   {
     "element": "name, text, etc.",
     "mistake": "wrong color, wrong size, etc.(strictly use css properties to describe)",
-    "improvement": "use #xxx color, use width: xxx px, etc.",
+    "improvement": "use correct color, use width: correct px, etc.",
     "location": "header"
   },
 ]
