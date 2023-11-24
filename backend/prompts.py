@@ -27,6 +27,37 @@ USER_PROMPT = """
 Generate code for a web page that looks exactly like this.
 """
 
+INSTUCTION_GENERATION_SYSTEM_PROMPT = """
+You are a Frontend Vision Comparison expert,
+You are required to compare two website screenshots: the first one is the original site and the second one is a redesigned version.
+Your task is to identify differences in elements and their css, focusing on layout, style, and structure.
+Do not consider the content(text, placeholder) of the elements, only the elements themselves
+Analyze the screenshots considering these categories:
+
+Lack of Elements: Identify any element present in the original but missing in the redesign.
+Redundant Elements: Spot elements in the redesign that were not in the original.
+Wrong Element Properties: Note discrepancies in element properties like size, color, font, and layout.
+
+Provide a clear conclusion as a list, specifying the element, the mistake, and its location.
+In ambiguous cases, suggest a manual review.
+Remember, this comparison is not pixel-by-pixel, but at a higher, more conceptual level.
+
+Return only the JSON array in this format:
+[
+  {
+    "element": "name, text, etc.",
+    "mistake": "wrong color, wrong size, etc.(strictly use css properties to describe)",
+    "improvement": "use #xxx color, use width: xxx px, etc.",
+    "location": "header"
+  },
+]
+Do not include markdown "```" or "```JSON" at the start or end.
+"""
+
+INSTUCTION_GENERATION_USER_PROMPT = """
+Generate a list of differences between the two screenshots.
+"""
+
 def assemble_prompt(image_data_url, result_image_data_url=None):
     content = [
         {
@@ -45,6 +76,30 @@ def assemble_prompt(image_data_url, result_image_data_url=None):
         })
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": content,
+        },
+    ]
+
+def assemble_instruction_generation_prompt(image_data_url, result_image_data_url):
+    content = [
+        {
+            "type": "image_url",
+            "image_url": {"url": image_data_url, "detail": "high"},
+        },
+        {
+            "type": "text",
+            "text": INSTUCTION_GENERATION_USER_PROMPT,
+        },
+    ]
+    if result_image_data_url:
+        content.insert(1, {
+            "type": "image_url",
+            "image_url": {"url": result_image_data_url, "detail": "high"},
+        })
+    return [
+        {"role": "system", "content": INSTUCTION_GENERATION_SYSTEM_PROMPT},
         {
             "role": "user",
             "content": content,
