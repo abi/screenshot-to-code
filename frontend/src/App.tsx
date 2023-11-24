@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
-import { CodeGenerationParams, generateCode } from "./generateCode";
+import { CodeGenerationParams, InstructionGenerationParams, generateCode, generateInstruction } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
 import {
@@ -114,6 +114,22 @@ function App() {
     );
   }
 
+  function doGenerateInstruction(params: InstructionGenerationParams) {
+    setAppState(AppState.INSTRUCTION_GENERATING);
+
+    // Merge settings with params
+    const updatedParams = { ...params, ...settings };
+
+    generateInstruction(
+      wsRef,
+      updatedParams,
+      (token) => setUpdateInstruction((prev) => prev + token),
+      (code) => setUpdateInstruction(code),
+      (line) => setExecutionConsole((prev) => [...prev, line]),
+      () => setAppState(AppState.CODE_READY)
+    );
+  }
+
   // Initial version creation
   function doCreate(referenceImages: string[]) {
     setReferenceImages(referenceImages);
@@ -160,6 +176,15 @@ function App() {
       isTermOfServiceAccepted: !open,
     }));
   };
+
+  const instructionGenerate = async () => {
+    const resultImage = await takeScreenshot();
+    const originalImage = referenceImages[0];
+    doGenerateInstruction({
+      image: originalImage,
+      resultImage: resultImage,
+    });
+  }
 
   return (
     <div className="mt-2">
@@ -221,6 +246,12 @@ function App() {
                         onCheckedChange={setShouldIncludeResultImage}
                       />
                     </div>
+                    <Button
+                      onClick={instructionGenerate}
+                      className="flex items-center gap-x-2"
+                    >
+                      Generate Instruction
+                    </Button>
                     <Button onClick={doUpdate}>Update</Button>
                   </div>
                   <div className="flex items-center gap-x-2 mt-2">
