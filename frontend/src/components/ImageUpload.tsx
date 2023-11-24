@@ -106,7 +106,9 @@ function ImageUpload({ setReferenceImages }: Props) {
       // Convert images to data URLs and set the prompt images state
       Promise.all(files.map((file) => fileToDataURL(file)))
         .then((dataUrls) => {
-          setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
+          if(dataUrls.length > 0) {
+            setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
+          }
         })
         .catch((error) => {
           // TODO: Display error to user
