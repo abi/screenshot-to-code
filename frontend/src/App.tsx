@@ -31,6 +31,7 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
+import { handleInstructions } from "./lib/utils";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
@@ -116,6 +117,7 @@ function App() {
 
   function doGenerateInstruction(params: InstructionGenerationParams) {
     setAppState(AppState.INSTRUCTION_GENERATING);
+    setUpdateInstruction("");
 
     // Merge settings with params
     const updatedParams = { ...params, ...settings };
@@ -126,7 +128,10 @@ function App() {
       (token) => setUpdateInstruction((prev) => prev + token),
       (code) => setUpdateInstruction(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
-      () => setAppState(AppState.CODE_READY)
+      () => {
+        setUpdateInstruction(instruction => handleInstructions(instruction));
+        setAppState(AppState.CODE_READY);
+      }
     );
   }
 
@@ -254,7 +259,7 @@ function App() {
                       className="flex items-center gap-x-2"
                       disabled={appState === AppState.INSTRUCTION_GENERATING}
                     >
-                      Generate Instruction
+                      {appState === AppState.INSTRUCTION_GENERATING ? 'Generating Instruction...' : 'Generate Instruction'}
                     </Button>
                     <Button onClick={doUpdate} disabled={appState === AppState.INSTRUCTION_GENERATING}>Update</Button>
                   </div>
@@ -268,6 +273,7 @@ function App() {
                     <Button
                       onClick={reset}
                       className="flex items-center gap-x-2"
+                      disabled={appState === AppState.INSTRUCTION_GENERATING}
                     >
                       <FaUndo />
                       Reset
@@ -324,7 +330,7 @@ function App() {
           </div>
         )}
 
-        {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
+        {(appState === AppState.CODING || appState === AppState.CODE_READY || appState === AppState.INSTRUCTION_GENERATING) && (
           <div className="ml-4">
             <Tabs defaultValue="desktop">
               <div className="flex justify-end mr-8 mb-4">
