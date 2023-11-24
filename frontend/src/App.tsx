@@ -101,6 +101,7 @@ function App() {
 
   function doGenerateCode(params: CodeGenerationParams) {
     setExecutionConsole([]);
+    setMistakesNum(0);
     setAppState(AppState.CODING);
 
     // Merge settings with params
@@ -133,8 +134,7 @@ function App() {
         setAppState(AppState.CODE_READY);
         setUpdateInstruction(instruction => {
           setMistakesNum(calculateMistakesNum(instruction));
-          handleInstructions(instruction);
-          return instruction;
+          return handleInstructions(instruction);
         });
 
       }
