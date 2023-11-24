@@ -10,3 +10,5 @@ export const handleInstructions = (instructions: string): string =>
   (JSON.parse(instructions) || []).map((line: Instruction) => 
     `- ${line.element} in the ${line.location} has a mistake: ${line.mistake}, please update: ${line.improvement}.`).join("\n\n");
 
+export const calculateMistakesNum = (instructions: string): number =>
+  (JSON.parse(instructions) || []).length;

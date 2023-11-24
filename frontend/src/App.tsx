@@ -31,7 +31,7 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
-import { handleInstructions } from "./lib/utils";
+import { calculateMistakesNum, handleInstructions } from "./lib/utils";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
@@ -52,6 +52,7 @@ function App() {
   );
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
+  const [mistakesNum, setMistakesNum] = useState<number>(0);
   const wsRef = useRef<WebSocket>(null);
 
   const takeScreenshot = async (): Promise<string> => {
@@ -118,7 +119,7 @@ function App() {
   function doGenerateInstruction(params: InstructionGenerationParams) {
     setAppState(AppState.INSTRUCTION_GENERATING);
     setUpdateInstruction("");
-
+    setMistakesNum(0);
     // Merge settings with params
     const updatedParams = { ...params, ...settings };
 
@@ -129,8 +130,13 @@ function App() {
       (code) => setUpdateInstruction(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
       () => {
-        setUpdateInstruction(instruction => handleInstructions(instruction));
         setAppState(AppState.CODE_READY);
+        setUpdateInstruction(instruction => {
+          setMistakesNum(calculateMistakesNum(instruction));
+          handleInstructions(instruction);
+          return instruction;
+        });
+
       }
     );
   }
@@ -243,6 +249,7 @@ function App() {
                       onChange={(e) => setUpdateInstruction(e.target.value)}
                       value={updateInstruction}
                       disabled={appState === AppState.INSTRUCTION_GENERATING}
+                      
                     />
                     <div className="flex justify-between items-center gap-x-2">
                       <div className="font-500 text-xs text-slate-700">
@@ -284,7 +291,7 @@ function App() {
 
               {/* Reference image display */}
               <div className="flex gap-x-2 mt-2">
-                <div className="flex flex-col">
+                <div className="flex flex-col items-center">
                   <div
                     className={classNames({
                       "scanning relative": appState === AppState.CODING,
@@ -298,6 +305,9 @@ function App() {
                   </div>
                   <div className="text-gray-400 uppercase text-sm text-center mt-1">
                     Original Screenshot
+                  </div>
+                  <div className="flex flex-col mt-4 text-sm">
+                    Total Mistakes Found:{" "} {mistakesNum}
                   </div>
                 </div>
                 <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
