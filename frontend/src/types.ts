@@ -17,3 +17,10 @@ export enum AppState {
   CODE_READY = "CODE_READY",
   INSTRUCTION_GENERATING = "INSTRUCTION_GENERATING",
 }
+
+export interface Instruction {
+  element: string;
+  mistake: string;
+  improvement: string;
+  location: string;
+}
