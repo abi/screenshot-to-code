@@ -44,16 +44,16 @@ def build_prompt(prompt, params):
         prompt = prompt.replace(placeholder, value)
     return prompt
 
-def add_support_lenguages(prompt):
+def add_support_lenguages(prompt, params):
     support_lenguage = "\n".join([IONIC_PROMPT_SUPPORT])
-    prompt = build_prompt(prompt, {'support_lenguage': support_lenguage })
+    prompt = build_prompt(prompt, {'support_lenguage': support_lenguage, **params })
     return prompt
 
 def get_prompt(prompt, params = {}):
     params_template = {**SYSTEM_PROMPT_PARAMS, **params}
     
     prompt_template = build_prompt(prompt, params_template)
-    prompt_template = add_support_lenguages(prompt_template)
+    prompt_template = add_support_lenguages(prompt_template, params_template)
 
     return prompt_template
 
