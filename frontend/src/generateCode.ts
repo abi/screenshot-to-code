@@ -7,8 +7,14 @@ const ERROR_MESSAGE =
 
 const STOP_MESSAGE = "Code generation stopped";
 
+export enum CodeType {
+  HTML = "HTML",
+  REACT = "react",
+}
+
 export interface CodeGenerationParams {
   generationType: "create" | "update";
+  codeType: CodeType;
   image: string;
   resultImage?: string;
   history?: string[];
