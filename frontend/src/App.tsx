@@ -1,13 +1,12 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
-import { CodeGenerationParams, generateCode } from "./generateCode";
+import { CodeGenerationParams, CodeType, generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
 import {
   FaCode,
-  FaCopy,
   FaDesktop,
   FaDownload,
   FaMobile,
@@ -31,6 +30,7 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
+import { ReactCodePreview } from "./components/ReactCodePreview";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
@@ -120,6 +120,7 @@ function App() {
     if (referenceImages.length > 0) {
       doGenerateCode({
         generationType: "create",
+        codeType: CodeType.HTML,
         image: referenceImages[0],
       });
     }
@@ -132,6 +133,7 @@ function App() {
       const resultImage = await takeScreenshot();
       doGenerateCode({
         generationType: "update",
+        codeType: CodeType.HTML,
         image: referenceImages[0],
         resultImage: resultImage,
         history: updatedHistory,
@@ -139,6 +141,7 @@ function App() {
     } else {
       doGenerateCode({
         generationType: "update",
+        codeType: CodeType.HTML,
         image: referenceImages[0],
         history: updatedHistory,
       });
@@ -149,10 +152,10 @@ function App() {
     setUpdateInstruction("");
   }
 
-  const doCopyCode = useCallback(() => {
-    copy(generatedCode);
+  const doCopyCode = (code: string) => {
+    copy(code);
     toast.success("Copied to clipboard");
-  }, [generatedCode]);
+  };
 
   const handleTermDialogOpenChange = (open: boolean) => {
     setSettings((s) => ({
@@ -305,6 +308,7 @@ function App() {
                     Code
                   </TabsTrigger>
                 </TabsList>
+                <ReactCodePreview doGenerateCode={doGenerateCode} referenceImage={referenceImages[0]} />
               </div>
               <TabsContent value="desktop">
                 <Preview code={generatedCode} device="desktop" />
@@ -313,20 +317,12 @@ function App() {
                 <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
-                <div className="relative">
-                  <CodeMirror
+                <CodeMirror
                     code={generatedCode}
                     editorTheme={settings.editorTheme}
                     onCodeChange={setGeneratedCode}
-                  />
-                  <span
-                    title="Copy Code"
-                    className="flex items-center justify-center w-10 h-10 text-gray-500 hover:bg-gray-100 cursor-pointer rounded-lg text-sm p-2.5 absolute top-[20px] right-[20px]"
-                    onClick={doCopyCode}
-                  >
-                    <FaCopy />
-                  </span>
-                </div>
+                    doCopyCode={() => doCopyCode(generatedCode)}
+                />
               </TabsContent>
             </Tabs>
           </div>
