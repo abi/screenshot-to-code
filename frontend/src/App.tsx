@@ -14,8 +14,6 @@ import {
 } from "react-icons/fa";
 
 import { Switch } from "./components/ui/switch";
-import copy from "copy-to-clipboard";
-import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
@@ -30,7 +28,8 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
-import { ReactCodePreview } from "./components/ReactCodePreview";
+import { ReactCodeEditor } from "./components/ReactCodeEditor";
+import { doCopyCode } from "./lib/utils";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
@@ -151,11 +150,6 @@ function App() {
     setGeneratedCode("");
     setUpdateInstruction("");
   }
-
-  const doCopyCode = (code: string) => {
-    copy(code);
-    toast.success("Copied to clipboard");
-  };
 
   const handleTermDialogOpenChange = (open: boolean) => {
     setSettings((s) => ({
@@ -308,7 +302,7 @@ function App() {
                     Code
                   </TabsTrigger>
                 </TabsList>
-                <ReactCodePreview doGenerateCode={doGenerateCode} referenceImage={referenceImages[0]} />
+                <ReactCodeEditor doGenerateCode={doGenerateCode} referenceImage={referenceImages[0]} />
               </div>
               <TabsContent value="desktop">
                 <Preview code={generatedCode} device="desktop" />
