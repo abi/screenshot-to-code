@@ -140,7 +140,10 @@ function ImageUpload({ setReferenceImages }: Props) {
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div {...getRootProps({ style: style as any })}>
         <input {...getInputProps()} />
-        <p>Drop a screenshot here, paste from clipboard, or click to select</p>
+        <p className="text-slate-700 font-bold">
+          Drag & drop a screenshot here, or paste from clipboard, or click to
+          upload
+        </p>
       </div>
     </section>
   );
