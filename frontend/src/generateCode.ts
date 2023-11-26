@@ -8,7 +8,7 @@ const ERROR_MESSAGE =
 const STOP_MESSAGE = "Code generation stopped";
 
 export enum CodeType {
-  HTML = "HTML",
+  HTML = "html",
   REACT = "react",
 }
 

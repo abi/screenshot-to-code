@@ -96,7 +96,7 @@ function App() {
     setAppState(AppState.CODE_READY);
   };
 
-  function doGenerateCode(params: CodeGenerationParams) {
+  function doGenerateCode(params: CodeGenerationParams, setCode: (value: React.SetStateAction<string>) => void = setGeneratedCode) {
     setExecutionConsole([]);
     setAppState(AppState.CODING);
 
@@ -106,8 +106,8 @@ function App() {
     generateCode(
       wsRef,
       updatedParams,
-      (token) => setGeneratedCode((prev) => prev + token),
-      (code) => setGeneratedCode(code),
+      (token) => setCode((prev) => prev + token),
+      (code) => setCode(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
       () => setAppState(AppState.CODE_READY)
     );

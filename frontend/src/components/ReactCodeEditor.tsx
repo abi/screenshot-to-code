@@ -19,7 +19,7 @@ import { Textarea } from "./ui/textarea";
 
 
 interface IProps {
-    doGenerateCode: (params: CodeGenerationParams) => void;
+    doGenerateCode: (params: CodeGenerationParams, setCode: (value: React.SetStateAction<string>) => void) => void;
     referenceImage: string;
 }
 
@@ -44,7 +44,7 @@ export const ReactCodeEditor: React.FC<IProps> = ({ doGenerateCode, referenceIma
             codeType: CodeType.REACT,
             image: referenceImage,
             history: updatedHistory,
-        });
+        }, setGeneratedReactCode);
 
         setReactHistory(updatedHistory);
         setGeneratedReactCode("");
