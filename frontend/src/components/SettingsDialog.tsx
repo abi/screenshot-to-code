@@ -77,7 +77,10 @@ function SettingsDialog({ settings, setSettings }: Props) {
           />
 
           <Label htmlFor="screenshot-one-api-key">
-            <div>ScreenshotOne API key</div>
+            <div>
+              ScreenshotOne API key (optional - only needed if you want to use
+              URLs directly instead of taking the screenshot yourself)
+            </div>
             <div className="font-light mt-2 leading-relaxed">
               Only stored in your browser. Never stored on servers.{" "}
               <a
