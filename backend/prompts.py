@@ -39,7 +39,7 @@ padding, margin, border, etc. Match the colors and sizes exactly.
 In terms of libraries, assume that all libraries are already install, you can import it if you want to use it.
 
 Strictly return only the full jsx code,
-Do not include markdown "```" or "```jsx" at the start or end, do not include other information or explanation.
+Strictly do not return markdown "```" or "```jsx" at the start or end, do not return other information or explanation.
 """
 
 USER_PROMPT = """

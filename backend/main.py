@@ -100,10 +100,16 @@ async def stream_code(websocket: WebSocket):
     if params.get("resultImage") and params["resultImage"]:
         prompt_messages = assemble_prompt(params["image"], params["resultImage"])
     else:
-        prompt_messages = assemble_prompt(params["image"])
+        if params.get("codeType") and params["codeType"] == "react":
+            prompt_messages = assemble_prompt(
+                params["image"], is_react=True
+            )
+        else:
+            prompt_messages = assemble_prompt(params["image"])
 
     # Image cache for updates so that we don't have to regenerate images
     image_cache = {}
+
 
     if params["generationType"] == "update":
         # Transform into message format

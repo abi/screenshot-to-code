@@ -13,7 +13,7 @@ import { useState } from "react";
 import { FaReact } from "react-icons/fa"
 import CodeMirror from "./CodeMirror";
 import { usePersistedState } from "@/hooks/usePersistedState";
-import { EditorTheme, Settings } from "@/types";
+import { AppState, EditorTheme, Settings } from "@/types";
 import { doCopyCode } from "@/lib/utils";
 import { Textarea } from "./ui/textarea";
 
@@ -21,9 +21,10 @@ import { Textarea } from "./ui/textarea";
 interface IProps {
     doGenerateCode: (params: CodeGenerationParams, setCode: (value: React.SetStateAction<string>) => void) => void;
     referenceImage: string;
+    appState: AppState;
 }
 
-export const ReactCodeEditor: React.FC<IProps> = ({ doGenerateCode, referenceImage }) => {
+export const ReactCodeEditor: React.FC<IProps> = ({ doGenerateCode, referenceImage, appState }) => {
     const [generatedReactCode, setGeneratedReactCode] = useState("");
     const [updateInstruction, setUpdateInstruction] = useState("");
     const [reactHistory, setReactHistory] = useState<string[]>([]);
@@ -51,19 +52,32 @@ export const ReactCodeEditor: React.FC<IProps> = ({ doGenerateCode, referenceIma
         setUpdateInstruction("");
     }
 
+    async function init() {
+        doGenerateCode({
+            generationType: "create",
+            codeType: CodeType.REACT,
+            image: referenceImage,
+            history: [],
+        }, setGeneratedReactCode);
+    }
+
     return (
-    <Dialog>
+    <Dialog onOpenChange={(open: boolean) => {
+        if (open && generatedReactCode === "") {
+            init();
+        }
+    }}>
         <DialogTrigger asChild>
         <Button className="flex items-center gap-x-2 ml-4"><FaReact /> Generate React Code</Button>
         </DialogTrigger>
-        <DialogContent className="sm:min-w-[425px] lg:min-w-[1240px] min-h-[600px] flex flex-col justify-between">
+        <DialogContent className="sm:min-w-[425px] lg:min-w-[1240px] h-[660px] flex flex-col justify-between">
             <DialogHeader>
                 <DialogTitle>Generate React Code</DialogTitle>
                 <DialogDescription>
                 Notice: The code below may shows different results than the HTML code.
                 </DialogDescription>
             </DialogHeader>
-            <div className="gap-2 flex-1">
+            <div className="gap-2 flex-1 overflow-scroll">
                 <CodeMirror
                     editorTheme={settings.editorTheme}
                     code={generatedReactCode}
@@ -77,7 +91,7 @@ export const ReactCodeEditor: React.FC<IProps> = ({ doGenerateCode, referenceIma
                 value={updateInstruction}
             />
             <DialogFooter>
-                <Button onClick={doUpdateReact}>Update</Button>
+                <Button disabled={appState === AppState.CODING} onClick={doUpdateReact}>Update</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

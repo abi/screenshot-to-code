@@ -302,7 +302,7 @@ function App() {
                     Code
                   </TabsTrigger>
                 </TabsList>
-                <ReactCodeEditor doGenerateCode={doGenerateCode} referenceImage={referenceImages[0]} />
+                <ReactCodeEditor doGenerateCode={doGenerateCode} referenceImage={referenceImages[0]} appState={appState} />
               </div>
               <TabsContent value="desktop">
                 <Preview code={generatedCode} device="desktop" />
