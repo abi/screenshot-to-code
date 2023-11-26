@@ -12,14 +12,16 @@ import {
 import { bracketMatching } from "@codemirror/language";
 import { html } from "@codemirror/lang-html";
 import { EditorTheme } from "@/types";
+import { FaCopy } from "react-icons/fa";
 
 interface Props {
   code: string;
   editorTheme: EditorTheme;
   onCodeChange: (code: string) => void;
+  doCopyCode: () => void;
 }
 
-function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
+function CodeMirror({ code, editorTheme, onCodeChange, doCopyCode }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const editorState = useMemo(() => EditorState.create({
@@ -67,7 +69,16 @@ function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
   }, [code]);
 
   return (
-    <div className="overflow-x-scroll overflow-y-scroll mx-2 border-[4px] border-black rounded-[20px]" ref={ref} />
+    <div className="relative">
+        <div className="overflow-x-scroll overflow-y-scroll mx-2 border-[4px] border-black rounded-[20px]" ref={ref} />
+        <span
+          title="Copy Code"
+          className="flex items-center justify-center w-10 h-10 text-gray-500 hover:bg-gray-100 cursor-pointer rounded-lg text-sm p-2.5 absolute top-[20px] right-[20px]"
+          onClick={doCopyCode}
+        >
+        <FaCopy />
+      </span>
+    </div>
   );
 }
 
