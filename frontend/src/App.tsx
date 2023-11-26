@@ -117,6 +117,9 @@ function App() {
 
   // Initial version creation
   function doCreate(referenceImages: string[]) {
+    // Reset any existing state
+    reset();
+
     setReferenceImages(referenceImages);
     if (referenceImages.length > 0) {
       doGenerateCode({
