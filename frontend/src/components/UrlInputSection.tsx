@@ -12,11 +12,13 @@ interface Props {
 export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
-  const isDisabled = !screenshotOneApiKey;
 
   async function takeScreenshot() {
     if (!screenshotOneApiKey) {
-      toast.error("Please add a Screenshot API key in the settings dialog");
+      toast.error(
+        "Please add a ScreenshotOne API key in the Settings dialog. This is optional - you can also drag/drop and upload images directly.",
+        { duration: 8000 }
+      );
       return;
     }
 
@@ -64,24 +66,13 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
         onChange={(e) => setReferenceUrl(e.target.value)}
         value={referenceUrl}
       />
-      <Button onClick={takeScreenshot} disabled={isDisabled || isLoading}>
+      <Button
+        onClick={takeScreenshot}
+        disabled={isLoading}
+        className="bg-slate-400"
+      >
         {isLoading ? "Capturing..." : "Capture"}
       </Button>
-      {isDisabled && (
-        <div className="flex space-y-4 bg-slate-200 p-2 rounded text-stone-800 text-sm">
-          <span>
-            To screenshot a URL, add a{" "}
-            <a
-              href="https://screenshotone.com?via=screenshot-to-code"
-              className="underline"
-              target="_blank"
-            >
-              ScreenshotOne API key
-            </a>{" "}
-            in the settings dialog.
-          </span>
-        </div>
-      )}
     </div>
   );
 }
