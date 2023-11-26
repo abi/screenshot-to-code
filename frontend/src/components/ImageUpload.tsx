@@ -128,7 +128,7 @@ const [colors, setColors] = useState<string[]>([]);
       // Convert images to data URLs and set the prompt images state
       Promise.all(files.map((file) => fileToDataURL(file)))
         .then((dataUrls) => {
-          if(dataUrls.length > 0) {
+          if (dataUrls.length > 0) {
             setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
           }
         })
