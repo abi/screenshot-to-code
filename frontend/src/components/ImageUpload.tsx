@@ -128,7 +128,9 @@ const [colors, setColors] = useState<string[]>([]);
       // Convert images to data URLs and set the prompt images state
       Promise.all(files.map((file) => fileToDataURL(file)))
         .then((dataUrls) => {
-          setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
+          if(dataUrls.length > 0) {
+            setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
+          }
         })
         .catch((error) => {
           // TODO: Display error to user
@@ -162,7 +164,10 @@ const [colors, setColors] = useState<string[]>([]);
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div {...getRootProps({ style: style as any })}>
         <input {...getInputProps()} />
-        <p>Drop a screenshot here, paste from clipboard, or click to select</p>
+        <p className="text-slate-700 font-bold">
+          Drag & drop a screenshot here, or paste from clipboard, or click to
+          upload
+        </p>
       </div>
     </section>
   );
