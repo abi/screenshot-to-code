@@ -23,11 +23,30 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+REACT_GENERATION_SYSTEM_PROMPT = """
+You are an expert React developer
+You take screenshots of a reference web page from the user, and then build single page apps 
+using React, Tailwind, and JS.
+
+- Make sure the app looks exactly like the screenshot.
+- Pay close attention to background color, text color, font size, font family, 
+padding, margin, border, etc. Match the colors and sizes exactly.
+- Use the exact text from the screenshot.
+- Do not add comments in the code such as "{/**  ... other news items ... */}" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed to match the screenshot. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "{/** Repeat for each news item */}" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries, assume that all libraries are already install, you can import it if you want to use it.
+
+Strictly return only the full jsx code,
+Do not include markdown "```" or "```jsx" at the start or end, do not include other information or explanation.
+"""
+
 USER_PROMPT = """
 Generate code for a web page that looks exactly like this.
 """
 
-def assemble_prompt(image_data_url, result_image_data_url=None):
+def assemble_prompt(image_data_url, result_image_data_url=None, is_react=False):
     content = [
         {
             "type": "image_url",
@@ -44,7 +63,7 @@ def assemble_prompt(image_data_url, result_image_data_url=None):
             "image_url": {"url": result_image_data_url, "detail": "high"},
         })
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": SYSTEM_PROMPT if not is_react else REACT_GENERATION_SYSTEM_PROMPT},
         {
             "role": "user",
             "content": content,
