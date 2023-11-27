@@ -97,36 +97,40 @@ function App() {
     setAppState(AppState.CODE_READY);
   };
 
-  function doOpenInCodepenio(){
-    const code = generatedCode
+  function doOpenInCodepenio() {
+    const code = generatedCode;
 
-    var form = document.createElement('form');
-    form.setAttribute('method', 'POST');
-    form.setAttribute('action', 'https://codepen.io/pen/define');
-    form.setAttribute('target', '_blank'); // open in new window
+    const form = document.createElement("form");
+    form.setAttribute("method", "POST");
+    form.setAttribute("action", "https://codepen.io/pen/define");
+    form.setAttribute("target", "_blank"); // open in new window
 
-    const data = { 
+    const data = {
       html: code,
       editors: "100", // 1:Open html, 0:close CSS, 0:Close Js
       layout: "left",
-      css_external: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-        + (generatedCode.includes('<ion-') ? ',https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css': '')
-      ,
-      js_external: "https://cdn.tailwindcss.com " 
-        + (generatedCode.includes('<ion-') ? ',https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js,https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js': '')
-      ,
-    }
+      css_external:
+        "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" +
+        (generatedCode.includes("<ion-")
+          ? ",https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css"
+          : ""),
+      js_external:
+        "https://cdn.tailwindcss.com " +
+        (generatedCode.includes("<ion-")
+          ? ",https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js,https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"
+          : ""),
+    };
     // test have html to json
     try {
-      JSON.stringify(data)
+      JSON.stringify(data);
     } catch (error) {
-      data.html = "<!-- Copy your code here -->"
+      data.html = "<!-- Copy your code here -->";
     }
     // Crear un input tipo hidden
-    var input = document.createElement('input');
-    input.setAttribute('type', 'hidden');
-    input.setAttribute('name', 'data');
-    input.setAttribute('value', JSON.stringify(data));
+    const input = document.createElement("input");
+    input.setAttribute("type", "hidden");
+    input.setAttribute("name", "data");
+    input.setAttribute("value", JSON.stringify(data));
 
     // Agregar el input al formulario
     form.appendChild(input);
@@ -359,10 +363,18 @@ function App() {
                       className="bg-black text-white flex items-center justify-center hover:text-black hover:bg-gray-100 cursor-pointer rounded-lg text-sm p-2.5"
                       onClick={doCopyCode}
                     >
-                       Copy Code <FaCopy className="ml-2" />
+                      Copy Code <FaCopy className="ml-2" />
                     </span>
-                    <Button onClick={doOpenInCodepenio} className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none">
-                      Open in <img src="https://assets.codepen.io/t-1/codepen-logo.svg" alt="codepen.io" className="h-4 ml-1" />
+                    <Button
+                      onClick={doOpenInCodepenio}
+                      className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
+                    >
+                      Open in{" "}
+                      <img
+                        src="https://assets.codepen.io/t-1/codepen-logo.svg"
+                        alt="codepen.io"
+                        className="h-4 ml-1"
+                      />
                     </Button>
                   </div>
                   <CodeMirror
