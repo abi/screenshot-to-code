@@ -31,8 +31,9 @@ interface Library {
  * @param { OpenInCodepenioProps } props 
  * @property {string} code  - this generated code.
  * @property {Function} onDoOpen - handle after open and redirect to Codepen Editor
- * @property {Record} libraries  - add support diferent tecnologies adding css, js libraries 
- * to css_external and js_external atributte of Codepen Editor.
+ * @property {Function} libraries[SupportType].css: [array style sheets libraries]
+ * @property {Function} libraries[SupportType].js: [array javascript libraries]
+ * @property {Function} libraries[SupportType].validate: return Boolean the result of custom validating
  */
 class OpenInCodepenio extends Component<OpenInCodepenioProps> {
 
@@ -62,7 +63,7 @@ class OpenInCodepenio extends Component<OpenInCodepenioProps> {
   getExternalLibraries = (type: LibraryType): string => {
     let library: string[] = []
     const { code, support = SupportType.HTML } = this.props;
-    debugger
+
     Object.values(this.libraries).forEach((value: Library) => {
       if( value.validate(support, code)){
         library = value[type]

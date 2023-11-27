@@ -323,7 +323,7 @@ function App() {
                     >
                        Copy Code <FaCopy className="ml-2" />
                     </span>
-                    <OpenInCodepenio code={generatedCode} ></OpenInCodepenio>
+                    <OpenInCodepenio code={generatedCode} onDoOpen={()=>toast.success("Opening codepen.io, enable redirect permission")} ></OpenInCodepenio>
                   </div>
                   <CodeMirror
                     code={generatedCode}
