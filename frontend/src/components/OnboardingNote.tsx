@@ -1,19 +1,27 @@
 export function OnboardingNote() {
   return (
-    <div className="flex flex-col space-y-4 bg-slate-500 p-2 rounded text-stone-200">
-      Please add your OpenAI API key (must have GPT4 vision access) in the
-      settings dialog (gear icon above).
-      <br />
-      <br />
-      How do you get an OpenAI API key that has the GPT4 Vision model available?
-      Create an OpenAI account. And then, you need to buy at least $1 worth of
-      credit on the Billing dashboard.
-      <br />
+    <div className="flex flex-col space-y-4 bg-green-700 p-2 rounded text-stone-200 text-sm">
       <span>
-        This key is only stored in your browser. Never stored on servers. This
-        app is open source. You can{" "}
-        <a href="https://github.com/abi/screenshot-to-code" className="inline">
-          check the code to confirm.
+        To use Screenshot to Code, you need an OpenAI API key with GPT4 vision
+        access.{" "}
+        <a
+          href="https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
+          className="inline underline hover:opacity-70"
+          target="_blank"
+        >
+          Follow these instructions to get yourself a key.
+        </a>{" "}
+        Then, paste it in the Settings dialog (gear icon above).
+      </span>
+      <span>
+        Your key is only stored in your browser. Never stored on our servers. If
+        you prefer, you can als run this app completely locally.{" "}
+        <a
+          href="https://github.com/abi/screenshot-to-code"
+          className="inline underline hover:opacity-70"
+          target="_blank"
+        >
+          See the Github project for instructions.
         </a>
       </span>
     </div>
