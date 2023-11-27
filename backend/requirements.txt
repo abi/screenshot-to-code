@@ -1,0 +1,6 @@
+beautifulsoup4==4.12.2
+fastapi==0.104.1
+httpx==0.25.2
+openai==0.27.8
+pydantic==1.10.7
+python-dotenv==1.0.0
