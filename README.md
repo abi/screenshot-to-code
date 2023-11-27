@@ -88,3 +88,5 @@ https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-a
 ## 🌍 Hosted Version
 
 🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section for details**). Or see [Getting Started](#-getting-started) for local install instructions.
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/abiraja)
