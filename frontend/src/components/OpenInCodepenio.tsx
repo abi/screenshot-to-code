@@ -34,6 +34,9 @@ interface Library {
  * @property {Function} libraries[SupportType].css: [array style sheets libraries]
  * @property {Function} libraries[SupportType].js: [array javascript libraries]
  * @property {Function} libraries[SupportType].validate: return Boolean the result of custom validating
+ * @property {Function} libraries[SupportType].css: [array style sheets libraries]
+ * @property {Function} libraries[SupportType].js: [array javascript libraries]
+ * @property {Function} libraries[SupportType].validate: return Boolean the result of custom validating
  */
 class OpenInCodepenio extends Component<OpenInCodepenioProps> {
 
@@ -63,6 +66,7 @@ class OpenInCodepenio extends Component<OpenInCodepenioProps> {
   getExternalLibraries = (type: LibraryType): string => {
     let library: string[] = []
     const { code, support = SupportType.HTML } = this.props;
+
     Object.values(this.libraries).forEach((value: Library) => {
       if( value.validate(support, code)){
         library = value[type]
