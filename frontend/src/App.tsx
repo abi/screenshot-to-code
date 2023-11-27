@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -7,7 +7,6 @@ import Spinner from "./components/Spinner";
 import classNames from "classnames";
 import {
   FaCode,
-  FaCopy,
   FaDesktop,
   FaDownload,
   FaMobile,
@@ -15,12 +14,9 @@ import {
 } from "react-icons/fa";
 
 import { Switch } from "./components/ui/switch";
-import copy from "copy-to-clipboard";
-import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
-import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
 import { Settings, EditorTheme, AppState } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
@@ -31,6 +27,7 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
+import CodeTab from "./components/CodeTab";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
@@ -151,11 +148,6 @@ function App() {
     setGeneratedCode("");
     setUpdateInstruction("");
   }
-
-  const doCopyCode = useCallback(() => {
-    copy(generatedCode);
-    toast.success("Copied to clipboard");
-  }, [generatedCode]);
 
   const handleTermDialogOpenChange = (open: boolean) => {
     setSettings((s) => ({
@@ -316,20 +308,11 @@ function App() {
                 <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
-                <div className="relative">
-                  <CodeMirror
-                    code={generatedCode}
-                    editorTheme={settings.editorTheme}
-                    onCodeChange={setGeneratedCode}
-                  />
-                  <span
-                    title="Copy Code"
-                    className="flex items-center justify-center w-10 h-10 text-gray-500 hover:bg-gray-100 cursor-pointer rounded-lg text-sm p-2.5 absolute top-[20px] right-[20px]"
-                    onClick={doCopyCode}
-                  >
-                    <FaCopy />
-                  </span>
-                </div>
+                <CodeTab
+                  code={generatedCode}
+                  setCode={setGeneratedCode}
+                  settings={settings}
+                />
               </TabsContent>
             </Tabs>
           </div>
