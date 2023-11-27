@@ -15,7 +15,7 @@ export function OnboardingNote() {
       </span>
       <span>
         Your key is only stored in your browser. Never stored on our servers. If
-        you prefer, you can als run this app completely locally.{" "}
+        you prefer, you can also run this app completely locally.{" "}
         <a
           href="https://github.com/abi/screenshot-to-code"
           className="inline underline hover:opacity-70"
