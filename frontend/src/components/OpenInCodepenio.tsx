@@ -63,7 +63,6 @@ class OpenInCodepenio extends Component<OpenInCodepenioProps> {
   getExternalLibraries = (type: LibraryType): string => {
     let library: string[] = []
     const { code, support = SupportType.HTML } = this.props;
-
     Object.values(this.libraries).forEach((value: Library) => {
       if( value.validate(support, code)){
         library = value[type]
