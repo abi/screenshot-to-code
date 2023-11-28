@@ -63,7 +63,11 @@ def write_logs(prompt_messages, completion):
 async def stream_code(websocket: WebSocket):
     await websocket.accept()
 
+    print("Incoming websocket connection...")
+
     params = await websocket.receive_json()
+
+    print("Received params")
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
