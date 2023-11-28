@@ -61,11 +61,6 @@
 
     --radius: 0.5rem;
   }
-
-  /* invert image for dark theme */
-  .invert {
-    filter: invert();
-  }
   
   body.dark {
     background-color: black;
