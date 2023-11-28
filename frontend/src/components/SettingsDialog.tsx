@@ -14,6 +14,7 @@ import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
+import { capitalize } from "../lib/utils";
 
 interface Props {
   settings: Settings;
@@ -115,7 +116,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
               onValueChange={(value) => handleThemeChange(value as EditorTheme)}
             >
               <SelectTrigger className="w-[180px]">
-                {settings.editorTheme}
+                {capitalize(settings.editorTheme)}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="cobalt">Cobalt</SelectItem>
