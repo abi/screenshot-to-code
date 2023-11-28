@@ -15,7 +15,9 @@ export default ({ mode }) => {
       createHtmlPlugin({
         inject: {
           data: {
-            injectHead: process.env.VITE_INJECT_HEAD,
+            injectHead: process.env.VITE_IS_DEPLOYED
+              ? '<script defer="" data-domain="screenshottocode.com" src="https://plausible.io/js/script.js"></script>'
+              : "",
           },
         },
       }),
