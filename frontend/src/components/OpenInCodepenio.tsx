@@ -1,26 +1,13 @@
-import { Component } from 'react';
+import { useCallback } from 'react';
 import { Button } from './ui/button';
+import { libraries, LibraryType } from '@/lib/support';
+import { ComponentLibrary } from '@/types';
+import toast from 'react-hot-toast';
 
-enum SupportType {
-  HTML = 'html',
-  IONIC = 'ionic'
-}
-
-enum LibraryType {
-  css = 'css',
-  js = 'js',
-}
-
-interface OpenInCodepenioProps {
+export interface OpenInProps {
   code: string;
-  support?: SupportType;
+  support?: ComponentLibrary;
   onDoOpen?: () => void;
-}
-
-interface Library {
-  [LibraryType.css]: string[],
-  [LibraryType.js]: string[],
-  validate: (support: SupportType, code: String) => Boolean
 }
 
 /**
@@ -28,56 +15,13 @@ interface Library {
  * of diferrent tecnologies do use `libraries` property.
  * @component
  * Redirect to codepen.io
- * @param { OpenInCodepenioProps } props 
+ * @param { OpenInProps } props 
  * @property {string} code  - this generated code.
  * @property {Function} onDoOpen - handle after open and redirect to Codepen Editor
- * @property {Function} libraries[SupportType].css: [array style sheets libraries]
- * @property {Function} libraries[SupportType].js: [array javascript libraries]
- * @property {Function} libraries[SupportType].validate: return Boolean the result of custom validating
- * @property {Function} libraries[SupportType].css: [array style sheets libraries]
- * @property {Function} libraries[SupportType].js: [array javascript libraries]
- * @property {Function} libraries[SupportType].validate: return Boolean the result of custom validating
  */
-class OpenInCodepenio extends Component<OpenInCodepenioProps> {
+function OpenInCodepenio({ code, support, onDoOpen }: OpenInProps) {
 
-  libraries: Record<string, Library> = {
-    [SupportType.HTML] : {
-      css: ['https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css'],
-      js: ['https://cdn.tailwindcss.com'],
-      validate: (support) => { 
-        return support == SupportType.HTML 
-      }
-    },
-    [SupportType.IONIC] : {
-      css: [
-        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css',
-        'https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css'],
-      js: [
-        'https://cdn.tailwindcss.com',
-        'https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js', 
-        'https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js'
-      ],
-      validate: (support, code) => { 
-        return support == SupportType.IONIC || code.includes('<ion-') 
-      }
-    },
-  }
-
-  getExternalLibraries = (type: LibraryType): string => {
-    let library: string[] = []
-    const { code, support = SupportType.HTML } = this.props;
-
-    Object.values(this.libraries).forEach((value: Library) => {
-      if( value.validate(support, code)){
-        library = value[type]
-      }
-    });
-
-    return library.join(',');
-  }
-
-  doOpenInCodepenio =  () => {
-      const { code, onDoOpen } = this.props; 
+  const doOpenInCodepenio =  useCallback(async () => { 
       var form = document.createElement('form');
       form.setAttribute('method', 'POST');
       form.setAttribute('action', 'https://codepen.io/pen/define');
@@ -87,15 +31,10 @@ class OpenInCodepenio extends Component<OpenInCodepenioProps> {
         html: code,
         editors: "100", // 1:Open html, 0:close CSS, 0:Close Js
         layout: "left",
-        css_external: this.getExternalLibraries(LibraryType.css),
-        js_external: this.getExternalLibraries(LibraryType.js),
+        css_external: libraries.getLibraries(LibraryType.css, { code , support }),
+        js_external: libraries.getLibraries(LibraryType.js, {code , support }),
       }
-      // test have html to json
-      try {
-        JSON.stringify({ html: data.html })
-      } catch (error) {
-        data.html = "<!-- Copy your code here -->"
-      }
+
       var input = document.createElement('input');
       input.setAttribute('type', 'hidden');
       input.setAttribute('name', 'data');
@@ -106,18 +45,25 @@ class OpenInCodepenio extends Component<OpenInCodepenioProps> {
       form.submit();
       if (onDoOpen) {
         onDoOpen();
+      } else {
+        toast.success("Will Opening codepen.io, need enable popup windows");
       }
-  }
+  }, [code, support])
 
-  render() {    
-    return (
-      <div>
-       <Button onClick={this.doOpenInCodepenio} className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none">
-          Open in <img src="https://assets.codepen.io/t-1/codepen-logo.svg" alt="codepen.io" className="h-4 ml-1" />
-        </Button>
-      </div>
-    );
-  }
+     
+  return (
+      <Button
+        onClick={doOpenInCodepenio}
+        className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
+      >
+        Open in{" "}
+        <img
+          src="https://assets.codepen.io/t-1/codepen-logo.svg"
+          alt="codepen.io"
+          className="h-4 ml-1"
+        />
+      </Button>
+  );
 }
 
 export default OpenInCodepenio;

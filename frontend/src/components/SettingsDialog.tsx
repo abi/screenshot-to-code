@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaCog } from "react-icons/fa";
-import { EditorTheme, Settings } from "../types";
+import { EditorTheme, Settings, ComponentLibrary } from "../types";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
@@ -118,6 +118,25 @@ function SettingsDialog({ settings, setSettings }: Props) {
             >
               <option value="cobalt">Cobalt</option>
               <option value="espresso">Espresso</option>
+            </Select>
+          </div>
+
+          <Label htmlFor="output-code">
+            <div>Output Code</div>
+          </Label>
+          <div>
+            <Select
+              id="output-code"
+              value={settings.componentLibrary}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSettings((s) => ({
+                  ...s,
+                  componentLibrary: e.target.value as ComponentLibrary,
+                }))
+              }
+            >
+              <option disabled>Default</option>
+              <option value={ComponentLibrary.HTML}>{ComponentLibrary.HTML.toUpperCase()}</option>
             </Select>
           </div>
         </div>
