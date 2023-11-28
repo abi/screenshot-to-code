@@ -24,6 +24,7 @@ import {
   AppState,
   CSSOption,
   OutputSettings,
+  JSFrameworkOption,
 } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
@@ -55,6 +56,7 @@ function App() {
   );
   const [outputSettings, setOutputSettings] = useState<OutputSettings>({
     css: CSSOption.TAILWIND,
+    js: JSFrameworkOption.VANILLA,
   });
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);

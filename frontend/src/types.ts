@@ -8,8 +8,15 @@ export enum CSSOption {
   BOOTSTRAP = "bootstrap",
 }
 
+export enum JSFrameworkOption {
+  VANILLA = "vanilla",
+  REACT = "react",
+  VUE = "vue",
+}
+
 export interface OutputSettings {
   css: CSSOption;
+  js: JSFrameworkOption;
 }
 
 export interface Settings {

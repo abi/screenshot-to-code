@@ -70,9 +70,11 @@ async def stream_code(websocket: WebSocket):
     print("Received params")
 
     # Read the output settings from the request. Fall back to default if not provided.
-    output_settings = {"css": "tailwind"}
+    output_settings = {"css": "tailwind", "js": "vanilla"}
     if params["outputSettings"] and params["outputSettings"]["css"]:
         output_settings["css"] = params["outputSettings"]["css"]
+    if params["outputSettings"] and params["outputSettings"]["js"]:
+        output_settings["js"] = params["outputSettings"]["js"]
     print("Using output settings:", output_settings)
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
