@@ -69,6 +69,12 @@ async def stream_code(websocket: WebSocket):
 
     print("Received params")
 
+    # Read the output settings from the request. Fall back to default if not provided.
+    output_settings = {"css": "tailwind"}
+    if params["outputSettings"] and params["outputSettings"]["css"]:
+        output_settings["css"] = params["outputSettings"]["css"]
+    print("Using output settings:", output_settings)
+
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
     if params["openAiApiKey"]:
@@ -102,9 +108,11 @@ async def stream_code(websocket: WebSocket):
         await websocket.send_json({"type": "chunk", "value": content})
 
     if params.get("resultImage") and params["resultImage"]:
-        prompt_messages = assemble_prompt(params["image"], params["resultImage"])
+        prompt_messages = assemble_prompt(
+            params["image"], output_settings, params["resultImage"]
+        )
     else:
-        prompt_messages = assemble_prompt(params["image"])
+        prompt_messages = assemble_prompt(params["image"], output_settings)
 
     # Image cache for updates so that we don't have to regenerate images
     image_cache = {}

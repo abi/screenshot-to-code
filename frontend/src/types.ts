@@ -3,6 +3,15 @@ export enum EditorTheme {
   COBALT = "cobalt",
 }
 
+export enum CSSOption {
+  TAILWIND = "tailwind",
+  BOOTSTRAP = "bootstrap",
+}
+
+export interface OutputSettings {
+  css: CSSOption;
+}
+
 export interface Settings {
   openAiApiKey: string | null;
   screenshotOneApiKey: string | null;
