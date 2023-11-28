@@ -8,7 +8,7 @@ import { createHtmlPlugin } from "vite-plugin-html";
 export default ({ mode }) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
   return defineConfig({
-    base: process.env.VITE_IS_DEPLOYED ? "/free-tools/screenshot-to-code/" : "",
+    base: "",
     plugins: [
       react(),
       checker({ typescript: true }),
