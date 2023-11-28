@@ -22,28 +22,32 @@ interface Props {
 function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
-  const editorState = useMemo(() => EditorState.create({
-    extensions: [
-      history(),
-      keymap.of([
-        ...defaultKeymap,
-        indentWithTab,
-        { key: "Mod-z", run: undo, preventDefault: true },
-        { key: "Mod-Shift-z", run: redo, preventDefault: true },
-      ]),
-      lineNumbers(),
-      bracketMatching(),
-      html(),
-      editorTheme === EditorTheme.ESPRESSO ? espresso : cobalt,
-      EditorView.lineWrapping,
-      EditorView.updateListener.of((update: ViewUpdate) => {
-        if (update.docChanged) {
-          const updatedCode = update.state.doc.toString();
-          onCodeChange(updatedCode);
-        }
+  const editorState = useMemo(
+    () =>
+      EditorState.create({
+        extensions: [
+          history(),
+          keymap.of([
+            ...defaultKeymap,
+            indentWithTab,
+            { key: "Mod-z", run: undo, preventDefault: true },
+            { key: "Mod-Shift-z", run: redo, preventDefault: true },
+          ]),
+          lineNumbers(),
+          bracketMatching(),
+          html(),
+          editorTheme === EditorTheme.ESPRESSO ? espresso : cobalt,
+          EditorView.lineWrapping,
+          EditorView.updateListener.of((update: ViewUpdate) => {
+            if (update.docChanged) {
+              const updatedCode = update.state.doc.toString();
+              onCodeChange(updatedCode);
+            }
+          }),
+        ],
       }),
-    ],
-  }), [editorTheme]);
+    [editorTheme]
+  );
   useEffect(() => {
     view.current = new EditorView({
       state: editorState,
@@ -67,9 +71,11 @@ function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
   }, [code]);
 
   return (
-    <div className="overflow-x-scroll overflow-y-scroll mx-2 border-[4px] border-black rounded-[20px]" ref={ref} />
+    <div
+      className="overflow-x-scroll overflow-y-scroll mx-2 border-[4px] border-black rounded-[20px]"
+      ref={ref}
+    />
   );
 }
 
 export default CodeMirror;
-
