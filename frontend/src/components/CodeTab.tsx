@@ -65,7 +65,7 @@ function CodeTab({ code, setCode, settings }: Props) {
         </span>
         <Button
           onClick={doOpenInCodepenio}
-          className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
+          className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none plausible-event-name=Codepen"
         >
           Open in{" "}
           <img
