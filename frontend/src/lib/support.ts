@@ -38,7 +38,6 @@ class SupportLibraries {
 
     getLibraries = (type: LibraryType, { code = '', support = ComponentLibrary.HTML} ): string => {
         let library: string[] = []
-        debugger
         Object.values(this.libraries).forEach((value: Library) => {
             if( value.validate(support, code)){
                 library = value[type]
