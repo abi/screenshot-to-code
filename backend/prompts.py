@@ -84,11 +84,16 @@ Generate code for a web page that looks exactly like this.
 
 def assemble_prompt(image_data_url, output_settings: dict, result_image_data_url=None):
     # Set the system prompt based on the output settings
+    chosen_prompt_name = "tailwind"
     system_content = TAILWIND_SYSTEM_PROMPT
     if output_settings["css"] == "bootstrap":
+        chosen_prompt_name = "bootstrap"
         system_content = BOOTSTRAP_SYSTEM_PROMPT
     if output_settings["js"] == "react":
+        chosen_prompt_name = "react-tailwind"
         system_content = REACT_TAILWIND_SYSTEM_PROMPT
+
+    print("Using system prompt:", chosen_prompt_name)
 
     user_content = [
         {
