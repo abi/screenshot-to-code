@@ -9,7 +9,7 @@ export enum CSSOption {
 }
 
 export enum JSFrameworkOption {
-  VANILLA = "vanilla",
+  NO_FRAMEWORK = "vanilla",
   REACT = "react",
   VUE = "vue",
 }

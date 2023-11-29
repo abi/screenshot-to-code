@@ -56,7 +56,7 @@ function App() {
   );
   const [outputSettings, setOutputSettings] = useState<OutputSettings>({
     css: CSSOption.TAILWIND,
-    js: JSFrameworkOption.VANILLA,
+    js: JSFrameworkOption.NO_FRAMEWORK,
   });
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
@@ -181,22 +181,18 @@ function App() {
 
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
-          <div className="flex items-center justify-between mt-10">
+          <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
-          {appState === AppState.INITIAL && (
-            <h2 className="text-sm text-gray-500 mb-2">
-              Drag & drop a screenshot to get started.
-            </h2>
-          )}
 
-          {appState === AppState.INITIAL && (
-            <OutputSettingsSection
-              outputSettings={outputSettings}
-              setOutputSettings={setOutputSettings}
-            />
-          )}
+          <OutputSettingsSection
+            outputSettings={outputSettings}
+            setOutputSettings={setOutputSettings}
+            shouldDisableUpdates={
+              appState === AppState.CODING || appState === AppState.CODE_READY
+            }
+          />
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
