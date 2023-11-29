@@ -79,13 +79,17 @@ async def stream_code(websocket: WebSocket):
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
-    if params["openAiApiKey"]:
-        openai_api_key = params["openAiApiKey"]
-        print("Using OpenAI API key from client-side settings dialog")
+    openai_api_key = None
+    if "accessCode" in params and params["accessCode"]:
+        print("Using access code")
     else:
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
-        if openai_api_key:
-            print("Using OpenAI API key from environment variable")
+        if params["openAiApiKey"]:
+            openai_api_key = params["openAiApiKey"]
+            print("Using OpenAI API key from client-side settings dialog")
+        else:
+            openai_api_key = os.environ.get("OPENAI_API_KEY")
+            if openai_api_key:
+                print("Using OpenAI API key from environment variable")
 
     if not openai_api_key:
         print("OpenAI API key not found")
