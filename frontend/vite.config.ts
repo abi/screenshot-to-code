@@ -16,7 +16,7 @@ export default ({ mode }) => {
         inject: {
           data: {
             injectHead: process.env.VITE_IS_DEPLOYED
-              ? '<script defer="" data-domain="screenshottocode.com" src="https://plausible.io/js/script.tagged-events.js"></script><script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>'
+              ? '<script defer="" data-domain="screenshottocode.com" src="https://plausible.io/js/script.tagged-events.outbound-links.js"></script><script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>'
               : "",
           },
         },
