@@ -195,7 +195,10 @@ function App() {
             }
           />
 
-          {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
+          {IS_RUNNING_ON_CLOUD &&
+            !(settings.openAiApiKey || settings.accessCode) && (
+              <OnboardingNote />
+            )}
 
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
