@@ -6,7 +6,6 @@ import {
   SelectTrigger,
 } from "./ui/select";
 import { CSSOption, JSFrameworkOption, OutputSettings } from "../types";
-import { capitalize } from "../lib/utils";
 import toast from "react-hot-toast";
 import { Label } from "@radix-ui/react-label";
 import { Button } from "./ui/button";
@@ -18,6 +17,17 @@ function displayCSSOption(option: CSSOption) {
       return "Tailwind";
     case CSSOption.BOOTSTRAP:
       return "Bootstrap";
+    default:
+      return option;
+  }
+}
+
+function displayJSOption(option: JSFrameworkOption) {
+  switch (option) {
+    case JSFrameworkOption.REACT:
+      return "React";
+    case JSFrameworkOption.NO_FRAMEWORK:
+      return "No Framework";
     default:
       return option;
   }
@@ -46,7 +56,7 @@ function generateDisplayString(settings: OutputSettings) {
       </div>
     );
   } else if (
-    settings.js === JSFrameworkOption.VANILLA &&
+    settings.js === JSFrameworkOption.NO_FRAMEWORK &&
     settings.css === CSSOption.TAILWIND
   ) {
     return (
@@ -56,7 +66,7 @@ function generateDisplayString(settings: OutputSettings) {
       </div>
     );
   } else if (
-    settings.js === JSFrameworkOption.VANILLA &&
+    settings.js === JSFrameworkOption.NO_FRAMEWORK &&
     settings.css === CSSOption.BOOTSTRAP
   ) {
     return (
@@ -135,12 +145,12 @@ function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
                     className="col-span-2 h-8"
                     id="output-settings-js"
                   >
-                    {capitalize(outputSettings.js)}
+                    {displayJSOption(outputSettings.js)}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value={JSFrameworkOption.VANILLA}>
-                        Vanilla
+                      <SelectItem value={JSFrameworkOption.NO_FRAMEWORK}>
+                        No Framework
                       </SelectItem>
                       <SelectItem value={JSFrameworkOption.REACT}>
                         React

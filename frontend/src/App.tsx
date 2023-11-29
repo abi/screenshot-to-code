@@ -56,7 +56,7 @@ function App() {
   );
   const [outputSettings, setOutputSettings] = useState<OutputSettings>({
     css: CSSOption.TAILWIND,
-    js: JSFrameworkOption.VANILLA,
+    js: JSFrameworkOption.NO_FRAMEWORK,
   });
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
