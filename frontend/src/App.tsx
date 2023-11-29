@@ -271,7 +271,7 @@ function App() {
                     })}
                   >
                     <img
-                      className="w-[340px] border border-gray-200 rounded-md dark:invert"
+                      className="w-[340px] border border-gray-200 rounded-md"
                       src={referenceImages[0]}
                       alt="Reference"
                     />
