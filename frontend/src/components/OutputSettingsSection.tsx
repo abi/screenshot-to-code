@@ -37,6 +37,40 @@ function convertStringToCSSOption(option: string) {
   }
 }
 
+function generateDisplayString(settings: OutputSettings) {
+  if (
+    settings.js === JSFrameworkOption.REACT &&
+    settings.css === CSSOption.TAILWIND
+  ) {
+    return (
+      <div>
+        Generating <span className="font-bold">React</span> +{" "}
+        <span className="font-bold">Tailwind</span> code
+      </div>
+    );
+  } else if (
+    settings.js === JSFrameworkOption.VANILLA &&
+    settings.css === CSSOption.TAILWIND
+  ) {
+    return (
+      <div>
+        Generating <span className="font-bold">HTML</span> +{" "}
+        <span className="font-bold">Tailwind</span> code
+      </div>
+    );
+  } else if (
+    settings.js === JSFrameworkOption.VANILLA &&
+    settings.css === CSSOption.BOOTSTRAP
+  ) {
+    return (
+      <div>
+        Generating <span className="font-bold">HTML</span> +{" "}
+        <span className="font-bold">Bootstrap</span> code
+      </div>
+    );
+  }
+}
+
 interface Props {
   outputSettings: OutputSettings;
   setOutputSettings: React.Dispatch<React.SetStateAction<OutputSettings>>;
@@ -82,7 +116,9 @@ function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="item-1">
         <AccordionTrigger>
-          <div className="flex gap-x-2">Output Settings </div>
+          <div className="flex gap-x-2">
+            {generateDisplayString(outputSettings)}{" "}
+          </div>
         </AccordionTrigger>
         <AccordionContent className="gap-y-2 flex flex-col pt-2">
           <div className="flex justify-between items-center pr-2">
