@@ -6,14 +6,11 @@ import {
   SelectTrigger,
 } from "./ui/select";
 import { CSSOption, JSFrameworkOption, OutputSettings } from "../types";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./ui/accordion";
 import { capitalize } from "../lib/utils";
 import toast from "react-hot-toast";
+import { Label } from "@radix-ui/react-label";
+import { Button } from "./ui/button";
+import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 
 function displayCSSOption(option: CSSOption) {
   switch (option) {
@@ -113,50 +110,74 @@ function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
   };
 
   return (
-    <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value="item-1">
-        <AccordionTrigger>
-          <div className="flex gap-x-2">
-            {generateDisplayString(outputSettings)}{" "}
+    <div className="flex flex-col gap-y-2 justify-between text-sm">
+      {generateDisplayString(outputSettings)}{" "}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline">Customize</Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 text-sm">
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <h4 className="font-medium leading-none">Code Settings</h4>
+              <p className="text-muted-foreground">
+                Customize your code output
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <div className="grid grid-cols-3 items-center gap-4">
+                <Label htmlFor="output-settings-js">JS</Label>
+                <Select
+                  value={outputSettings.js}
+                  onValueChange={onJsFrameworkChange}
+                >
+                  <SelectTrigger
+                    className="col-span-2 h-8"
+                    id="output-settings-js"
+                  >
+                    {capitalize(outputSettings.js)}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={JSFrameworkOption.VANILLA}>
+                        Vanilla
+                      </SelectItem>
+                      <SelectItem value={JSFrameworkOption.REACT}>
+                        React
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <Label htmlFor="output-settings-css">CSS</Label>
+                <Select
+                  value={outputSettings.css}
+                  onValueChange={onCSSValueChange}
+                >
+                  <SelectTrigger
+                    className="col-span-2 h-8"
+                    id="output-settings-css"
+                  >
+                    {displayCSSOption(outputSettings.css)}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={CSSOption.TAILWIND}>
+                        Tailwind
+                      </SelectItem>
+                      <SelectItem value={CSSOption.BOOTSTRAP}>
+                        Bootstrap
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-        </AccordionTrigger>
-        <AccordionContent className="gap-y-2 flex flex-col pt-2">
-          <div className="flex justify-between items-center pr-2">
-            <span className="text-sm">CSS</span>
-            <Select value={outputSettings.css} onValueChange={onCSSValueChange}>
-              <SelectTrigger className="w-[180px]">
-                {displayCSSOption(outputSettings.css)}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value={CSSOption.TAILWIND}>Tailwind</SelectItem>
-                  <SelectItem value={CSSOption.BOOTSTRAP}>Bootstrap</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex justify-between items-center pr-2">
-            <span className="text-sm">JS Framework</span>
-            <Select
-              value={outputSettings.js}
-              onValueChange={onJsFrameworkChange}
-            >
-              <SelectTrigger className="w-[180px]">
-                {capitalize(outputSettings.js)}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value={JSFrameworkOption.VANILLA}>
-                    Vanilla
-                  </SelectItem>
-                  <SelectItem value={JSFrameworkOption.REACT}>React</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
 
