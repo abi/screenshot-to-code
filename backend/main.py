@@ -1,6 +1,5 @@
 # Load environment variables first
 from dotenv import load_dotenv
-from pydantic import BaseModel
 
 load_dotenv()
 
@@ -16,6 +15,7 @@ from mock import mock_completion
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_prompt
 from routes import screenshot
+from access_token import validate_access_token
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
@@ -82,13 +82,13 @@ async def stream_code(websocket: WebSocket):
     openai_api_key = None
     if "accessCode" in params and params["accessCode"]:
         print("Access code - using platform API key")
-        if params["accessCode"] == "hi":
+        if await validate_access_token(params["accessCode"]):
             openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
         else:
             await websocket.send_json(
                 {
                     "type": "error",
-                    "value": "Invalid access code. Please try again.",
+                    "value": "Invalid access code or you're out of credits. Please try again.",
                 }
             )
             return
