@@ -77,6 +77,12 @@ function App() {
   };
 
   const downloadCode = () => {
+    try {
+      window.plausible("Download");
+    } catch {
+      // Ignore
+    }
+
     // Create a blob from the generated code
     const blob = new Blob([generatedCode], { type: "text/html" });
     const url = URL.createObjectURL(blob);
