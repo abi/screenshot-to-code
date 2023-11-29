@@ -60,7 +60,7 @@ function generateDisplayString(settings: OutputSettings) {
     settings.css === CSSOption.TAILWIND
   ) {
     return (
-      <div>
+      <div className="text-gray-800">
         Generating <span className="font-bold">HTML</span> +{" "}
         <span className="font-bold">Tailwind</span> code
       </div>
