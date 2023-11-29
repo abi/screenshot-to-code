@@ -172,7 +172,7 @@ function App() {
 
   return (
     <div className="mt-2">
-      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
+      {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
           open={!settings.isTermOfServiceAccepted}
