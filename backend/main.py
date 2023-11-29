@@ -81,7 +81,17 @@ async def stream_code(websocket: WebSocket):
     # If neither is provided, we throw an error.
     openai_api_key = None
     if "accessCode" in params and params["accessCode"]:
-        print("Using access code")
+        print("Access code - using platform API key")
+        if params["accessCode"] == "hi":
+            openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
+        else:
+            await websocket.send_json(
+                {
+                    "type": "error",
+                    "value": "Invalid access code. Please try again.",
+                }
+            )
+            return
     else:
         if params["openAiApiKey"]:
             openai_api_key = params["openAiApiKey"]
