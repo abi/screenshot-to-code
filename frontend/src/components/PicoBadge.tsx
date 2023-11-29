@@ -3,7 +3,7 @@ export function PicoBadge() {
     <>
       <a href="https://buy.stripe.com/5kAfZt0CX85f9mEbI" target="_blank">
         <div
-          className="fixed z-[100] bottom-5 left-5 rounded-md shadow-lg bg-black
+          className="fixed z-50 bottom-5 left-5 rounded-md shadow-lg bg-black
           text-white  px-4 text-xs py-3 cursor-pointer"
         >
           buy 100 code generations for $36 <br />
