@@ -44,6 +44,9 @@ interface Props {
 
 function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
   const onCSSValueChange = (value: string) => {
+    window.plausible("OutputSettings", {
+      props: { framework: "CSS", value: value },
+    });
     setOutputSettings((prev) => {
       if (prev.js === JSFrameworkOption.REACT) {
         if (value !== CSSOption.TAILWIND) {
@@ -65,6 +68,9 @@ function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
   };
 
   const onJsFrameworkChange = (value: string) => {
+    window.plausible("OutputSettings", {
+      props: { framework: "JS", value: value },
+    });
     if (value === JSFrameworkOption.REACT) {
       setOutputSettings(() => ({
         css: CSSOption.TAILWIND,
