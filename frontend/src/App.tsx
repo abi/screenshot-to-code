@@ -51,6 +51,7 @@ function App() {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       isTermOfServiceAccepted: false,
+      accessCode: null,
     },
     "setting"
   );

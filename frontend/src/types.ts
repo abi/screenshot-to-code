@@ -25,6 +25,7 @@ export interface Settings {
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;
   isTermOfServiceAccepted: boolean; // Only relevant for hosted version
+  accessCode: string | null; // Only relevant for hosted version
 }
 
 export enum AppState {

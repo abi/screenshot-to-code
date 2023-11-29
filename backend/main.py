@@ -1,6 +1,5 @@
 # Load environment variables first
 from dotenv import load_dotenv
-from pydantic import BaseModel
 
 load_dotenv()
 
@@ -16,6 +15,7 @@ from mock import mock_completion
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_prompt
 from routes import screenshot
+from access_token import validate_access_token
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
@@ -79,13 +79,27 @@ async def stream_code(websocket: WebSocket):
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
-    if params["openAiApiKey"]:
-        openai_api_key = params["openAiApiKey"]
-        print("Using OpenAI API key from client-side settings dialog")
+    openai_api_key = None
+    if "accessCode" in params and params["accessCode"]:
+        print("Access code - using platform API key")
+        if await validate_access_token(params["accessCode"]):
+            openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
+        else:
+            await websocket.send_json(
+                {
+                    "type": "error",
+                    "value": "Invalid access code or you're out of credits. Please try again.",
+                }
+            )
+            return
     else:
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
-        if openai_api_key:
-            print("Using OpenAI API key from environment variable")
+        if params["openAiApiKey"]:
+            openai_api_key = params["openAiApiKey"]
+            print("Using OpenAI API key from client-side settings dialog")
+        else:
+            openai_api_key = os.environ.get("OPENAI_API_KEY")
+            if openai_api_key:
+                print("Using OpenAI API key from environment variable")
 
     if not openai_api_key:
         print("OpenAI API key not found")
