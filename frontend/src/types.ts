@@ -14,9 +14,15 @@ export enum JSFrameworkOption {
   VUE = "vue",
 }
 
+export enum UIComponentOption {
+  HTML = 'HTML',
+  IONIC = 'ionic'
+}
+
 export interface OutputSettings {
   css: CSSOption;
   js: JSFrameworkOption;
+  components: UIComponentOption;
 }
 
 export interface Settings {
