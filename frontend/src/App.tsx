@@ -179,7 +179,7 @@ function App() {
         />
       )}
 
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
+      <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
           <div className="flex items-center justify-between mt-10">
             <h1 className="text-2xl ">Screenshot to Code</h1>
