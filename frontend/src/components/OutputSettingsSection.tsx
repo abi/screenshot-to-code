@@ -81,15 +81,20 @@ function generateDisplayString(settings: OutputSettings) {
 interface Props {
   outputSettings: OutputSettings;
   setOutputSettings: React.Dispatch<React.SetStateAction<OutputSettings>>;
+  shouldDisableUpdates?: boolean;
 }
 
-function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
+function OutputSettingsSection({
+  outputSettings,
+  setOutputSettings,
+  shouldDisableUpdates = false,
+}: Props) {
   const onCSSValueChange = (value: string) => {
     setOutputSettings((prev) => {
       if (prev.js === JSFrameworkOption.REACT) {
         if (value !== CSSOption.TAILWIND) {
           toast.error(
-            "React only supports Tailwind CSS. Change JS framework to Vanilla to use Bootstrap."
+            'React only supports Tailwind CSS. Change JS framework to "No Framework" to use Bootstrap.'
           );
         }
         return {
@@ -122,71 +127,73 @@ function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
   return (
     <div className="flex flex-col gap-y-2 justify-between text-sm">
       {generateDisplayString(outputSettings)}{" "}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline">Customize</Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80 text-sm">
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <h4 className="font-medium leading-none">Code Settings</h4>
-              <p className="text-muted-foreground">
-                Customize your code output
-              </p>
-            </div>
-            <div className="grid gap-2">
-              <div className="grid grid-cols-3 items-center gap-4">
-                <Label htmlFor="output-settings-js">JS</Label>
-                <Select
-                  value={outputSettings.js}
-                  onValueChange={onJsFrameworkChange}
-                >
-                  <SelectTrigger
-                    className="col-span-2 h-8"
-                    id="output-settings-js"
-                  >
-                    {displayJSOption(outputSettings.js)}
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value={JSFrameworkOption.NO_FRAMEWORK}>
-                        No Framework
-                      </SelectItem>
-                      <SelectItem value={JSFrameworkOption.REACT}>
-                        React
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+      {!shouldDisableUpdates && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline">Customize</Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 text-sm">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Code Settings</h4>
+                <p className="text-muted-foreground">
+                  Customize your code output
+                </p>
               </div>
-              <div className="grid grid-cols-3 items-center gap-4">
-                <Label htmlFor="output-settings-css">CSS</Label>
-                <Select
-                  value={outputSettings.css}
-                  onValueChange={onCSSValueChange}
-                >
-                  <SelectTrigger
-                    className="col-span-2 h-8"
-                    id="output-settings-css"
+              <div className="grid gap-2">
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="output-settings-js">JS</Label>
+                  <Select
+                    value={outputSettings.js}
+                    onValueChange={onJsFrameworkChange}
                   >
-                    {displayCSSOption(outputSettings.css)}
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value={CSSOption.TAILWIND}>
-                        Tailwind
-                      </SelectItem>
-                      <SelectItem value={CSSOption.BOOTSTRAP}>
-                        Bootstrap
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger
+                      className="col-span-2 h-8"
+                      id="output-settings-js"
+                    >
+                      {displayJSOption(outputSettings.js)}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value={JSFrameworkOption.NO_FRAMEWORK}>
+                          No Framework
+                        </SelectItem>
+                        <SelectItem value={JSFrameworkOption.REACT}>
+                          React
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="output-settings-css">CSS</Label>
+                  <Select
+                    value={outputSettings.css}
+                    onValueChange={onCSSValueChange}
+                  >
+                    <SelectTrigger
+                      className="col-span-2 h-8"
+                      id="output-settings-css"
+                    >
+                      {displayCSSOption(outputSettings.css)}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value={CSSOption.TAILWIND}>
+                          Tailwind
+                        </SelectItem>
+                        <SelectItem value={CSSOption.BOOTSTRAP}>
+                          Bootstrap
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-          </div>
-        </PopoverContent>
-      </Popover>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }

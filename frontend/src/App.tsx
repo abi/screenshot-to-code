@@ -186,12 +186,13 @@ function App() {
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
 
-          {appState === AppState.INITIAL && (
-            <OutputSettingsSection
-              outputSettings={outputSettings}
-              setOutputSettings={setOutputSettings}
-            />
-          )}
+          <OutputSettingsSection
+            outputSettings={outputSettings}
+            setOutputSettings={setOutputSettings}
+            shouldDisableUpdates={
+              appState === AppState.CODING || appState === AppState.CODE_READY
+            }
+          />
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
