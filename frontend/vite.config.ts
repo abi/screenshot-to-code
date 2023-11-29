@@ -8,14 +8,16 @@ import { createHtmlPlugin } from "vite-plugin-html";
 export default ({ mode }) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
   return defineConfig({
-    base: process.env.VITE_IS_DEPLOYED ? "/free-tools/screenshot-to-code/" : "",
+    base: "",
     plugins: [
       react(),
       checker({ typescript: true }),
       createHtmlPlugin({
         inject: {
           data: {
-            injectHead: process.env.VITE_INJECT_HEAD,
+            injectHead: process.env.VITE_IS_DEPLOYED
+              ? '<script defer="" data-domain="screenshottocode.com" src="https://plausible.io/js/script.js"></script>'
+              : "",
           },
         },
       }),

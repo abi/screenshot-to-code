@@ -13,7 +13,8 @@ import { EditorTheme, Settings } from "../types";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
-import { Select } from "./ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
+import { capitalize } from "../lib/utils";
 
 interface Props {
   settings: Settings;
@@ -124,14 +125,17 @@ function SettingsDialog({ settings, setSettings }: Props) {
           </Label>
           <div>
             <Select // Use the custom Select component here
-              id="editor-theme"
+              name="editor-theme"
               value={settings.editorTheme}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                handleThemeChange(e.target.value as EditorTheme)
-              }
+              onValueChange={(value) => handleThemeChange(value as EditorTheme)}
             >
-              <option value="cobalt">Cobalt</option>
-              <option value="espresso">Espresso</option>
+              <SelectTrigger className="w-[180px]">
+                {capitalize(settings.editorTheme)}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cobalt">Cobalt</SelectItem>
+                <SelectItem value="espresso">Espresso</SelectItem>
+              </SelectContent>
             </Select>
           </div>
         </div>

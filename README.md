@@ -1,6 +1,6 @@
 # screenshot-to-code
 
-This simple app converts a screenshot to HTML/Tailwind CSS. It uses GPT-4 Vision to generate the code and DALL-E 3 to generate similar-looking images. You can now also enter a URL to clone a live website!
+This simple app converts a screenshot to code (HTML/Tailwind CSS, or React or Vue or Bootstrap). It uses GPT-4 Vision to generate the code and DALL-E 3 to generate similar-looking images. You can now also enter a URL to clone a live website!
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
@@ -8,17 +8,18 @@ See the [Examples](#examples) section below for more demos.
 
 ## 🚀 Try It Out!
 
-🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section below for details**). Or see [Getting Started](#-getting-started) below for local install instructions.
+🆕 [Try it here](https://screenshottocode.com) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section below for details**). Or see [Getting Started](#-getting-started) below for local install instructions.
 
 ## 🌟 Recent Updates
 
+- Nov 28 - 🔥 🔥 🔥 Get output code in React or Bootstrap or TailwindCSS
 - Nov 23 - Send in a screenshot of the current replicated version (sometimes improves quality of subsequent generations)
 - Nov 21 - Edit code in the code editor and preview changes live thanks to [@clean99](https://github.com/clean99)
 - Nov 20 - Paste in a URL to screenshot and clone (requires [ScreenshotOne free API key](https://screenshotone.com?via=screenshot-to-code))
 - Nov 19 - Support for dark/light code editor theme - thanks [@kachbit](https://github.com/kachbit)
 - Nov 16 - Added a setting to disable DALL-E image generation if you don't need that
 - Nov 16 - View code directly within the app
-- Nov 15 - 🔥 You can now instruct the AI to update the code as you wish. It is helpful if the AI messed up some styles or missed a section.
+- Nov 15 - You can now instruct the AI to update the code as you wish. It is helpful if the AI messed up some styles or missed a section.
 
 ## 🛠 Getting Started
 
@@ -87,6 +88,6 @@ https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-a
 
 ## 🌍 Hosted Version
 
-🆕 [Try it here](https://picoapps.xyz/free-tools/screenshot-to-code) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section for details**). Or see [Getting Started](#-getting-started) for local install instructions.
+🆕 [Try it here](https://screenshottocode.com) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section for details**). Or see [Getting Started](#-getting-started) for local install instructions.
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/abiraja)

@@ -18,7 +18,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
-import { Settings, EditorTheme, AppState } from "./types";
+import {
+  Settings,
+  EditorTheme,
+  AppState,
+  CSSOption,
+  OutputSettings,
+  JSFrameworkOption,
+} from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -28,6 +35,7 @@ import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import CodeTab from "./components/CodeTab";
+import OutputSettingsSection from "./components/OutputSettingsSection";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
@@ -46,8 +54,13 @@ function App() {
     },
     "setting"
   );
+  const [outputSettings, setOutputSettings] = useState<OutputSettings>({
+    css: CSSOption.TAILWIND,
+    js: JSFrameworkOption.VANILLA,
+  });
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
+
   const wsRef = useRef<WebSocket>(null);
 
   const takeScreenshot = async (): Promise<string> => {
@@ -99,7 +112,7 @@ function App() {
     setAppState(AppState.CODING);
 
     // Merge settings with params
-    const updatedParams = { ...params, ...settings };
+    const updatedParams = { ...params, ...settings, outputSettings };
 
     generateCode(
       wsRef,
@@ -176,6 +189,13 @@ function App() {
             <h2 className="text-sm text-gray-500 mb-2">
               Drag & drop a screenshot to get started.
             </h2>
+          )}
+
+          {appState === AppState.INITIAL && (
+            <OutputSettingsSection
+              outputSettings={outputSettings}
+              setOutputSettings={setOutputSettings}
+            />
           )}
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
