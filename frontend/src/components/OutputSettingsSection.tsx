@@ -14,8 +14,6 @@ import {
 } from "./ui/accordion";
 import { capitalize } from "../lib/utils";
 import toast from "react-hot-toast";
-import { IS_RUNNING_ON_CLOUD } from "../config";
-import { Badge } from "./ui/badge";
 
 function displayCSSOption(option: CSSOption) {
   switch (option) {
@@ -46,11 +44,6 @@ interface Props {
 
 function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
   const onCSSValueChange = (value: string) => {
-    if (IS_RUNNING_ON_CLOUD) {
-      toast.error("Upgrade to the Business plan to change CSS framework.");
-      return;
-    }
-
     setOutputSettings((prev) => {
       if (prev.js === JSFrameworkOption.REACT) {
         if (value !== CSSOption.TAILWIND) {
@@ -72,11 +65,6 @@ function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
   };
 
   const onJsFrameworkChange = (value: string) => {
-    if (IS_RUNNING_ON_CLOUD) {
-      toast.error("Upgrade to the Business plan to change JS framework.");
-      return;
-    }
-
     if (value === JSFrameworkOption.REACT) {
       setOutputSettings(() => ({
         css: CSSOption.TAILWIND,
@@ -94,10 +82,7 @@ function OutputSettingsSection({ outputSettings, setOutputSettings }: Props) {
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="item-1">
         <AccordionTrigger>
-          <div className="flex gap-x-2">
-            Output Settings{" "}
-            {IS_RUNNING_ON_CLOUD && <Badge variant="outline">Pro</Badge>}
-          </div>
+          <div className="flex gap-x-2">Output Settings </div>
         </AccordionTrigger>
         <AccordionContent className="gap-y-2 flex flex-col pt-2">
           <div className="flex justify-between items-center pr-2">
