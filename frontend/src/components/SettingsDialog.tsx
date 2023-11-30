@@ -109,6 +109,29 @@ function SettingsDialog({ settings, setSettings }: Props) {
             }
           />
 
+          {!IS_RUNNING_ON_CLOUD && (
+            <>
+              <Label htmlFor="openai-api-key">
+                <div>OpenAI Base URL (optional)</div>
+                <div className="font-light mt-2 leading-relaxed">
+                  Replace with a proxy URL if you don't want to use the default.
+                </div>
+              </Label>
+
+              <Input
+                id="openai-base-url"
+                placeholder="OpenAI Base URL"
+                value={settings.openAiBaseURL || ""}
+                onChange={(e) =>
+                  setSettings((s) => ({
+                    ...s,
+                    openAiBaseURL: e.target.value,
+                  }))
+                }
+              />
+            </>
+          )}
+
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
               <AccordionTrigger>Screenshot by URL Config</AccordionTrigger>
