@@ -48,17 +48,19 @@ function App() {
   const [settings, setSettings] = usePersistedState<Settings>(
     {
       openAiApiKey: null,
+      openAiBaseURL: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       isTermOfServiceAccepted: false,
+      accessCode: null,
     },
     "setting"
   );
   const [outputSettings, setOutputSettings] = useState<OutputSettings>({
     css: CSSOption.TAILWIND,
-    js: JSFrameworkOption.VANILLA,
     components: UIComponentOption.HTML,
+    js: JSFrameworkOption.NO_FRAMEWORK,
   });
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
@@ -172,35 +174,33 @@ function App() {
   };
 
   return (
-    <div className="mt-2">
-      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
+    <div className="mt-2 dark:bg-black dark:text-white">
+      {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
           open={!settings.isTermOfServiceAccepted}
           onOpenChange={handleTermDialogOpenChange}
         />
       )}
-
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
-        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
-          <div className="flex items-center justify-between mt-10">
+        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+          <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
-          {appState === AppState.INITIAL && (
-            <h2 className="text-sm text-gray-500 mb-2">
-              Drag & drop a screenshot to get started.
-            </h2>
-          )}
 
-          {appState === AppState.INITIAL && (
-            <OutputSettingsSection
-              outputSettings={outputSettings}
-              setOutputSettings={setOutputSettings}
-            />
-          )}
+          <OutputSettingsSection
+            outputSettings={outputSettings}
+            setOutputSettings={setOutputSettings}
+            shouldDisableUpdates={
+              appState === AppState.CODING || appState === AppState.CODE_READY
+            }
+          />
 
-          {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
+          {IS_RUNNING_ON_CLOUD &&
+            !(settings.openAiApiKey || settings.accessCode) && (
+              <OnboardingNote />
+            )}
 
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
@@ -213,7 +213,10 @@ function App() {
                     {executionConsole.slice(-1)[0]}
                   </div>
                   <div className="flex mt-4 w-full">
-                    <Button onClick={stop} className="w-full">
+                    <Button
+                      onClick={stop}
+                      className="w-full dark:text-white dark:bg-gray-700"
+                    >
                       Stop
                     </Button>
                   </div>
@@ -230,26 +233,32 @@ function App() {
                       value={updateInstruction}
                     />
                     <div className="flex justify-between items-center gap-x-2">
-                      <div className="font-500 text-xs text-slate-700">
+                      <div className="font-500 text-xs text-slate-700 dark:text-white">
                         Include screenshot of current version?
                       </div>
                       <Switch
                         checked={shouldIncludeResultImage}
                         onCheckedChange={setShouldIncludeResultImage}
+                        className="dark:bg-gray-700"
                       />
                     </div>
-                    <Button onClick={doUpdate}>Update</Button>
+                    <Button
+                      onClick={doUpdate}
+                      className="dark:text-white dark:bg-gray-700"
+                    >
+                      Update
+                    </Button>
                   </div>
                   <div className="flex items-center gap-x-2 mt-2">
                     <Button
                       onClick={downloadCode}
-                      className="flex items-center gap-x-2"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
                     >
                       <FaDownload /> Download
                     </Button>
                     <Button
                       onClick={reset}
-                      className="flex items-center gap-x-2"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
                     >
                       <FaUndo />
                       Reset

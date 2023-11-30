@@ -1,4 +1,6 @@
-export function PicoBadge() {
+import { Settings } from "../types";
+
+export function PicoBadge({ settings }: { settings: Settings }) {
   return (
     <>
       <a
@@ -12,14 +14,26 @@ export function PicoBadge() {
           feature requests?
         </div>
       </a>
-      <a href="https://picoapps.xyz?ref=screenshot-to-code" target="_blank">
-        <div
-          className="fixed z-50 bottom-5 right-5 rounded-md shadow text-black
+      {!settings.accessCode && (
+        <a href="https://picoapps.xyz?ref=screenshot-to-code" target="_blank">
+          <div
+            className="fixed z-50 bottom-5 right-5 rounded-md shadow text-black
          bg-white px-4 text-xs py-3 cursor-pointer"
-        >
-          an open source project by Pico
-        </div>
-      </a>
+          >
+            an open source project by Pico
+          </div>
+        </a>
+      )}
+      {settings.accessCode && (
+        <a href="mailto:support@picoapps.xyz" target="_blank">
+          <div
+            className="fixed z-50 bottom-5 right-5 rounded-md shadow text-black
+         bg-white px-4 text-xs py-3 cursor-pointer"
+          >
+            email support
+          </div>
+        </a>
+      )}
     </>
   );
 }

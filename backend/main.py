@@ -1,6 +1,5 @@
 # Load environment variables first
 from dotenv import load_dotenv
-from pydantic import BaseModel
 
 load_dotenv()
 
@@ -16,6 +15,7 @@ from mock import mock_completion
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_prompt
 from routes import screenshot
+from access_token import validate_access_token
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
@@ -81,13 +81,27 @@ async def stream_code(websocket: WebSocket):
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
-    if params["openAiApiKey"]:
-        openai_api_key = params["openAiApiKey"]
-        print("Using OpenAI API key from client-side settings dialog")
+    openai_api_key = None
+    if "accessCode" in params and params["accessCode"]:
+        print("Access code - using platform API key")
+        if await validate_access_token(params["accessCode"]):
+            openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
+        else:
+            await websocket.send_json(
+                {
+                    "type": "error",
+                    "value": "Invalid access code or you're out of credits. Please try again.",
+                }
+            )
+            return
     else:
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
-        if openai_api_key:
-            print("Using OpenAI API key from environment variable")
+        if params["openAiApiKey"]:
+            openai_api_key = params["openAiApiKey"]
+            print("Using OpenAI API key from client-side settings dialog")
+        else:
+            openai_api_key = os.environ.get("OPENAI_API_KEY")
+            if openai_api_key:
+                print("Using OpenAI API key from environment variable")
 
     if not openai_api_key:
         print("OpenAI API key not found")
@@ -99,6 +113,22 @@ async def stream_code(websocket: WebSocket):
         )
         return
 
+    # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
+    openai_base_url = None
+    # Disable user-specified OpenAI Base URL in prod
+    if not os.environ.get("IS_PROD"):
+        if "openAiBaseURL" in params and params["openAiBaseURL"]:
+            openai_base_url = params["openAiBaseURL"]
+            print("Using OpenAI Base URL from client-side settings dialog")
+        else:
+            openai_base_url = os.environ.get("OPENAI_BASE_URL")
+            if openai_base_url:
+                print("Using OpenAI Base URL from environment variable")
+
+    if not openai_base_url:
+        print("Using official OpenAI URL")
+
+    # Get the image generation flag from the request. Fall back to True if not provided.
     should_generate_images = (
         params["isImageGenerationEnabled"]
         if "isImageGenerationEnabled" in params
@@ -137,6 +167,7 @@ async def stream_code(websocket: WebSocket):
         completion = await stream_openai_response(
             prompt_messages,
             api_key=openai_api_key,
+            base_url=openai_base_url,
             callback=lambda x: process_chunk(x),
         )
 
@@ -149,7 +180,10 @@ async def stream_code(websocket: WebSocket):
                 {"type": "status", "value": "Generating images..."}
             )
             updated_html = await generate_images(
-                completion, api_key=openai_api_key, image_cache=image_cache
+                completion,
+                api_key=openai_api_key,
+                base_url=openai_base_url,
+                image_cache=image_cache,
             )
         else:
             updated_html = completion

@@ -7,6 +7,6 @@ import { Toaster } from "react-hot-toast";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
-    <Toaster />
+    <Toaster toastOptions={{ className:"dark:bg-zinc-950 dark:text-white" }}/>
   </React.StrictMode>
 );

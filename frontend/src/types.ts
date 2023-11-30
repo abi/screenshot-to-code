@@ -9,7 +9,7 @@ export enum CSSOption {
 }
 
 export enum JSFrameworkOption {
-  VANILLA = "vanilla",
+  NO_FRAMEWORK = "vanilla",
   REACT = "react",
   VUE = "vue",
 }
@@ -27,10 +27,12 @@ export interface OutputSettings {
 
 export interface Settings {
   openAiApiKey: string | null;
+  openAiBaseURL: string | null;
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;
   isTermOfServiceAccepted: boolean; // Only relevant for hosted version
+  accessCode: string | null; // Only relevant for hosted version
 }
 
 export enum AppState {
