@@ -1,10 +1,8 @@
 # Load environment variables first
 from dotenv import load_dotenv
 
+#用于从 .env 文件中读取环境变量
 load_dotenv()
-
-
-
 
 import json
 import os
@@ -19,6 +17,7 @@ from prompts import assemble_prompt
 from routes import screenshot
 from access_token import validate_access_token
 
+#这个是FastAPI的默认使用方式吗？
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
 # Configure CORS
