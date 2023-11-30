@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -76,6 +76,12 @@ function App() {
     const png = canvas.toDataURL("image/png");
     return png;
   };
+  const [message, setMessage] = useState('');
+  useEffect(() => {
+    fetch('http://localhost:5000/')
+      .then(response => response.text())
+      .then(data => setMessage(data));
+  }, []);
 
   const downloadCode = () => {
     // Create a blob from the generated code
@@ -200,6 +206,11 @@ function App() {
             )}
 
           {(appState === AppState.CODING ||
+          <div className="flex items-center justify-between mt-10 mb-2">
+            <h1 className="text-2xl ">Screenshot to Code</h1>
+            <p>{message}</p>
+            <SettingsDialog settings={settings} setSettings={setSettings} />
+          </div>
             appState === AppState.CODE_READY) && (
             <>
               {/* Show code preview only when coding */}
