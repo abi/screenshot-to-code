@@ -14,6 +14,7 @@ import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
+import { Button } from "./ui/button";
 import { capitalize } from "../lib/utils";
 import { IS_RUNNING_ON_CLOUD } from "../config";
 import {
@@ -57,6 +58,9 @@ function SettingsDialog({ settings, setSettings }: Props) {
             </Label>
 
             <Input
+  const handleResetSettings = () => {
+    localStorage.clear();
+  };
               id="access-code dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               placeholder="Enter your Screenshot to Code access code"
               value={settings.accessCode || ""}
@@ -204,3 +208,6 @@ function SettingsDialog({ settings, setSettings }: Props) {
 }
 
 export default SettingsDialog;
+        <div className="mt-4">
+          <Button onClick={handleResetSettings}>Reset to Defaults</Button>
+        </div>
