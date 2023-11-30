@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import classNames from "classnames";
 import useThrottle from "../hooks/useThrottle";
 
@@ -8,12 +9,23 @@ interface Props {
 
 function Preview({ code, device }: Props) {
   const throttledCode = useThrottle(code, 200);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (iframe && iframe.contentDocument) {
+      iframe.contentDocument.open();
+      iframe.contentDocument.write(throttledCode);
+      iframe.contentDocument.close();
+    }
+  }, [throttledCode]);
 
   return (
     <div className="flex justify-center mx-2">
       <iframe
+        id={`preview-${device}`}
+        ref={iframeRef}
         title="Preview"
-        srcDoc={throttledCode}
         className={classNames(
           "border-[4px] border-black rounded-[20px] shadow-lg",
           "transform scale-[0.9] origin-top",
@@ -26,4 +38,5 @@ function Preview({ code, device }: Props) {
     </div>
   );
 }
+
 export default Preview;

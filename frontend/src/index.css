@@ -61,9 +61,21 @@
 
     --radius: 0.5rem;
   }
+  
+  body.dark {
+    background-color: black;
+  }
+
+  div[role="presentation"].dark {
+    background-color: #09090b !important;
+  }
+
+  iframe {
+    background-color: white !important; 
+  }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222.2 0% 0%;
     --foreground: 210 40% 98%;
 
     --card: 222.2 84% 4.9%;

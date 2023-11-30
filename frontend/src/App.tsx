@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -12,23 +12,33 @@ import {
   FaMobile,
   FaUndo,
 } from "react-icons/fa";
+
+import { Switch } from "./components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
-import CodeMirror from "./components/CodeMirror";
 import SettingsDialog from "./components/SettingsDialog";
-import { Settings } from "./types";
+import {
+  Settings,
+  EditorTheme,
+  AppState,
+  CSSOption,
+  OutputSettings,
+  JSFrameworkOption,
+} from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
+import html2canvas from "html2canvas";
+import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
+import CodeTab from "./components/CodeTab";
+import OutputSettingsSection from "./components/OutputSettingsSection";
 
 function App() {
-  const [appState, setAppState] = useState<"INITIAL" | "CODING" | "CODE_READY">(
-    "INITIAL"
-  );
+  const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
@@ -40,10 +50,33 @@ function App() {
       openAiBaseURL: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
-      editorTheme: "cobalt",
+      editorTheme: EditorTheme.COBALT,
+      isTermOfServiceAccepted: false,
+      accessCode: null,
     },
     "setting"
   );
+  const [outputSettings, setOutputSettings] = useState<OutputSettings>({
+    css: CSSOption.TAILWIND,
+    js: JSFrameworkOption.NO_FRAMEWORK,
+  });
+  const [shouldIncludeResultImage, setShouldIncludeResultImage] =
+    useState<boolean>(false);
+
+  const wsRef = useRef<WebSocket>(null);
+
+  const takeScreenshot = async (): Promise<string> => {
+    const iframeElement = document.querySelector(
+      "#preview-desktop"
+    ) as HTMLIFrameElement;
+    if (!iframeElement?.contentWindow?.document.body) {
+      return "";
+    }
+
+    const canvas = await html2canvas(iframeElement.contentWindow.document.body);
+    const png = canvas.toDataURL("image/png");
+    return png;
+  };
 
   const downloadCode = () => {
     // Create a blob from the generated code
@@ -63,31 +96,41 @@ function App() {
   };
 
   const reset = () => {
-    setAppState("INITIAL");
+    setAppState(AppState.INITIAL);
     setGeneratedCode("");
     setReferenceImages([]);
     setExecutionConsole([]);
     setHistory([]);
   };
 
+  const stop = () => {
+    wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
+    // make sure stop can correct the state even if the websocket is already closed
+    setAppState(AppState.CODE_READY);
+  };
+
   function doGenerateCode(params: CodeGenerationParams) {
     setExecutionConsole([]);
-    setAppState("CODING");
+    setAppState(AppState.CODING);
 
     // Merge settings with params
-    const updatedParams = { ...params, ...settings };
+    const updatedParams = { ...params, ...settings, outputSettings };
 
     generateCode(
+      wsRef,
       updatedParams,
       (token) => setGeneratedCode((prev) => prev + token),
       (code) => setGeneratedCode(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
-      () => setAppState("CODE_READY")
+      () => setAppState(AppState.CODE_READY)
     );
   }
 
   // Initial version creation
   function doCreate(referenceImages: string[]) {
+    // Reset any existing state
+    reset();
+
     setReferenceImages(referenceImages);
     if (referenceImages.length > 0) {
       doGenerateCode({
@@ -98,53 +141,88 @@ function App() {
   }
 
   // Subsequent updates
-  function doUpdate() {
+  async function doUpdate() {
     const updatedHistory = [...history, generatedCode, updateInstruction];
-
-    doGenerateCode({
-      generationType: "update",
-      image: referenceImages[0],
-      history: updatedHistory,
-    });
+    if (shouldIncludeResultImage) {
+      const resultImage = await takeScreenshot();
+      doGenerateCode({
+        generationType: "update",
+        image: referenceImages[0],
+        resultImage: resultImage,
+        history: updatedHistory,
+      });
+    } else {
+      doGenerateCode({
+        generationType: "update",
+        image: referenceImages[0],
+        history: updatedHistory,
+      });
+    }
 
     setHistory(updatedHistory);
     setGeneratedCode("");
     setUpdateInstruction("");
   }
 
-  return (
-    <div className="mt-2">
-      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
-      {IS_RUNNING_ON_CLOUD && <TermsOfServiceDialog />}
+  const handleTermDialogOpenChange = (open: boolean) => {
+    setSettings((s) => ({
+      ...s,
+      isTermOfServiceAccepted: !open,
+    }));
+  };
 
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-96 lg:flex-col">
-        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
-          <div className="flex items-center justify-between mt-10">
+  return (
+    <div className="mt-2 dark:bg-black dark:text-white">
+      {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
+      {IS_RUNNING_ON_CLOUD && (
+        <TermsOfServiceDialog
+          open={!settings.isTermOfServiceAccepted}
+          onOpenChange={handleTermDialogOpenChange}
+        />
+      )}
+      <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
+        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+          <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
-          {appState === "INITIAL" && (
-            <h2 className="text-sm text-gray-500 mb-2">
-              Drag & drop a screenshot to get started.
-            </h2>
-          )}
 
-          {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
+          <OutputSettingsSection
+            outputSettings={outputSettings}
+            setOutputSettings={setOutputSettings}
+            shouldDisableUpdates={
+              appState === AppState.CODING || appState === AppState.CODE_READY
+            }
+          />
 
-          {(appState === "CODING" || appState === "CODE_READY") && (
+          {IS_RUNNING_ON_CLOUD &&
+            !(settings.openAiApiKey || settings.accessCode) && (
+              <OnboardingNote />
+            )}
+
+          {(appState === AppState.CODING ||
+            appState === AppState.CODE_READY) && (
             <>
               {/* Show code preview only when coding */}
-              {appState === "CODING" && (
+              {appState === AppState.CODING && (
                 <div className="flex flex-col">
                   <div className="flex items-center gap-x-1">
                     <Spinner />
                     {executionConsole.slice(-1)[0]}
                   </div>
+                  <div className="flex mt-4 w-full">
+                    <Button
+                      onClick={stop}
+                      className="w-full dark:text-white dark:bg-gray-700"
+                    >
+                      Stop
+                    </Button>
+                  </div>
                   <CodePreview code={generatedCode} />
                 </div>
               )}
 
-              {appState === "CODE_READY" && (
+              {appState === AppState.CODE_READY && (
                 <div>
                   <div className="grid w-full gap-2">
                     <Textarea
@@ -152,18 +230,33 @@ function App() {
                       onChange={(e) => setUpdateInstruction(e.target.value)}
                       value={updateInstruction}
                     />
-                    <Button onClick={doUpdate}>Update</Button>
+                    <div className="flex justify-between items-center gap-x-2">
+                      <div className="font-500 text-xs text-slate-700 dark:text-white">
+                        Include screenshot of current version?
+                      </div>
+                      <Switch
+                        checked={shouldIncludeResultImage}
+                        onCheckedChange={setShouldIncludeResultImage}
+                        className="dark:bg-gray-700"
+                      />
+                    </div>
+                    <Button
+                      onClick={doUpdate}
+                      className="dark:text-white dark:bg-gray-700"
+                    >
+                      Update
+                    </Button>
                   </div>
                   <div className="flex items-center gap-x-2 mt-2">
                     <Button
                       onClick={downloadCode}
-                      className="flex items-center gap-x-2"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
                     >
                       <FaDownload /> Download
                     </Button>
                     <Button
                       onClick={reset}
-                      className="flex items-center gap-x-2"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
                     >
                       <FaUndo />
                       Reset
@@ -177,7 +270,7 @@ function App() {
                 <div className="flex flex-col">
                   <div
                     className={classNames({
-                      "scanning relative": appState === "CODING",
+                      "scanning relative": appState === AppState.CODING,
                     })}
                   >
                     <img
@@ -210,7 +303,7 @@ function App() {
       </div>
 
       <main className="py-2 lg:pl-96">
-        {appState === "INITIAL" && (
+        {appState === AppState.INITIAL && (
           <div className="flex flex-col justify-center items-center gap-y-10">
             <ImageUpload setReferenceImages={doCreate} />
             <UrlInputSection
@@ -220,7 +313,7 @@ function App() {
           </div>
         )}
 
-        {(appState === "CODING" || appState === "CODE_READY") && (
+        {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
           <div className="ml-4">
             <Tabs defaultValue="desktop">
               <div className="flex justify-end mr-8 mb-4">
@@ -244,9 +337,10 @@ function App() {
                 <Preview code={generatedCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
-                <CodeMirror
+                <CodeTab
                   code={generatedCode}
-                  editorTheme={settings.editorTheme}
+                  setCode={setGeneratedCode}
+                  settings={settings}
                 />
               </TabsContent>
             </Tabs>

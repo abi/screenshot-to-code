@@ -1,3 +1,5 @@
+from prompts import assemble_prompt
+
 TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer
 You take screenshots of a reference web page from the user, and then build single page apps 
@@ -77,51 +79,19 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
-USER_PROMPT = """
-Generate code for a web page that looks exactly like this.
-"""
 
+def test_prompts():
+    tailwind_prompt = assemble_prompt(
+        "image_data_url", {"css": "tailwind", "js": "vanilla"}, "result_image_data_url"
+    )
+    assert tailwind_prompt[0]["content"] == TAILWIND_SYSTEM_PROMPT
 
-def assemble_prompt(image_data_url, output_settings: dict, result_image_data_url=None):
-    # Set the system prompt based on the output settings
-    chosen_prompt_name = "tailwind"
-    system_content = TAILWIND_SYSTEM_PROMPT
-    if output_settings["css"] == "bootstrap":
-        chosen_prompt_name = "bootstrap"
-        system_content = BOOTSTRAP_SYSTEM_PROMPT
-    if output_settings["js"] == "react":
-        chosen_prompt_name = "react-tailwind"
-        system_content = REACT_TAILWIND_SYSTEM_PROMPT
+    bootstrap_prompt = assemble_prompt(
+        "image_data_url", {"css": "bootstrap", "js": "vanilla"}, "result_image_data_url"
+    )
+    assert bootstrap_prompt[0]["content"] == BOOTSTRAP_SYSTEM_PROMPT
 
-    print("Using system prompt:", chosen_prompt_name)
-
-    user_content = [
-        {
-            "type": "image_url",
-            "image_url": {"url": image_data_url, "detail": "high"},
-        },
-        {
-            "type": "text",
-            "text": USER_PROMPT,
-        },
-    ]
-
-    # Include the result image if it exists
-    if result_image_data_url:
-        user_content.insert(
-            1,
-            {
-                "type": "image_url",
-                "image_url": {"url": result_image_data_url, "detail": "high"},
-            },
-        )
-    return [
-        {
-            "role": "system",
-            "content": system_content,
-        },
-        {
-            "role": "user",
-            "content": user_content,
-        },
-    ]
+    react_tailwind_prompt = assemble_prompt(
+        "image_data_url", {"css": "tailwind", "js": "react"}, "result_image_data_url"
+    )
+    assert react_tailwind_prompt[0]["content"] == REACT_TAILWIND_SYSTEM_PROMPT
