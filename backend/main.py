@@ -17,6 +17,8 @@ from prompts import assemble_prompt
 from routes import screenshot
 from access_token import validate_access_token
 
+from server_status import status_router
+
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
 # Configure CORS
@@ -38,6 +40,7 @@ SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))
 
 
 app.include_router(screenshot.router)
+app.include_router(status_router, prefix='/status')
 
 
 def write_logs(prompt_messages, completion):
