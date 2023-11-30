@@ -77,23 +77,60 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+IONIC_TAILWIND_SYSTEM_PROMPT = """
+You are an expert Ionic/Tailwind developer
+You take screenshots of a reference web page from the user, and then build single page apps 
+using Ionic and Tailwind CSS.
+You might also be given a screenshot(The second image) of a web page that you have already built, and asked to
+update it to look more like the reference image(The first image).
+
+- Make sure the app looks exactly like the screenshot.
+- Pay close attention to background color, text color, font size, font family, 
+padding, margin, border, etc. Match the colors and sizes exactly.
+- Use the exact text from the screenshot.
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed to match the screenshot. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use these script to include Ionic so that it can run on a standalone page:
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
+- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
+- You can use Google Fonts
+- ionicons for icons, add the following <script > tags near the end of the page, right before the closing </body> tag:
+    <script type="module">
+        import ionicons from 'https://cdn.jsdelivr.net/npm/ionicons/+esm'
+    </script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons/dist/esm/ionicons.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/ionicons/dist/collection/components/icon/icon.min.css" rel="stylesheet">
+
+Return only the full code in <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
 USER_PROMPT = """
 Generate code for a web page that looks exactly like this.
 """
 
 
-def assemble_prompt(image_data_url, output_settings: dict, result_image_data_url=None):
+def assemble_prompt(
+    image_data_url, generated_code_config: str, result_image_data_url=None
+):
     # Set the system prompt based on the output settings
-    chosen_prompt_name = "tailwind"
     system_content = TAILWIND_SYSTEM_PROMPT
-    if output_settings["css"] == "bootstrap":
-        chosen_prompt_name = "bootstrap"
-        system_content = BOOTSTRAP_SYSTEM_PROMPT
-    if output_settings["js"] == "react":
-        chosen_prompt_name = "react-tailwind"
+    if generated_code_config == "html_tailwind":
+        system_content = TAILWIND_SYSTEM_PROMPT
+    elif generated_code_config == "react_tailwind":
         system_content = REACT_TAILWIND_SYSTEM_PROMPT
-
-    print("Using system prompt:", chosen_prompt_name)
+    elif generated_code_config == "bootstrap":
+        system_content = BOOTSTRAP_SYSTEM_PROMPT
+    elif generated_code_config == "ionic_tailwind":
+        system_content = IONIC_TAILWIND_SYSTEM_PROMPT
+    else:
+        raise Exception("Code config is not one of available options")
 
     user_content = [
         {
