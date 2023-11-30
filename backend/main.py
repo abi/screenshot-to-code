@@ -69,13 +69,11 @@ async def stream_code(websocket: WebSocket):
 
     print("Received params")
 
-    # Read the output settings from the request. Fall back to default if not provided.
-    output_settings = {"css": "tailwind", "js": "vanilla"}
-    if params["outputSettings"] and params["outputSettings"]["css"]:
-        output_settings["css"] = params["outputSettings"]["css"]
-    if params["outputSettings"] and params["outputSettings"]["js"]:
-        output_settings["js"] = params["outputSettings"]["js"]
-    print("Using output settings:", output_settings)
+    # Read the code config settings from the request. Fall back to default if not provided.
+    generated_code_config = ""
+    if "generatedCodeConfig" in params and params["generatedCodeConfig"]:
+        generated_code_config = params["generatedCodeConfig"]
+    print(f"Generating {generated_code_config} code")
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
@@ -111,6 +109,22 @@ async def stream_code(websocket: WebSocket):
         )
         return
 
+    # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
+    openai_base_url = None
+    # Disable user-specified OpenAI Base URL in prod
+    if not os.environ.get("IS_PROD"):
+        if "openAiBaseURL" in params and params["openAiBaseURL"]:
+            openai_base_url = params["openAiBaseURL"]
+            print("Using OpenAI Base URL from client-side settings dialog")
+        else:
+            openai_base_url = os.environ.get("OPENAI_BASE_URL")
+            if openai_base_url:
+                print("Using OpenAI Base URL from environment variable")
+
+    if not openai_base_url:
+        print("Using official OpenAI URL")
+
+    # Get the image generation flag from the request. Fall back to True if not provided.
     should_generate_images = (
         params["isImageGenerationEnabled"]
         if "isImageGenerationEnabled" in params
@@ -123,12 +137,23 @@ async def stream_code(websocket: WebSocket):
     async def process_chunk(content):
         await websocket.send_json({"type": "chunk", "value": content})
 
-    if params.get("resultImage") and params["resultImage"]:
-        prompt_messages = assemble_prompt(
-            params["image"], output_settings, params["resultImage"]
+    # Assemble the prompt
+    try:
+        if params.get("resultImage") and params["resultImage"]:
+            prompt_messages = assemble_prompt(
+                params["image"], generated_code_config, params["resultImage"]
+            )
+        else:
+            prompt_messages = assemble_prompt(params["image"], generated_code_config)
+    except:
+        await websocket.send_json(
+            {
+                "type": "error",
+                "value": "Error assembling prompt. Contact support at support@picoapps.xyz",
+            }
         )
-    else:
-        prompt_messages = assemble_prompt(params["image"], output_settings)
+        await websocket.close()
+        return
 
     # Image cache for updates so that we don't have to regenerate images
     image_cache = {}
@@ -149,6 +174,7 @@ async def stream_code(websocket: WebSocket):
         completion = await stream_openai_response(
             prompt_messages,
             api_key=openai_api_key,
+            base_url=openai_base_url,
             callback=lambda x: process_chunk(x),
         )
 
@@ -161,7 +187,10 @@ async def stream_code(websocket: WebSocket):
                 {"type": "status", "value": "Generating images..."}
             )
             updated_html = await generate_images(
-                completion, api_key=openai_api_key, image_cache=image_cache
+                completion,
+                api_key=openai_api_key,
+                base_url=openai_base_url,
+                image_cache=image_cache,
             )
         else:
             updated_html = completion

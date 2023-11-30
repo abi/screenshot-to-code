@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -18,14 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
-import {
-  Settings,
-  EditorTheme,
-  AppState,
-  CSSOption,
-  OutputSettings,
-  JSFrameworkOption,
-} from "./types";
+import { Settings, EditorTheme, AppState, GeneratedCodeConfig } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -47,22 +40,34 @@ function App() {
   const [settings, setSettings] = usePersistedState<Settings>(
     {
       openAiApiKey: null,
+      openAiBaseURL: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
+      generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
+      // Only relevant for hosted version
       isTermOfServiceAccepted: false,
       accessCode: null,
     },
     "setting"
   );
-  const [outputSettings, setOutputSettings] = useState<OutputSettings>({
-    css: CSSOption.TAILWIND,
-    js: JSFrameworkOption.NO_FRAMEWORK,
-  });
+
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
 
   const wsRef = useRef<WebSocket>(null);
+
+  // When the user already has the settings in local storage, newly added keys
+  // do not get added to the settings so if it's falsy, we populate it with the default
+  // value
+  useEffect(() => {
+    if (!settings.generatedCodeConfig) {
+      setSettings((prev) => ({
+        ...prev,
+        generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
+      }));
+    }
+  }, [settings.generatedCodeConfig, setSettings]);
 
   const takeScreenshot = async (): Promise<string> => {
     const iframeElement = document.querySelector(
@@ -119,7 +124,7 @@ function App() {
     setAppState(AppState.CODING);
 
     // Merge settings with params
-    const updatedParams = { ...params, ...settings, outputSettings };
+    const updatedParams = { ...params, ...settings };
 
     generateCode(
       wsRef,
@@ -177,7 +182,7 @@ function App() {
   };
 
   return (
-    <div className="mt-2">
+    <div className="mt-2 dark:bg-black dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
@@ -185,17 +190,21 @@ function App() {
           onOpenChange={handleTermDialogOpenChange}
         />
       )}
-
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
-        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6">
+        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
           <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
 
           <OutputSettingsSection
-            outputSettings={outputSettings}
-            setOutputSettings={setOutputSettings}
+            generatedCodeConfig={settings.generatedCodeConfig}
+            setGeneratedCodeConfig={(config: GeneratedCodeConfig) =>
+              setSettings((prev) => ({
+                ...prev,
+                generatedCodeConfig: config,
+              }))
+            }
             shouldDisableUpdates={
               appState === AppState.CODING || appState === AppState.CODE_READY
             }
@@ -217,7 +226,10 @@ function App() {
                     {executionConsole.slice(-1)[0]}
                   </div>
                   <div className="flex mt-4 w-full">
-                    <Button onClick={stop} className="w-full">
+                    <Button
+                      onClick={stop}
+                      className="w-full dark:text-white dark:bg-gray-700"
+                    >
                       Stop
                     </Button>
                   </div>
@@ -234,26 +246,32 @@ function App() {
                       value={updateInstruction}
                     />
                     <div className="flex justify-between items-center gap-x-2">
-                      <div className="font-500 text-xs text-slate-700">
+                      <div className="font-500 text-xs text-slate-700 dark:text-white">
                         Include screenshot of current version?
                       </div>
                       <Switch
                         checked={shouldIncludeResultImage}
                         onCheckedChange={setShouldIncludeResultImage}
+                        className="dark:bg-gray-700"
                       />
                     </div>
-                    <Button onClick={doUpdate}>Update</Button>
+                    <Button
+                      onClick={doUpdate}
+                      className="dark:text-white dark:bg-gray-700"
+                    >
+                      Update
+                    </Button>
                   </div>
                   <div className="flex items-center gap-x-2 mt-2">
                     <Button
                       onClick={downloadCode}
-                      className="flex items-center gap-x-2"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
                     >
                       <FaDownload /> Download
                     </Button>
                     <Button
                       onClick={reset}
-                      className="flex items-center gap-x-2"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
                     >
                       <FaUndo />
                       Reset
