@@ -15,6 +15,7 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
 import { capitalize } from "../lib/utils";
+import { IS_RUNNING_ON_CLOUD } from "../config";
 
 interface Props {
   settings: Settings;
@@ -38,6 +39,31 @@ function SettingsDialog({ settings, setSettings }: Props) {
         <DialogHeader>
           <DialogTitle className="mb-4">Settings</DialogTitle>
         </DialogHeader>
+
+        {/* Access code */}
+        {IS_RUNNING_ON_CLOUD && (
+          <div className="flex flex-col space-y-4 bg-slate-300 p-4 rounded">
+            <Label htmlFor="access-code">
+              <div>Access Code</div>
+              <div className="font-light mt-1 leading-relaxed">
+                Buy an access code.
+              </div>
+            </Label>
+
+            <Input
+              id="access-code"
+              placeholder="Enter your Screenshot to Code access code"
+              value={settings.accessCode || ""}
+              onChange={(e) =>
+                setSettings((s) => ({
+                  ...s,
+                  accessCode: e.target.value,
+                }))
+              }
+            />
+          </div>
+        )}
+
         <div className="flex items-center space-x-2">
           <Label htmlFor="image-generation">
             <div>DALL-E Placeholder Image Generation</div>
