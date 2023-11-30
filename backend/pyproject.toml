@@ -6,7 +6,7 @@ authors = ["Abi Raja <abimanyuraja@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 fastapi = "^0.95.0"
 uvicorn = "^0.24.0.post1"
 websockets = "^12.0"
