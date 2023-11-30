@@ -21,6 +21,7 @@ export interface OutputSettings {
 
 export interface Settings {
   openAiApiKey: string | null;
+  openAiApiBaseUrl: string | null;
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;

@@ -103,6 +103,25 @@ function SettingsDialog({ settings, setSettings }: Props) {
             }
           />
 
+          <Label htmlFor="openai-api-base-url">
+            <div>OpenAI API Base Url</div>
+            <div className="font-light mt-2 leading-relaxed">
+              The default is "https://api.openai.com/v1"
+            </div>
+          </Label>
+
+          <Input
+            id="openai-api-base-url"
+            placeholder="openAI API BASE URL"
+            value={settings.openAiApiBaseUrl || ""}
+            onChange={(e) =>
+              setSettings((s) => ({
+                ...s,
+                openAiApiBaseUrl: e.target.value,
+              }))
+            }
+          />
+
           <Label htmlFor="screenshot-one-api-key">
             <div>
               ScreenshotOne API key (optional - only needed if you want to use

@@ -80,6 +80,7 @@ async def stream_code(websocket: WebSocket):
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
     openai_api_key = None
+    openai_api_base_url = None
     if "accessCode" in params and params["accessCode"]:
         print("Access code - using platform API key")
         if await validate_access_token(params["accessCode"]):
@@ -100,6 +101,14 @@ async def stream_code(websocket: WebSocket):
             openai_api_key = os.environ.get("OPENAI_API_KEY")
             if openai_api_key:
                 print("Using OpenAI API key from environment variable")
+
+        if params["openAiApiBaseUrl"]:
+            openai_api_base_url = params["openAiApiBaseUrl"].strip()
+            print("Using OpenAI API Base Url from client-side settings dialog")
+        else:
+            openai_api_base_url = os.environ.get("OPENAI_API_BASE_URL")
+            if openai_api_base_url:
+                print("Using OpenAI API Base Url from environment variable")
 
     if not openai_api_key:
         print("OpenAI API key not found")
@@ -149,6 +158,7 @@ async def stream_code(websocket: WebSocket):
         completion = await stream_openai_response(
             prompt_messages,
             api_key=openai_api_key,
+            base_url=openai_api_base_url,
             callback=lambda x: process_chunk(x),
         )
 
@@ -161,7 +171,7 @@ async def stream_code(websocket: WebSocket):
                 {"type": "status", "value": "Generating images..."}
             )
             updated_html = await generate_images(
-                completion, api_key=openai_api_key, image_cache=image_cache
+                completion, api_key=openai_api_key, base_url=openai_api_base_url, image_cache=image_cache
             )
         else:
             updated_html = completion
