@@ -122,7 +122,7 @@ async def stream_code(websocket: WebSocket):
             print("Using OpenAI Base URL from environment variable")
 
     if not openai_base_url:
-        print("Using offical OpenAI URL")
+        print("Using official OpenAI URL")
 
     # Get the image generation flag from the request. Fall back to True if not provided.
     should_generate_images = (
