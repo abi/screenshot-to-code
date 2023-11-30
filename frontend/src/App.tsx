@@ -77,10 +77,12 @@ function App() {
     return png;
   };
   const [message, setMessage] = useState('');
+  const [error, setError] = useState(null);
   useEffect(() => {
-    fetch('http://localhost:5000/')
-      .then(response => response.text())
-      .then(data => setMessage(data));
+    fetch('http://localhost:5000/status')
+      .then(response => response.json())
+      .then(data => setMessage(data.message))
+      .catch(error => setError(error.toString()));
   }, []);
 
   const downloadCode = () => {
@@ -120,7 +122,6 @@ function App() {
 
     // Merge settings with params
     const updatedParams = { ...params, ...settings, outputSettings };
-
     generateCode(
       wsRef,
       updatedParams,
@@ -208,7 +209,8 @@ function App() {
           {(appState === AppState.CODING ||
           <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
-            <p>{message}</p>
+            {message && <p>{message}</p>}
+            {error && <p>Error: {error}</p>}
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
             appState === AppState.CODE_READY) && (
@@ -231,7 +233,6 @@ function App() {
                   <CodePreview code={generatedCode} />
                 </div>
               )}
-
               {appState === AppState.CODE_READY && (
                 <div>
                   <div className="grid w-full gap-2">
