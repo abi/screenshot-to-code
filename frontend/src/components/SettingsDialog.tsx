@@ -193,7 +193,9 @@ function SettingsDialog({ settings, setSettings }: Props) {
                 </div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="editor-theme">
-                    <div>Code Editor Theme</div>
+                    <div>
+                      Code Editor Theme - requires page refresh to update
+                    </div>
                   </Label>
                   <div>
                     <Select // Use the custom Select component here
