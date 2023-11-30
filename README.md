@@ -12,7 +12,8 @@ See the [Examples](#examples) section below for more demos.
 
 ## 🌟 Recent Updates
 
-- Nov 28 - 🔥 🔥 🔥 Get output code in React or Bootstrap or TailwindCSS
+- Nov 30 - Dark mode, output code in Ionic (thanks [@dialmedu](https://github.com/dialmedu)), set OpenAI base URL
+- Nov 28 - 🔥 🔥 🔥 Customize your stack: React or Bootstrap or TailwindCSS
 - Nov 23 - Send in a screenshot of the current replicated version (sometimes improves quality of subsequent generations)
 - Nov 21 - Edit code in the code editor and preview changes live thanks to [@clean99](https://github.com/clean99)
 - Nov 20 - Paste in a URL to screenshot and clone (requires [ScreenshotOne free API key](https://screenshotone.com?via=screenshot-to-code))
