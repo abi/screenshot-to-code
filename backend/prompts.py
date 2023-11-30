@@ -116,21 +116,21 @@ Generate code for a web page that looks exactly like this.
 """
 
 
-def assemble_prompt(image_data_url, output_settings: dict, result_image_data_url=None):
+def assemble_prompt(
+    image_data_url, generated_code_config: str, result_image_data_url=None
+):
     # Set the system prompt based on the output settings
-    chosen_prompt_name = "tailwind"
     system_content = TAILWIND_SYSTEM_PROMPT
-    if output_settings["css"] == "bootstrap":
-        chosen_prompt_name = "bootstrap"
-        system_content = BOOTSTRAP_SYSTEM_PROMPT
-    if output_settings["js"] == "react":
-        chosen_prompt_name = "react-tailwind"
+    if generated_code_config == "html_tailwind":
+        system_content = TAILWIND_SYSTEM_PROMPT
+    elif generated_code_config == "react_tailwind":
         system_content = REACT_TAILWIND_SYSTEM_PROMPT
-    if output_settings["components"] == "ionic":
-        chosen_prompt_name = "ionic-tailwind"
+    elif generated_code_config == "bootstrap":
+        system_content = BOOTSTRAP_SYSTEM_PROMPT
+    elif generated_code_config == "ionic_tailwind":
         system_content = IONIC_TAILWIND_SYSTEM_PROMPT
-
-    print("Using system prompt:", chosen_prompt_name)
+    else:
+        raise Exception("Code config is not one of available options")
 
     user_content = [
         {

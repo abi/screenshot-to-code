@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -18,15 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
-import {
-  Settings,
-  EditorTheme,
-  AppState,
-  CSSOption,
-  OutputSettings,
-  JSFrameworkOption,
-  UIComponentOption,
-} from "./types";
+import { Settings, EditorTheme, AppState, GeneratedCodeConfig } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -52,20 +44,30 @@ function App() {
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
+      generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
+      // Only relevant for hosted version
       isTermOfServiceAccepted: false,
       accessCode: null,
     },
     "setting"
   );
-  const [outputSettings, setOutputSettings] = useState<OutputSettings>({
-    css: CSSOption.TAILWIND,
-    components: UIComponentOption.HTML,
-    js: JSFrameworkOption.NO_FRAMEWORK,
-  });
+
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
 
   const wsRef = useRef<WebSocket>(null);
+
+  // When the user already has the settings in local storage, newly added keys
+  // do not get added to the settings so if it's falsy, we populate it with the default
+  // value
+  useEffect(() => {
+    if (!settings.generatedCodeConfig) {
+      setSettings((prev) => ({
+        ...prev,
+        generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
+      }));
+    }
+  }, [settings.generatedCodeConfig, setSettings]);
 
   const takeScreenshot = async (): Promise<string> => {
     const iframeElement = document.querySelector(
@@ -116,7 +118,7 @@ function App() {
     setAppState(AppState.CODING);
 
     // Merge settings with params
-    const updatedParams = { ...params, ...settings, outputSettings };
+    const updatedParams = { ...params, ...settings };
 
     generateCode(
       wsRef,
@@ -190,8 +192,13 @@ function App() {
           </div>
 
           <OutputSettingsSection
-            outputSettings={outputSettings}
-            setOutputSettings={setOutputSettings}
+            generatedCodeConfig={settings.generatedCodeConfig}
+            setGeneratedCodeConfig={(config: GeneratedCodeConfig) =>
+              setSettings((prev) => ({
+                ...prev,
+                generatedCodeConfig: config,
+              }))
+            }
             shouldDisableUpdates={
               appState === AppState.CODING || appState === AppState.CODE_READY
             }
