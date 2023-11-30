@@ -110,15 +110,15 @@ function SettingsDialog({ settings, setSettings }: Props) {
           />
 
           <Label htmlFor="openai-api-key">
-            <div>OpenAI Base URL</div>
+            <div>OpenAI Base URL (optional)</div>
             <div className="font-light mt-2 leading-relaxed">
-              You can replace it for the third api server.
+              Replace with a proxy URL if you don't want to use the default.
             </div>
           </Label>
 
           <Input
             id="openai-base-url"
-            placeholder="OpenAI Base Url"
+            placeholder="OpenAI Base URL"
             value={settings.openAiBaseURL || ""}
             onChange={(e) =>
               setSettings((s) => ({
