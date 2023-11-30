@@ -50,7 +50,7 @@ function generateDisplayString(settings: OutputSettings) {
     settings.css === CSSOption.TAILWIND
   ) {
     return (
-      <div>
+      <div className="text-gray-800 dark:text-white">
         Generating <span className="font-bold">React</span> +{" "}
         <span className="font-bold">Tailwind</span> code
       </div>
@@ -60,7 +60,7 @@ function generateDisplayString(settings: OutputSettings) {
     settings.css === CSSOption.TAILWIND
   ) {
     return (
-      <div className="text-gray-800">
+      <div className="text-gray-800 dark:text-white">
         Generating <span className="font-bold">HTML</span> +{" "}
         <span className="font-bold">Tailwind</span> code
       </div>
@@ -70,7 +70,7 @@ function generateDisplayString(settings: OutputSettings) {
     settings.css === CSSOption.BOOTSTRAP
   ) {
     return (
-      <div>
+      <div className="text-gray-800 dark:text-white">
         Generating <span className="font-bold">HTML</span> +{" "}
         <span className="font-bold">Bootstrap</span> code
       </div>

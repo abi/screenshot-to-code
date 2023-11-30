@@ -170,6 +170,7 @@ function App() {
     }));
   };
 
+  return (
     <div className="mt-2 dark:bg-black dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
       {IS_RUNNING_ON_CLOUD && (
