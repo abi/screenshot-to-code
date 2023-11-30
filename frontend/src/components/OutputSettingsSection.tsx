@@ -59,9 +59,10 @@ function OutputSettingsSection({
         <span>Generating:</span>
         <Select
           value={generatedCodeConfig}
-          onValueChange={(value: string) =>
-            setGeneratedCodeConfig(value as GeneratedCodeConfig)
-          }
+          onValueChange={(value: string) => {
+            window.plausible("OutputSettings", { props: { stack: value } });
+            setGeneratedCodeConfig(value as GeneratedCodeConfig);
+          }}
           disabled={shouldDisableUpdates}
         >
           <SelectTrigger className="col-span-2" id="output-settings-js">
