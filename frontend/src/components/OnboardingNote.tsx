@@ -8,18 +8,17 @@ export function OnboardingNote() {
           href="https://buy.stripe.com/8wM6sre70gBW1nqaEE"
           target="_blank"
         >
-          buy some credits (20 generations for $9)
+          buy some credits (100 generations for $15)
         </a>{" "}
-        or use your own OpenAI API key with GPT4 vision access.{" "}
+        or use your own OpenAI API key with GPT4 vision access (
         <a
           href="https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
           className="inline underline hover:opacity-70"
           target="_blank"
         >
-          Follow these instructions to get yourself a key.
-        </a>{" "}
-        and paste it in the Settings dialog (gear icon above). Your key is only
-        stored in your browser. Never stored on our servers.
+          follow these instructions to obtain a key
+        </a>
+        ).
       </span>
     </div>
   );
