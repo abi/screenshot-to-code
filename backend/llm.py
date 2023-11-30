@@ -6,7 +6,10 @@ MODEL_GPT_4_VISION = "gpt-4-vision-preview"
 
 
 async def stream_openai_response(
-    messages, api_key: str, base_url:str,  callback: Callable[[str], Awaitable[None]]
+    messages,
+    api_key: str,
+    base_url: str | None,
+    callback: Callable[[str], Awaitable[None]],
 ):
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
