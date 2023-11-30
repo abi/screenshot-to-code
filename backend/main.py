@@ -137,12 +137,23 @@ async def stream_code(websocket: WebSocket):
     async def process_chunk(content):
         await websocket.send_json({"type": "chunk", "value": content})
 
-    if params.get("resultImage") and params["resultImage"]:
-        prompt_messages = assemble_prompt(
-            params["image"], generated_code_config, params["resultImage"]
+    # Assemble the prompt
+    try:
+        if params.get("resultImage") and params["resultImage"]:
+            prompt_messages = assemble_prompt(
+                params["image"], generated_code_config, params["resultImage"]
+            )
+        else:
+            prompt_messages = assemble_prompt(params["image"], generated_code_config)
+    except:
+        await websocket.send_json(
+            {
+                "type": "error",
+                "value": "Error assembling prompt. Contact support at support@picoapps.xyz",
+            }
         )
-    else:
-        prompt_messages = assemble_prompt(params["image"], generated_code_config)
+        await websocket.close()
+        return
 
     # Image cache for updates so that we don't have to regenerate images
     image_cache = {}
