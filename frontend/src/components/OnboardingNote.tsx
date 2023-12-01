@@ -8,7 +8,7 @@ export function OnboardingNote() {
           href="https://buy.stripe.com/8wM6sre70gBW1nqaEE"
           target="_blank"
         >
-          buy some credits (100 generations for $15)
+          buy some credits (20 generations for $4.99)
         </a>{" "}
         or use your own OpenAI API key with GPT4 vision access (
         <a
@@ -16,7 +16,7 @@ export function OnboardingNote() {
           className="inline underline hover:opacity-70"
           target="_blank"
         >
-          follow these instructions to obtain a key
+          follow these instructions to depost $5 credit and obtain a key
         </a>
         ).
       </span>

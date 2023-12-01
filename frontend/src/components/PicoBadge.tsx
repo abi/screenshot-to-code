@@ -8,7 +8,7 @@ export function PicoBadge({ settings }: { settings: Settings }) {
           className="fixed z-50 bottom-5 left-5 rounded-md shadow-lg bg-black
           text-white  px-4 text-xs py-3 cursor-pointer"
         >
-          buy 100 code generations for $15 <br />
+          buy 20 code generations for $4.99 <br />
         </div>
       </a>
       <a
