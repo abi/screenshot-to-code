@@ -4,7 +4,7 @@ This simple app converts a screenshot to code (HTML/Tailwind CSS, or React or Vu
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
-See the [Examples](#examples) section below for more demos.
+See the [Examples](#-examples) section below for more demos.
 
 ## 🚀 Try It Out!
 
