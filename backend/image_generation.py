@@ -31,6 +31,7 @@ async def generate_image(prompt, api_key, base_url):
         "prompt": prompt,
     }
     res = await client.images.generate(**image_params)
+    await client.close()
     return res.data[0].url
 
 
