@@ -19,8 +19,6 @@ from access_token import validate_access_token
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
-# Configure CORS
-
 # Configure CORS settings
 app.add_middleware(
     CORSMiddleware,
