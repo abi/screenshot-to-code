@@ -202,5 +202,5 @@ async def stream_code(websocket: WebSocket):
         await websocket.send_json(
             {"type": "status", "value": "Image generation failed but code is complete."}
         )
-    finally:
-        await websocket.close()
+
+    await websocket.close()
