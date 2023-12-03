@@ -1,3 +1,5 @@
+from prompts import assemble_prompt
+
 TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer
 You take screenshots of a reference web page from the user, and then build single page apps 
@@ -111,114 +113,24 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
-USER_PROMPT = """
-Generate code for a web page that looks exactly like this.
-"""
 
+def test_prompts():
+    tailwind_prompt = assemble_prompt(
+        "image_data_url", "html_tailwind", "result_image_data_url"
+    )
+    assert tailwind_prompt[0]["content"] == TAILWIND_SYSTEM_PROMPT
 
-def assemble_prompt(
-    image_data_url, generated_code_config: str, result_image_data_url=None
-):
-    # Set the system prompt based on the output settings
-    system_content = TAILWIND_SYSTEM_PROMPT
-    if generated_code_config == "html_tailwind":
-        system_content = TAILWIND_SYSTEM_PROMPT
-    elif generated_code_config == "react_tailwind":
-        system_content = REACT_TAILWIND_SYSTEM_PROMPT
-    elif generated_code_config == "bootstrap":
-        system_content = BOOTSTRAP_SYSTEM_PROMPT
-    elif generated_code_config == "ionic_tailwind":
-        system_content = IONIC_TAILWIND_SYSTEM_PROMPT
-    else:
-        raise Exception("Code config is not one of available options")
+    react_tailwind_prompt = assemble_prompt(
+        "image_data_url", "react_tailwind", "result_image_data_url"
+    )
+    assert react_tailwind_prompt[0]["content"] == REACT_TAILWIND_SYSTEM_PROMPT
 
-    user_content = [
-        {
-            "type": "image_url",
-            "image_url": {"url": image_data_url, "detail": "high"},
-        },
-        {
-            "type": "text",
-            "text": USER_PROMPT,
-        },
-    ]
+    bootstrap_prompt = assemble_prompt(
+        "image_data_url", "bootstrap", "result_image_data_url"
+    )
+    assert bootstrap_prompt[0]["content"] == BOOTSTRAP_SYSTEM_PROMPT
 
-    # Include the result image if it exists
-    if result_image_data_url:
-        user_content.insert(
-            1,
-            {
-                "type": "image_url",
-                "image_url": {"url": result_image_data_url, "detail": "high"},
-            },
-        )
-    return [
-        {
-            "role": "system",
-            "content": system_content,
-        },
-        {
-            "role": "user",
-            "content": user_content,
-        },
-    ]
-
-
-INSTUCTION_GENERATION_SYSTEM_PROMPT = """
-You are a Frontend Vision Comparison expert,
-You are required to compare two website screenshots: the first one is the original site and the second one is a redesigned version.
-Your task is to identify differences in elements and their css, focusing on layout, style, and structure.
-Do not consider the content(text, placeholder) of the elements, only the elements themselves
-Analyze the screenshots considering these categories:
-
-Lack of Elements: Identify any element present in the original but missing in the redesign.
-Redundant Elements: Spot elements in the redesign that were not in the original.
-Wrong Element Properties: Note discrepancies in element properties like size, color, font, and layout.
-
-Provide a clear conclusion as a list, specifying the element, the mistake, and its location.
-In ambiguous cases, suggest a manual review.
-Remember, this comparison is not pixel-by-pixel, but at a higher, more conceptual level.
-
-Return only the JSON array in this format:
-[
-  {
-    "element": "name, text, etc.",
-    "mistake": "wrong color, wrong size, etc.(strictly use css properties to describe)",
-    "improvement": "use correct color, use width: correct px, etc.",
-    "location": "header"
-  },
-]
-Do not include markdown "```" or "```JSON" at the start or end.
-"""
-
-INSTUCTION_GENERATION_USER_PROMPT = """
-Generate a list of differences between the two screenshots.
-"""
-
-
-def assemble_instruction_generation_prompt(image_data_url, result_image_data_url):
-    content = [
-        {
-            "type": "image_url",
-            "image_url": {"url": image_data_url, "detail": "high"},
-        },
-        {
-            "type": "text",
-            "text": INSTUCTION_GENERATION_USER_PROMPT,
-        },
-    ]
-    if result_image_data_url:
-        content.insert(
-            1,
-            {
-                "type": "image_url",
-                "image_url": {"url": result_image_data_url, "detail": "high"},
-            },
-        )
-    return [
-        {"role": "system", "content": INSTUCTION_GENERATION_SYSTEM_PROMPT},
-        {
-            "role": "user",
-            "content": content,
-        },
-    ]
+    ionic_tailwind = assemble_prompt(
+        "image_data_url", "ionic_tailwind", "result_image_data_url"
+    )
+    assert ionic_tailwind[0]["content"] == IONIC_TAILWIND_SYSTEM_PROMPT
