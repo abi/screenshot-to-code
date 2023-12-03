@@ -30,4 +30,6 @@ async def stream_openai_response(
         full_response += content
         await callback(content)
 
+    await client.close()
+
     return full_response
