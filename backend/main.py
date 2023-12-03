@@ -19,8 +19,6 @@ from access_token import validate_access_token
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
-# Configure CORS
-
 # Configure CORS settings
 app.add_middleware(
     CORSMiddleware,
@@ -204,5 +202,5 @@ async def stream_code(websocket: WebSocket):
         await websocket.send_json(
             {"type": "status", "value": "Image generation failed but code is complete."}
         )
-    finally:
-        await websocket.close()
+
+    await websocket.close()
