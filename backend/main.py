@@ -1,5 +1,6 @@
 # Load environment variables first
 from dotenv import load_dotenv
+from fastapi.responses import HTMLResponse
 
 load_dotenv()
 
@@ -36,6 +37,13 @@ SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))
 
 
 app.include_router(screenshot.router)
+
+
+@app.get("/")
+async def get_status():
+    return HTMLResponse(
+        content="<h3>Your backend is running correctly. Please open the front-end URL (default is http://localhost:5173) to use screenshot-to-code.</h3>"
+    )
 
 
 def write_logs(prompt_messages, completion):

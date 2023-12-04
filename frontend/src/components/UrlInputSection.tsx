@@ -59,7 +59,7 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
   }
 
   return (
-    <div className="w-[400px] gap-y-2 flex flex-col">
+    <div className="max-w-[90%] min-w-[40%] gap-y-2 flex flex-col">
       <div className="text-gray-500 text-sm">Or screenshot a URL...</div>
       <Input
         placeholder="Enter URL"
