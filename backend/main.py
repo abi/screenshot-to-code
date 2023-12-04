@@ -218,6 +218,17 @@ async def stream_code(websocket: WebSocket):
                 )
             )
             return await throw_error(error_message)
+        except openai.RateLimitError as e:
+            print("[GENERATE_CODE] Rate limit exceeded", e)
+            error_message = (
+                "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
+            )
+            return await throw_error(error_message)
 
     # Write the messages dict into a log so that we can debug later
     write_logs(prompt_messages, completion)
