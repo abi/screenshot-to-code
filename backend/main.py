@@ -1,6 +1,5 @@
 # Load environment variables first
 from dotenv import load_dotenv
-from fastapi.responses import HTMLResponse
 
 load_dotenv()
 
@@ -11,6 +10,7 @@ import traceback
 from datetime import datetime
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from llm import stream_openai_response
 from mock import mock_completion
 from image_generation import create_alt_url_mapping, generate_images
@@ -18,6 +18,21 @@ from prompts import assemble_prompt
 from routes import screenshot
 from access_token import validate_access_token
 
+# Setup Sentry (only relevant in prod)
+if os.environ.get("IS_PROD"):
+    import sentry_sdk
+
+    SENTRY_DSN = os.environ.get("SENTRY_DSN")
+    if not SENTRY_DSN:
+        raise Exception("SENTRY_DSN not found in prod environment")
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=0,
+        profiles_sample_rate=0.1,
+    )
+
+# Setup FastAPI
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
 # Configure CORS settings
