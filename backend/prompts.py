@@ -17,7 +17,7 @@ from screenshot_system_prompts import (
 
 
 USER_PROMPT = """
-Generate code for a web page that looks exactly like this.
+Generate code for a web page that looks exactly like these images. Seperate them into different sectionsif multiple images are provided.
 """
 
 
