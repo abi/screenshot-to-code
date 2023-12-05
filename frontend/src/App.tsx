@@ -29,6 +29,7 @@ import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
+import { addEvent } from "./lib/analytics";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
@@ -83,11 +84,7 @@ function App() {
   };
 
   const downloadCode = () => {
-    try {
-      window.plausible("Download");
-    } catch {
-      // Ignore
-    }
+    addEvent("Download");
 
     // Create a blob from the generated code
     const blob = new Blob([generatedCode], { type: "text/html" });

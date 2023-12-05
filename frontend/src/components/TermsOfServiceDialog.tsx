@@ -10,6 +10,7 @@ import {
 import { Input } from "./ui/input";
 import toast from "react-hot-toast";
 import { PICO_BACKEND_FORM_SECRET } from "../config";
+import { addEvent } from "../lib/analytics";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
@@ -81,6 +82,7 @@ const TermsOfServiceDialog: React.FC<{
                 e.preventDefault();
                 toast.error("Please enter your email");
               } else {
+                addEvent("EmailSubmit");
                 onSubscribe();
               }
             }}
