@@ -1,9 +1,11 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { History, HistoryItemType } from "../history_types";
 import toast from "react-hot-toast";
+import classNames from "classnames";
 
 interface Props {
   history: History;
+  currentVersion: number | null;
   revertToVersion: (version: number) => void;
   shouldDisableReverts: boolean;
 }
@@ -28,6 +30,7 @@ function displayHistoryItemType(itemType: HistoryItemType) {
 
 export default function HistoryDisplay({
   history,
+  currentVersion,
   revertToVersion,
   shouldDisableReverts,
 }: Props) {
@@ -39,8 +42,14 @@ export default function HistoryDisplay({
           {history.map((item, index) => (
             <li
               key={index}
-              className="flex items-center space-x-2 justify-between p-2
-              border-b cursor-pointer hover:bg-black hover:text-white"
+              className={classNames(
+                "flex items-center space-x-2 justify-between p-2",
+                "border-b cursor-pointer",
+                {
+                  " hover:bg-black hover:text-white": index !== currentVersion,
+                  "bg-slate-500 text-white": index === currentVersion,
+                }
+              )}
               onClick={() =>
                 shouldDisableReverts
                   ? toast.error(

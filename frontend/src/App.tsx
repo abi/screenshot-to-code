@@ -61,6 +61,7 @@ function App() {
 
   // App history
   const [appHistory, setAppHistory] = useState<History>([]);
+  const [currentVersion, setCurrentVersion] = useState<number | null>(null);
 
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
@@ -146,20 +147,25 @@ function App() {
               inputs: { image_url: referenceImages[0] },
             },
           ]);
+          setCurrentVersion(0);
         } else {
-          setAppHistory((prev) => [
-            {
-              type: "ai_edit",
-              code,
-              // TODO: Doesn't typecheck correctly
-              inputs: {
-                // TODO: Fix this
-                previous_commands: [],
-                new_instruction: updateInstruction,
+          setAppHistory((prev) => {
+            const newHistory: History = [
+              {
+                type: "ai_edit",
+                code,
+                // TODO: Doesn't typecheck correctly
+                inputs: {
+                  // TODO: Fix this
+                  previous_commands: [],
+                  new_instruction: updateInstruction,
+                },
               },
-            },
-            ...prev,
-          ]);
+              ...prev,
+            ];
+            setCurrentVersion(0);
+            return newHistory;
+          });
         }
       },
       (line) => setExecutionConsole((prev) => [...prev, line]),
@@ -357,6 +363,7 @@ function App() {
           {
             <HistoryDisplay
               history={appHistory}
+              currentVersion={currentVersion}
               revertToVersion={(index) => {
                 if (
                   index < 0 ||
@@ -364,6 +371,7 @@ function App() {
                   !appHistory[index]
                 )
                   return;
+                setCurrentVersion(index);
                 setGeneratedCode(appHistory[index].code);
               }}
               shouldDisableReverts={appState === AppState.CODING}
