@@ -22,6 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
+import AccessCodeSection from "./settings/AccessCodeSection";
 
 interface Props {
   settings: Settings;
@@ -48,26 +49,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
 
         {/* Access code */}
         {IS_RUNNING_ON_CLOUD && (
-          <div className="flex flex-col space-y-4 bg-slate-300 p-4 rounded dark:text-white dark:bg-slate-800">
-            <Label htmlFor="access-code">
-              <div>Access Code</div>
-              <div className="font-light mt-1 leading-relaxed">
-                Buy an access code.
-              </div>
-            </Label>
-
-            <Input
-              id="access-code dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-              placeholder="Enter your Screenshot to Code access code"
-              value={settings.accessCode || ""}
-              onChange={(e) =>
-                setSettings((s) => ({
-                  ...s,
-                  accessCode: e.target.value,
-                }))
-              }
-            />
-          </div>
+          <AccessCodeSection settings={settings} setSettings={setSettings} />
         )}
 
         <div className="flex items-center space-x-2">
