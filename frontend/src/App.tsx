@@ -30,7 +30,7 @@ import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
 
-const IS_OPENAI_DOWN = false;
+const IS_OPENAI_DOWN = true;
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
