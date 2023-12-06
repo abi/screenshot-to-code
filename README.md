@@ -54,6 +54,10 @@ For debugging purposes, if you don't want to waste GPT4-Vision credits, you can 
 MOCK=true poetry run uvicorn main:app --reload --port 7001
 ```
 
+## Configuration
+
+* You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
+
 ## Docker
 
 If you have Docker installed on your system, in the root directory, run:
