@@ -7,7 +7,7 @@ export type HistoryItemType =
 
 export type HistoryItem = {
   type: HistoryItemType;
-  code?: string;
+  code: string;
   inputs:
     | AiCreateInputs
     | CodeCreateInputs

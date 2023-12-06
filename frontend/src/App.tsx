@@ -37,10 +37,13 @@ const IS_OPENAI_DOWN = false;
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
+
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+
+  // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
     {
       openAiApiKey: null,
@@ -132,15 +135,13 @@ function App() {
       wsRef,
       updatedParams,
       (token) => setGeneratedCode((prev) => prev + token),
-      (code) => setGeneratedCode(code),
-      (line) => setExecutionConsole((prev) => [...prev, line]),
-      () => {
-        setAppState(AppState.CODE_READY);
+      (code) => {
+        setGeneratedCode(code);
         if (params.generationType === "create") {
           setAppHistory([
             {
               type: "ai_create",
-              code: generatedCode,
+              code,
               // TODO: Doesn't typecheck correctly
               inputs: { image_url: referenceImages[0] },
             },
@@ -149,7 +150,7 @@ function App() {
           setAppHistory((prev) => [
             {
               type: "ai_edit",
-              code: generatedCode,
+              code,
               // TODO: Doesn't typecheck correctly
               inputs: {
                 // TODO: Fix this
@@ -160,6 +161,10 @@ function App() {
             ...prev,
           ]);
         }
+      },
+      (line) => setExecutionConsole((prev) => [...prev, line]),
+      () => {
+        setAppState(AppState.CODE_READY);
       }
     );
   }
@@ -349,7 +354,20 @@ function App() {
               </div>
             </>
           )}
-          {<HistoryDisplay history={appHistory} />}
+          {
+            <HistoryDisplay
+              history={appHistory}
+              revertToVersion={(index) => {
+                if (
+                  index < 0 ||
+                  index >= appHistory.length ||
+                  !appHistory[index]
+                )
+                  return;
+                setGeneratedCode(appHistory[index].code);
+              }}
+            />
+          }
         </div>
       </div>
 
