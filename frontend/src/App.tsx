@@ -30,6 +30,8 @@ import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
 
+const IS_OPENAI_DOWN = false;
+
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
@@ -208,6 +210,13 @@ function App() {
             !(settings.openAiApiKey || settings.accessCode) && (
               <OnboardingNote />
             )}
+
+          {IS_OPENAI_DOWN && (
+            <div className="bg-black text-white dark:bg-white dark:text-black p-3 rounded">
+              OpenAI API is currently down. Try back in 30 minutes or later. We
+              apologize for the inconvenience.
+            </div>
+          )}
 
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
