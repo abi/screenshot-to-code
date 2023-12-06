@@ -366,6 +366,7 @@ function App() {
                   return;
                 setGeneratedCode(appHistory[index].code);
               }}
+              shouldDisableReverts={appState === AppState.CODING}
             />
           }
         </div>

@@ -1,9 +1,11 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { History, HistoryItemType } from "../history_types";
+import toast from "react-hot-toast";
 
 interface Props {
   history: History;
   revertToVersion: (version: number) => void;
+  shouldDisableReverts: boolean;
 }
 
 function displayHistoryItemType(itemType: HistoryItemType) {
@@ -24,7 +26,11 @@ function displayHistoryItemType(itemType: HistoryItemType) {
   }
 }
 
-export default function HistoryDisplay({ history, revertToVersion }: Props) {
+export default function HistoryDisplay({
+  history,
+  revertToVersion,
+  shouldDisableReverts,
+}: Props) {
   return history.length === 0 ? null : (
     <div className="flex flex-col h-screen">
       <h1 className="font-bold mb-2">History</h1>
@@ -35,7 +41,13 @@ export default function HistoryDisplay({ history, revertToVersion }: Props) {
               key={index}
               className="flex items-center space-x-2 justify-between p-2
               border-b cursor-pointer hover:bg-black hover:text-white"
-              onClick={() => revertToVersion(index)}
+              onClick={() =>
+                shouldDisableReverts
+                  ? toast.error(
+                      "Please wait for code generation to complete before viewing an older version"
+                    )
+                  : revertToVersion(index)
+              }
             >
               <h2 className="text-sm">{displayHistoryItemType(item.type)}</h2>
               <h2 className="text-sm">v{history.length - index}</h2>
