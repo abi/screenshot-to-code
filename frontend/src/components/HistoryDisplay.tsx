@@ -25,15 +25,16 @@ function displayHistoryItemType(itemType: HistoryItemType) {
 }
 
 export default function HistoryDisplay({ history, revertToVersion }: Props) {
-  return (
-    <div className="flex flex-col h-screen p-4">
-      <h1 className="font-bold mb-4">History</h1>
+  return history.length === 0 ? null : (
+    <div className="flex flex-col h-screen">
+      <h1 className="font-bold mb-2">History</h1>
       <ScrollArea className="flex-1 overflow-y-auto">
-        <ul className="space-y-4">
+        <ul className="space-y-0">
           {history.map((item, index) => (
             <li
               key={index}
-              className="flex items-center space-x-4 justify-between border-b pb-1 cursor-pointer"
+              className="flex items-center space-x-2 justify-between p-2
+              border-b cursor-pointer hover:bg-black hover:text-white"
               onClick={() => revertToVersion(index)}
             >
               <h2 className="text-sm">{displayHistoryItemType(item.type)}</h2>
