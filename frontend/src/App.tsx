@@ -31,7 +31,7 @@ import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
 import { addEvent } from "./lib/analytics";
 
-const IS_OPENAI_DOWN = true;
+const IS_OPENAI_DOWN = false;
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
