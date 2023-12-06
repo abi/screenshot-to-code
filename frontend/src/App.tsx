@@ -29,8 +29,10 @@ import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
+import { History } from "./history_types";
+import HistoryDisplay from "./components/HistoryDisplay";
 
-const IS_OPENAI_DOWN = true;
+const IS_OPENAI_DOWN = false;
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
@@ -53,6 +55,9 @@ function App() {
     },
     "setting"
   );
+
+  // App history
+  const [appHistory, setAppHistory] = useState<History>([]);
 
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
@@ -107,6 +112,7 @@ function App() {
     setReferenceImages([]);
     setExecutionConsole([]);
     setHistory([]);
+    setAppHistory([]);
   };
 
   const stop = () => {
@@ -128,7 +134,32 @@ function App() {
       (token) => setGeneratedCode((prev) => prev + token),
       (code) => setGeneratedCode(code),
       (line) => setExecutionConsole((prev) => [...prev, line]),
-      () => setAppState(AppState.CODE_READY)
+      () => {
+        setAppState(AppState.CODE_READY);
+        if (params.generationType === "create") {
+          setAppHistory([
+            {
+              type: "ai_create",
+              code: generatedCode,
+              // TODO: Doesn't typecheck correctly
+              inputs: { image_url: referenceImages[0] },
+            },
+          ]);
+        } else {
+          setAppHistory((prev) => [
+            {
+              type: "ai_edit",
+              code: generatedCode,
+              // TODO: Doesn't typecheck correctly
+              inputs: {
+                previous_commands: [],
+                new_instruction: updateInstruction,
+              },
+            },
+            ...prev,
+          ]);
+        }
+      }
     );
   }
 
@@ -317,6 +348,7 @@ function App() {
               </div>
             </>
           )}
+          {<HistoryDisplay history={appHistory} />}
         </div>
       </div>
 
