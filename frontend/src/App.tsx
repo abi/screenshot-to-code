@@ -152,6 +152,7 @@ function App() {
               code: generatedCode,
               // TODO: Doesn't typecheck correctly
               inputs: {
+                // TODO: Fix this
                 previous_commands: [],
                 new_instruction: updateInstruction,
               },
