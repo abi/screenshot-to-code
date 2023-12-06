@@ -30,7 +30,10 @@ import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
 import { History } from "./history_types";
-import HistoryDisplay from "./components/HistoryDisplay";
+import HistoryDisplay, {
+  extractHistoryTree,
+} from "./components/HistoryDisplay";
+import toast from "react-hot-toast";
 
 const IS_OPENAI_DOWN = false;
 
@@ -41,7 +44,6 @@ function App() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
-  const [history, setHistory] = useState<string[]>([]);
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -61,6 +63,7 @@ function App() {
 
   // App history
   const [appHistory, setAppHistory] = useState<History>([]);
+  // Tracks the currently viewed version from app history
   const [currentVersion, setCurrentVersion] = useState<number | null>(null);
 
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
@@ -115,7 +118,6 @@ function App() {
     setGeneratedCode("");
     setReferenceImages([]);
     setExecutionConsole([]);
-    setHistory([]);
     setAppHistory([]);
   };
 
@@ -143,7 +145,6 @@ function App() {
             {
               type: "ai_create",
               code,
-              // TODO: Doesn't typecheck correctly
               inputs: { image_url: referenceImages[0] },
             },
           ]);
@@ -154,11 +155,8 @@ function App() {
               {
                 type: "ai_edit",
                 code,
-                // TODO: Doesn't typecheck correctly
                 inputs: {
-                  // TODO: Fix this
-                  previous_commands: [],
-                  new_instruction: updateInstruction,
+                  prompt: updateInstruction,
                 },
               },
               ...prev,
@@ -191,7 +189,18 @@ function App() {
 
   // Subsequent updates
   async function doUpdate() {
-    const updatedHistory = [...history, generatedCode, updateInstruction];
+    if (currentVersion === null) {
+      toast.error(
+        "No current version set. Contact support or open a Github issue."
+      );
+      return;
+    }
+
+    const updatedHistory = [
+      ...extractHistoryTree(appHistory, currentVersion),
+      updateInstruction,
+    ];
+
     if (shouldIncludeResultImage) {
       const resultImage = await takeScreenshot();
       doGenerateCode({
@@ -208,7 +217,6 @@ function App() {
       });
     }
 
-    setHistory(updatedHistory);
     setGeneratedCode("");
     setUpdateInstruction("");
   }

@@ -1,40 +1,23 @@
-export type HistoryItemType =
-  | "ai_create"
-  | "code_create"
-  | "ai_edit"
-  | "revert"
-  | "code_edit";
+export type HistoryItemType = "ai_create" | "ai_edit";
 
-export type HistoryItem = {
-  type: HistoryItemType;
-  code: string;
-  inputs:
-    | AiCreateInputs
-    | CodeCreateInputs
-    | AiEditInputs
-    | RevertInputs
-    | CodeEditInputs;
-};
+export type HistoryItem =
+  | {
+      type: "ai_create";
+      code: string;
+      inputs: AiCreateInputs;
+    }
+  | {
+      type: "ai_edit";
+      code: string;
+      inputs: AiEditInputs;
+    };
 
 export type AiCreateInputs = {
-  image_url?: string;
-};
-
-export type CodeCreateInputs = {
-  // Define specific properties relevant for code creation
+  image_url: string;
 };
 
 export type AiEditInputs = {
-  previous_commands: string[];
-  new_instruction: string;
-};
-
-export type RevertInputs = {
-  parent: number;
-};
-
-export type CodeEditInputs = {
-  // TODO: Fill in
+  prompt: string;
 };
 
 export type History = HistoryItem[];

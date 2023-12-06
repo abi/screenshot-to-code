@@ -10,18 +10,35 @@ interface Props {
   shouldDisableReverts: boolean;
 }
 
+export function extractHistoryTree(
+  history: History,
+  version: number
+): string[] {
+  // History is in reverse chronological order
+
+  // Get all history items up to the current version
+  const extractedHistory = history.slice(version);
+
+  const obj: string[] = [];
+
+  // Reverse the history so that it is in chronological order for the server
+  extractedHistory.reverse().forEach((item) => {
+    // Don't include the image for ai_create since the server gets it passed and will include it directly
+    if (item.type !== "ai_create") {
+      obj.push(item.inputs.prompt);
+    }
+    obj.push(item.code);
+  });
+
+  return obj;
+}
+
 function displayHistoryItemType(itemType: HistoryItemType) {
   switch (itemType) {
     case "ai_create":
       return "Create";
     case "ai_edit":
       return "Edit";
-    case "code_create":
-      return "Create";
-    case "code_edit":
-      return "Code Edit";
-    case "revert":
-      return "Revert";
     default:
       // TODO: Error out since this is exhaustive
       return "Unknown";
