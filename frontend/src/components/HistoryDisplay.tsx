@@ -44,7 +44,7 @@ export default function HistoryDisplay({
               onClick={() =>
                 shouldDisableReverts
                   ? toast.error(
-                      "Please wait for code generation to complete before viewing an older version"
+                      "Please wait for code generation to complete before viewing an older version."
                     )
                   : revertToVersion(index)
               }
