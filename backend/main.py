@@ -97,13 +97,14 @@ async def stream_code(websocket: WebSocket):
     openai_api_key = None
     if "accessCode" in params and params["accessCode"]:
         print("Access code - using platform API key")
-        if await validate_access_token(params["accessCode"]):
+        res = await validate_access_token(params["accessCode"])
+        if res["success"]:
             openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
         else:
             await websocket.send_json(
                 {
                     "type": "error",
-                    "value": "Invalid access code or you're out of credits. Please try again.",
+                    "value": res["failure_reason"],
                 }
             )
             return

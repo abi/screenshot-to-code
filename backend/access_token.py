@@ -18,10 +18,4 @@ async def validate_access_token(access_code: str):
 
         response = await client.post(url, content=data, headers=headers)
         response_data = response.json()
-
-        if response_data["success"]:
-            print("Access token is valid.")
-            return True
-        else:
-            print(f"Access token validation failed: {response_data['failure_reason']}")
-            return False
+        return response_data
