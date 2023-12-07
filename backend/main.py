@@ -1,6 +1,7 @@
 # Load environment variables first
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 
@@ -14,6 +15,7 @@ from fastapi.responses import HTMLResponse
 import openai
 from llm import stream_openai_response
 from mock import mock_completion
+from utils import pprint_prompt
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_prompt
 from routes import screenshot
@@ -183,7 +185,6 @@ async def stream_code(websocket: WebSocket):
             prompt_messages += [
                 {"role": "assistant" if index % 2 == 0 else "user", "content": text}
             ]
-
         image_cache = create_alt_url_mapping(params["history"][-2])
 
     if SHOULD_MOCK_AI_RESPONSE:

@@ -29,16 +29,22 @@ import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
+import { History } from "./components/history/history_types";
+import HistoryDisplay from "./components/history/HistoryDisplay";
+import { extractHistoryTree } from "./components/history/utils";
+import toast from "react-hot-toast";
 
 const IS_OPENAI_DOWN = false;
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
+
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
-  const [history, setHistory] = useState<string[]>([]);
+
+  // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
     {
       openAiApiKey: null,
@@ -53,6 +59,11 @@ function App() {
     },
     "setting"
   );
+
+  // App history
+  const [appHistory, setAppHistory] = useState<History>([]);
+  // Tracks the currently viewed version from app history
+  const [currentVersion, setCurrentVersion] = useState<number | null>(null);
 
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
@@ -106,7 +117,7 @@ function App() {
     setGeneratedCode("");
     setReferenceImages([]);
     setExecutionConsole([]);
-    setHistory([]);
+    setAppHistory([]);
   };
 
   const stop = () => {
@@ -115,7 +126,10 @@ function App() {
     setAppState(AppState.CODE_READY);
   };
 
-  function doGenerateCode(params: CodeGenerationParams) {
+  function doGenerateCode(
+    params: CodeGenerationParams,
+    parentVersion: number | null
+  ) {
     setExecutionConsole([]);
     setAppState(AppState.CODING);
 
@@ -126,9 +140,48 @@ function App() {
       wsRef,
       updatedParams,
       (token) => setGeneratedCode((prev) => prev + token),
-      (code) => setGeneratedCode(code),
+      (code) => {
+        setGeneratedCode(code);
+        if (params.generationType === "create") {
+          setAppHistory([
+            {
+              type: "ai_create",
+              parentIndex: null,
+              code,
+              inputs: { image_url: referenceImages[0] },
+            },
+          ]);
+          setCurrentVersion(0);
+        } else {
+          setAppHistory((prev) => {
+            // Validate parent version
+            if (parentVersion === null) {
+              toast.error(
+                "No parent version set. Contact support or open a Github issue."
+              );
+              return prev;
+            }
+
+            const newHistory: History = [
+              ...prev,
+              {
+                type: "ai_edit",
+                parentIndex: parentVersion,
+                code,
+                inputs: {
+                  prompt: updateInstruction,
+                },
+              },
+            ];
+            setCurrentVersion(newHistory.length - 1);
+            return newHistory;
+          });
+        }
+      },
       (line) => setExecutionConsole((prev) => [...prev, line]),
-      () => setAppState(AppState.CODE_READY)
+      () => {
+        setAppState(AppState.CODE_READY);
+      }
     );
   }
 
@@ -139,33 +192,52 @@ function App() {
 
     setReferenceImages(referenceImages);
     if (referenceImages.length > 0) {
-      doGenerateCode({
-        generationType: "create",
-        image: referenceImages[0],
-      });
+      doGenerateCode(
+        {
+          generationType: "create",
+          image: referenceImages[0],
+        },
+        currentVersion
+      );
     }
   }
 
   // Subsequent updates
   async function doUpdate() {
-    const updatedHistory = [...history, generatedCode, updateInstruction];
-    if (shouldIncludeResultImage) {
-      const resultImage = await takeScreenshot();
-      doGenerateCode({
-        generationType: "update",
-        image: referenceImages[0],
-        resultImage: resultImage,
-        history: updatedHistory,
-      });
-    } else {
-      doGenerateCode({
-        generationType: "update",
-        image: referenceImages[0],
-        history: updatedHistory,
-      });
+    if (currentVersion === null) {
+      toast.error(
+        "No current version set. Contact support or open a Github issue."
+      );
+      return;
     }
 
-    setHistory(updatedHistory);
+    const updatedHistory = [
+      ...extractHistoryTree(appHistory, currentVersion),
+      updateInstruction,
+    ];
+
+    if (shouldIncludeResultImage) {
+      const resultImage = await takeScreenshot();
+      doGenerateCode(
+        {
+          generationType: "update",
+          image: referenceImages[0],
+          resultImage: resultImage,
+          history: updatedHistory,
+        },
+        currentVersion
+      );
+    } else {
+      doGenerateCode(
+        {
+          generationType: "update",
+          image: referenceImages[0],
+          history: updatedHistory,
+        },
+        currentVersion
+      );
+    }
+
     setGeneratedCode("");
     setUpdateInstruction("");
   }
@@ -317,6 +389,23 @@ function App() {
               </div>
             </>
           )}
+          {
+            <HistoryDisplay
+              history={appHistory}
+              currentVersion={currentVersion}
+              revertToVersion={(index) => {
+                if (
+                  index < 0 ||
+                  index >= appHistory.length ||
+                  !appHistory[index]
+                )
+                  return;
+                setCurrentVersion(index);
+                setGeneratedCode(appHistory[index].code);
+              }}
+              shouldDisableReverts={appState === AppState.CODING}
+            />
+          }
         </div>
       </div>
 
