@@ -9,8 +9,9 @@ import os
 import traceback
 from datetime import datetime
 from fastapi import FastAPI, WebSocket
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 import openai
 from llm import stream_openai_response
 from mock import mock_completion
@@ -40,12 +41,19 @@ SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))
 # Used as a feature flag to enable or disable certain features
 IS_PROD = os.environ.get("IS_PROD", False)
 
+# if webui folder exists, we are in build mode
+IS_BUILD = os.path.exists("webui")
+
 
 app.include_router(screenshot.router)
 
 
 @app.get("/")
 async def get_status():
+    if IS_BUILD:
+        # if in build mode, return webui/index.html
+        return FileResponse("webui/index.html")
+    
     return HTMLResponse(
         content="<h3>Your backend is running correctly. Please open the front-end URL (default is http://localhost:5173) to use screenshot-to-code.</h3>"
     )
@@ -259,3 +267,12 @@ async def stream_code(websocket: WebSocket):
         )
 
     await websocket.close()
+
+
+# Serve the webui folder as static files
+if IS_BUILD:
+    app.mount("/", StaticFiles(directory="webui", html=True), name="webui")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
