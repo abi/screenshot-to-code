@@ -58,7 +58,7 @@ function CodeTab({ code, setCode, settings }: Props) {
       <div className="flex justify-start items-center px-4 mb-2">
         <span
           title="Copy Code"
-          className="bg-black text-white flex items-center justify-center hover:text-black hover:bg-gray-100 cursor-pointer rounded-lg text-sm p-2.5"
+          className="bg-black text-white flex items-center justify-center hover:text-black hover:bg-gray-100 cursor-pointer rounded-lg text-sm p-2.5 plausible-event-name=CopyCode"
           onClick={copyCode}
         >
           Copy Code <FaCopy className="ml-2" />
