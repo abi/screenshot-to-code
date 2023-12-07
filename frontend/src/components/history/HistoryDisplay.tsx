@@ -1,4 +1,4 @@
-import { History } from "./history_types";
+import { History, HistoryItemType } from "./history_types";
 import toast from "react-hot-toast";
 import classNames from "classnames";
 import {
@@ -6,6 +6,7 @@ import {
   HoverCardTrigger,
   HoverCardContent,
 } from "../ui/hover-card";
+import { Badge } from "../ui/badge";
 
 interface Props {
   history: History;
@@ -14,17 +15,18 @@ interface Props {
   shouldDisableReverts: boolean;
 }
 
-// function displayHistoryItemType(itemType: HistoryItemType) {
-//   switch (itemType) {
-//     case "ai_create":
-//       return "Create";
-//     case "ai_edit":
-//       return "Edit";
-//     default:
-//       // TODO: Error out since this is exhaustive
-//       return "Unknown";
-//   }
-// }
+function displayHistoryItemType(itemType: HistoryItemType) {
+  switch (itemType) {
+    case "ai_create":
+      return "Create";
+    case "ai_edit":
+      return "Edit";
+    default: {
+      const exhaustiveCheck: never = itemType;
+      throw new Error(`Unhandled case: ${exhaustiveCheck}`);
+    }
+  }
+}
 
 export default function HistoryDisplay({
   history,
@@ -73,7 +75,10 @@ export default function HistoryDisplay({
                 <h2 className="text-sm">v{index + 1}</h2>
               </HoverCardTrigger>
               <HoverCardContent>
-                {item.type === "ai_edit" ? item.inputs.prompt : "Create"}
+                <div>
+                  {item.type === "ai_edit" ? item.inputs.prompt : "Create"}
+                </div>
+                <Badge>{displayHistoryItemType(item.type)}</Badge>
               </HoverCardContent>
             </HoverCard>
           </li>
