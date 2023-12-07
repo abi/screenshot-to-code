@@ -4,21 +4,21 @@ import { extractHistoryTree } from "./utils";
 const data = [
   {
     type: "ai_edit" as const,
-    code: "<html>edit with better icons and red text</html>",
+    code: "<html>3. edit with better icons and red text</html>",
     inputs: {
       prompt: "make text red",
     },
   },
   {
     type: "ai_edit" as const,
-    code: "<html>edit with better icons</html>",
+    code: "<html>2. edit with better icons</html>",
     inputs: {
       prompt: "use better icons",
     },
   },
   {
     type: "ai_create" as const,
-    code: "<html>create</html>",
+    code: "<html>1. create</html>",
     inputs: {
       image_url: "",
     },
@@ -27,12 +27,12 @@ const data = [
 
 test("should only include history from this point onward", () => {
   expect(extractHistoryTree(data, 0)).toEqual([
-    "<html>create</html>",
+    "<html>1. create</html>",
     "use better icons",
-    "<html>edit with better icons</html>",
+    "<html>2. edit with better icons</html>",
     "make text red",
-    "<html>edit with better icons and red text</html>",
+    "<html>3. edit with better icons and red text</html>",
   ]);
 
-  expect(extractHistoryTree(data, 2)).toEqual(["<html>create</html>"]);
+  expect(extractHistoryTree(data, 2)).toEqual(["<html>1. create</html>"]);
 });
