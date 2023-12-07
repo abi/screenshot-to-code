@@ -8,9 +8,7 @@ export function extractHistoryTree(
 
   let currentIndex: number | null = version;
   while (currentIndex !== null) {
-    // TODO: Handle currentIndex being out of bounds
     const item: HistoryItem = history[currentIndex];
-    console.log(item);
 
     if (item) {
       if (item.type === "ai_create") {
@@ -24,6 +22,7 @@ export function extractHistoryTree(
       // Move to the parent of the current item
       currentIndex = item.parentIndex;
     } else {
+      // TODO: Throw an exception here?
       // Break the loop if the item is not found (should not happen in a well-formed history)
       break;
     }
