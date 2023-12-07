@@ -335,7 +335,7 @@ function App() {
                     </div>
                     <Button
                       onClick={doUpdate}
-                      className="dark:text-white dark:bg-gray-700"
+                      className="dark:text-white dark:bg-gray-700 plausible-event-name=Edit"
                     >
                       Update
                     </Button>
