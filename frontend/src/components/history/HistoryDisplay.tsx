@@ -54,9 +54,11 @@ export default function HistoryDisplay({
             >
               <div className="flex gap-x-1">
                 <h2 className="text-sm">{displayHistoryItemType(item.type)}</h2>
-                {item.parent && item.parent !== index - 1 && (
-                  <h2 className="text-sm">(parent: v{item.parent + 1})</h2>
-                )}
+                {item.parent && item.parent !== index - 1 ? (
+                  <h2 className="text-sm">
+                    (parent: v{(item.parent || 0) + 1})
+                  </h2>
+                ) : null}
               </div>
               <h2 className="text-sm">
                 {item.type === "ai_edit"

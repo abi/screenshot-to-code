@@ -1,18 +1,19 @@
 export type HistoryItemType = "ai_create" | "ai_edit";
 
+type CommonHistoryItem = {
+  parent: null | number;
+  code: string;
+};
+
 export type HistoryItem =
-  | {
+  | ({
       type: "ai_create";
-      parent: null | number;
-      code: string;
       inputs: AiCreateInputs;
-    }
-  | {
+    } & CommonHistoryItem)
+  | ({
       type: "ai_edit";
-      parent: null | number;
-      code: string;
       inputs: AiEditInputs;
-    };
+    } & CommonHistoryItem);
 
 export type AiCreateInputs = {
   image_url: string;

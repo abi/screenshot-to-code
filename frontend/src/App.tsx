@@ -128,7 +128,7 @@ function App() {
 
   function doGenerateCode(
     params: CodeGenerationParams,
-    parentVersion?: number
+    parentVersion: number | null
   ) {
     setExecutionConsole([]);
     setAppState(AppState.CODING);
@@ -166,7 +166,6 @@ function App() {
               ...prev,
               {
                 type: "ai_edit",
-                // TODO: It should never be null
                 parent: parentVersion,
                 code,
                 inputs: {
@@ -193,10 +192,13 @@ function App() {
 
     setReferenceImages(referenceImages);
     if (referenceImages.length > 0) {
-      doGenerateCode({
-        generationType: "create",
-        image: referenceImages[0],
-      });
+      doGenerateCode(
+        {
+          generationType: "create",
+          image: referenceImages[0],
+        },
+        currentVersion
+      );
     }
   }
 
