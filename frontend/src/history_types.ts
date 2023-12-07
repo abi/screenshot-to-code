@@ -1,7 +1,7 @@
 export type HistoryItemType = "ai_create" | "ai_edit";
 
 type CommonHistoryItem = {
-  parent: null | number;
+  parentIndex: null | number;
   code: string;
 };
 

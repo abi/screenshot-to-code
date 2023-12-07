@@ -146,7 +146,7 @@ function App() {
           setAppHistory([
             {
               type: "ai_create",
-              parent: null,
+              parentIndex: null,
               code,
               inputs: { image_url: referenceImages[0] },
             },
@@ -166,7 +166,7 @@ function App() {
               ...prev,
               {
                 type: "ai_edit",
-                parent: parentVersion,
+                parentIndex: parentVersion,
                 code,
                 inputs: {
                   prompt: updateInstruction,

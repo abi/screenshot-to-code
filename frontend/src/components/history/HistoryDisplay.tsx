@@ -54,9 +54,9 @@ export default function HistoryDisplay({
             >
               <div className="flex gap-x-1">
                 <h2 className="text-sm">{displayHistoryItemType(item.type)}</h2>
-                {item.parent && item.parent !== index - 1 ? (
+                {item.parentIndex && item.parentIndex !== index - 1 ? (
                   <h2 className="text-sm">
-                    (parent: v{(item.parent || 0) + 1})
+                    (parent: v{(item.parentIndex || 0) + 1})
                   </h2>
                 ) : null}
               </div>
