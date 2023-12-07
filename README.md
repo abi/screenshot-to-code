@@ -12,6 +12,7 @@ See the [Examples](#-examples) section below for more demos.
 
 ## 🌟 Recent Updates
 
+- Dec 7 - 🔥 🔥 🔥 View a history of your edits, and branch off them
 - Nov 30 - Dark mode, output code in Ionic (thanks [@dialmedu](https://github.com/dialmedu)), set OpenAI base URL
 - Nov 28 - 🔥 🔥 🔥 Customize your stack: React or Bootstrap or TailwindCSS
 - Nov 23 - Send in a screenshot of the current replicated version (sometimes improves quality of subsequent generations)
