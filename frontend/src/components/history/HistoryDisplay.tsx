@@ -1,5 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History, HistoryItemType } from "../history_types";
+import { History, HistoryItemType } from "../../history_types";
 import toast from "react-hot-toast";
 import classNames from "classnames";
 
@@ -8,29 +8,6 @@ interface Props {
   currentVersion: number | null;
   revertToVersion: (version: number) => void;
   shouldDisableReverts: boolean;
-}
-
-export function extractHistoryTree(
-  history: History,
-  version: number
-): string[] {
-  // History is in reverse chronological order
-
-  // Get all history items up to the current version
-  const extractedHistory = history.slice(version);
-
-  const obj: string[] = [];
-
-  // Reverse the history so that it is in chronological order for the server
-  extractedHistory.reverse().forEach((item) => {
-    // Don't include the image for ai_create since the server gets it passed and will include it directly
-    if (item.type !== "ai_create") {
-      obj.push(item.inputs.prompt);
-    }
-    obj.push(item.code);
-  });
-
-  return obj;
 }
 
 function displayHistoryItemType(itemType: HistoryItemType) {
