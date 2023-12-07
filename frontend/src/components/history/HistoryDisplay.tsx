@@ -30,7 +30,7 @@ export default function HistoryDisplay({
 }: Props) {
   return history.length === 0 ? null : (
     <div className="flex flex-col h-screen">
-      <h1 className="font-bold mb-2">History</h1>
+      <h1 className="font-bold mb-2">Versions</h1>
       <ScrollArea className="flex-1 overflow-y-auto">
         <ul className="space-y-0 flex flex-col-reverse">
           {history.map((item, index) => (
@@ -58,6 +58,11 @@ export default function HistoryDisplay({
                   <h2 className="text-sm">(parent: v{item.parent + 1})</h2>
                 )}
               </div>
+              <h2 className="text-sm">
+                {item.type === "ai_edit"
+                  ? item.inputs.prompt
+                  : item.inputs.image_url}
+              </h2>
               <h2 className="text-sm">v{index + 1}</h2>
             </li>
           ))}

@@ -155,7 +155,7 @@ function App() {
         } else {
           setAppHistory((prev) => {
             // Validate parent version
-            if (!parentVersion) {
+            if (parentVersion === null) {
               toast.error(
                 "No parent version set. Contact support or open a Github issue."
               );
