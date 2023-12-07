@@ -9,7 +9,8 @@
     "build": "tsc && vite build",
     "build-hosted": "tsc && vite build --mode prod",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "dependencies": {
     "@codemirror/lang-html": "^6.4.6",
@@ -58,7 +59,8 @@
     "tailwindcss": "^3.3.5",
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
-    "vite-plugin-html": "^3.2.0"
+    "vite-plugin-html": "^3.2.0",
+    "vitest": "^1.0.1"
   },
   "engines": {
     "node": ">=14.18.0"
