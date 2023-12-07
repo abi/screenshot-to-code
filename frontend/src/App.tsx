@@ -126,7 +126,10 @@ function App() {
     setAppState(AppState.CODE_READY);
   };
 
-  function doGenerateCode(params: CodeGenerationParams) {
+  function doGenerateCode(
+    params: CodeGenerationParams,
+    parentVersion?: number
+  ) {
     setExecutionConsole([]);
     setAppState(AppState.CODING);
 
@@ -143,6 +146,7 @@ function App() {
           setAppHistory([
             {
               type: "ai_create",
+              parent: null,
               code,
               inputs: { image_url: referenceImages[0] },
             },
@@ -150,10 +154,20 @@ function App() {
           setCurrentVersion(0);
         } else {
           setAppHistory((prev) => {
+            // Validate parent version
+            if (!parentVersion) {
+              toast.error(
+                "No parent version set. Contact support or open a Github issue."
+              );
+              return prev;
+            }
+
             const newHistory: History = [
               ...prev,
               {
                 type: "ai_edit",
+                // TODO: It should never be null
+                parent: parentVersion,
                 code,
                 inputs: {
                   prompt: updateInstruction,
@@ -202,18 +216,24 @@ function App() {
 
     if (shouldIncludeResultImage) {
       const resultImage = await takeScreenshot();
-      doGenerateCode({
-        generationType: "update",
-        image: referenceImages[0],
-        resultImage: resultImage,
-        history: updatedHistory,
-      });
+      doGenerateCode(
+        {
+          generationType: "update",
+          image: referenceImages[0],
+          resultImage: resultImage,
+          history: updatedHistory,
+        },
+        currentVersion
+      );
     } else {
-      doGenerateCode({
-        generationType: "update",
-        image: referenceImages[0],
-        history: updatedHistory,
-      });
+      doGenerateCode(
+        {
+          generationType: "update",
+          image: referenceImages[0],
+          history: updatedHistory,
+        },
+        currentVersion
+      );
     }
 
     setGeneratedCode("");

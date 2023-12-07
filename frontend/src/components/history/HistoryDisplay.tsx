@@ -52,7 +52,12 @@ export default function HistoryDisplay({
                   : revertToVersion(index)
               }
             >
-              <h2 className="text-sm">{displayHistoryItemType(item.type)}</h2>
+              <div className="flex gap-x-1">
+                <h2 className="text-sm">{displayHistoryItemType(item.type)}</h2>
+                {item.parent && item.parent !== index - 1 && (
+                  <h2 className="text-sm">(parent: v{item.parent + 1})</h2>
+                )}
+              </div>
               <h2 className="text-sm">v{index + 1}</h2>
             </li>
           ))}
