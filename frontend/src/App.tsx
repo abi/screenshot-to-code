@@ -62,7 +62,7 @@ function App() {
 
   // App history
   const [appHistory, setAppHistory] = useState<History>([]);
-  // Tracks the currently viewed version from app history
+  // Tracks the currently shown version from app history
   const [currentVersion, setCurrentVersion] = useState<number | null>(null);
 
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
