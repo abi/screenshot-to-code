@@ -29,7 +29,7 @@ import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
-import { History } from "./history_types";
+import { History } from "./components/history/history_types";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";

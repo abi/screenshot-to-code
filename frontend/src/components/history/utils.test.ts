@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { extractHistoryTree } from "./utils";
-import type { History } from "../../history_types";
+import type { History } from "./history_types";
 
 const data: History = [
   {

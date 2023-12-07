@@ -1,4 +1,4 @@
-import { History } from "../../history_types";
+import { History } from "./history_types";
 
 export function extractHistoryTree(
   history: History,

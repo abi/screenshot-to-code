@@ -1,5 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History, HistoryItemType } from "../../history_types";
+import { History, HistoryItemType } from "./history_types";
 import toast from "react-hot-toast";
 import classNames from "classnames";
 
