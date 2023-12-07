@@ -32,7 +32,7 @@ export default function HistoryDisplay({
     <div className="flex flex-col h-screen">
       <h1 className="font-bold mb-2">History</h1>
       <ScrollArea className="flex-1 overflow-y-auto">
-        <ul className="space-y-0">
+        <ul className="space-y-0 flex flex-col-reverse">
           {history.map((item, index) => (
             <li
               key={index}
@@ -53,7 +53,7 @@ export default function HistoryDisplay({
               }
             >
               <h2 className="text-sm">{displayHistoryItemType(item.type)}</h2>
-              <h2 className="text-sm">v{history.length - index}</h2>
+              <h2 className="text-sm">v{index + 1}</h2>
             </li>
           ))}
         </ul>

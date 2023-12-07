@@ -151,6 +151,7 @@ function App() {
         } else {
           setAppHistory((prev) => {
             const newHistory: History = [
+              ...prev,
               {
                 type: "ai_edit",
                 code,
@@ -158,9 +159,8 @@ function App() {
                   prompt: updateInstruction,
                 },
               },
-              ...prev,
             ];
-            setCurrentVersion(0);
+            setCurrentVersion(newHistory.length - 1);
             return newHistory;
           });
         }
