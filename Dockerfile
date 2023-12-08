@@ -7,15 +7,15 @@ ENV VITE_IS_WEB_UI_MODE=true
 RUN yarn install && yarn build
 
 
-FROM thehale/python-poetry as build-backend
-RUN apt update && apt install -y binutils
+FROM acidrain/python-poetry:3.12-alpine as build-backend
+RUN apk add binutils
 WORKDIR /app
 COPY ./backend /app/
 RUN poetry install --no-interaction
 RUN poetry run pyinstaller --clean --onefile --name backend main.py
 
 
-FROM debian:bookworm-slim
+FROM alpine:latest
 ENV FASTAPI_ENV=production
 ENV OPENAI_API_KEY=
 WORKDIR /app
