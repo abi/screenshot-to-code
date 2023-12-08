@@ -162,6 +162,7 @@ function App() {
               toast.error(
                 "No parent version set. Contact support or open a Github issue."
               );
+              window.plausible("ParentVersionNull");
               return prev;
             }
 
@@ -211,6 +212,7 @@ function App() {
       toast.error(
         "No current version set. Contact support or open a Github issue."
       );
+      window.plausible("CurrentVersionNull");
       return;
     }
 
