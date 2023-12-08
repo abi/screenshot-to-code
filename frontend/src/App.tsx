@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
-import { CodeGenerationParams, generateCode } from "./generateCode";
+import { generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
 import {
@@ -18,7 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
-import { Settings, EditorTheme, AppState, GeneratedCodeConfig } from "./types";
+import {
+  AppState,
+  CodeGenerationParams,
+  EditorTheme,
+  GeneratedCodeConfig,
+  Settings,
+} from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";

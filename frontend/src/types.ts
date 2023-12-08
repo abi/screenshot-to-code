@@ -28,3 +28,13 @@ export enum AppState {
   CODING = "CODING",
   CODE_READY = "CODE_READY",
 }
+
+export interface CodeGenerationParams {
+  generationType: "create" | "update";
+  image: string;
+  resultImage?: string;
+  history?: string[];
+  // isImageGenerationEnabled: boolean; // TODO: Merge with Settings type in types.ts
+}
+
+export type FullGenerationSettings = CodeGenerationParams & Settings;
