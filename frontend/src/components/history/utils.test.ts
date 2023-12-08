@@ -53,7 +53,26 @@ const longerBranchingHistory: History = [
   },
 ];
 
-test("should only include history from this point onward", () => {
+const basicBadHistory: History = [
+  {
+    type: "ai_create",
+    parentIndex: null,
+    code: "<html>1. create</html>",
+    inputs: {
+      image_url: "",
+    },
+  },
+  {
+    type: "ai_edit",
+    parentIndex: 2, // <- Bad parent index
+    code: "<html>2. edit with better icons</html>",
+    inputs: {
+      prompt: "use better icons",
+    },
+  },
+];
+
+test("should correctly extract the history tree", () => {
   expect(extractHistoryTree(basicLinearHistory, 2)).toEqual([
     "<html>1. create</html>",
     "use better icons",
@@ -93,11 +112,12 @@ test("should only include history from this point onward", () => {
     "<html>3. edit with better icons and red text</html>",
   ]);
 
-  // Errors - TODO: Handle these
+  // Errors
+
   // Bad index
-  // TODO: Throw an exception instead?
-  expect(extractHistoryTree(basicLinearHistory, 100)).toEqual([]);
-  expect(extractHistoryTree(basicLinearHistory, -2)).toEqual([]);
+  expect(() => extractHistoryTree(basicLinearHistory, 100)).toThrow();
+  expect(() => extractHistoryTree(basicLinearHistory, -2)).toThrow();
 
   // Bad tree
+  expect(() => extractHistoryTree(basicBadHistory, 1)).toThrow();
 });

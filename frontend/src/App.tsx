@@ -211,10 +211,17 @@ function App() {
       return;
     }
 
-    const updatedHistory = [
-      ...extractHistoryTree(appHistory, currentVersion),
-      updateInstruction,
-    ];
+    let historyTree;
+    try {
+      historyTree = extractHistoryTree(appHistory, currentVersion);
+    } catch {
+      toast.error(
+        "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
+      );
+      return;
+    }
+
+    const updatedHistory = [...historyTree, updateInstruction];
 
     if (shouldIncludeResultImage) {
       const resultImage = await takeScreenshot();
