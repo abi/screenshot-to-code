@@ -14,8 +14,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 import openai
 from llm import stream_openai_response
-from mock import mock_completion
+from openai.types.chat import ChatCompletionMessageParam
+from mock_llm import mock_completion
 from utils import pprint_prompt
+from typing import Dict, List
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_prompt
 from routes import screenshot
@@ -53,7 +55,7 @@ async def get_status():
     )
 
 
-def write_logs(prompt_messages, completion):
+def write_logs(prompt_messages: List[ChatCompletionMessageParam], completion: str):
     # Get the logs path from environment, default to the current working directory
     logs_path = os.environ.get("LOGS_PATH", os.getcwd())
 
@@ -84,7 +86,8 @@ async def stream_code(websocket: WebSocket):
         await websocket.send_json({"type": "error", "value": message})
         await websocket.close()
 
-    params = await websocket.receive_json()
+    # TODO: Are the values always strings?
+    params: Dict[str, str] = await websocket.receive_json()
 
     print("Received params")
 
@@ -154,7 +157,7 @@ async def stream_code(websocket: WebSocket):
     print("generating code...")
     await websocket.send_json({"type": "status", "value": "Generating code..."})
 
-    async def process_chunk(content):
+    async def process_chunk(content: str):
         await websocket.send_json({"type": "chunk", "value": content})
 
     # Assemble the prompt
@@ -176,15 +179,23 @@ async def stream_code(websocket: WebSocket):
         return
 
     # Image cache for updates so that we don't have to regenerate images
-    image_cache = {}
+    image_cache: Dict[str, str] = {}
 
     if params["generationType"] == "update":
         # Transform into message format
         # TODO: Move this to frontend
         for index, text in enumerate(params["history"]):
-            prompt_messages += [
-                {"role": "assistant" if index % 2 == 0 else "user", "content": text}
-            ]
+            if index % 2 == 0:
+                message: ChatCompletionMessageParam = {
+                    "role": "assistant",
+                    "content": text,
+                }
+            else:
+                message: ChatCompletionMessageParam = {
+                    "role": "user",
+                    "content": text,
+                }
+            prompt_messages.append(message)
         image_cache = create_alt_url_mapping(params["history"][-2])
 
     if SHOULD_MOCK_AI_RESPONSE:

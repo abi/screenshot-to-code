@@ -1,3 +1,8 @@
+from typing import List, Union
+
+from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
+
+
 TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer
 You take screenshots of a reference web page from the user, and then build single page apps 
@@ -117,8 +122,10 @@ Generate code for a web page that looks exactly like this.
 
 
 def assemble_prompt(
-    image_data_url, generated_code_config: str, result_image_data_url=None
-):
+    image_data_url: str,
+    generated_code_config: str,
+    result_image_data_url: Union[str, None] = None,
+) -> List[ChatCompletionMessageParam]:
     # Set the system prompt based on the output settings
     system_content = TAILWIND_SYSTEM_PROMPT
     if generated_code_config == "html_tailwind":
@@ -132,7 +139,7 @@ def assemble_prompt(
     else:
         raise Exception("Code config is not one of available options")
 
-    user_content = [
+    user_content: List[ChatCompletionContentPartParam] = [
         {
             "type": "image_url",
             "image_url": {"url": image_data_url, "detail": "high"},

@@ -1,7 +1,8 @@
 import asyncio
+from typing import Awaitable, Callable
 
 
-async def mock_completion(process_chunk):
+async def mock_completion(process_chunk: Callable[[str], Awaitable[None]]) -> str:
     code_to_return = NO_IMAGES_NYTIMES_MOCK_CODE
 
     for i in range(0, len(code_to_return), 10):
