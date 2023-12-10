@@ -14,9 +14,11 @@ export function extractHistoryTree(
       if (item.type === "ai_create") {
         // Don't include the image for ai_create
         flatHistory.unshift(item.code);
-      } else {
+      } else if (item.type === "ai_edit") {
         flatHistory.unshift(item.code);
         flatHistory.unshift(item.inputs.prompt);
+      } else if (item.type === "code_create") {
+        flatHistory.unshift(item.code);
       }
 
       // Move to the parent of the current item

@@ -33,6 +33,7 @@ import { History } from "./components/history/history_types";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
+import ImportCodeSection from "./components/ImportCodeSection";
 
 const IS_OPENAI_DOWN = false;
 
@@ -43,6 +44,7 @@ function App() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
+  const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -118,6 +120,8 @@ function App() {
     setReferenceImages([]);
     setExecutionConsole([]);
     setAppHistory([]);
+    setCurrentVersion(null);
+    setIsImportedFromCode(false);
   };
 
   const stop = () => {
@@ -231,6 +235,7 @@ function App() {
           image: referenceImages[0],
           resultImage: resultImage,
           history: updatedHistory,
+          isImportedFromCode,
         },
         currentVersion
       );
@@ -240,6 +245,7 @@ function App() {
           generationType: "update",
           image: referenceImages[0],
           history: updatedHistory,
+          isImportedFromCode,
         },
         currentVersion
       );
@@ -255,6 +261,33 @@ function App() {
       isTermOfServiceAccepted: !open,
     }));
   };
+
+  // TODO: Rename everything to "stack" instead of "config"
+  function setStack(stack: GeneratedCodeConfig) {
+    setSettings((prev) => ({
+      ...prev,
+      generatedCodeConfig: stack,
+    }));
+  }
+
+  function importFromCode(code: string, stack: GeneratedCodeConfig) {
+    setIsImportedFromCode(true);
+
+    // Set up this project
+    setGeneratedCode(code);
+    setStack(stack);
+    setAppHistory([
+      {
+        type: "code_create",
+        parentIndex: null,
+        code,
+        inputs: { code },
+      },
+    ]);
+    setCurrentVersion(0);
+
+    setAppState(AppState.CODE_READY);
+  }
 
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
@@ -274,12 +307,7 @@ function App() {
 
           <OutputSettingsSection
             generatedCodeConfig={settings.generatedCodeConfig}
-            setGeneratedCodeConfig={(config: GeneratedCodeConfig) =>
-              setSettings((prev) => ({
-                ...prev,
-                generatedCodeConfig: config,
-              }))
-            }
+            setGeneratedCodeConfig={(config) => setStack(config)}
             shouldDisableUpdates={
               appState === AppState.CODING || appState === AppState.CODE_READY
             }
@@ -364,22 +392,24 @@ function App() {
 
               {/* Reference image display */}
               <div className="flex gap-x-2 mt-2">
-                <div className="flex flex-col">
-                  <div
-                    className={classNames({
-                      "scanning relative": appState === AppState.CODING,
-                    })}
-                  >
-                    <img
-                      className="w-[340px] border border-gray-200 rounded-md"
-                      src={referenceImages[0]}
-                      alt="Reference"
-                    />
+                {referenceImages.length > 0 && (
+                  <div className="flex flex-col">
+                    <div
+                      className={classNames({
+                        "scanning relative": appState === AppState.CODING,
+                      })}
+                    >
+                      <img
+                        className="w-[340px] border border-gray-200 rounded-md"
+                        src={referenceImages[0]}
+                        alt="Reference"
+                      />
+                    </div>
+                    <div className="text-gray-400 uppercase text-sm text-center mt-1">
+                      Original Screenshot
+                    </div>
                   </div>
-                  <div className="text-gray-400 uppercase text-sm text-center mt-1">
-                    Original Screenshot
-                  </div>
-                </div>
+                )}
                 <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
                   <h2 className="text-lg mb-4 border-b border-gray-800">
                     Console
@@ -424,6 +454,7 @@ function App() {
               doCreate={doCreate}
               screenshotOneApiKey={settings.screenshotOneApiKey}
             />
+            <ImportCodeSection importFromCode={importFromCode} />
           </div>
         )}
 

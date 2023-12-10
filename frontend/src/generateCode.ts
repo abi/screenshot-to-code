@@ -12,6 +12,7 @@ export interface CodeGenerationParams {
   image: string;
   resultImage?: string;
   history?: string[];
+  isImportedFromCode?: boolean;
   // isImageGenerationEnabled: boolean; // TODO: Merge with Settings type in types.ts
 }
 
