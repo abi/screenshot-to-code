@@ -262,9 +262,20 @@ function App() {
     }));
   };
 
-  function importFromCode(code: string) {
-    setAppState(AppState.CODE_READY);
+  // TODO: Rename everything to "stack" instead of "config"
+  function setStack(stack: GeneratedCodeConfig) {
+    setSettings((prev) => ({
+      ...prev,
+      generatedCodeConfig: stack,
+    }));
+  }
+
+  function importFromCode(code: string, stack: GeneratedCodeConfig) {
+    setIsImportedFromCode(true);
+
+    // Set up this project
     setGeneratedCode(code);
+    setStack(stack);
     setAppHistory([
       {
         type: "code_create",
@@ -274,7 +285,8 @@ function App() {
       },
     ]);
     setCurrentVersion(0);
-    setIsImportedFromCode(true);
+
+    setAppState(AppState.CODE_READY);
   }
 
   return (
@@ -295,12 +307,7 @@ function App() {
 
           <OutputSettingsSection
             generatedCodeConfig={settings.generatedCodeConfig}
-            setGeneratedCodeConfig={(config: GeneratedCodeConfig) =>
-              setSettings((prev) => ({
-                ...prev,
-                generatedCodeConfig: config,
-              }))
-            }
+            setGeneratedCodeConfig={(config) => setStack(config)}
             shouldDisableUpdates={
               appState === AppState.CODING || appState === AppState.CODE_READY
             }

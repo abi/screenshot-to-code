@@ -130,7 +130,9 @@ async def stream_code(websocket: WebSocket):
     # If this generation started off with imported code, we need to assemble the prompt differently
     if params.get("isImportedFromCode") and params["isImportedFromCode"]:
         original_imported_code = params["history"][0]
-        prompt_messages = assemble_imported_code_prompt(original_imported_code)
+        prompt_messages = assemble_imported_code_prompt(
+            original_imported_code, generated_code_config
+        )
         for index, text in enumerate(params["history"][1:]):
             if index % 2 == 0:
                 message: ChatCompletionMessageParam = {
@@ -181,6 +183,8 @@ async def stream_code(websocket: WebSocket):
                 prompt_messages.append(message)
 
             image_cache = create_alt_url_mapping(params["history"][-2])
+
+    pprint_prompt(prompt_messages)
 
     if SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(process_chunk)
