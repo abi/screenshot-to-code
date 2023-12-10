@@ -21,6 +21,8 @@ function displayHistoryItemType(itemType: HistoryItemType) {
       return "Create";
     case "ai_edit":
       return "Edit";
+    case "code_create":
+      return "Imported from code";
     default: {
       const exhaustiveCheck: never = itemType;
       throw new Error(`Unhandled case: ${exhaustiveCheck}`);
@@ -62,7 +64,11 @@ export default function HistoryDisplay({
                 {" "}
                 <div className="flex gap-x-1 truncate">
                   <h2 className="text-sm truncate">
-                    {item.type === "ai_edit" ? item.inputs.prompt : "Create"}
+                    {item.type === "ai_edit"
+                      ? item.inputs.prompt
+                      : item.type === "ai_create"
+                      ? "Create"
+                      : "Imported from code"}
                   </h2>
                   {/* <h2 className="text-sm">{displayHistoryItemType(item.type)}</h2> */}
                   {item.parentIndex !== null &&
@@ -76,7 +82,11 @@ export default function HistoryDisplay({
               </HoverCardTrigger>
               <HoverCardContent>
                 <div>
-                  {item.type === "ai_edit" ? item.inputs.prompt : "Create"}
+                  {item.type === "ai_edit"
+                    ? item.inputs.prompt
+                    : item.type === "ai_create"
+                    ? "Create"
+                    : "Imported from code"}
                 </div>
                 <Badge>{displayHistoryItemType(item.type)}</Badge>
               </HoverCardContent>

@@ -2,6 +2,8 @@ from typing import List, Union
 
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
+from imported_code_prompts import IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT
+
 
 TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer
@@ -119,6 +121,23 @@ Do not include markdown "```" or "```html" at the start or end.
 USER_PROMPT = """
 Generate code for a web page that looks exactly like this.
 """
+
+
+def assemble_imported_code_prompt(
+    code: str, result_image_data_url: Union[str, None] = None
+) -> List[ChatCompletionMessageParam]:
+    system_content = IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT
+    return [
+        {
+            "role": "system",
+            "content": system_content,
+        },
+        {
+            "role": "user",
+            "content": "Here is the code of the app: " + code,
+        },
+    ]
+    # TODO: Use result_image_data_url
 
 
 def assemble_prompt(

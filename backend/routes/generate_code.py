@@ -8,10 +8,12 @@ from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
 from typing import Dict, List
 from image_generation import create_alt_url_mapping, generate_images
-from prompts import assemble_prompt
+from prompts import assemble_imported_code_prompt, assemble_prompt
 from access_token import validate_access_token
 from datetime import datetime
 import json
+
+from utils import pprint_prompt  # type: ignore
 
 
 router = APIRouter()
@@ -122,43 +124,63 @@ async def stream_code(websocket: WebSocket):
     async def process_chunk(content: str):
         await websocket.send_json({"type": "chunk", "value": content})
 
-    # Assemble the prompt
-    try:
-        if params.get("resultImage") and params["resultImage"]:
-            prompt_messages = assemble_prompt(
-                params["image"], generated_code_config, params["resultImage"]
-            )
-        else:
-            prompt_messages = assemble_prompt(params["image"], generated_code_config)
-    except:
-        await websocket.send_json(
-            {
-                "type": "error",
-                "value": "Error assembling prompt. Contact support at support@picoapps.xyz",
-            }
-        )
-        await websocket.close()
-        return
-
     # Image cache for updates so that we don't have to regenerate images
     image_cache: Dict[str, str] = {}
 
-    if params["generationType"] == "update":
-        # Transform into message format
-        # TODO: Move this to frontend
-        for index, text in enumerate(params["history"]):
+    # If this generation started off with imported code, we need to assemble the prompt differently
+    if params.get("isImportedFromCode") and params["isImportedFromCode"]:
+        original_imported_code = params["history"][0]
+        prompt_messages = assemble_imported_code_prompt(original_imported_code)
+        for index, text in enumerate(params["history"][1:]):
             if index % 2 == 0:
-                message: ChatCompletionMessageParam = {
-                    "role": "assistant",
-                    "content": text,
-                }
-            else:
                 message: ChatCompletionMessageParam = {
                     "role": "user",
                     "content": text,
                 }
+            else:
+                message: ChatCompletionMessageParam = {
+                    "role": "assistant",
+                    "content": text,
+                }
             prompt_messages.append(message)
-        image_cache = create_alt_url_mapping(params["history"][-2])
+    else:
+        # Assemble the prompt
+        try:
+            if params.get("resultImage") and params["resultImage"]:
+                prompt_messages = assemble_prompt(
+                    params["image"], generated_code_config, params["resultImage"]
+                )
+            else:
+                prompt_messages = assemble_prompt(
+                    params["image"], generated_code_config
+                )
+        except:
+            await websocket.send_json(
+                {
+                    "type": "error",
+                    "value": "Error assembling prompt. Contact support at support@picoapps.xyz",
+                }
+            )
+            await websocket.close()
+            return
+
+        if params["generationType"] == "update":
+            # Transform the history tree into message format
+            # TODO: Move this to frontend
+            for index, text in enumerate(params["history"]):
+                if index % 2 == 0:
+                    message: ChatCompletionMessageParam = {
+                        "role": "assistant",
+                        "content": text,
+                    }
+                else:
+                    message: ChatCompletionMessageParam = {
+                        "role": "user",
+                        "content": text,
+                    }
+                prompt_messages.append(message)
+
+            image_cache = create_alt_url_mapping(params["history"][-2])
 
     if SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(process_chunk)
