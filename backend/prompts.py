@@ -2,7 +2,12 @@ from typing import List, Union
 
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
-from imported_code_prompts import IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT
+from imported_code_prompts import (
+    IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT,
+    IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT,
+    IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT,
+    IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT,
+)
 
 
 TAILWIND_SYSTEM_PROMPT = """
@@ -130,11 +135,11 @@ def assemble_imported_code_prompt(
     if stack == "html_tailwind":
         system_content = IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT
     elif stack == "react_tailwind":
-        system_content = REACT_TAILWIND_SYSTEM_PROMPT
+        system_content = IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT
     elif stack == "bootstrap":
-        system_content = BOOTSTRAP_SYSTEM_PROMPT
+        system_content = IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT
     elif stack == "ionic_tailwind":
-        system_content = IONIC_TAILWIND_SYSTEM_PROMPT
+        system_content = IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT
     else:
         raise Exception("Code config is not one of available options")
 
