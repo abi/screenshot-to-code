@@ -1,15 +1,15 @@
 import asyncio
-import os
 import re
+from typing import Dict, List, Union
 from openai import AsyncOpenAI
 from bs4 import BeautifulSoup
 
 
-async def process_tasks(prompts, api_key, base_url):
+async def process_tasks(prompts: List[str], api_key: str, base_url: str):
     tasks = [generate_image(prompt, api_key, base_url) for prompt in prompts]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    processed_results = []
+    processed_results: List[Union[str, None]] = []
     for result in results:
         if isinstance(result, Exception):
             print(f"An exception occurred: {result}")
@@ -20,9 +20,9 @@ async def process_tasks(prompts, api_key, base_url):
     return processed_results
 
 
-async def generate_image(prompt, api_key, base_url):
+async def generate_image(prompt: str, api_key: str, base_url: str):
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-    image_params = {
+    image_params: Dict[str, Union[str, int]] = {
         "model": "dall-e-3",
         "quality": "standard",
         "style": "natural",
@@ -35,7 +35,7 @@ async def generate_image(prompt, api_key, base_url):
     return res.data[0].url
 
 
-def extract_dimensions(url):
+def extract_dimensions(url: str):
     # Regular expression to match numbers in the format '300x200'
     matches = re.findall(r"(\d+)x(\d+)", url)
 
@@ -48,11 +48,11 @@ def extract_dimensions(url):
         return (100, 100)
 
 
-def create_alt_url_mapping(code):
+def create_alt_url_mapping(code: str) -> Dict[str, str]:
     soup = BeautifulSoup(code, "html.parser")
     images = soup.find_all("img")
 
-    mapping = {}
+    mapping: Dict[str, str] = {}
 
     for image in images:
         if not image["src"].startswith("https://placehold.co"):
@@ -61,7 +61,9 @@ def create_alt_url_mapping(code):
     return mapping
 
 
-async def generate_images(code, api_key, base_url, image_cache):
+async def generate_images(
+    code: str, api_key: str, base_url: Union[str, None], image_cache: Dict[str, str]
+):
     # Find all images
     soup = BeautifulSoup(code, "html.parser")
     images = soup.find_all("img")

@@ -43,20 +43,22 @@ function generateDisplayComponent(config: GeneratedCodeConfig) {
 }
 
 interface Props {
-  generatedCodeConfig: GeneratedCodeConfig;
+  generatedCodeConfig: GeneratedCodeConfig | undefined;
   setGeneratedCodeConfig: (config: GeneratedCodeConfig) => void;
+  label?: string;
   shouldDisableUpdates?: boolean;
 }
 
 function OutputSettingsSection({
   generatedCodeConfig,
   setGeneratedCodeConfig,
+  label = "Generating:",
   shouldDisableUpdates = false,
 }: Props) {
   return (
     <div className="flex flex-col gap-y-2 justify-between text-sm">
       <div className="grid grid-cols-3 items-center gap-4">
-        <span>Generating:</span>
+        <span>{label}</span>
         <Select
           value={generatedCodeConfig}
           onValueChange={(value: string) => {
@@ -66,7 +68,9 @@ function OutputSettingsSection({
           disabled={shouldDisableUpdates}
         >
           <SelectTrigger className="col-span-2" id="output-settings-js">
-            {generateDisplayComponent(generatedCodeConfig)}
+            {generatedCodeConfig
+              ? generateDisplayComponent(generatedCodeConfig)
+              : "Select a stack"}
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>

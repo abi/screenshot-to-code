@@ -1,4 +1,4 @@
-from prompts import assemble_prompt
+from prompts import assemble_imported_code_prompt, assemble_prompt
 
 TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer
@@ -113,6 +113,87 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT = """
+You are an expert Tailwind developer.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code in <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
+IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT = """
+You are an expert React/Tailwind developer
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use these script to include React so that it can run on a standalone page:
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code in <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
+IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT = """
+You are an expert Bootstrap developer.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use this script to include Bootstrap: <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code in <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
+IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT = """
+You are an expert Ionic/Tailwind developer.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use these script to include Ionic so that it can run on a standalone page:
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
+- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
+- You can use Google Fonts
+- ionicons for icons, add the following <script > tags near the end of the page, right before the closing </body> tag:
+    <script type="module">
+        import ionicons from 'https://cdn.jsdelivr.net/npm/ionicons/+esm'
+    </script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons/dist/esm/ionicons.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/ionicons/dist/collection/components/icon/icon.min.css" rel="stylesheet">
+
+Return only the full code in <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
 
 def test_prompts():
     tailwind_prompt = assemble_prompt(
@@ -134,3 +215,41 @@ def test_prompts():
         "image_data_url", "ionic_tailwind", "result_image_data_url"
     )
     assert ionic_tailwind[0]["content"] == IONIC_TAILWIND_SYSTEM_PROMPT
+
+
+def test_imported_code_prompts():
+    tailwind_prompt = assemble_imported_code_prompt(
+        "code", "html_tailwind", "result_image_data_url"
+    )
+    expected_tailwind_prompt = [
+        {"role": "system", "content": IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT},
+        {"role": "user", "content": "Here is the code of the app: code"},
+    ]
+    assert tailwind_prompt == expected_tailwind_prompt
+
+    react_tailwind_prompt = assemble_imported_code_prompt(
+        "code", "react_tailwind", "result_image_data_url"
+    )
+    expected_react_tailwind_prompt = [
+        {"role": "system", "content": IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT},
+        {"role": "user", "content": "Here is the code of the app: code"},
+    ]
+    assert react_tailwind_prompt == expected_react_tailwind_prompt
+
+    bootstrap_prompt = assemble_imported_code_prompt(
+        "code", "bootstrap", "result_image_data_url"
+    )
+    expected_bootstrap_prompt = [
+        {"role": "system", "content": IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT},
+        {"role": "user", "content": "Here is the code of the app: code"},
+    ]
+    assert bootstrap_prompt == expected_bootstrap_prompt
+
+    ionic_tailwind = assemble_imported_code_prompt(
+        "code", "ionic_tailwind", "result_image_data_url"
+    )
+    expected_ionic_tailwind = [
+        {"role": "system", "content": IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT},
+        {"role": "user", "content": "Here is the code of the app: code"},
+    ]
+    assert ionic_tailwind == expected_ionic_tailwind

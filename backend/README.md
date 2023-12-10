@@ -1,3 +1,3 @@
-Run tests
+# Run tests
 
-pytest test_prompts.py
+poetry run pytest

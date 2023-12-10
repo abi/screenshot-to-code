@@ -11,7 +11,9 @@ def bytes_to_data_url(image_bytes: bytes, mime_type: str) -> str:
     return f"data:{mime_type};base64,{base64_image}"
 
 
-async def capture_screenshot(target_url, api_key, device="desktop") -> bytes:
+async def capture_screenshot(
+    target_url: str, api_key: str, device: str = "desktop"
+) -> bytes:
     api_base_url = "https://api.screenshotone.com/take"
 
     params = {
