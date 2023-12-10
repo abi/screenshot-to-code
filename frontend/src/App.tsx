@@ -216,14 +216,14 @@ function App() {
       toast.error(
         "No current version set. Contact support or open a Github issue."
       );
-      window.plausible("CurrentVersionNull");
+      addEvent("CurrentVersionNull");
       return;
     }
 
     let historyTree;
     try {
       historyTree = extractHistoryTree(appHistory, currentVersion);
-      window.plausible("HistoryTreeFailed");
+      addEvent("HistoryTreeFailed");
     } catch {
       toast.error(
         "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
