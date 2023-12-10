@@ -166,7 +166,7 @@ function App() {
               toast.error(
                 "No parent version set. Contact support or open a Github issue."
               );
-              window.plausible("ParentVersionNull");
+              addEvent("ParentVersionNull");
               return prev;
             }
 

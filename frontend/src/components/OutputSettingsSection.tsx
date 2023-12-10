@@ -6,6 +6,7 @@ import {
   SelectTrigger,
 } from "./ui/select";
 import { GeneratedCodeConfig } from "../types";
+import { addEvent } from "../lib/analytics";
 
 function generateDisplayComponent(config: GeneratedCodeConfig) {
   switch (config) {
@@ -62,7 +63,7 @@ function OutputSettingsSection({
         <Select
           value={generatedCodeConfig}
           onValueChange={(value: string) => {
-            window.plausible("OutputSettings", { props: { stack: value } });
+            addEvent("OutputSettings", { stack: value });
             setGeneratedCodeConfig(value as GeneratedCodeConfig);
           }}
           disabled={shouldDisableUpdates}
