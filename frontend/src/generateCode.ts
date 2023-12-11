@@ -6,7 +6,7 @@ import { FullGenerationSettings } from "./types";
 const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console AND the backend logs for details. Feel free to open a Github issue.";
 
-const STOP_MESSAGE = "Code generation stopped";
+const CANCEL_MESSAGE = "Code generation cancelled";
 
 export function generateCode(
   wsRef: React.MutableRefObject<WebSocket | null>,
@@ -14,6 +14,7 @@ export function generateCode(
   onChange: (chunk: string) => void,
   onSetCode: (code: string) => void,
   onStatusUpdate: (status: string) => void,
+  onCancel: () => void,
   onComplete: () => void
 ) {
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
@@ -39,15 +40,18 @@ export function generateCode(
       toast.error(response.value);
     }
   });
+
   ws.addEventListener("close", (event) => {
     console.log("Connection closed", event.code, event.reason);
     if (event.code === USER_CLOSE_WEB_SOCKET_CODE) {
-      toast.success(STOP_MESSAGE);
+      toast.success(CANCEL_MESSAGE);
+      onCancel();
     } else if (event.code !== 1000) {
       console.error("WebSocket error code", event);
       toast.error(ERROR_MESSAGE);
+    } else {
+      onComplete();
     }
-    onComplete();
   });
 
   ws.addEventListener("error", (error) => {

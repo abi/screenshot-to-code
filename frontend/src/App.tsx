@@ -130,10 +130,21 @@ function App() {
     setIsImportedFromCode(false);
   };
 
-  const stop = () => {
+  const cancelCodeGeneration = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
     // make sure stop can correct the state even if the websocket is already closed
-    setAppState(AppState.CODE_READY);
+    cancelCodeGenerationAndReset();
+  };
+
+  const cancelCodeGenerationAndReset = () => {
+    // When this is the first version, reset the entire app state
+    if (currentVersion === null) {
+      reset();
+    } else {
+      // Otherwise, revert to the last version
+      setGeneratedCode(appHistory[currentVersion].code);
+      setAppState(AppState.CODE_READY);
+    }
   };
 
   function doGenerateCode(
@@ -189,6 +200,11 @@ function App() {
         }
       },
       (line) => setExecutionConsole((prev) => [...prev, line]),
+      // On cancel
+      () => {
+        cancelCodeGenerationAndReset();
+      },
+      // On complete
       () => {
         setAppState(AppState.CODE_READY);
       }
@@ -343,10 +359,10 @@ function App() {
                   </div>
                   <div className="flex mt-4 w-full">
                     <Button
-                      onClick={stop}
+                      onClick={cancelCodeGeneration}
                       className="w-full dark:text-white dark:bg-gray-700"
                     >
-                      Stop
+                      Cancel
                     </Button>
                   </div>
                   <CodePreview code={generatedCode} />
