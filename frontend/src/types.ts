@@ -34,6 +34,7 @@ export interface CodeGenerationParams {
   image: string;
   resultImage?: string;
   history?: string[];
+  isImportedFromCode?: boolean;
 }
 
 export type FullGenerationSettings = CodeGenerationParams & Settings;
