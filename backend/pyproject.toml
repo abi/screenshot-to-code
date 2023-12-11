@@ -15,6 +15,9 @@ python-dotenv = "^1.0.0"
 beautifulsoup4 = "^4.12.2"
 httpx = "^0.25.1"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
