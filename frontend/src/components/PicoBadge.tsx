@@ -1,16 +1,15 @@
 import { Settings } from "../types";
+import PricingDialog from "./payments/PricingDialog";
 
 export function PicoBadge({ settings }: { settings: Settings }) {
   return (
     <>
-      <a href="https://buy.stripe.com/8wM6sre70gBW1nqaEE" target="_blank">
-        <div
-          className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
+      <div
+        className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
           text-white  px-4 text-xs py-3 cursor-pointer"
-        >
-          buy 100 code generations for $15 <br />
-        </div>
-      </a>
+      >
+        <PricingDialog />
+      </div>
       <a
         href="https://screenshot-to-code.canny.io/feature-requests"
         target="_blank"
