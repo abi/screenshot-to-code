@@ -245,8 +245,8 @@ function App() {
     let historyTree;
     try {
       historyTree = extractHistoryTree(appHistory, currentVersion);
-      addEvent("HistoryTreeFailed");
     } catch {
+      addEvent("HistoryTreeFailed");
       toast.error(
         "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
       );
