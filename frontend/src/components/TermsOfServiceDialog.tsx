@@ -7,9 +7,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
-import { Input } from "./ui/input";
-import toast from "react-hot-toast";
-import { PICO_BACKEND_FORM_SECRET } from "../config";
 import { addEvent } from "../lib/analytics";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
@@ -18,40 +15,19 @@ const TermsOfServiceDialog: React.FC<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }> = ({ open, onOpenChange }) => {
-  const [email, setEmail] = React.useState("");
-
-  const onSubscribe = async () => {
-    await fetch("https://backend.buildpicoapps.com/form", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, secret: PICO_BACKEND_FORM_SECRET }),
-    });
-  };
-
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="mb-2 text-xl">
-            Enter your email to get started
+            One last step
           </AlertDialogTitle>
         </AlertDialogHeader>
 
-        <div className="mb-2">
-          <Input
-            placeholder="Email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-            }}
-          />
-        </div>
         <div className="flex flex-col space-y-3 text-sm">
           <p>
-            By providing your email, you consent to receiving occasional product
-            updates, and you accept the{" "}
+            You consent to receiving occasional product updates via email, and
+            you accept the{" "}
             <a
               href="https://a.picoapps.xyz/camera-write"
               target="_blank"
@@ -77,14 +53,8 @@ const TermsOfServiceDialog: React.FC<{
 
         <AlertDialogFooter>
           <AlertDialogAction
-            onClick={(e) => {
-              if (!email.trim() || !email.trim().includes("@")) {
-                e.preventDefault();
-                toast.error("Please enter your email");
-              } else {
-                addEvent("EmailSubmit");
-                onSubscribe();
-              }
+            onClick={() => {
+              addEvent("EmailSubmit");
             }}
           >
             Agree & Continue
