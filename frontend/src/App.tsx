@@ -3,7 +3,7 @@ import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
 import { generateCode } from "./generateCode";
-import Spinner from "./components/Spinner";
+import Spinner from "./components/custom-ui/Spinner";
 import classNames from "classnames";
 import {
   FaCode,
@@ -44,7 +44,11 @@ import ImportCodeSection from "./components/ImportCodeSection";
 
 const IS_OPENAI_DOWN = false;
 
-function App() {
+interface Props {
+  navbarComponent?: JSX.Element;
+}
+
+function App({ navbarComponent }: Props) {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
 
@@ -475,6 +479,8 @@ function App() {
       </div>
 
       <main className="py-2 lg:pl-96">
+        {!!navbarComponent && navbarComponent}
+
         {appState === AppState.INITIAL && (
           <div className="flex flex-col justify-center items-center gap-y-10">
             <ImageUpload setReferenceImages={doCreate} />

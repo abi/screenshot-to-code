@@ -13,6 +13,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^4.29.0",
     "@codemirror/lang-html": "^6.4.6",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
