@@ -2,9 +2,11 @@
 from typing import Any, Coroutine
 from dotenv import load_dotenv
 
+from eval_config import EVALS_DIR
+from eval_utils import image_to_data_url
+
 load_dotenv()
 
-import base64
 import os
 from llm import stream_openai_response
 from prompts import assemble_prompt
@@ -36,14 +38,7 @@ async def generate_code_core(image_url: str, stack: str) -> str:
     return completion
 
 
-async def image_to_data_url(filepath: str):
-    with open(filepath, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    return f"data:image/png;base64,{encoded_string}"
-
-
 async def main():
-    EVALS_DIR = "./evals"
     INPUT_DIR = EVALS_DIR + "/inputs"
     OUTPUT_DIR = EVALS_DIR + "/outputs"
 
