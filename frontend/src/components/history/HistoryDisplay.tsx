@@ -45,7 +45,7 @@ export default function HistoryDisplay({
                 )}
               >
                 <div
-                  className="flex justify-between truncate flex-1 p-2"
+                  className="flex justify-between truncate flex-1 p-2 plausible-event-name=HistoryClick"
                   onClick={() =>
                     shouldDisableReverts
                       ? toast.error(
