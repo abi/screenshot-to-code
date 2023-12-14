@@ -26,13 +26,30 @@ See the [Examples](#-examples) section below for more demos.
 
 ## 🛠 Getting Started
 
-The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API.
+The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API/Azure key with access to the GPT-4 Vision API.
 
-Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
+Run the backend based on the AI provider you want to use (I use Poetry for package management - `pip install poetry` if you don't have it):
+
+For OpenAI Version:
 
 ```bash
 cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
+poetry install
+poetry shell
+poetry run uvicorn main:app --reload --port 7001
+```
+
+For Azure version, you need to add some additional environment keys (vision and dalle3 deployment must be int the same resource on Azure):
+
+```bash
+cd backend
+echo "AZURE_OPENAI_API_KEY=sk-your-key" > .env
+echo "AZURE_OPENAI_RESOURCE_NAME=azure_resource_name" > .env
+echo "AZURE_OPENAI_DEPLOYMENT_NAME=azure_deployment_name" > .env
+echo "AZURE_OPENAI_API_VERSION=azure_api_version" > .env
+echo "AZURE_OPENAI_DALLE3_DEPLOYMENT_NAME=azure_dalle3_deployment_name"> .env
+echo "AZURE_OPENAI_DALLE3_API_VERSION=azure_dalle3_api_version" > .env
 poetry install
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
@@ -58,14 +75,28 @@ MOCK=true poetry run uvicorn main:app --reload --port 7001
 
 ## Configuration
 
-* You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
+- You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
 
 ## Docker
 
 If you have Docker installed on your system, in the root directory, run:
 
+For OpenAI Version:
+
 ```bash
 echo "OPENAI_API_KEY=sk-your-key" > .env
+docker-compose up -d --build
+```
+
+For Azure version:
+
+```bash
+echo "AZURE_OPENAI_API_KEY=sk-your-key" > .env
+echo "AZURE_OPENAI_RESOURCE_NAME=azure_resource_name" > .env
+echo "AZURE_OPENAI_DEPLOYMENT_NAME=azure_deployment_name" > .env
+echo "AZURE_OPENAI_API_VERSION=azure_api_version" > .env
+echo "AZURE_OPENAI_DALLE3_DEPLOYMENT_NAME=azure_dalle3_deployment_name"> .env
+echo "AZURE_OPENAI_DALLE3_API_VERSION=azure_dalle3_api_version" > .env
 docker-compose up -d --build
 ```
 
