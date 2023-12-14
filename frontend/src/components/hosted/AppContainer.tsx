@@ -3,7 +3,7 @@ import App from "../../App";
 import { useEffect, useRef, useState } from "react";
 import { AlertDialog } from "@radix-ui/react-alert-dialog";
 import { AlertDialogContent } from "../ui/alert-dialog";
-import FullPageSpinner from "../custom-ui/FullPageSpinner";
+// import FullPageSpinner from "../custom-ui/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 
 function AppContainer() {
@@ -18,6 +18,7 @@ function AppContainer() {
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       // setShowPopup(true);
+      setShowPopup(false);
     }
   }, [isSignedIn, isLoaded]);
 
