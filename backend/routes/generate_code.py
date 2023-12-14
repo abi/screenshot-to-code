@@ -254,6 +254,9 @@ async def stream_code(websocket: WebSocket):
     except Exception as e:
         traceback.print_exc()
         print("Image generation failed", e)
+        # Send set code even if image generation fails since that triggers
+        # the frontend to update history
+        await websocket.send_json({"type": "setCode", "value": completion})
         await websocket.send_json(
             {"type": "status", "value": "Image generation failed but code is complete."}
         )
