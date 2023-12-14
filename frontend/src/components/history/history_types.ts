@@ -32,3 +32,10 @@ export type CodeCreateInputs = {
 };
 
 export type History = HistoryItem[];
+
+export type RenderedHistoryItem = {
+  type: string;
+  summary: string;
+  parentVersion: string | null;
+  isActive: boolean;
+};
