@@ -17,7 +17,7 @@ function AppContainer() {
   // If Clerk is loaded and the user is not signed in, show the sign up popup
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      setShowPopup(true);
+      // setShowPopup(true);
     }
   }, [isSignedIn, isLoaded]);
 
@@ -43,7 +43,7 @@ function AppContainer() {
   }, []);
 
   // If Clerk is still loading, show a spinner
-  if (!isLoaded) return <FullPageSpinner />;
+  // if (!isLoaded) return <FullPageSpinner />;
 
   return (
     <>
