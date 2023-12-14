@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 import classNames from "classnames";
 import useThrottle from "../hooks/useThrottle";
 
@@ -8,7 +8,9 @@ interface Props {
 }
 
 function Preview({ code, device }: Props) {
-  const throttledCode = useThrottle(code, 200);
+  const throttledCode = code;
+  // Temporary disable throttling for the preview not updating when the code changes
+  // useThrottle(code, 200);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
