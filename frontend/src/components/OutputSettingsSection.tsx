@@ -7,6 +7,7 @@ import {
 } from "./ui/select";
 import { GeneratedCodeConfig } from "../types";
 import { addEvent } from "../lib/analytics";
+import { Badge } from "./ui/badge";
 
 function generateDisplayComponent(config: GeneratedCodeConfig) {
   switch (config) {
@@ -37,9 +38,16 @@ function generateDisplayComponent(config: GeneratedCodeConfig) {
           <span className="font-semibold">Tailwind</span>
         </div>
       );
-    default:
-      // TODO: Should never reach this out. Error out
-      return config;
+    case GeneratedCodeConfig.SVG:
+      return (
+        <div>
+          <span className="font-semibold">SVG</span>
+        </div>
+      );
+    default: {
+      const exhaustiveCheck: never = config;
+      throw new Error(`Unhandled case: ${exhaustiveCheck}`);
+    }
   }
 }
 
@@ -85,7 +93,20 @@ function OutputSettingsSection({
                 {generateDisplayComponent(GeneratedCodeConfig.BOOTSTRAP)}
               </SelectItem>
               <SelectItem value={GeneratedCodeConfig.IONIC_TAILWIND}>
-                {generateDisplayComponent(GeneratedCodeConfig.IONIC_TAILWIND)}
+                <div className="flex items-center">
+                  {generateDisplayComponent(GeneratedCodeConfig.IONIC_TAILWIND)}
+                  <Badge className="ml-2" variant="secondary">
+                    Beta
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value={GeneratedCodeConfig.SVG}>
+                <div className="flex items-center">
+                  {generateDisplayComponent(GeneratedCodeConfig.SVG)}
+                  <Badge className="ml-2" variant="secondary">
+                    Beta
+                  </Badge>
+                </div>
               </SelectItem>
             </SelectGroup>
           </SelectContent>

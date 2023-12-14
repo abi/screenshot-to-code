@@ -9,6 +9,7 @@ export enum GeneratedCodeConfig {
   REACT_TAILWIND = "react_tailwind",
   BOOTSTRAP = "bootstrap",
   IONIC_TAILWIND = "ionic_tailwind",
+  SVG = "svg",
 }
 
 export interface Settings {
