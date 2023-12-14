@@ -113,6 +113,23 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+SVG_SYSTEM_PROMPT = """
+You are an expert at building SVGs.
+You take screenshots of a reference web page from the user, and then build a SVG that looks exactly like the screenshot.
+
+- Make sure the SVG looks exactly like the screenshot.
+- Pay close attention to background color, text color, font size, font family, 
+padding, margin, border, etc. Match the colors and sizes exactly.
+- Use the exact text from the screenshot.
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed to match the screenshot. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+- You can use Google Fonts
+
+Return only the full code in <svg></svg> tags.
+Do not include markdown "```" or "```svg" at the start or end.
+"""
+
 IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer.
 
@@ -194,27 +211,55 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+IMPORTED_CODE_SVG_SYSTEM_PROMPT = """
+You are an expert at building SVGs.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed to match the screenshot. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+- You can use Google Fonts
+
+Return only the full code in <svg></svg> tags.
+Do not include markdown "```" or "```svg" at the start or end.
+"""
+
+USER_PROMPT = """
+Generate code for a web page that looks exactly like this.
+"""
+
+SVG_USER_PROMPT = """
+Generate code for a SVG that looks exactly like this.
+"""
+
 
 def test_prompts():
     tailwind_prompt = assemble_prompt(
         "image_data_url", "html_tailwind", "result_image_data_url"
     )
     assert tailwind_prompt[0]["content"] == TAILWIND_SYSTEM_PROMPT
+    assert tailwind_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     react_tailwind_prompt = assemble_prompt(
         "image_data_url", "react_tailwind", "result_image_data_url"
     )
     assert react_tailwind_prompt[0]["content"] == REACT_TAILWIND_SYSTEM_PROMPT
+    assert react_tailwind_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     bootstrap_prompt = assemble_prompt(
         "image_data_url", "bootstrap", "result_image_data_url"
     )
     assert bootstrap_prompt[0]["content"] == BOOTSTRAP_SYSTEM_PROMPT
+    assert bootstrap_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     ionic_tailwind = assemble_prompt(
         "image_data_url", "ionic_tailwind", "result_image_data_url"
     )
     assert ionic_tailwind[0]["content"] == IONIC_TAILWIND_SYSTEM_PROMPT
+    assert ionic_tailwind[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
+
+    svg_prompt = assemble_prompt("image_data_url", "svg", "result_image_data_url")
+    assert svg_prompt[0]["content"] == SVG_SYSTEM_PROMPT
+    assert svg_prompt[1]["content"][2]["text"] == SVG_USER_PROMPT  # type: ignore
 
 
 def test_imported_code_prompts():
@@ -253,3 +298,10 @@ def test_imported_code_prompts():
         {"role": "user", "content": "Here is the code of the app: code"},
     ]
     assert ionic_tailwind == expected_ionic_tailwind
+
+    svg = assemble_imported_code_prompt("code", "svg", "result_image_data_url")
+    expected_svg = [
+        {"role": "system", "content": IMPORTED_CODE_SVG_SYSTEM_PROMPT},
+        {"role": "user", "content": "Here is the code of the SVG: code"},
+    ]
+    assert svg == expected_svg

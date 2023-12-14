@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import classNames from "classnames";
-import useThrottle from "../hooks/useThrottle";
+// import useThrottle from "../hooks/useThrottle";
 
 interface Props {
   code: string;
