@@ -11,6 +11,8 @@ export const useAuthenticatedFetch = () => {
     body: object | null | undefined = null
   ) => {
     const accessToken = await getToken();
+    if (!accessToken) return;
+
     const headers: HeadersInit = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
