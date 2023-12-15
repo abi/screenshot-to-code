@@ -3,7 +3,7 @@ import App from "../../App";
 import { useEffect, useRef, useState } from "react";
 import { AlertDialog } from "@radix-ui/react-alert-dialog";
 import { AlertDialogContent } from "../ui/alert-dialog";
-// import FullPageSpinner from "../custom-ui/FullPageSpinner";
+import FullPageSpinner from "../custom-ui/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 
 function AppContainer() {
@@ -17,8 +17,7 @@ function AppContainer() {
   // If Clerk is loaded and the user is not signed in, show the sign up popup
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      // setShowPopup(true);
-      setShowPopup(false);
+      setShowPopup(true);
     }
   }, [isSignedIn, isLoaded]);
 
@@ -31,8 +30,8 @@ function AppContainer() {
       isInitRequestInProgress.current = true;
 
       const user = await authenticatedFetch(
-        // "https://screenshot-to-code-saas.onrender.com/users/create",
-        "http://localhost:8001/users/create",
+        "https://screenshot-to-code-saas.onrender.com/users/create",
+        // "http://localhost:8001/users/create",
         "POST"
       );
       console.log(user);
@@ -44,7 +43,7 @@ function AppContainer() {
   }, []);
 
   // If Clerk is still loading, show a spinner
-  // if (!isLoaded) return <FullPageSpinner />;
+  if (!isLoaded) return <FullPageSpinner />;
 
   return (
     <>
