@@ -65,7 +65,15 @@ function AppContainer() {
                   border: "none",
                   backgroundColor: "transparent",
                 },
+                footer: {
+                  display: "flex",
+                  flexDirection: "column",
+                },
+                footerAction: {
+                  marginBottom: "5px",
+                },
               },
+              layout: { privacyPageUrl: "https://a.picoapps.xyz/camera-write" },
             }}
           />
         </AlertDialogContent>

@@ -67,7 +67,7 @@ function App({ navbarComponent }: Props) {
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
       // Only relevant for hosted version
-      isTermOfServiceAccepted: false,
+      isTermOfServiceAccepted: true,
       accessCode: null,
     },
     "setting"
@@ -329,7 +329,7 @@ function App({ navbarComponent }: Props) {
       {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
-          open={!settings.isTermOfServiceAccepted}
+          open={false}
           onOpenChange={handleTermDialogOpenChange}
         />
       )}

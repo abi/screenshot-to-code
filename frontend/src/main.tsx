@@ -10,7 +10,13 @@ import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      localization={{
+        footerPageLink__privacy:
+          "By signing up, you accept our terms of service and consent to receiving occasional product updates via email.",
+      }}
+    >
       <Router>
         <Routes>
           <Route path="/" element={<AppContainer />} />
