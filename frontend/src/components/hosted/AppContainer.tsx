@@ -68,6 +68,7 @@ function AppContainer() {
                 footer: {
                   display: "flex",
                   flexDirection: "column",
+                  textAlign: "center",
                 },
                 footerAction: {
                   marginBottom: "5px",
