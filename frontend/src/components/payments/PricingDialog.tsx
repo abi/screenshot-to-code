@@ -14,7 +14,12 @@ const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 const PricingDialog: React.FC = () => {
   return (
     <Dialog>
-      <DialogTrigger>buy 100 code generations for $15</DialogTrigger>
+      <DialogTrigger
+        className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
+          text-white  px-4 text-xs py-3 cursor-pointer"
+      >
+        buy 100 code generations for $15
+      </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="mb-2 text-2xl text-center">

@@ -4,10 +4,7 @@ import PricingDialog from "./payments/PricingDialog";
 export function PicoBadge({ settings }: { settings: Settings }) {
   return (
     <>
-      <div
-        className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
-          text-white  px-4 text-xs py-3 cursor-pointer"
-      >
+      <div>
         <PricingDialog />
       </div>
       <a
@@ -18,10 +15,10 @@ export function PicoBadge({ settings }: { settings: Settings }) {
           className="fixed z-50 bottom-16 right-5 rounded-md shadow bg-black
          text-white px-4 text-xs py-3 cursor-pointer"
         >
-          feature requests?
+          feature requests
         </div>
       </a>
-      {!settings.accessCode && (
+      {/* {!settings.accessCode && (
         <a href="https://picoapps.xyz?ref=screenshot-to-code" target="_blank">
           <div
             className="fixed z-50 bottom-5 right-5 rounded-md shadow text-black
@@ -30,7 +27,7 @@ export function PicoBadge({ settings }: { settings: Settings }) {
             an open source project by Pico
           </div>
         </a>
-      )}
+      )} */}
       {settings.accessCode && (
         <a href="mailto:support@picoapps.xyz" target="_blank">
           <div
