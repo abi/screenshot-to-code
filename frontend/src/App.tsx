@@ -125,9 +125,11 @@ function App() {
     setGeneratedCode("");
     setReferenceImages([]);
     setExecutionConsole([]);
+    setUpdateInstruction("");
+    setIsImportedFromCode(false);
     setAppHistory([]);
     setCurrentVersion(null);
-    setIsImportedFromCode(false);
+    setShouldIncludeResultImage(false);
   };
 
   const cancelCodeGeneration = () => {
@@ -199,6 +201,7 @@ function App() {
           });
         }
       },
+      // On status update
       (line) => setExecutionConsole((prev) => [...prev, line]),
       // On cancel
       () => {
