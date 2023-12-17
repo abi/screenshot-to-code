@@ -2,8 +2,9 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
+from api_types import AzureProviderInfo, OpenAiProviderInfo
 from config import IS_PROD, SHOULD_MOCK_AI_RESPONSE
-from llm import stream_openai_response, stream_azure_openai_response
+from llm import stream_openai_response
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
 from typing import Dict, List
@@ -210,22 +211,44 @@ async def stream_code(websocket: WebSocket):
         completion = await mock_completion(process_chunk)
     else:
         try:
+            api_provider_info = None
             if openai_api_key is not None:
-                completion = await stream_openai_response(
-                    prompt_messages,
-                    api_key=openai_api_key,
-                    base_url=openai_base_url,
-                    callback=lambda x: process_chunk(x),
+                api_provider_info = {
+                    "name": "openai",
+                    "api_key": openai_api_key,
+                    "base_url": openai_base_url,
+                }
+
+                api_provider_info = OpenAiProviderInfo(
+                    api_key=openai_api_key, base_url=openai_base_url
                 )
+
             if azure_openai_api_key is not None:
-                completion = await stream_azure_openai_response(
-                    prompt_messages,
-                    azure_openai_api_key=azure_openai_api_key,
-                    azure_openai_api_version=azure_openai_api_version,
-                    azure_openai_resource_name=azure_openai_resource_name,
-                    azure_openai_deployment_name=azure_openai_deployment_name,
-                    callback=lambda x: process_chunk(x),
+                if (
+                    not azure_openai_api_version
+                    or not azure_openai_resource_name
+                    or not azure_openai_deployment_name
+                ):
+                    raise Exception(
+                        "Missing Azure OpenAI API version, resource name, or deployment name"
+                    )
+
+                api_provider_info = AzureProviderInfo(
+                    api_key=azure_openai_api_key,
+                    api_version=azure_openai_api_version,
+                    deployment_name=azure_openai_deployment_name,
+                    resource_name=azure_openai_resource_name,
                 )
+
+            if api_provider_info is None:
+                raise Exception("Invalid api_provider_info")
+
+            completion = await stream_openai_response(
+                prompt_messages,
+                api_provider_info=api_provider_info,
+                callback=lambda x: process_chunk(x),
+            )
+
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
             error_message = (
