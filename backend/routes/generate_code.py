@@ -12,6 +12,7 @@ from prompts import assemble_imported_code_prompt, assemble_prompt
 from access_token import validate_access_token
 from datetime import datetime
 import json
+from routes.logging_utils import send_to_saas_backend
 
 from utils import pprint_prompt  # type: ignore
 
@@ -233,6 +234,13 @@ async def stream_code(websocket: WebSocket):
 
     # Write the messages dict into a log so that we can debug later
     write_logs(prompt_messages, completion)
+
+    if IS_PROD:
+        # Catch any errors from sending to SaaS backend and continue
+        try:
+            await send_to_saas_backend(prompt_messages, completion, params["authToken"])
+        except Exception as e:
+            print("Error sending to SaaS backend", e)
 
     try:
         if should_generate_images:

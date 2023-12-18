@@ -36,6 +36,7 @@ export interface CodeGenerationParams {
   resultImage?: string;
   history?: string[];
   isImportedFromCode?: boolean;
+  authToken?: string;
 }
 
 export type FullGenerationSettings = CodeGenerationParams & Settings;

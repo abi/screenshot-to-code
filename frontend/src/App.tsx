@@ -12,7 +12,6 @@ import {
   FaMobile,
   FaUndo,
 } from "react-icons/fa";
-
 import { Switch } from "./components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +40,7 @@ import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
 import ImportCodeSection from "./components/ImportCodeSection";
+import { useAuth } from "@clerk/clerk-react";
 
 const IS_OPENAI_DOWN = false;
 
@@ -56,6 +56,9 @@ function App({ navbarComponent }: Props) {
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
+
+  // TODO: Move to AppContainer
+  const { getToken } = useAuth();
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -156,7 +159,7 @@ function App({ navbarComponent }: Props) {
     }
   };
 
-  function doGenerateCode(
+  async function doGenerateCode(
     params: CodeGenerationParams,
     parentVersion: number | null
   ) {
@@ -164,7 +167,12 @@ function App({ navbarComponent }: Props) {
     setAppState(AppState.CODING);
 
     // Merge settings with params
-    const updatedParams = { ...params, ...settings };
+    const authToken = await getToken();
+    const updatedParams = {
+      ...params,
+      ...settings,
+      authToken: authToken || undefined,
+    };
 
     generateCode(
       wsRef,
@@ -223,13 +231,13 @@ function App({ navbarComponent }: Props) {
   }
 
   // Initial version creation
-  function doCreate(referenceImages: string[]) {
+  async function doCreate(referenceImages: string[]) {
     // Reset any existing state
     reset();
 
     setReferenceImages(referenceImages);
     if (referenceImages.length > 0) {
-      doGenerateCode(
+      await doGenerateCode(
         {
           generationType: "create",
           image: referenceImages[0],
@@ -264,7 +272,7 @@ function App({ navbarComponent }: Props) {
 
     if (shouldIncludeResultImage) {
       const resultImage = await takeScreenshot();
-      doGenerateCode(
+      await doGenerateCode(
         {
           generationType: "update",
           image: referenceImages[0],
@@ -275,7 +283,7 @@ function App({ navbarComponent }: Props) {
         currentVersion
       );
     } else {
-      doGenerateCode(
+      await doGenerateCode(
         {
           generationType: "update",
           image: referenceImages[0],
