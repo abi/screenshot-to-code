@@ -10,8 +10,8 @@ async def does_user_have_subscription_credits(
     auth_token: str,
 ):
     async with httpx.AsyncClient() as client:
-        # url = "https://screenshot-to-code-saas.onrender.com/credits/has_credits"
-        url = "http://localhost:8001/credits/has_credits"
+        url = "https://screenshot-to-code-saas.onrender.com/credits/has_credits"
+        # url = "http://localhost:8001/credits/has_credits"
 
         headers = {
             "Content-Type": "application/json",

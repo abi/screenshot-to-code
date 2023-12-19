@@ -23,8 +23,8 @@ async def send_to_saas_backend(
 ):
     if IS_PROD:
         async with httpx.AsyncClient() as client:
-            # url = "https://screenshot-to-code-saas.onrender.com/generations/store"
-            url = "http://localhost:8001/generations/store"
+            url = "https://screenshot-to-code-saas.onrender.com/generations/store"
+            # url = "http://localhost:8001/generations/store"
 
             data = json.dumps(
                 {
