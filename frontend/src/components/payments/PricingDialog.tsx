@@ -18,7 +18,7 @@ const PricingDialog: React.FC = () => {
         className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
           text-white  px-4 text-xs py-3 cursor-pointer"
       >
-        buy 100 code generations for $15
+        get 100 generations/month for $15
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
@@ -28,64 +28,40 @@ const PricingDialog: React.FC = () => {
         </DialogHeader>
 
         <div className="flex justify-center items-center">
-          <div className="grid grid-cols-2 gap-8 p-2">
+          <div className="grid grid-cols-1 gap-8 p-2">
             {/* Free Plan */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="font-semibold">Hobby</h2>
               <p className="text-gray-500">Great to start</p>
               <div className="my-4">
                 <span className="text-4xl font-bold">$15</span>
-                {/* <span className="text-gray-500"> / month</span> */}
+                <span className="text-gray-500"> / month</span>
               </div>
               <a
-                href="https://buy.stripe.com/8wM6sre70gBW1nqaEE"
+                href="https://buy.stripe.com/cN28Az7ICclG5DGaEG"
                 target="_blank"
               >
                 <button className="bg-black text-white rounded py-2 px-4 w-full text-sm">
-                  Purchase Credits
+                  Subscribe
                 </button>
               </a>
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center">
                   <FaCheckCircle className="text-black mr-2" />
-                  100 credits
+                  100 credits/month
                 </li>
                 <li className="flex items-center">
                   <FaCheckCircle className="text-black mr-2" />
                   Email support
                 </li>
+                <li className="flex items-center">
+                  <FaCheckCircle className="text-black mr-2" />
+                  Cancel anytime
+                </li>
               </ul>
             </div>
 
             {/* Economy Plan */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="font-semibold">Pro</h2>
-              <p className="text-gray-500">Higher limits</p>
-              <div className="my-4">
-                <span className="text-4xl font-bold">$40</span>
-                {/* <span className="text-gray-500"> / month</span> */}
-              </div>
-
-              <a
-                href="https://buy.stripe.com/dR69ED3sm85qgikcMN"
-                target="_blank"
-              >
-                <button className="bg-black text-white rounded py-2 px-4 w-full text-sm">
-                  Purchase Credits
-                </button>
-              </a>
-
-              <ul className="mt-4 space-y-2">
-                <li className="flex items-center">
-                  <FaCheckCircle className="text-black mr-2" />
-                  300 credits
-                </li>
-                <li className="flex items-center">
-                  <FaCheckCircle className="text-black mr-2" />
-                  Slack support
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
         <p className="text-center text-xs text-gray-600 mt-1">

@@ -5,10 +5,10 @@ export function OnboardingNote() {
         To use Screenshot to Code,{" "}
         <a
           className="inline underline hover:opacity-70"
-          href="https://buy.stripe.com/8wM6sre70gBW1nqaEE"
+          href="https://buy.stripe.com/cN28Az7ICclG5DGaEG"
           target="_blank"
         >
-          buy some credits (100 generations for $15)
+          get 100 generations for $15/month
         </a>{" "}
         or use your own OpenAI API key with GPT4 vision access (
         <a

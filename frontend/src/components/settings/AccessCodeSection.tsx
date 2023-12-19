@@ -100,7 +100,7 @@ function AccessCodeSection({ settings, setSettings }: Props) {
 
       {fetchState === "EMPTY" && (
         <div className="flex items-center justify-between">
-          <a href="https://buy.stripe.com/8wM6sre70gBW1nqaEE" target="_blank">
+          <a href="https://buy.stripe.com/cN28Az7ICclG5DGaEG" target="_blank">
             <Button size="sm" variant="secondary">
               Buy credits
             </Button>
@@ -129,7 +129,7 @@ function AccessCodeSection({ settings, setSettings }: Props) {
             <span className="text-xs text-gray-700">
               {usedCredits} out of {totalCredits} credits used
             </span>
-            <a href="https://buy.stripe.com/8wM6sre70gBW1nqaEE" target="_blank">
+            <a href="https://buy.stripe.com/cN28Az7ICclG5DGaEG" target="_blank">
               <Button size="sm">Add credits</Button>
             </a>
           </div>
