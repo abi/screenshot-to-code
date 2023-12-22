@@ -162,7 +162,9 @@ function App() {
     generateCode(
       wsRef,
       updatedParams,
+      // On change
       (token) => setGeneratedCode((prev) => prev + token),
+      // On set code
       (code) => {
         setGeneratedCode(code);
         if (params.generationType === "create") {
