@@ -8,10 +8,14 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { FaCheckCircle } from "react-icons/fa";
+import Spinner from "../custom-ui/Spinner";
+import useStripeCheckout from "./useStripeCheckout";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
 const PricingDialog: React.FC = () => {
+  const { checkout, isLoadingCheckout } = useStripeCheckout();
+
   return (
     <Dialog>
       <DialogTrigger
@@ -74,6 +78,34 @@ const PricingDialog: React.FC = () => {
                   Purchase Credits
                 </button>
               </a>
+
+              <ul className="mt-4 space-y-2">
+                <li className="flex items-center">
+                  <FaCheckCircle className="text-black mr-2" />
+                  300 credits
+                </li>
+                <li className="flex items-center">
+                  <FaCheckCircle className="text-black mr-2" />
+                  Slack support
+                </li>
+              </ul>
+            </div>
+
+            {/* Economy Plan */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="font-semibold">Hobby</h2>
+              <p className="text-gray-500">Higher limits</p>
+              <div className="my-4">
+                <span className="text-4xl font-bold">$15</span>
+                <span className="text-gray-500"> / month</span>
+              </div>
+
+              <button
+                className="bg-black text-white rounded py-2 px-4 w-full text-sm"
+                onClick={() => checkout("test")}
+              >
+                Subscribe {isLoadingCheckout && <Spinner />}
+              </button>
 
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center">

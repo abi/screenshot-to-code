@@ -15,3 +15,8 @@ export const PICO_BACKEND_FORM_SECRET =
 
 export const CLERK_PUBLISHABLE_KEY =
   import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || null;
+
+export const STRIPE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || null;
+
+export const SAAS_BACKEND_URL = import.meta.env.VITE_SAAS_BACKEND_URL || null;
