@@ -41,6 +41,7 @@ import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
 import ImportCodeSection from "./components/ImportCodeSection";
 import { useAuth } from "@clerk/clerk-react";
+import { useStore } from "./store/store";
 
 const IS_OPENAI_DOWN = false;
 
@@ -57,8 +58,10 @@ function App({ navbarComponent }: Props) {
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
 
+  // Relevant for hosted version only
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
+  const subscriberTier = useStore((state) => state.subscriberTier);
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -357,9 +360,8 @@ function App({ navbarComponent }: Props) {
           />
 
           {IS_RUNNING_ON_CLOUD &&
-            !(settings.openAiApiKey || settings.accessCode) && (
-              <OnboardingNote />
-            )}
+            !(settings.openAiApiKey || settings.accessCode) &&
+            subscriberTier === "free" && <OnboardingNote />}
 
           {IS_OPENAI_DOWN && (
             <div className="bg-black text-white dark:bg-white dark:text-black p-3 rounded">

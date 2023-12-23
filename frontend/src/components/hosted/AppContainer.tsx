@@ -5,10 +5,13 @@ import { AlertDialog } from "@radix-ui/react-alert-dialog";
 import { AlertDialogContent } from "../ui/alert-dialog";
 import FullPageSpinner from "../custom-ui/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
+import { useStore } from "../../store/store";
 
 function AppContainer() {
   const [showPopup, setShowPopup] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
+
+  const setSubscriberTier = useStore((state) => state.setSubscriberTier);
 
   // For fetching user
   const authenticatedFetch = useAuthenticatedFetch();
@@ -34,6 +37,13 @@ function AppContainer() {
         // "http://localhost:8001/users/create",
         "POST"
       );
+
+      if (!user.subscriber_tier) {
+        setSubscriberTier("free");
+      } else {
+        setSubscriberTier(user.subscriber_tier);
+      }
+
       console.log(user);
 
       isInitRequestInProgress.current = false;
