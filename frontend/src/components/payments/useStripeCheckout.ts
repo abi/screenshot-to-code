@@ -28,7 +28,7 @@ export default function useStripeCheckout() {
 
       // Create a Checkout Session
       const res: CreateCheckoutSessionResponse = await authenticatedFetch(
-        `${SAAS_BACKEND_URL}/create_checkout_session` +
+        `${SAAS_BACKEND_URL}/payments/create_checkout_session` +
           `?price_lookup_key=${priceLookupKey}` +
           `&rewardful_referral_id=${rewardfulReferralId}`,
         "POST"
