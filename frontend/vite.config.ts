@@ -24,8 +24,8 @@ export default ({ mode }) => {
       }),
       copy({
         targets: [
-          { src: 'dist/index.html', dest: path.resolve('../backend/templates/')},
-          { src: 'dist/assets', dest: path.resolve('../backend/') }
+          { src: 'dist/index.html', dest: path.resolve('../screenshottocode/templates/')},
+          { src: 'dist/assets', dest: path.resolve('../screenshottocode/') }
         ]
       })
     ],

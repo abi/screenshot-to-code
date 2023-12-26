@@ -41,6 +41,3 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 screenshottocode = "screenshottocode.cli:main"
-
-[tool.poetry.scripts.pre-build]
-build_frontend = "cd frontend && yarn build"

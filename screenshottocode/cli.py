@@ -13,7 +13,7 @@ def start(args: Namespace):
     
     Config.MODEL = args.model
     Config.IS_MODEL_GEMINI = args.model == 'gemini'
-    
+    Config.API_KEY = args.api_key
     if args.production:
         Config.MODEL = args.production
 
@@ -28,6 +28,7 @@ def get_arguments():
 
     parser.add_argument('-m', '--model', default='gpt-4-vision', type=str, nargs='?', choices=['gpt-4-vision', 'gemini'],
                         help='Name of Model to use')
+    parser.add_argument('--api-key', default='', help='Set api key of selected model')
     parser.add_argument('--production', action='store_true', help='Run project in production mode')
     parser.add_argument('--host', type=str, default='127.0.0.1', help='Host address to run on')
     parser.add_argument('--port', type=int, default=7001, help='Host port to run on')

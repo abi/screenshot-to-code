@@ -63,11 +63,12 @@ async def stream_code(websocket: WebSocket):
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
-    openai_api_key = os.getenv('OPENAI_API_KEY')
+    openai_api_key = Config.API_KEY if not Config.IS_MODEL_GEMINI else None
     openai_base_url = None
-    google_api_key = os.getenv('GOOGLE_API_KEY')
-    model = 'model/gemini-pro-vision' if Config.IS_MODEL_GEMINI else 'gpt-4-vision'
+    google_api_key = Config.API_KEY if Config.IS_MODEL_GEMINI else None
+    
     should_generate_images = False
+    
     if "accessCode" in params and params["accessCode"]:
         print("Access code - using platform API key")
         res = await validate_access_token(params["accessCode"])
@@ -85,20 +86,25 @@ async def stream_code(websocket: WebSocket):
     else:
         if params['model'] == 'models/gemini-pro-vision':
             print('Using the Gemini Pro Vision Model')
-            model = params['model']
+            
             Config.MODEL = 'gemini'
             Config.IS_MODEL_GEMINI = True
             google_api_key = params['googleApiKey']
+            if google_api_key:
+                Config.API_KEY = google_api_key
+                print("Using Google API key from client-side settings dialog")
         else:
             print('Using the GPT 4 Vision Model')
             if params["openAiApiKey"]:
                 openai_api_key = params["openAiApiKey"]
-                print("Using OpenAI API key from client-side settings dialog")
+                if openai_api_key:
+                    Config.API_KEY = openai_api_key
+                    print("Using OpenAI API key from client-side settings dialog")
             else:
                 if openai_api_key:
                     print("Using OpenAI API key from environment variable")
 
-    if (model == 'gpt-4-vision' and not openai_api_key) or (model == 'models/gemini-pro-vision' and not google_api_key):
+    if (not Config.IS_MODEL_GEMINI and not Config.API_KEY) or (Config.IS_MODEL_GEMINI and not Config.API_KEY):
         print("API key not found")
         await websocket.send_json(
             {
@@ -108,7 +114,7 @@ async def stream_code(websocket: WebSocket):
         )
         return
 
-    if model == 'gpt-4-vision':
+    if not Config.IS_MODEL_GEMINI:
         # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
         openai_base_url = None
         # Disable user-specified OpenAI Base URL in prod
@@ -198,20 +204,20 @@ async def stream_code(websocket: WebSocket):
             image_cache = create_alt_url_mapping(params["history"][-2])
 
     # pprint_prompt(prompt_messages)
-
+    completion = ""
     if Config.SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(process_chunk)
-    elif Config.IS_MODEL_GEMINI:
+    elif Config.IS_MODEL_GEMINI and Config.API_KEY:
         completion = await stream_gemini_response(
                 prompt_messages,
-                api_key=google_api_key,
+                api_key=Config.API_KEY,
                 callback=lambda x: process_chunk(x),
             )
-    else:
+    elif Config.API_KEY:
         try:
             completion = await stream_openai_response(
                 prompt_messages,
-                api_key=openai_api_key,
+                api_key=Config.API_KEY,
                 base_url=openai_base_url,
                 callback=lambda x: process_chunk(x),
             )
