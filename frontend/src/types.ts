@@ -13,7 +13,9 @@ export enum GeneratedCodeConfig {
 }
 
 export interface Settings {
+  model: string;
   openAiApiKey: string | null;
+  googleApiKey: string | null;
   openAiBaseURL: string | null;
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;

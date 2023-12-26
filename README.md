@@ -26,29 +26,31 @@ See the [Examples](#-examples) section below for more demos.
 
 ## 🛠 Getting Started
 
-The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API.
+The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API or Google API key for Gemini Pro Vision.
 
-Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
-
-```bash
-cd backend
-echo "OPENAI_API_KEY=sk-your-key" > .env
-poetry install
-poetry shell
-poetry run uvicorn main:app --reload --port 7001
-```
-
-Run the frontend:
+## Installation
+Install package with your preferred python package management app.
 
 ```bash
-cd frontend
-yarn
-yarn dev
+pip install https://github.com/theonlyamos/screenshot-to-code/archive/v0.1.0.zip
 ```
 
-Open http://localhost:5173 to use the app.
+## Usage
+After installation, you can run the package from the terminal/command prompt and access the app on http://localhost:7001.
+Model Configuration can also be found on the settings modal of the web ui.
 
-If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL in `frontend/.env.local`
+### Run with GPT-4 Vision
+You can run this with GPT-4 Vision by using the following command line:
+```bash
+screenshottocode --api-key "<Your Api Key>"
+```
+
+### Run with Gemini Pro Vision
+You can also run this with Gemini Pro Vision by using the following command line instead:
+```bash
+screenshottocode --model gemini --api-key "<Your Api Key>"
+```
+Using Gemini Pro Vision model is a lot slower than using GPT-4 Vision since Gemini has a maximum output token of 2048. This means the results are fetched iteratively.
 
 For debugging purposes, if you don't want to waste GPT4-Vision credits, you can run the backend in mock mode (which streams a pre-recorded response):
 
@@ -62,7 +64,8 @@ MOCK=true poetry run uvicorn main:app --reload --port 7001
 
 ## Docker
 
-If you have Docker installed on your system, in the root directory, run:
+If you have Docker installed on your system, in the root directory,
+clone the reposition and then run:
 
 ```bash
 echo "OPENAI_API_KEY=sk-your-key" > .env

@@ -2,18 +2,18 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
-from config import IS_PROD, SHOULD_MOCK_AI_RESPONSE
-from llm import stream_openai_response
+from ..config import Config
+from ..llm import stream_gemini_response, stream_openai_response
 from openai.types.chat import ChatCompletionMessageParam
-from mock_llm import mock_completion
+from ..mock_llm import mock_completion
 from typing import Dict, List
-from image_generation import create_alt_url_mapping, generate_images
-from prompts import assemble_imported_code_prompt, assemble_prompt
-from access_token import validate_access_token
+from ..image_generation import create_alt_url_mapping, generate_images
+from ..prompts import assemble_imported_code_prompt, assemble_prompt
+from ..access_token import validate_access_token
 from datetime import datetime
 import json
 
-from utils import pprint_prompt  # type: ignore
+from ..utils import pprint_prompt  # type: ignore
 
 
 router = APIRouter()
@@ -63,12 +63,18 @@ async def stream_code(websocket: WebSocket):
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
-    openai_api_key = None
+    openai_api_key = Config.API_KEY if not Config.IS_MODEL_GEMINI else None
+    openai_base_url = None
+    google_api_key = Config.API_KEY if Config.IS_MODEL_GEMINI else None
+    
+    should_generate_images = False
+    
     if "accessCode" in params and params["accessCode"]:
         print("Access code - using platform API key")
         res = await validate_access_token(params["accessCode"])
         if res["success"]:
             openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
+            google_api_key = os.environ.get("PLATFORM_GOOGLE_API_KEY")
         else:
             await websocket.send_json(
                 {
@@ -78,48 +84,61 @@ async def stream_code(websocket: WebSocket):
             )
             return
     else:
-        if params["openAiApiKey"]:
-            openai_api_key = params["openAiApiKey"]
-            print("Using OpenAI API key from client-side settings dialog")
+        if params['model'] == 'models/gemini-pro-vision':
+            print('Using the Gemini Pro Vision Model')
+            
+            Config.MODEL = 'gemini'
+            Config.IS_MODEL_GEMINI = True
+            google_api_key = params['googleApiKey']
+            if google_api_key:
+                Config.API_KEY = google_api_key
+                print("Using Google API key from client-side settings dialog")
         else:
-            openai_api_key = os.environ.get("OPENAI_API_KEY")
-            if openai_api_key:
-                print("Using OpenAI API key from environment variable")
+            print('Using the GPT 4 Vision Model')
+            if params["openAiApiKey"]:
+                openai_api_key = params["openAiApiKey"]
+                if openai_api_key:
+                    Config.API_KEY = openai_api_key
+                    print("Using OpenAI API key from client-side settings dialog")
+            else:
+                if openai_api_key:
+                    print("Using OpenAI API key from environment variable")
 
-    if not openai_api_key:
-        print("OpenAI API key not found")
+    if (not Config.IS_MODEL_GEMINI and not Config.API_KEY) or (Config.IS_MODEL_GEMINI and not Config.API_KEY):
+        print("API key not found")
         await websocket.send_json(
             {
                 "type": "error",
-                "value": "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file.",
+                "value": "No API key found. Please add your API key in the settings dialog or add it to backend/.env file.",
             }
         )
         return
 
-    # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
-    openai_base_url = None
-    # Disable user-specified OpenAI Base URL in prod
-    if not os.environ.get("IS_PROD"):
-        if "openAiBaseURL" in params and params["openAiBaseURL"]:
-            openai_base_url = params["openAiBaseURL"]
-            print("Using OpenAI Base URL from client-side settings dialog")
-        else:
-            openai_base_url = os.environ.get("OPENAI_BASE_URL")
-            if openai_base_url:
-                print("Using OpenAI Base URL from environment variable")
+    if not Config.IS_MODEL_GEMINI:
+        # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
+        openai_base_url = None
+        # Disable user-specified OpenAI Base URL in prod
+        if not os.environ.get("Config.IS_PROD"):
+            if "openAiBaseURL" in params and params["openAiBaseURL"]:
+                openai_base_url = params["openAiBaseURL"]
+                print("Using OpenAI Base URL from client-side settings dialog")
+            else:
+                openai_base_url = os.environ.get("OPENAI_BASE_URL")
+                if openai_base_url:
+                    print("Using OpenAI Base URL from environment variable")
 
-    if not openai_base_url:
-        print("Using official OpenAI URL")
+        if not openai_base_url:
+            print("Using official OpenAI URL")
 
-    # Get the image generation flag from the request. Fall back to True if not provided.
-    should_generate_images = (
-        params["isImageGenerationEnabled"]
-        if "isImageGenerationEnabled" in params
-        else True
-    )
+        # Get the image generation flag from the request. Fall back to True if not provided.
+        should_generate_images = (
+            params["isImageGenerationEnabled"]
+            if "isImageGenerationEnabled" in params
+            else True
+        )
 
-    print("generating code...")
-    await websocket.send_json({"type": "status", "value": "Generating code..."})
+        print("generating code...")
+        await websocket.send_json({"type": "status", "value": "Generating code..."})
 
     async def process_chunk(content: str):
         await websocket.send_json({"type": "chunk", "value": content})
@@ -184,15 +203,21 @@ async def stream_code(websocket: WebSocket):
 
             image_cache = create_alt_url_mapping(params["history"][-2])
 
-    pprint_prompt(prompt_messages)
-
-    if SHOULD_MOCK_AI_RESPONSE:
+    # pprint_prompt(prompt_messages)
+    completion = ""
+    if Config.SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(process_chunk)
-    else:
+    elif Config.IS_MODEL_GEMINI and Config.API_KEY:
+        completion = await stream_gemini_response(
+                prompt_messages,
+                api_key=Config.API_KEY,
+                callback=lambda x: process_chunk(x),
+            )
+    elif Config.API_KEY:
         try:
             completion = await stream_openai_response(
                 prompt_messages,
-                api_key=openai_api_key,
+                api_key=Config.API_KEY,
                 base_url=openai_base_url,
                 callback=lambda x: process_chunk(x),
             )
@@ -202,7 +227,7 @@ async def stream_code(websocket: WebSocket):
                 "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, or create a new OpenAI API key on your OpenAI dashboard."
                 + (
                     " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
+                    if Config.IS_PROD
                     else ""
                 )
             )
@@ -214,7 +239,7 @@ async def stream_code(websocket: WebSocket):
                 + ". Please make sure you have followed the instructions correctly to obtain an OpenAI key with GPT vision access: https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
                 + (
                     " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
+                    if Config.IS_PROD
                     else ""
                 )
             )
@@ -225,7 +250,7 @@ async def stream_code(websocket: WebSocket):
                 "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
                 + (
                     " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
+                    if Config.IS_PROD
                     else ""
                 )
             )
@@ -259,6 +284,15 @@ async def stream_code(websocket: WebSocket):
         await websocket.send_json({"type": "setCode", "value": completion})
         await websocket.send_json(
             {"type": "status", "value": "Image generation failed but code is complete."}
+        )
+    except RuntimeError as e:
+        traceback.print_exc()
+        print("Code generation failed", e)
+        # Send set code even if image generation fails since that triggers
+        # the frontend to update history
+        await websocket.send_json({"type": "setCode", "value": completion})
+        await websocket.send_json(
+            {"type": "status", "value": "Code generation failed but code is complete."}
         )
 
     await websocket.close()

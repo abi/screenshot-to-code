@@ -3,13 +3,15 @@
 # Project-related files
 
 # Run logs
-backend/run_logs/*
+screenshottocode/run_logs/*
 
 # Weird Docker setup related files
-backend/backend/*
+screenshottocode/screenshottocode/*
 
 # Env vars
+frontend/dist/*
 frontend/.env.local
+screenshottocode/.env
 .env
 
 # Mac files

@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "screenshottocode"
+version = "0.1.0"
+description = ""
+authors = [
+    "Abi Raja <abimanyuraja@gmail.com>",
+    "Amos Amissah <theonlyamos@gmail.com>"
+]
+license = "MIT"
+readme = "README.md"
+homepage = "https://screenshottocode.com/"
+repository = "https://github.com/theonlyamos/screenshot-to-code"
+include = ["screenshottocode/templates/*", "screenshottocode/assets/*"]
+classifiers = [
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/abi/screenshot-to-code/issues"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.95.0"
+uvicorn = "^0.24.0.post1"
+websockets = "^12.0"
+openai = "^1.2.4"
+python-dotenv = "^1.0.0"
+beautifulsoup4 = "^4.12.2"
+httpx = "^0.25.1"
+google-generativeai = "0.3.0"
+google-ai-generativelanguage = "0.4.0"
+pillow = "^10.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+screenshottocode = "screenshottocode.cli:main"

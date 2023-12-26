@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -37,6 +37,20 @@ function SettingsDialog({ settings, setSettings }: Props) {
     }));
   };
 
+  const [isGemini, setIsGemini] = useState(false);
+
+  const toggleModelSettings = (model: string)=>{
+    setIsGemini(model === 'models/gemini-pro-vision')
+    setSettings((s) => ({
+      ...s,
+      model,
+    }))
+  }
+
+  useEffect(()=>{
+    setIsGemini(settings.model === 'models/gemini-pro-vision')
+  }, [])
+
   return (
     <Dialog>
       <DialogTrigger>
@@ -71,25 +85,65 @@ function SettingsDialog({ settings, setSettings }: Props) {
           />
         </div>
         <div className="flex flex-col space-y-4">
-          <Label htmlFor="openai-api-key">
-            <div>OpenAI API key</div>
-            <div className="font-light mt-2 leading-relaxed">
-              Only stored in your browser. Never stored on servers. Overrides
-              your .env config.
+          <Label htmlFor="model-selection">
+            <div>Select model to use</div>
+            <div className="font-light mt-2">
+              More fun with it but if you want to save money, turn it off.
             </div>
           </Label>
-
-          <Input
-            id="openai-api-key"
-            placeholder="OpenAI API key"
-            value={settings.openAiApiKey || ""}
-            onChange={(e) =>
-              setSettings((s) => ({
-                ...s,
-                openAiApiKey: e.target.value,
-              }))
-            }
-          />
+          <select 
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            value={settings.model || ""}
+            onChange={(e)=>{toggleModelSettings(e.target.value)}}>
+            <option value="gpt-4-vision">GPT 4 Vision</option>
+            <option value="models/gemini-pro-vision">Gemini Pro Vision</option>
+          </select>
+        </div>
+        <div className="flex flex-col space-y-4">
+          {isGemini
+          ?
+          <>
+            <Label htmlFor="google-api-key">
+              <div>Google API key</div>
+              <div className="font-light mt-2 leading-relaxed">
+                Only stored in your browser. Never stored on servers. Overrides
+                your .env config.
+              </div>
+            </Label>
+            <Input
+              id="google-api-key"
+              placeholder="Google API key"
+              value={settings.googleApiKey || ""}
+              onChange={(e) =>
+                setSettings((s) => ({
+                  ...s,
+                  googleApiKey: e.target.value,
+                }))
+              }
+            />
+          </>
+          :
+          <>
+            <Label htmlFor="openai-api-key">
+              <div>OpenAI API key</div>
+              <div className="font-light mt-2 leading-relaxed">
+                Only stored in your browser. Never stored on servers. Overrides
+                your .env config.
+              </div>
+            </Label>
+            <Input
+              id="openai-api-key"
+              placeholder="OpenAI API key"
+              value={settings.openAiApiKey || ""}
+              onChange={(e) =>
+                setSettings((s) => ({
+                  ...s,
+                  openAiApiKey: e.target.value,
+                }))
+              }
+            />
+          </>
+          }
 
           {!IS_RUNNING_ON_CLOUD && (
             <>

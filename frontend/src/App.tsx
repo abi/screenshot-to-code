@@ -55,7 +55,9 @@ function App() {
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
     {
+      model: 'gpt-4-vision',
       openAiApiKey: null,
+      googleApiKey: null,
       openAiBaseURL: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
