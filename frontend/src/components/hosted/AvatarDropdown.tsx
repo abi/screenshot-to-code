@@ -15,6 +15,7 @@ export default function AvatarDropdown() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useClerk();
   const subscriberTier = useStore((state) => state.subscriberTier);
+  const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
   const isFreeUser = subscriberTier === "free";
 
   // If Clerk is still loading or user is logged out, don't show anything
@@ -33,12 +34,7 @@ export default function AvatarDropdown() {
           {/* Free users */}
           {isFreeUser && (
             <DropdownMenuItem asChild={true}>
-              <a
-                href="https://buy.stripe.com/8wM6sre70gBW1nqaEE"
-                target="_blank"
-              >
-                Buy credits
-              </a>
+              <a onClick={() => setPricingDialogOpen(true)}>Get pro</a>
             </DropdownMenuItem>
           )}
           {/* Paying user */}

@@ -11,24 +11,29 @@ import { FaCheckCircle } from "react-icons/fa";
 import Spinner from "../custom-ui/Spinner";
 import useStripeCheckout from "./useStripeCheckout";
 import { Button } from "../ui/button";
+import { useStore } from "../../store/store";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
-const SELL_SUBSCRIPTIONS = false;
+const SELL_SUBSCRIPTIONS = true;
 
 const PricingDialog: React.FC = () => {
   const { checkout, isLoadingCheckout } = useStripeCheckout();
   const [paymentInterval, setPaymentInterval] = React.useState<
     "monthly" | "yearly"
   >("monthly");
+  const [showDialog, setShowDialog] = useStore((state) => [
+    state.isPricingDialogOpen,
+    state.setPricingDialogOpen,
+  ]);
 
   return (
-    <Dialog>
+    <Dialog open={showDialog} onOpenChange={(isOpen) => setShowDialog(isOpen)}>
       <DialogTrigger
         className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
           text-white  px-4 text-xs py-3 cursor-pointer"
       >
-        buy 100 code generations for $15
+        get 100 code generations for $15
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
