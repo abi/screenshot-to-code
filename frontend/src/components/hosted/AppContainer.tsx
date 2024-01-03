@@ -7,6 +7,7 @@ import FullPageSpinner from "../custom-ui/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
 import AvatarDropdown from "./AvatarDropdown";
+import { UserResponse } from "./types";
 
 function AppContainer() {
   const [showPopup, setShowPopup] = useState(false);
@@ -34,7 +35,7 @@ function AppContainer() {
       isInitRequestInProgress.current = true;
 
       // TODO: Handle when the user is not signed in
-      const user = await authenticatedFetch(
+      const user: UserResponse = await authenticatedFetch(
         "https://screenshot-to-code-saas.onrender.com/users/create",
         // "http://localhost:8001/users/create",
         "POST"
