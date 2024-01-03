@@ -1,4 +1,4 @@
-import { SignUp, UserButton, useUser } from "@clerk/clerk-react";
+import { SignUp, useUser } from "@clerk/clerk-react";
 import App from "../../App";
 import { useEffect, useRef, useState } from "react";
 import { AlertDialog } from "@radix-ui/react-alert-dialog";
@@ -6,6 +6,7 @@ import { AlertDialogContent } from "../ui/alert-dialog";
 import FullPageSpinner from "../custom-ui/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
+import AvatarDropdown from "./AvatarDropdown";
 
 function AppContainer() {
   const [showPopup, setShowPopup] = useState(false);
@@ -32,6 +33,7 @@ function AppContainer() {
       if (isInitRequestInProgress.current) return;
       isInitRequestInProgress.current = true;
 
+      // TODO: Handle when the user is not signed in
       const user = await authenticatedFetch(
         "https://screenshot-to-code-saas.onrender.com/users/create",
         // "http://localhost:8001/users/create",
@@ -43,8 +45,6 @@ function AppContainer() {
       } else {
         setSubscriberTier(user.subscriber_tier);
       }
-
-      console.log(user);
 
       isInitRequestInProgress.current = false;
     };
@@ -60,7 +60,7 @@ function AppContainer() {
       <App
         navbarComponent={
           <div className="flex justify-end items-center gap-x-2 px-10 mt-0 mb-4">
-            <UserButton afterSignOutUrl="/" />
+            <AvatarDropdown />
           </div>
         }
       />
