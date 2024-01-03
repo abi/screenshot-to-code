@@ -22,6 +22,7 @@ const PricingDialog: React.FC = () => {
   const [paymentInterval, setPaymentInterval] = React.useState<
     "monthly" | "yearly"
   >("monthly");
+  const subscriberTier = useStore((state) => state.subscriberTier);
   const [showDialog, setShowDialog] = useStore((state) => [
     state.isPricingDialogOpen,
     state.setPricingDialogOpen,
@@ -29,12 +30,14 @@ const PricingDialog: React.FC = () => {
 
   return (
     <Dialog open={showDialog} onOpenChange={(isOpen) => setShowDialog(isOpen)}>
-      <DialogTrigger
-        className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
+      {subscriberTier === "free" && (
+        <DialogTrigger
+          className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
           text-white  px-4 text-xs py-3 cursor-pointer"
-      >
-        get 100 code generations for $15
-      </DialogTrigger>
+        >
+          get 100 code generations for $15
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="mb-2 text-2xl text-center">
