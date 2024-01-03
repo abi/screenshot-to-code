@@ -197,11 +197,12 @@ const PricingDialog: React.FC = () => {
           </div>
         </div>
         <p className="text-center text-xs text-gray-600 mt-1">
-          1 credit = 1 code generation. Unused credits expire after 90 days.
+          1 credit = 1 code generation.{" "}
+          {!SELL_SUBSCRIPTIONS && <>Unused credits expire after 90 days.</>}
           {SELL_SUBSCRIPTIONS && (
             <>
               <br />
-              Cancel anytime.
+              Cancel subscription at any time.
             </>
           )}
         </p>
