@@ -18,6 +18,6 @@ async def does_user_have_subscription_credits(
             "Authorization": f"Bearer {auth_token}",
         }
 
-        response = await client.post(url, headers=headers)
+        response = await client.post(url, headers=headers, timeout=60)
         parsed_response = SubscriptionCreditsResponse.parse_obj(response.json())
         return parsed_response
