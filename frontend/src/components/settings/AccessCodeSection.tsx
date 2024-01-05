@@ -6,6 +6,7 @@ import { Label } from "../ui/label";
 import useThrottle from "../../hooks/useThrottle";
 import { Progress } from "../ui/progress";
 import { PICO_BACKEND_FORM_SECRET } from "../../config";
+import { useStore } from "../../store/store";
 
 interface Props {
   settings: Settings;
@@ -31,6 +32,7 @@ function AccessCodeSection({ settings, setSettings }: Props) {
   const [usedCredits, setUsedCredits] = useState(0);
   const [totalCredits, setTotalCredits] = useState(0);
   const throttledAccessCode = useThrottle(settings.accessCode || "", 500);
+  const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
 
   const fetchState = (() => {
     if (!settings.accessCode) return FetchState.EMPTY;
@@ -100,11 +102,16 @@ function AccessCodeSection({ settings, setSettings }: Props) {
 
       {fetchState === "EMPTY" && (
         <div className="flex items-center justify-between">
-          <a href="https://buy.stripe.com/8wM6sre70gBW1nqaEE" target="_blank">
-            <Button size="sm" variant="secondary">
-              Buy credits
-            </Button>
-          </a>
+          <div className="text-xs">
+            If you already have an access code, enter it above.
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setPricingDialogOpen(true)}
+          >
+            Subscribe to a plan
+          </Button>
         </div>
       )}
 
@@ -129,9 +136,9 @@ function AccessCodeSection({ settings, setSettings }: Props) {
             <span className="text-xs text-gray-700">
               {usedCredits} out of {totalCredits} credits used
             </span>
-            <a href="https://buy.stripe.com/8wM6sre70gBW1nqaEE" target="_blank">
-              <Button size="sm">Add credits</Button>
-            </a>
+            <Button size="sm" onClick={() => setPricingDialogOpen(true)}>
+              Add credits
+            </Button>
           </div>
         </>
       )}
