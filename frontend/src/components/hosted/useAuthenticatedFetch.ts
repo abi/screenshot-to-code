@@ -2,6 +2,9 @@ import { useAuth } from "@clerk/clerk-react";
 
 type FetchMethod = "GET" | "POST" | "PUT" | "DELETE";
 
+// Assumes that the backend is using JWTs for authentication
+// and assumes JSON responses
+// *If response code is not 200 OK or if there's any other error, throws an error
 export const useAuthenticatedFetch = () => {
   const { getToken } = useAuth();
 

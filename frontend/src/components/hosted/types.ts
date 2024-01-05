@@ -6,3 +6,7 @@ export interface UserResponse {
   subscriber_tier: string;
   stripe_customer_id: string;
 }
+
+export interface PortalSessionResponse {
+  url: string;
+}

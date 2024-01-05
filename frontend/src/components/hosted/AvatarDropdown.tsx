@@ -10,6 +10,7 @@ import {
 } from "../ui/dropdown-menu";
 import { useStore } from "../../store/store";
 import { capitalize } from "./utils";
+import StripeCustomerPortalLink from "./StripeCustomerPortalLink";
 
 export default function AvatarDropdown() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -55,12 +56,7 @@ export default function AvatarDropdown() {
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild={true}>
-                <a
-                  href="https://billing.stripe.com/p/login/dR65nxfkLgvldyg9AA"
-                  target="_blank"
-                >
-                  Cancel subscription
-                </a>
+                <StripeCustomerPortalLink label="Cancel subscription" />
               </DropdownMenuItem>
             </>
           )}
