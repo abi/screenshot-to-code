@@ -51,9 +51,7 @@ export default function AvatarDropdown() {
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild={true}>
-                <a href="mailto:support@picoapps.xyz" target="_blank">
-                  Upgrade plan
-                </a>
+                <StripeCustomerPortalLink label="Manage billing" />
               </DropdownMenuItem>
               <DropdownMenuItem asChild={true}>
                 <StripeCustomerPortalLink label="Cancel subscription" />
