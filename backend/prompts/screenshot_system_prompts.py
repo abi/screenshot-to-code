@@ -1,4 +1,7 @@
-TAILWIND_SYSTEM_PROMPT = """
+from prompts.types import SystemPrompts
+
+
+HTML_TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer
 You take screenshots of a reference web page from the user, and then build single page apps 
 using Tailwind, HTML and JS.
@@ -170,3 +173,13 @@ padding, margin, border, etc. Match the colors and sizes exactly.
 Return only the full code in <svg></svg> tags.
 Do not include markdown "```" or "```svg" at the start or end.
 """
+
+
+SYSTEM_PROMPTS = SystemPrompts(
+    html_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
+    react_tailwind=REACT_TAILWIND_SYSTEM_PROMPT,
+    bootstrap=BOOTSTRAP_SYSTEM_PROMPT,
+    ionic_tailwind=IONIC_TAILWIND_SYSTEM_PROMPT,
+    vue_tailwind=VUE_TAILWIND_SYSTEM_PROMPT,
+    svg=SVG_SYSTEM_PROMPT,
+)

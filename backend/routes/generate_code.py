@@ -6,12 +6,13 @@ from config import IS_PROD, SHOULD_MOCK_AI_RESPONSE
 from llm import stream_openai_response
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
-from typing import Dict, List
+from typing import Dict, List, cast, get_args
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_imported_code_prompt, assemble_prompt
 from access_token import validate_access_token
 from datetime import datetime
 import json
+from prompts.types import Stack
 
 from utils import pprint_prompt  # type: ignore
 
@@ -96,6 +97,13 @@ async def stream_code(websocket: WebSocket):
         )
         return
 
+    # Validate the generated code config
+    if not generated_code_config in get_args(Stack):
+        await throw_error(f"Invalid generated code config: {generated_code_config}")
+        return
+    # Cast the variable to the Stack type
+    valid_stack = cast(Stack, generated_code_config)
+
     # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
     openai_base_url = None
     # Disable user-specified OpenAI Base URL in prod
@@ -131,7 +139,7 @@ async def stream_code(websocket: WebSocket):
     if params.get("isImportedFromCode") and params["isImportedFromCode"]:
         original_imported_code = params["history"][0]
         prompt_messages = assemble_imported_code_prompt(
-            original_imported_code, generated_code_config
+            original_imported_code, valid_stack
         )
         for index, text in enumerate(params["history"][1:]):
             if index % 2 == 0:
@@ -150,12 +158,10 @@ async def stream_code(websocket: WebSocket):
         try:
             if params.get("resultImage") and params["resultImage"]:
                 prompt_messages = assemble_prompt(
-                    params["image"], generated_code_config, params["resultImage"]
+                    params["image"], valid_stack, params["resultImage"]
                 )
             else:
-                prompt_messages = assemble_prompt(
-                    params["image"], generated_code_config
-                )
+                prompt_messages = assemble_prompt(params["image"], valid_stack)
         except:
             await websocket.send_json(
                 {

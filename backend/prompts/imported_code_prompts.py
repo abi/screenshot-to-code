@@ -1,3 +1,6 @@
+from prompts.types import SystemPrompts
+
+
 IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer.
 
@@ -90,3 +93,13 @@ You are an expert at building SVGs.
 Return only the full code in <svg></svg> tags.
 Do not include markdown "```" or "```svg" at the start or end.
 """
+
+IMPORTED_CODE_SYSTEM_PROMPTS = SystemPrompts(
+    html_tailwind=IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT,
+    react_tailwind=IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT,
+    bootstrap=IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT,
+    ionic_tailwind=IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT,
+    # TODO: Fix this prompt to actually be Vue
+    vue_tailwind=IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT,
+    svg=IMPORTED_CODE_SVG_SYSTEM_PROMPT,
+)
