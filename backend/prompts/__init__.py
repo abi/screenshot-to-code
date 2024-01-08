@@ -2,14 +2,14 @@ from typing import List, Union
 
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
-from imported_code_prompts import (
+from prompts.imported_code_prompts import (
     IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT,
     IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT,
     IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT,
     IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT,
     IMPORTED_CODE_SVG_SYSTEM_PROMPT,
 )
-from screenshot_system_prompts import (
+from prompts.screenshot_system_prompts import (
     BOOTSTRAP_SYSTEM_PROMPT,
     IONIC_TAILWIND_SYSTEM_PROMPT,
     REACT_TAILWIND_SYSTEM_PROMPT,
