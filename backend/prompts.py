@@ -15,6 +15,7 @@ from screenshot_system_prompts import (
     REACT_TAILWIND_SYSTEM_PROMPT,
     TAILWIND_SYSTEM_PROMPT,
     SVG_SYSTEM_PROMPT,
+    VUE_TAILWIND_SYSTEM_PROMPT,
 )
 
 
@@ -77,6 +78,8 @@ def assemble_prompt(
         system_content = BOOTSTRAP_SYSTEM_PROMPT
     elif generated_code_config == "ionic_tailwind":
         system_content = IONIC_TAILWIND_SYSTEM_PROMPT
+    elif generated_code_config == "vue_tailwind":
+        system_content = VUE_TAILWIND_SYSTEM_PROMPT
     elif generated_code_config == "svg":
         system_content = SVG_SYSTEM_PROMPT
     else:

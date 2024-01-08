@@ -37,6 +37,13 @@ function generateDisplayComponent(config: GeneratedCodeConfig) {
           <span className="font-semibold">Tailwind</span>
         </div>
       );
+    case GeneratedCodeConfig.VUE_TAILWIND:
+      return (
+        <div>
+          <span className="font-semibold">Vue</span> +{" "}
+          <span className="font-semibold">Tailwind</span>
+        </div>
+      );
     case GeneratedCodeConfig.SVG:
       return (
         <div>
@@ -89,6 +96,14 @@ function OutputSettingsSection({
               </SelectItem>
               <SelectItem value={GeneratedCodeConfig.BOOTSTRAP}>
                 {generateDisplayComponent(GeneratedCodeConfig.BOOTSTRAP)}
+              </SelectItem>
+              <SelectItem value={GeneratedCodeConfig.VUE_TAILWIND}>
+                <div className="flex items-center">
+                  {generateDisplayComponent(GeneratedCodeConfig.VUE_TAILWIND)}
+                  <Badge className="ml-2" variant="secondary">
+                    Beta
+                  </Badge>
+                </div>
               </SelectItem>
               <SelectItem value={GeneratedCodeConfig.IONIC_TAILWIND}>
                 <div className="flex items-center">

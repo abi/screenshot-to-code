@@ -7,6 +7,7 @@ export enum EditorTheme {
 export enum GeneratedCodeConfig {
   HTML_TAILWIND = "html_tailwind",
   REACT_TAILWIND = "react_tailwind",
+  VUE_TAILWIND = "vue_tailwind",
   BOOTSTRAP = "bootstrap",
   IONIC_TAILWIND = "ionic_tailwind",
   SVG = "svg",
