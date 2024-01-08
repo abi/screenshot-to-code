@@ -60,6 +60,7 @@ function ImageUpload({ setReferenceImages }: Props) {
     useDropzone({
       maxFiles: 1,
       maxSize: 1024 * 1024 * 5, // 5 MB
+      // Keep in sync with backend supported mime types
       accept: {
         "image/png": [".png"],
         "image/jpeg": [".jpeg"],
