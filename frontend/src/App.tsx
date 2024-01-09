@@ -34,7 +34,7 @@ import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
 import ImportCodeSection from "./components/ImportCodeSection";
-import { Stack } from "./lib/stacks/types";
+import { Stack } from "./lib/stacks";
 
 const IS_OPENAI_DOWN = false;
 

@@ -7,8 +7,7 @@ import {
   SelectTrigger,
 } from "./ui/select";
 import { Badge } from "./ui/badge";
-import { Stack } from "../lib/stacks/types";
-import { STACK_DESCRIPTIONS } from "../lib/stacks/descriptions";
+import { Stack, STACK_DESCRIPTIONS } from "../lib/stacks";
 
 function generateDisplayComponent(stack: Stack) {
   const stackComponents = STACK_DESCRIPTIONS[stack].components;
