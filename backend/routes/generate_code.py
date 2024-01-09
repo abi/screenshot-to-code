@@ -2,6 +2,7 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
+from api_types import AzureProviderInfo, OpenAiProviderInfo
 from config import IS_PROD, SHOULD_MOCK_AI_RESPONSE
 from llm import stream_openai_response
 from openai.types.chat import ChatCompletionMessageParam
@@ -64,6 +65,12 @@ async def stream_code(websocket: WebSocket):
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
     openai_api_key = None
+    azure_openai_api_key = None
+    azure_openai_resource_name = None
+    azure_openai_deployment_name = None
+    azure_openai_api_version = None
+    azure_openai_dalle3_deployment_name = None
+    azure_openai_dalle3_api_version = None
     if "accessCode" in params and params["accessCode"]:
         print("Access code - using platform API key")
         res = await validate_access_token(params["accessCode"])
@@ -83,15 +90,29 @@ async def stream_code(websocket: WebSocket):
             print("Using OpenAI API key from client-side settings dialog")
         else:
             openai_api_key = os.environ.get("OPENAI_API_KEY")
+            azure_openai_api_key = os.environ.get("AZURE_OPENAI_API_KEY")
+            azure_openai_resource_name = os.environ.get("AZURE_OPENAI_RESOURCE_NAME")
+            azure_openai_deployment_name = os.environ.get(
+                "AZURE_OPENAI_DEPLOYMENT_NAME"
+            )
+            azure_openai_api_version = os.environ.get("AZURE_OPENAI_API_VERSION")
+            azure_openai_dalle3_deployment_name = os.environ.get(
+                "AZURE_OPENAI_DALLE3_DEPLOYMENT_NAME"
+            )
+            azure_openai_dalle3_api_version = os.environ.get(
+                "AZURE_OPENAI_DALLE3_API_VERSION"
+            )
             if openai_api_key:
                 print("Using OpenAI API key from environment variable")
+            if azure_openai_api_key:
+                print("Using Azure OpenAI API key from environment variable")
 
-    if not openai_api_key:
-        print("OpenAI API key not found")
+    if not openai_api_key and not azure_openai_api_key:
+        print("OpenAI API or Azure key not found")
         await websocket.send_json(
             {
                 "type": "error",
-                "value": "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file.",
+                "value": "No OpenAI API or Azure key found. Please add your API key in the settings dialog or add it to backend/.env file.",
             }
         )
         return
@@ -190,12 +211,44 @@ async def stream_code(websocket: WebSocket):
         completion = await mock_completion(process_chunk)
     else:
         try:
+            api_provider_info = None
+            if openai_api_key is not None:
+                api_provider_info = {
+                    "name": "openai",
+                    "api_key": openai_api_key,
+                    "base_url": openai_base_url,
+                }
+
+                api_provider_info = OpenAiProviderInfo(
+                    api_key=openai_api_key, base_url=openai_base_url
+                )
+
+            if azure_openai_api_key is not None:
+                if (
+                    not azure_openai_api_version
+                    or not azure_openai_resource_name
+                    or not azure_openai_deployment_name
+                ):
+                    raise Exception(
+                        "Missing Azure OpenAI API version, resource name, or deployment name"
+                    )
+
+                api_provider_info = AzureProviderInfo(
+                    api_key=azure_openai_api_key,
+                    api_version=azure_openai_api_version,
+                    deployment_name=azure_openai_deployment_name,
+                    resource_name=azure_openai_resource_name,
+                )
+
+            if api_provider_info is None:
+                raise Exception("Invalid api_provider_info")
+
             completion = await stream_openai_response(
                 prompt_messages,
-                api_key=openai_api_key,
-                base_url=openai_base_url,
+                api_provider_info=api_provider_info,
                 callback=lambda x: process_chunk(x),
             )
+
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
             error_message = (
@@ -244,6 +297,10 @@ async def stream_code(websocket: WebSocket):
                 api_key=openai_api_key,
                 base_url=openai_base_url,
                 image_cache=image_cache,
+                azure_openai_api_key=azure_openai_api_key,
+                azure_openai_dalle3_api_version=azure_openai_dalle3_api_version,
+                azure_openai_resource_name=azure_openai_resource_name,
+                azure_openai_dalle3_deployment_name=azure_openai_dalle3_deployment_name,
             )
         else:
             updated_html = completion

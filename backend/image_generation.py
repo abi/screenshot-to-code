@@ -1,12 +1,32 @@
 import asyncio
 import re
 from typing import Dict, List, Union
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, AsyncAzureOpenAI
 from bs4 import BeautifulSoup
 
 
-async def process_tasks(prompts: List[str], api_key: str, base_url: str):
-    tasks = [generate_image(prompt, api_key, base_url) for prompt in prompts]
+async def process_tasks(
+    prompts: List[str],
+    api_key: str | None,
+    base_url: str | None,
+    azure_openai_api_key: str | None,
+    azure_openai_dalle3_api_version: str | None,
+    azure_openai_resource_name: str | None,
+    azure_openai_dalle3_deployment_name: str | None,
+):
+    if api_key is not None:
+        tasks = [generate_image(prompt, api_key, base_url) for prompt in prompts]
+    if azure_openai_api_key is not None:
+        tasks = [
+            generate_image_azure(
+                prompt,
+                azure_openai_api_key,
+                azure_openai_dalle3_api_version,
+                azure_openai_resource_name,
+                azure_openai_dalle3_deployment_name,
+            )
+            for prompt in prompts
+        ]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     processed_results: List[Union[str, None]] = []
@@ -22,6 +42,32 @@ async def process_tasks(prompts: List[str], api_key: str, base_url: str):
 
 async def generate_image(prompt: str, api_key: str, base_url: str):
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+    image_params: Dict[str, Union[str, int]] = {
+        "model": "dall-e-3",
+        "quality": "standard",
+        "style": "natural",
+        "n": 1,
+        "size": "1024x1024",
+        "prompt": prompt,
+    }
+    res = await client.images.generate(**image_params)
+    await client.close()
+    return res.data[0].url
+
+
+async def generate_image_azure(
+    prompt: str,
+    azure_openai_api_key: str,
+    azure_openai_api_version: str,
+    azure_openai_resource_name: str,
+    azure_openai_dalle3_deployment_name: str,
+):
+    client = AsyncAzureOpenAI(
+        api_version=azure_openai_api_version,
+        api_key=azure_openai_api_key,
+        azure_endpoint=f"https://{azure_openai_resource_name}.openai.azure.com/",
+        azure_deployment=azure_openai_dalle3_deployment_name,
+    )
     image_params: Dict[str, Union[str, int]] = {
         "model": "dall-e-3",
         "quality": "standard",
@@ -62,7 +108,14 @@ def create_alt_url_mapping(code: str) -> Dict[str, str]:
 
 
 async def generate_images(
-    code: str, api_key: str, base_url: Union[str, None], image_cache: Dict[str, str]
+    code: str,
+    api_key: str | None,
+    base_url: Union[str, None] | None,
+    image_cache: Dict[str, str],
+    azure_openai_api_key: str | None,
+    azure_openai_dalle3_api_version: str | None,
+    azure_openai_resource_name: str | None,
+    azure_openai_dalle3_deployment_name: str | None,
 ):
     # Find all images
     soup = BeautifulSoup(code, "html.parser")
@@ -90,7 +143,15 @@ async def generate_images(
         return code
 
     # Generate images
-    results = await process_tasks(prompts, api_key, base_url)
+    results = await process_tasks(
+        prompts,
+        api_key,
+        base_url,
+        azure_openai_api_key,
+        azure_openai_dalle3_api_version,
+        azure_openai_resource_name,
+        azure_openai_dalle3_deployment_name,
+    )
 
     # Create a dict mapping alt text to image URL
     mapped_image_urls = dict(zip(prompts, results))

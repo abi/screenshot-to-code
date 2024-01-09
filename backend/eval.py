@@ -8,7 +8,7 @@ from eval_utils import image_to_data_url
 load_dotenv()
 
 import os
-from llm import stream_openai_response
+from llm import stream_openai_response, stream_azure_openai_response
 from prompts import assemble_prompt
 import asyncio
 
@@ -19,21 +19,35 @@ async def generate_code_core(image_url: str, stack: str) -> str:
     prompt_messages = assemble_prompt(image_url, stack)
     openai_api_key = os.environ.get("OPENAI_API_KEY")
     openai_base_url = None
+    azure_openai_api_key = os.environ.get("AZURE_OPENAI_API_KEY")
+    azure_openai_resource_name = os.environ.get("AZURE_OPENAI_RESOURCE_NAME")
+    azure_openai_deployment_name = os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME")
+    azure_openai_api_version = os.environ.get("AZURE_OPENAI_API_VERSION")
 
     pprint_prompt(prompt_messages)
 
     async def process_chunk(content: str):
         pass
 
-    if not openai_api_key:
-        raise Exception("OpenAI API key not found")
+    if not openai_api_key and not azure_openai_api_key:
+        raise Exception("OpenAI API or Azure key not found")
 
-    completion = await stream_openai_response(
-        prompt_messages,
-        api_key=openai_api_key,
-        base_url=openai_base_url,
-        callback=lambda x: process_chunk(x),
-    )
+    if not openai_api_key:
+        completion = await stream_openai_response(
+            prompt_messages,
+            api_key=openai_api_key,
+            base_url=openai_base_url,
+            callback=lambda x: process_chunk(x),
+        )
+    if not azure_openai_api_key:
+        completion = await stream_azure_openai_response(
+            prompt_messages,
+            azure_openai_api_key=azure_openai_api_key,
+            azure_openai_api_version=azure_openai_api_version,
+            azure_openai_resource_name=azure_openai_resource_name,
+            azure_openai_deployment_name=azure_openai_deployment_name,
+            callback=lambda x: process_chunk(x),
+        )
 
     return completion
 
