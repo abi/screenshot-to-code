@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Select,
   SelectContent,
@@ -5,56 +6,22 @@ import {
   SelectItem,
   SelectTrigger,
 } from "./ui/select";
-import { GeneratedCodeConfig } from "../types";
+import { GeneratedCodeConfig, STACK_DESCRIPTION } from "../types";
 import { Badge } from "./ui/badge";
 
-function generateDisplayComponent(config: GeneratedCodeConfig) {
-  switch (config) {
-    case GeneratedCodeConfig.HTML_TAILWIND:
-      return (
-        <div>
-          <span className="font-semibold">HTML</span> +{" "}
-          <span className="font-semibold">Tailwind</span>
-        </div>
-      );
-    case GeneratedCodeConfig.REACT_TAILWIND:
-      return (
-        <div>
-          <span className="font-semibold">React</span> +{" "}
-          <span className="font-semibold">Tailwind</span>
-        </div>
-      );
-    case GeneratedCodeConfig.BOOTSTRAP:
-      return (
-        <div>
-          <span className="font-semibold">Bootstrap</span>
-        </div>
-      );
-    case GeneratedCodeConfig.IONIC_TAILWIND:
-      return (
-        <div>
-          <span className="font-semibold">Ionic</span> +{" "}
-          <span className="font-semibold">Tailwind</span>
-        </div>
-      );
-    case GeneratedCodeConfig.VUE_TAILWIND:
-      return (
-        <div>
-          <span className="font-semibold">Vue</span> +{" "}
-          <span className="font-semibold">Tailwind</span>
-        </div>
-      );
-    case GeneratedCodeConfig.SVG:
-      return (
-        <div>
-          <span className="font-semibold">SVG</span>
-        </div>
-      );
-    default: {
-      const exhaustiveCheck: never = config;
-      throw new Error(`Unhandled case: ${exhaustiveCheck}`);
-    }
-  }
+function generateDisplayComponent(stack: GeneratedCodeConfig) {
+  const stackComponents = STACK_DESCRIPTION[stack].components;
+
+  return (
+    <div>
+      {stackComponents.map((component, index) => (
+        <React.Fragment key={index}>
+          <span className="font-semibold">{component}</span>
+          {index < stackComponents.length - 1 && " + "}
+        </React.Fragment>
+      ))}
+    </div>
+  );
 }
 
 interface Props {
@@ -88,39 +55,18 @@ function OutputSettingsSection({
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value={GeneratedCodeConfig.HTML_TAILWIND}>
-                {generateDisplayComponent(GeneratedCodeConfig.HTML_TAILWIND)}
-              </SelectItem>
-              <SelectItem value={GeneratedCodeConfig.REACT_TAILWIND}>
-                {generateDisplayComponent(GeneratedCodeConfig.REACT_TAILWIND)}
-              </SelectItem>
-              <SelectItem value={GeneratedCodeConfig.BOOTSTRAP}>
-                {generateDisplayComponent(GeneratedCodeConfig.BOOTSTRAP)}
-              </SelectItem>
-              <SelectItem value={GeneratedCodeConfig.VUE_TAILWIND}>
-                <div className="flex items-center">
-                  {generateDisplayComponent(GeneratedCodeConfig.VUE_TAILWIND)}
-                  <Badge className="ml-2" variant="secondary">
-                    Beta
-                  </Badge>
-                </div>
-              </SelectItem>
-              <SelectItem value={GeneratedCodeConfig.IONIC_TAILWIND}>
-                <div className="flex items-center">
-                  {generateDisplayComponent(GeneratedCodeConfig.IONIC_TAILWIND)}
-                  <Badge className="ml-2" variant="secondary">
-                    Beta
-                  </Badge>
-                </div>
-              </SelectItem>
-              <SelectItem value={GeneratedCodeConfig.SVG}>
-                <div className="flex items-center">
-                  {generateDisplayComponent(GeneratedCodeConfig.SVG)}
-                  <Badge className="ml-2" variant="secondary">
-                    Beta
-                  </Badge>
-                </div>
-              </SelectItem>
+              {Object.values(GeneratedCodeConfig).map((stack) => (
+                <SelectItem value={stack}>
+                  <div className="flex items-center">
+                    {generateDisplayComponent(stack)}
+                    {STACK_DESCRIPTION[stack].inBeta && (
+                      <Badge className="ml-2" variant="secondary">
+                        Beta
+                      </Badge>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>
