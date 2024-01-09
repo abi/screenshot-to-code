@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 from eval_config import EVALS_DIR
 from eval_utils import image_to_data_url
+from prompts.types import Stack
 
 load_dotenv()
 
@@ -15,7 +16,7 @@ import asyncio
 from utils import pprint_prompt
 
 
-async def generate_code_core(image_url: str, stack: str) -> str:
+async def generate_code_core(image_url: str, stack: Stack) -> str:
     prompt_messages = assemble_prompt(image_url, stack)
     openai_api_key = os.environ.get("OPENAI_API_KEY")
     openai_base_url = None
