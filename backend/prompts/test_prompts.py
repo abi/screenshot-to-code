@@ -253,6 +253,39 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+
+IMPORTED_CODE_VUE_TAILWIND_PROMPT = """
+You are an expert Vue/Tailwind developer.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use these script to include Vue so that it can run on a standalone page:
+  <script src="https://registry.npmmirror.com/vue/3.3.11/files/dist/vue.global.js"></script>
+- Use Vue using the global build like so:
+    <div id="app">{{ message }}</div>
+    <script>
+    const { createApp, ref } = Vue
+    createApp({
+        setup() {
+        const message = ref('Hello vue!')
+        return {
+            message
+        }
+        }
+    }).mount('#app')
+    </script>
+- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code in <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+The return result must only include the code."""
+
 IMPORTED_CODE_SVG_SYSTEM_PROMPT = """
 You are an expert at building SVGs.
 
@@ -299,9 +332,11 @@ def test_prompts():
     assert ionic_tailwind[0]["content"] == IONIC_TAILWIND_SYSTEM_PROMPT
     assert ionic_tailwind[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
-    vue = assemble_prompt("image_data_url", "vue_tailwind", "result_image_data_url")
-    assert vue[0]["content"] == VUE_TAILWIND_SYSTEM_PROMPT
-    assert vue[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
+    vue_tailwind = assemble_prompt(
+        "image_data_url", "vue_tailwind", "result_image_data_url"
+    )
+    assert vue_tailwind[0]["content"] == VUE_TAILWIND_SYSTEM_PROMPT
+    assert vue_tailwind[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     svg_prompt = assemble_prompt("image_data_url", "svg", "result_image_data_url")
     assert svg_prompt[0]["content"] == SVG_SYSTEM_PROMPT
@@ -344,6 +379,15 @@ def test_imported_code_prompts():
         {"role": "user", "content": "Here is the code of the app: code"},
     ]
     assert ionic_tailwind == expected_ionic_tailwind
+
+    vue_tailwind = assemble_imported_code_prompt(
+        "code", "vue_tailwind", "result_image_data_url"
+    )
+    expected_vue_tailwind = [
+        {"role": "system", "content": IMPORTED_CODE_VUE_TAILWIND_PROMPT},
+        {"role": "user", "content": "Here is the code of the app: code"},
+    ]
+    assert vue_tailwind == expected_vue_tailwind
 
     svg = assemble_imported_code_prompt("code", "svg", "result_image_data_url")
     expected_svg = [
