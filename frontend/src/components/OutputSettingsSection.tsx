@@ -6,11 +6,12 @@ import {
   SelectItem,
   SelectTrigger,
 } from "./ui/select";
-import { GeneratedCodeConfig, STACK_DESCRIPTION } from "../types";
 import { Badge } from "./ui/badge";
+import { GeneratedCodeConfig } from "../lib/stacks/types";
+import { STACK_DESCRIPTIONS } from "../lib/stacks/descriptions";
 
 function generateDisplayComponent(stack: GeneratedCodeConfig) {
-  const stackComponents = STACK_DESCRIPTION[stack].components;
+  const stackComponents = STACK_DESCRIPTIONS[stack].components;
 
   return (
     <div>
@@ -59,7 +60,7 @@ function OutputSettingsSection({
                 <SelectItem value={stack}>
                   <div className="flex items-center">
                     {generateDisplayComponent(stack)}
-                    {STACK_DESCRIPTION[stack].inBeta && (
+                    {STACK_DESCRIPTIONS[stack].inBeta && (
                       <Badge className="ml-2" variant="secondary">
                         Beta
                       </Badge>
