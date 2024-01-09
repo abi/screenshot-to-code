@@ -1,8 +1,8 @@
 import os
 from fastapi import APIRouter
 from pydantic import BaseModel
-from eval_utils import image_to_data_url
-from eval_config import EVALS_DIR
+from evals.utils import image_to_data_url
+from evals.config import EVALS_DIR
 
 
 router = APIRouter()

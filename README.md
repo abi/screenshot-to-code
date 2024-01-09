@@ -1,6 +1,6 @@
 # screenshot-to-code
 
-This simple app converts a screenshot to code (HTML/Tailwind CSS, or React or Bootstrap). It uses GPT-4 Vision to generate the code and DALL-E 3 to generate similar-looking images. You can now also enter a URL to clone a live website!
+This simple app converts a screenshot to code (HTML/Tailwind CSS, or React or Bootstrap or Vue). It uses GPT-4 Vision to generate the code and DALL-E 3 to generate similar-looking images. You can now also enter a URL to clone a live website!
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
@@ -38,6 +38,12 @@ poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
 
+You can also run the backend (when you're in `backend`):
+
+```bash
+poetry run pyright
+```
+
 Run the frontend:
 
 ```bash
@@ -58,7 +64,7 @@ MOCK=true poetry run uvicorn main:app --reload --port 7001
 
 ## Configuration
 
-* You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
+- You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
 
 ## Docker
 

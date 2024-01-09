@@ -1,16 +1,8 @@
+import { Stack } from "./lib/stacks/types";
+
 export enum EditorTheme {
   ESPRESSO = "espresso",
   COBALT = "cobalt",
-}
-
-// Keep in sync with backend (prompts.py)
-export enum GeneratedCodeConfig {
-  HTML_TAILWIND = "html_tailwind",
-  REACT_TAILWIND = "react_tailwind",
-  VUE_TAILWIND = "vue_tailwind",
-  BOOTSTRAP = "bootstrap",
-  IONIC_TAILWIND = "ionic_tailwind",
-  SVG = "svg",
 }
 
 export interface Settings {
@@ -19,7 +11,7 @@ export interface Settings {
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;
-  generatedCodeConfig: GeneratedCodeConfig;
+  generatedCodeConfig: Stack;
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
   accessCode: string | null;
