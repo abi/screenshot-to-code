@@ -53,7 +53,7 @@ function OutputSettingsSection({
           <SelectContent>
             <SelectGroup>
               {Object.values(Stack).map((stack) => (
-                <SelectItem value={stack}>
+                <SelectItem key={stack} value={stack}>
                   <div className="flex items-center">
                     {generateDisplayComponent(stack)}
                     {STACK_DESCRIPTIONS[stack].inBeta && (
