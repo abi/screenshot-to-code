@@ -18,13 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
-import {
-  AppState,
-  CodeGenerationParams,
-  EditorTheme,
-  GeneratedCodeConfig,
-  Settings,
-} from "./types";
+import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -40,6 +34,7 @@ import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
 import ImportCodeSection from "./components/ImportCodeSection";
+import { Stack } from "./lib/stacks/types";
 
 const IS_OPENAI_DOWN = false;
 
@@ -60,7 +55,7 @@ function App() {
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
-      generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
+      generatedCodeConfig: Stack.HTML_TAILWIND,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
       accessCode: null,
@@ -85,7 +80,7 @@ function App() {
     if (!settings.generatedCodeConfig) {
       setSettings((prev) => ({
         ...prev,
-        generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
+        generatedCodeConfig: Stack.HTML_TAILWIND,
       }));
     }
   }, [settings.generatedCodeConfig, setSettings]);
@@ -289,15 +284,14 @@ function App() {
     }));
   };
 
-  // TODO: Rename everything to "stack" instead of "config"
-  function setStack(stack: GeneratedCodeConfig) {
+  function setStack(stack: Stack) {
     setSettings((prev) => ({
       ...prev,
       generatedCodeConfig: stack,
     }));
   }
 
-  function importFromCode(code: string, stack: GeneratedCodeConfig) {
+  function importFromCode(code: string, stack: Stack) {
     setIsImportedFromCode(true);
 
     // Set up this project
@@ -333,8 +327,8 @@ function App() {
           </div>
 
           <OutputSettingsSection
-            generatedCodeConfig={settings.generatedCodeConfig}
-            setGeneratedCodeConfig={(config) => setStack(config)}
+            stack={settings.generatedCodeConfig}
+            setStack={(config) => setStack(config)}
             shouldDisableUpdates={
               appState === AppState.CODING || appState === AppState.CODE_READY
             }

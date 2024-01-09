@@ -1,7 +1,7 @@
-import { GeneratedCodeConfig } from "./types";
+import { Stack } from "./types";
 
 export const STACK_DESCRIPTIONS: {
-  [key in GeneratedCodeConfig]: { components: string[]; inBeta: boolean };
+  [key in Stack]: { components: string[]; inBeta: boolean };
 } = {
   html_tailwind: { components: ["HTML", "Tailwind"], inBeta: false },
   react_tailwind: { components: ["React", "Tailwind"], inBeta: false },

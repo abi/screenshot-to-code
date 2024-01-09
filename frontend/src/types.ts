@@ -1,4 +1,4 @@
-import { GeneratedCodeConfig } from "./lib/stacks/types";
+import { Stack } from "./lib/stacks/types";
 
 export enum EditorTheme {
   ESPRESSO = "espresso",
@@ -11,7 +11,7 @@ export interface Settings {
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;
-  generatedCodeConfig: GeneratedCodeConfig;
+  generatedCodeConfig: Stack;
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
   accessCode: string | null;
@@ -32,4 +32,3 @@ export interface CodeGenerationParams {
 }
 
 export type FullGenerationSettings = CodeGenerationParams & Settings;
-export { GeneratedCodeConfig };

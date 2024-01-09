@@ -7,10 +7,10 @@ import {
   SelectTrigger,
 } from "./ui/select";
 import { Badge } from "./ui/badge";
-import { GeneratedCodeConfig } from "../lib/stacks/types";
+import { Stack } from "../lib/stacks/types";
 import { STACK_DESCRIPTIONS } from "../lib/stacks/descriptions";
 
-function generateDisplayComponent(stack: GeneratedCodeConfig) {
+function generateDisplayComponent(stack: Stack) {
   const stackComponents = STACK_DESCRIPTIONS[stack].components;
 
   return (
@@ -26,15 +26,15 @@ function generateDisplayComponent(stack: GeneratedCodeConfig) {
 }
 
 interface Props {
-  generatedCodeConfig: GeneratedCodeConfig | undefined;
-  setGeneratedCodeConfig: (config: GeneratedCodeConfig) => void;
+  stack: Stack | undefined;
+  setStack: (config: Stack) => void;
   label?: string;
   shouldDisableUpdates?: boolean;
 }
 
 function OutputSettingsSection({
-  generatedCodeConfig,
-  setGeneratedCodeConfig,
+  stack,
+  setStack,
   label = "Generating:",
   shouldDisableUpdates = false,
 }: Props) {
@@ -43,20 +43,16 @@ function OutputSettingsSection({
       <div className="grid grid-cols-3 items-center gap-4">
         <span>{label}</span>
         <Select
-          value={generatedCodeConfig}
-          onValueChange={(value: string) =>
-            setGeneratedCodeConfig(value as GeneratedCodeConfig)
-          }
+          value={stack}
+          onValueChange={(value: string) => setStack(value as Stack)}
           disabled={shouldDisableUpdates}
         >
           <SelectTrigger className="col-span-2" id="output-settings-js">
-            {generatedCodeConfig
-              ? generateDisplayComponent(generatedCodeConfig)
-              : "Select a stack"}
+            {stack ? generateDisplayComponent(stack) : "Select a stack"}
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {Object.values(GeneratedCodeConfig).map((stack) => (
+              {Object.values(Stack).map((stack) => (
                 <SelectItem value={stack}>
                   <div className="flex items-center">
                     {generateDisplayComponent(stack)}

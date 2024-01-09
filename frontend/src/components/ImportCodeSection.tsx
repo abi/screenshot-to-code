@@ -11,18 +11,16 @@ import {
 } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
 import OutputSettingsSection from "./OutputSettingsSection";
-import { GeneratedCodeConfig } from "../types";
 import toast from "react-hot-toast";
+import { Stack } from "../lib/stacks/types";
 
 interface Props {
-  importFromCode: (code: string, stack: GeneratedCodeConfig) => void;
+  importFromCode: (code: string, stack: Stack) => void;
 }
 
 function ImportCodeSection({ importFromCode }: Props) {
   const [code, setCode] = useState("");
-  const [stack, setStack] = useState<GeneratedCodeConfig | undefined>(
-    undefined
-  );
+  const [stack, setStack] = useState<Stack | undefined>(undefined);
 
   const doImport = () => {
     if (code === "") {
@@ -57,10 +55,8 @@ function ImportCodeSection({ importFromCode }: Props) {
         />
 
         <OutputSettingsSection
-          generatedCodeConfig={stack}
-          setGeneratedCodeConfig={(config: GeneratedCodeConfig) =>
-            setStack(config)
-          }
+          stack={stack}
+          setStack={(config: Stack) => setStack(config)}
           label="Stack:"
           shouldDisableUpdates={false}
         />

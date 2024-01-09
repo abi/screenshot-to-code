@@ -1,5 +1,5 @@
 // Keep in sync with backend (prompts/types.py)
-export enum GeneratedCodeConfig {
+export enum Stack {
   HTML_TAILWIND = "html_tailwind",
   REACT_TAILWIND = "react_tailwind",
   BOOTSTRAP = "bootstrap",
