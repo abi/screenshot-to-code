@@ -36,7 +36,7 @@ import toast from "react-hot-toast";
 import ImportCodeSection from "./components/ImportCodeSection";
 import { useAuth } from "@clerk/clerk-react";
 import { useStore } from "./store/store";
-import { Stack } from "./lib/stacks/types";
+import { Stack } from "./lib/stacks";
 
 const IS_OPENAI_DOWN = false;
 

@@ -8,8 +8,7 @@ import {
 } from "./ui/select";
 import { addEvent } from "../lib/analytics";
 import { Badge } from "./ui/badge";
-import { Stack } from "../lib/stacks/types";
-import { STACK_DESCRIPTIONS } from "../lib/stacks/descriptions";
+import { Stack, STACK_DESCRIPTIONS } from "../lib/stacks";
 
 function generateDisplayComponent(stack: Stack) {
   const stackComponents = STACK_DESCRIPTIONS[stack].components;
@@ -57,7 +56,7 @@ function OutputSettingsSection({
           <SelectContent>
             <SelectGroup>
               {Object.values(Stack).map((stack) => (
-                <SelectItem value={stack}>
+                <SelectItem key={stack} value={stack}>
                   <div className="flex items-center">
                     {generateDisplayComponent(stack)}
                     {STACK_DESCRIPTIONS[stack].inBeta && (

@@ -1,4 +1,4 @@
-import { Stack } from "./lib/stacks/types";
+import { Stack } from "./lib/stacks";
 
 export enum EditorTheme {
   ESPRESSO = "espresso",

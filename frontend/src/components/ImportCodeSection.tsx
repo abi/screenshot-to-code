@@ -12,7 +12,7 @@ import {
 import { Textarea } from "./ui/textarea";
 import OutputSettingsSection from "./OutputSettingsSection";
 import toast from "react-hot-toast";
-import { Stack } from "../lib/stacks/types";
+import { Stack } from "../lib/stacks";
 
 interface Props {
   importFromCode: (code: string, stack: Stack) => void;
