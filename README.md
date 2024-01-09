@@ -38,6 +38,12 @@ poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
 
+You can also run the backend (when you're in `backend`):
+
+```bash
+poetry run pyright
+```
+
 Run the frontend:
 
 ```bash
@@ -58,7 +64,7 @@ MOCK=true poetry run uvicorn main:app --reload --port 7001
 
 ## Configuration
 
-* You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
+- You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
 
 ## Docker
 
