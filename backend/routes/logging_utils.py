@@ -4,7 +4,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from typing import List
 import json
 
-from config import IS_PROD
+from config import BACKEND_SAAS_URL, IS_PROD
 
 
 class PaymentMethod(Enum):
@@ -23,8 +23,7 @@ async def send_to_saas_backend(
 ):
     if IS_PROD:
         async with httpx.AsyncClient() as client:
-            url = "https://screenshot-to-code-saas.onrender.com/generations/store"
-            # url = "http://localhost:8001/generations/store"
+            url = BACKEND_SAAS_URL + "/generations/store"
 
             data = json.dumps(
                 {

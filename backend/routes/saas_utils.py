@@ -1,6 +1,8 @@
 import httpx
 from pydantic import BaseModel
 
+from config import BACKEND_SAAS_URL
+
 
 class SubscriptionCreditsResponse(BaseModel):
     status: str
@@ -10,8 +12,7 @@ async def does_user_have_subscription_credits(
     auth_token: str,
 ):
     async with httpx.AsyncClient() as client:
-        url = "https://screenshot-to-code-saas.onrender.com/credits/has_credits"
-        # url = "http://localhost:8001/credits/has_credits"
+        url = BACKEND_SAAS_URL + "/credits/has_credits"
 
         headers = {
             "Content-Type": "application/json",
