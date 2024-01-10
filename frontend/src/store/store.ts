@@ -11,6 +11,6 @@ export const useStore = create<Store>((set) => ({
   isPricingDialogOpen: false,
   setPricingDialogOpen: (isOpen: boolean) =>
     set(() => ({ isPricingDialogOpen: isOpen })),
-  subscriberTier: "",
+  subscriberTier: "free",
   setSubscriberTier: (tier: string) => set(() => ({ subscriberTier: tier })),
 }));
