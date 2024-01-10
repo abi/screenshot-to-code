@@ -8,6 +8,7 @@ import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
 import AvatarDropdown from "./AvatarDropdown";
 import { UserResponse } from "./types";
+import { SAAS_BACKEND_URL } from "../../config";
 
 function AppContainer() {
   const [showPopup, setShowPopup] = useState(false);
@@ -36,8 +37,7 @@ function AppContainer() {
 
       // TODO: Handle when the user is not signed in
       const user: UserResponse = await authenticatedFetch(
-        "https://screenshot-to-code-saas.onrender.com/users/create",
-        // "http://localhost:8001/users/create",
+        SAAS_BACKEND_URL + "/users/create",
         "POST"
       );
 
