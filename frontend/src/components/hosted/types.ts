@@ -10,3 +10,8 @@ export interface UserResponse {
 export interface PortalSessionResponse {
   url: string;
 }
+
+export interface CreditsUsage {
+  total_monthly_credits: number;
+  used_monthly_credits: number;
+}
