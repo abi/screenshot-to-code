@@ -100,7 +100,7 @@ export default function AvatarDropdown() {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-xs text-gray-700">
                     {usedCredits} out of {totalCredits} credits used for{" "}
-                    {new Date().toLocaleString("default", { month: "long" })}
+                    {new Date().toLocaleString("default", { month: "long" })}.
                     {subscriberTier !== "pro" && (
                       <> Upgrade to Pro to get more credits.</>
                     )}
