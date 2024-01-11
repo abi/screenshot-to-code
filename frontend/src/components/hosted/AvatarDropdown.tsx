@@ -99,7 +99,8 @@ export default function AvatarDropdown() {
                     <Progress value={(usedCredits / totalCredits) * 100} />
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-xs text-gray-700">
-                    {usedCredits} out of {totalCredits} credits used.
+                    {usedCredits} out of {totalCredits} credits used for{" "}
+                    {new Date().toLocaleString("default", { month: "long" })}
                     {subscriberTier !== "pro" && (
                       <> Upgrade to Pro to get more credits.</>
                     )}
