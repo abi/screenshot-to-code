@@ -84,7 +84,10 @@ function AccessCodeSection({ settings, setSettings }: Props) {
   return (
     <div className="flex flex-col space-y-4 bg-slate-200 p-4 rounded dark:text-white dark:bg-slate-800">
       <Label htmlFor="access-code">
-        <div>Access Code</div>
+        <div>
+          Access Code (monthly subscribers do not need to fill this out - it
+          should just work)
+        </div>
       </Label>
 
       <Input
