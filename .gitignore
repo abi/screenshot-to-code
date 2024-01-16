@@ -1,6 +1,7 @@
 .aider*
 
 # Project-related files
+webui
 
 # Run logs
 backend/run_logs/*
@@ -14,3 +15,6 @@ frontend/.env.local
 
 # Mac files
 .DS_Store
+
+# Editor files
+.vscode

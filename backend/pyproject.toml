@@ -6,7 +6,7 @@ authors = ["Abi Raja <abimanyuraja@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.10, <3.13"
 fastapi = "^0.95.0"
 uvicorn = "^0.25.0"
 websockets = "^12.0"
@@ -18,6 +18,7 @@ httpx = "^0.25.1"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
 pyright = "^1.1.345"
+pyinstaller = "^6.2.0"
 
 [build-system]
 requires = ["poetry-core"]
