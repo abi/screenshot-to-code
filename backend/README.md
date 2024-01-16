@@ -1,3 +1,7 @@
-Run tests
+# Run the type checker
 
-pytest test_prompts.py
+poetry run pyright
+
+# Run tests
+
+poetry run pytest

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { extractHistoryTree } from "./utils";
+import { extractHistoryTree, renderHistory } from "./utils";
 import type { History } from "./history_types";
 
 const basicLinearHistory: History = [
@@ -29,6 +29,18 @@ const basicLinearHistory: History = [
   },
 ];
 
+const basicLinearHistoryWithCode: History = [
+  {
+    type: "code_create",
+    parentIndex: null,
+    code: "<html>1. create</html>",
+    inputs: {
+      code: "<html>1. create</html>",
+    },
+  },
+  ...basicLinearHistory.slice(1),
+];
+
 const basicBranchingHistory: History = [
   ...basicLinearHistory,
   {
@@ -53,7 +65,26 @@ const longerBranchingHistory: History = [
   },
 ];
 
-test("should only include history from this point onward", () => {
+const basicBadHistory: History = [
+  {
+    type: "ai_create",
+    parentIndex: null,
+    code: "<html>1. create</html>",
+    inputs: {
+      image_url: "",
+    },
+  },
+  {
+    type: "ai_edit",
+    parentIndex: 2, // <- Bad parent index
+    code: "<html>2. edit with better icons</html>",
+    inputs: {
+      prompt: "use better icons",
+    },
+  },
+];
+
+test("should correctly extract the history tree", () => {
   expect(extractHistoryTree(basicLinearHistory, 2)).toEqual([
     "<html>1. create</html>",
     "use better icons",
@@ -93,11 +124,107 @@ test("should only include history from this point onward", () => {
     "<html>3. edit with better icons and red text</html>",
   ]);
 
-  // Errors - TODO: Handle these
+  // Errors
+
   // Bad index
-  // TODO: Throw an exception instead?
-  expect(extractHistoryTree(basicLinearHistory, 100)).toEqual([]);
-  expect(extractHistoryTree(basicLinearHistory, -2)).toEqual([]);
+  expect(() => extractHistoryTree(basicLinearHistory, 100)).toThrow();
+  expect(() => extractHistoryTree(basicLinearHistory, -2)).toThrow();
 
   // Bad tree
+  expect(() => extractHistoryTree(basicBadHistory, 1)).toThrow();
+});
+
+test("should correctly render the history tree", () => {
+  expect(renderHistory(basicLinearHistory, 2)).toEqual([
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "Create",
+      type: "Create",
+    },
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "use better icons",
+      type: "Edit",
+    },
+    {
+      isActive: true,
+      parentVersion: null,
+      summary: "make text red",
+      type: "Edit",
+    },
+  ]);
+
+  // Current version is the first version
+  expect(renderHistory(basicLinearHistory, 0)).toEqual([
+    {
+      isActive: true,
+      parentVersion: null,
+      summary: "Create",
+      type: "Create",
+    },
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "use better icons",
+      type: "Edit",
+    },
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "make text red",
+      type: "Edit",
+    },
+  ]);
+
+  // Render a history with code
+  expect(renderHistory(basicLinearHistoryWithCode, 0)).toEqual([
+    {
+      isActive: true,
+      parentVersion: null,
+      summary: "Imported from code",
+      type: "Imported from code",
+    },
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "use better icons",
+      type: "Edit",
+    },
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "make text red",
+      type: "Edit",
+    },
+  ]);
+
+  // Render a non-linear history
+  expect(renderHistory(basicBranchingHistory, 3)).toEqual([
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "Create",
+      type: "Create",
+    },
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "use better icons",
+      type: "Edit",
+    },
+    {
+      isActive: false,
+      parentVersion: null,
+      summary: "make text red",
+      type: "Edit",
+    },
+    {
+      isActive: true,
+      parentVersion: "v2",
+      summary: "make text green",
+      type: "Edit",
+    },
+  ]);
 });

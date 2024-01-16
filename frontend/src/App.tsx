@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
-import { CodeGenerationParams, generateCode } from "./generateCode";
+import { generateCode } from "./generateCode";
 import Spinner from "./components/Spinner";
 import classNames from "classnames";
 import {
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
-import { Settings, EditorTheme, AppState, GeneratedCodeConfig } from "./types";
+import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
@@ -33,6 +33,8 @@ import { History } from "./components/history/history_types";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
+import ImportCodeSection from "./components/ImportCodeSection";
+import { Stack } from "./lib/stacks";
 
 const IS_OPENAI_DOWN = false;
 
@@ -43,6 +45,7 @@ function App() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
+  const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -52,7 +55,7 @@ function App() {
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
-      generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
+      generatedCodeConfig: Stack.HTML_TAILWIND,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
       accessCode: null,
@@ -77,7 +80,7 @@ function App() {
     if (!settings.generatedCodeConfig) {
       setSettings((prev) => ({
         ...prev,
-        generatedCodeConfig: GeneratedCodeConfig.HTML_TAILWIND,
+        generatedCodeConfig: Stack.HTML_TAILWIND,
       }));
     }
   }, [settings.generatedCodeConfig, setSettings]);
@@ -117,13 +120,28 @@ function App() {
     setGeneratedCode("");
     setReferenceImages([]);
     setExecutionConsole([]);
+    setUpdateInstruction("");
+    setIsImportedFromCode(false);
     setAppHistory([]);
+    setCurrentVersion(null);
+    setShouldIncludeResultImage(false);
   };
 
-  const stop = () => {
+  const cancelCodeGeneration = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
     // make sure stop can correct the state even if the websocket is already closed
-    setAppState(AppState.CODE_READY);
+    cancelCodeGenerationAndReset();
+  };
+
+  const cancelCodeGenerationAndReset = () => {
+    // When this is the first version, reset the entire app state
+    if (currentVersion === null) {
+      reset();
+    } else {
+      // Otherwise, revert to the last version
+      setGeneratedCode(appHistory[currentVersion].code);
+      setAppState(AppState.CODE_READY);
+    }
   };
 
   function doGenerateCode(
@@ -139,7 +157,9 @@ function App() {
     generateCode(
       wsRef,
       updatedParams,
+      // On change
       (token) => setGeneratedCode((prev) => prev + token),
+      // On set code
       (code) => {
         setGeneratedCode(code);
         if (params.generationType === "create") {
@@ -178,7 +198,13 @@ function App() {
           });
         }
       },
+      // On status update
       (line) => setExecutionConsole((prev) => [...prev, line]),
+      // On cancel
+      () => {
+        cancelCodeGenerationAndReset();
+      },
+      // On complete
       () => {
         setAppState(AppState.CODE_READY);
       }
@@ -211,10 +237,17 @@ function App() {
       return;
     }
 
-    const updatedHistory = [
-      ...extractHistoryTree(appHistory, currentVersion),
-      updateInstruction,
-    ];
+    let historyTree;
+    try {
+      historyTree = extractHistoryTree(appHistory, currentVersion);
+    } catch {
+      toast.error(
+        "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
+      );
+      return;
+    }
+
+    const updatedHistory = [...historyTree, updateInstruction];
 
     if (shouldIncludeResultImage) {
       const resultImage = await takeScreenshot();
@@ -224,6 +257,7 @@ function App() {
           image: referenceImages[0],
           resultImage: resultImage,
           history: updatedHistory,
+          isImportedFromCode,
         },
         currentVersion
       );
@@ -233,6 +267,7 @@ function App() {
           generationType: "update",
           image: referenceImages[0],
           history: updatedHistory,
+          isImportedFromCode,
         },
         currentVersion
       );
@@ -248,6 +283,32 @@ function App() {
       isTermOfServiceAccepted: !open,
     }));
   };
+
+  function setStack(stack: Stack) {
+    setSettings((prev) => ({
+      ...prev,
+      generatedCodeConfig: stack,
+    }));
+  }
+
+  function importFromCode(code: string, stack: Stack) {
+    setIsImportedFromCode(true);
+
+    // Set up this project
+    setGeneratedCode(code);
+    setStack(stack);
+    setAppHistory([
+      {
+        type: "code_create",
+        parentIndex: null,
+        code,
+        inputs: { code },
+      },
+    ]);
+    setCurrentVersion(0);
+
+    setAppState(AppState.CODE_READY);
+  }
 
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
@@ -266,13 +327,8 @@ function App() {
           </div>
 
           <OutputSettingsSection
-            generatedCodeConfig={settings.generatedCodeConfig}
-            setGeneratedCodeConfig={(config: GeneratedCodeConfig) =>
-              setSettings((prev) => ({
-                ...prev,
-                generatedCodeConfig: config,
-              }))
-            }
+            stack={settings.generatedCodeConfig}
+            setStack={(config) => setStack(config)}
             shouldDisableUpdates={
               appState === AppState.CODING || appState === AppState.CODE_READY
             }
@@ -302,10 +358,10 @@ function App() {
                   </div>
                   <div className="flex mt-4 w-full">
                     <Button
-                      onClick={stop}
+                      onClick={cancelCodeGeneration}
                       className="w-full dark:text-white dark:bg-gray-700"
                     >
-                      Stop
+                      Cancel
                     </Button>
                   </div>
                   <CodePreview code={generatedCode} />
@@ -357,22 +413,24 @@ function App() {
 
               {/* Reference image display */}
               <div className="flex gap-x-2 mt-2">
-                <div className="flex flex-col">
-                  <div
-                    className={classNames({
-                      "scanning relative": appState === AppState.CODING,
-                    })}
-                  >
-                    <img
-                      className="w-[340px] border border-gray-200 rounded-md"
-                      src={referenceImages[0]}
-                      alt="Reference"
-                    />
+                {referenceImages.length > 0 && (
+                  <div className="flex flex-col">
+                    <div
+                      className={classNames({
+                        "scanning relative": appState === AppState.CODING,
+                      })}
+                    >
+                      <img
+                        className="w-[340px] border border-gray-200 rounded-md"
+                        src={referenceImages[0]}
+                        alt="Reference"
+                      />
+                    </div>
+                    <div className="text-gray-400 uppercase text-sm text-center mt-1">
+                      Original Screenshot
+                    </div>
                   </div>
-                  <div className="text-gray-400 uppercase text-sm text-center mt-1">
-                    Original Screenshot
-                  </div>
-                </div>
+                )}
                 <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
                   <h2 className="text-lg mb-4 border-b border-gray-800">
                     Console
@@ -417,6 +475,7 @@ function App() {
               doCreate={doCreate}
               screenshotOneApiKey={settings.screenshotOneApiKey}
             />
+            <ImportCodeSection importFromCode={importFromCode} />
           </div>
         )}
 

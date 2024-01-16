@@ -1,0 +1,3 @@
+{
+  "exclude": ["image_generation.py"]
+}

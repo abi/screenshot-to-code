@@ -1,14 +1,8 @@
+import { Stack } from "./lib/stacks";
+
 export enum EditorTheme {
   ESPRESSO = "espresso",
   COBALT = "cobalt",
-}
-
-// Keep in sync with backend (prompts.py)
-export enum GeneratedCodeConfig {
-  HTML_TAILWIND = "html_tailwind",
-  REACT_TAILWIND = "react_tailwind",
-  BOOTSTRAP = "bootstrap",
-  IONIC_TAILWIND = "ionic_tailwind",
 }
 
 export interface Settings {
@@ -17,7 +11,7 @@ export interface Settings {
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;
-  generatedCodeConfig: GeneratedCodeConfig;
+  generatedCodeConfig: Stack;
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
   accessCode: string | null;
@@ -28,3 +22,13 @@ export enum AppState {
   CODING = "CODING",
   CODE_READY = "CODE_READY",
 }
+
+export interface CodeGenerationParams {
+  generationType: "create" | "update";
+  image: string;
+  resultImage?: string;
+  history?: string[];
+  isImportedFromCode?: boolean;
+}
+
+export type FullGenerationSettings = CodeGenerationParams & Settings;
