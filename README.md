@@ -1,3 +1,7 @@
+This is a fork of [abi/screenshot-to-code](https://github.com/abi/screenshot-to-code)
+
+The goal of this fork is to improve the strategy for Docker build and run, and now you can run this project with less memory and image downloads, without the need for docker-compose.
+
 # screenshot-to-code
 
 This simple app converts a screenshot to code (HTML/Tailwind CSS, or React or Bootstrap or Vue). It uses GPT-4 Vision to generate the code and DALL-E 3 to generate similar-looking images. You can now also enter a URL to clone a live website!
@@ -68,14 +72,13 @@ MOCK=true poetry run uvicorn main:app --reload --port 7001
 
 ## Docker
 
-If you have Docker installed on your system, in the root directory, run:
+If you have Docker installed on your system, run:
 
 ```bash
-echo "OPENAI_API_KEY=sk-your-key" > .env
-docker-compose up -d --build
+docker run -d -p 8000:8000 -e OPENAI_API_KEY=sk-your-key --name screenshot-to-code wearzdk/screenshot-to-code:latest
 ```
 
-The app will be up and running at http://localhost:5173. Note that you can't develop the application with this setup as the file changes won't trigger a rebuild.
+The app will be up and running at http://0.0.0.0:8000.
 
 ## 🙋‍♂️ FAQs
 
