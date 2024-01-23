@@ -20,3 +20,7 @@ export const STRIPE_PUBLISHABLE_KEY =
   import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || null;
 
 export const SAAS_BACKEND_URL = import.meta.env.VITE_SAAS_BACKEND_URL || null;
+
+// PostHog
+export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || null;
+export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || null;

@@ -40,6 +40,7 @@
     "codemirror": "^6.0.1",
     "copy-to-clipboard": "^3.3.3",
     "html2canvas": "^1.4.1",
+    "posthog-js": "^1.101.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",

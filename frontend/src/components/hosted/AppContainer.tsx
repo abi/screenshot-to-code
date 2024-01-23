@@ -1,4 +1,5 @@
 import { SignUp, useUser } from "@clerk/clerk-react";
+import posthog from "posthog-js";
 import App from "../../App";
 import { useEffect, useRef, useState } from "react";
 import { AlertDialog } from "@radix-ui/react-alert-dialog";
@@ -8,7 +9,7 @@ import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
 import AvatarDropdown from "./AvatarDropdown";
 import { UserResponse } from "./types";
-import { SAAS_BACKEND_URL } from "../../config";
+import { POSTHOG_HOST, POSTHOG_KEY, SAAS_BACKEND_URL } from "../../config";
 
 function AppContainer() {
   const [showPopup, setShowPopup] = useState(false);
@@ -44,6 +45,15 @@ function AppContainer() {
       if (!user.subscriber_tier) {
         setSubscriberTier("free");
       } else {
+        // Initialize PostHog only for paid users
+        posthog.init(POSTHOG_KEY, { api_host: POSTHOG_HOST });
+        // Identify the user to PostHog
+        posthog.identify(user.email, {
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+        });
+
         setSubscriberTier(user.subscriber_tier);
       }
 
