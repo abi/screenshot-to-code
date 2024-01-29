@@ -1,18 +1,16 @@
-import { SignUp, useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import posthog from "posthog-js";
 import App from "../../App";
-import { useEffect, useRef, useState } from "react";
-import { AlertDialog } from "@radix-ui/react-alert-dialog";
-import { AlertDialogContent } from "../ui/alert-dialog";
+import { useEffect, useRef } from "react";
 import FullPageSpinner from "../custom-ui/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
 import AvatarDropdown from "./AvatarDropdown";
 import { UserResponse } from "./types";
 import { POSTHOG_HOST, POSTHOG_KEY, SAAS_BACKEND_URL } from "../../config";
+import LandingPage from "./LandingPage";
 
 function AppContainer() {
-  const [showPopup, setShowPopup] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
 
   const setSubscriberTier = useStore((state) => state.setSubscriberTier);
@@ -21,14 +19,7 @@ function AppContainer() {
   const authenticatedFetch = useAuthenticatedFetch();
   const isInitRequestInProgress = useRef(false);
 
-  // If Clerk is loaded and the user is not signed in, show the sign up popup
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      setShowPopup(true);
-    }
-  }, [isSignedIn, isLoaded]);
-
-  // Get the current user
+  // Get information from our backend about the user (subscription status)
   useEffect(() => {
     const init = async () => {
       // Make sure there's only one request in progress
@@ -36,11 +27,16 @@ function AppContainer() {
       if (isInitRequestInProgress.current) return;
       isInitRequestInProgress.current = true;
 
-      // TODO: Handle when the user is not signed in
       const user: UserResponse = await authenticatedFetch(
         SAAS_BACKEND_URL + "/users/create",
         "POST"
       );
+
+      // If the user is not signed in, authenticatedFetch will return undefined
+      if (!user) {
+        isInitRequestInProgress.current = false;
+        return;
+      }
 
       if (!user.subscriber_tier) {
         setSubscriberTier("free");
@@ -66,6 +62,10 @@ function AppContainer() {
   // If Clerk is still loading, show a spinner
   if (!isLoaded) return <FullPageSpinner />;
 
+  // If the user is not signed in, show the landing page
+  if (isLoaded && !isSignedIn) return <LandingPage />;
+
+  // If the user is signed in, show the app
   return (
     <>
       <App
@@ -75,31 +75,6 @@ function AppContainer() {
           </div>
         }
       />
-      <AlertDialog open={showPopup}>
-        <AlertDialogContent className="flex justify-center">
-          <SignUp
-            appearance={{
-              elements: {
-                card: {
-                  boxShadow: "none",
-                  borderRadius: "0",
-                  border: "none",
-                  backgroundColor: "transparent",
-                },
-                footer: {
-                  display: "flex",
-                  flexDirection: "column",
-                  textAlign: "center",
-                },
-                footerAction: {
-                  marginBottom: "5px",
-                },
-              },
-              layout: { privacyPageUrl: "https://a.picoapps.xyz/camera-write" },
-            }}
-          />
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
