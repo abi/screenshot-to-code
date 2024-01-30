@@ -23,6 +23,7 @@ function LandingPage() {
       >
         <DialogContent className="flex justify-center">
           <SignUp
+            redirectUrl="/"
             appearance={{
               elements: {
                 card: {
