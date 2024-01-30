@@ -3,6 +3,8 @@ import { HTTP_BACKEND_URL } from "../config";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { toast } from "react-hot-toast";
+import { useStore } from "../store/store";
+import { useAuth } from "@clerk/clerk-react";
 
 interface Props {
   screenshotOneApiKey: string | null;
@@ -13,28 +15,31 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
 
+  // Hosted version only
+  const subscriberTier = useStore((state) => state.subscriberTier);
+  const { getToken } = useAuth();
+
   async function takeScreenshot() {
-    if (!screenshotOneApiKey) {
-      toast.error(
-        "Please add a ScreenshotOne API key in the Settings dialog. This is optional - you can also drag/drop and upload images directly.",
-        { duration: 8000 }
-      );
-      return;
+    if (!referenceUrl) {
+      return toast.error("Please enter a URL");
     }
 
-    if (!referenceUrl) {
-      toast.error("Please enter a URL");
-      return;
+    if (!screenshotOneApiKey && subscriberTier === "free") {
+      return toast.error(
+        "Please upgrade to a paid plan to use the screenshot feature."
+      );
     }
 
     if (referenceUrl) {
       try {
         setIsLoading(true);
+        const authToken = await getToken();
         const response = await fetch(`${HTTP_BACKEND_URL}/api/screenshot`, {
           method: "POST",
           body: JSON.stringify({
             url: referenceUrl,
             apiKey: screenshotOneApiKey,
+            authToken,
           }),
           headers: {
             "Content-Type": "application/json",

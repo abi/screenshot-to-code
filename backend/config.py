@@ -11,4 +11,7 @@ SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))
 IS_PROD = os.environ.get("IS_PROD", False)
 
 # Hosted version only
+
+PLATFORM_SCREENSHOTONE_API_KEY = os.environ.get("PLATFORM_SCREENSHOTONE_API_KEY", "")
+
 BACKEND_SAAS_URL = os.environ.get("BACKEND_SAAS_URL", "")
