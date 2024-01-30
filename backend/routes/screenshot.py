@@ -23,6 +23,7 @@ async def capture_screenshot(
     if not auth_token:
         raise Exception("No auth token with capture_screenshot")
 
+    # TODO: Clean up this code and send the users correct error messages
     # If API key is not passed in, only use the platform ScreenshotOne API key if the user is a subscriber
     if not api_key:
         res = await does_user_have_subscription_credits(auth_token)
