@@ -56,8 +56,6 @@ async def stream_code(websocket: WebSocket):
     # TODO: Are the values always strings?
     params: Dict[str, str] = await websocket.receive_json()
 
-    print("Received params")
-
     # Read the code config settings from the request. Fall back to default if not provided.
     generated_code_config = ""
     if "generatedCodeConfig" in params and params["generatedCodeConfig"]:
@@ -66,64 +64,71 @@ async def stream_code(websocket: WebSocket):
 
     # Track how this generation is being paid for
     payment_method: PaymentMethod = PaymentMethod.UNKNOWN
-
-    # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
-    # If neither is provided, we throw an error.
+    # Track the OpenAI API key to use
     openai_api_key = None
-    if "accessCode" in params and params["accessCode"]:
-        print("Access code - using platform API key")
-        res = await validate_access_token(params["accessCode"])
-        if res["success"]:
-            payment_method = PaymentMethod.ACCESS_CODE
+
+    auth_token = params.get("authToken")
+    if not auth_token:
+        await throw_error("You need to be logged in to use screenshot to code")
+        raise Exception("No auth token")
+
+    # Get the OpenAI key by waterfalling through the different payment methods
+    # 1. Subcription
+    # 2. Access code
+    # 3. User's API key from client-side settings dialog
+    # 4. User's API key from environment variable
+
+    # If the user is a subscriber, use the platform API key
+    # TODO: Rename does_user_have_subscription_credits
+    res = await does_user_have_subscription_credits(auth_token)
+    if res.status != "not_subscriber":
+        if res.status == "subscriber_has_credits":
+            payment_method = PaymentMethod.SUBSCRIPTION
             openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
-        else:
-            await websocket.send_json(
-                {
-                    "type": "error",
-                    "value": res["failure_reason"],
-                }
+            print("Subscription - using platform API key")
+        elif res.status == "subscriber_has_no_credits":
+            await throw_error(
+                "Your subscription has run out of monthly credits. Contact support and we can add more credits to your account for free."
             )
-            return
-    else:
-        auth_token = params.get("authToken")
-        if auth_token:
-            # TODO: Rename does_user_have_subscription_credits
-            res = await does_user_have_subscription_credits(auth_token)
-            if res.status == "not_subscriber":
-                # Keep going for non-subscriber users
-                pass
-            elif res.status == "subscriber_has_credits":
-                payment_method = PaymentMethod.SUBSCRIPTION
-                openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
-            elif res.status == "subscriber_has_no_credits":
-                return await throw_error(
-                    "Your subscription has run out of monthly credits. Contact support and we can add more credits to your account for free."
-                )
-            else:
-                return await throw_error("Unknown error occurred. Contact support.")
-
+            raise Exception("User has no credits")
         else:
-            # Log but keep going for users
-            print("Missing auth token")
+            await throw_error("Unknown error occurred. Contact support.")
+            raise Exception("Unknown error occurred when checking subscription credits")
 
-        if params["openAiApiKey"]:
-            openai_api_key = params["openAiApiKey"]
-            payment_method = PaymentMethod.OPENAI_API_KEY
-            print("Using OpenAI API key from client-side settings dialog")
-        elif not openai_api_key:
-            openai_api_key = os.environ.get("OPENAI_API_KEY")
-            if openai_api_key:
-                print("Using OpenAI API key from environment variable")
+    # For non-subscribers, if they have an access code, validate it
+    # and use the platform API key
+    if not openai_api_key:
+        accessCode = params.get("accessCode", None)
+        if accessCode:
+            print("Access code - using platform API key")
+            res = await validate_access_token(accessCode)
+            if res["success"]:
+                payment_method = PaymentMethod.ACCESS_CODE
+                openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
+            else:
+                await throw_error(res["failure_reason"])
+                raise Exception("Invalid access code: " + accessCode)
 
+    # If we still don't have an API key, use the user's API key from client-side settings dialog
+    if not openai_api_key:
+        openai_api_key = params.get("openAiApiKey", None)
+        payment_method = PaymentMethod.OPENAI_API_KEY
+        print("Using OpenAI API key from client-side settings dialog")
+
+    # If we still don't have an API key, use the user's API key from environment variable
+    if not openai_api_key:
+        openai_api_key = os.environ.get("OPENAI_API_KEY")
+        payment_method = PaymentMethod.OPENAI_API_KEY
+        if openai_api_key:
+            print("Using OpenAI API key from environment variable")
+
+    # If we still don't have an API key, throw an error
     if not openai_api_key:
         print("OpenAI API key not found")
-        await websocket.send_json(
-            {
-                "type": "error",
-                "value": "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file.",
-            }
+        await throw_error(
+            "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file."
         )
-        return
+        raise Exception("No OpenAI API key found")
 
     # Validate the generated code config
     if not generated_code_config in get_args(Stack):
@@ -218,7 +223,7 @@ async def stream_code(websocket: WebSocket):
 
             image_cache = create_alt_url_mapping(params["history"][-2])
 
-    pprint_prompt(prompt_messages)
+    # pprint_prompt(prompt_messages)
 
     if SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(process_chunk)
