@@ -1,5 +1,6 @@
 // Keep in sync with backend (prompts/types.py)
 export enum Stack {
+  HTML_CSS = "html_css",
   HTML_TAILWIND = "html_tailwind",
   REACT_TAILWIND = "react_tailwind",
   BOOTSTRAP = "bootstrap",
@@ -11,6 +12,7 @@ export enum Stack {
 export const STACK_DESCRIPTIONS: {
   [key in Stack]: { components: string[]; inBeta: boolean };
 } = {
+  html_css: { components: ["HTML", "Css"], inBeta: false },
   html_tailwind: { components: ["HTML", "Tailwind"], inBeta: false },
   react_tailwind: { components: ["React", "Tailwind"], inBeta: false },
   bootstrap: { components: ["Bootstrap"], inBeta: false },
