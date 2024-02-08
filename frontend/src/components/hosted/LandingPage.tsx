@@ -98,7 +98,7 @@ function LandingPage() {
       <div className="mx-auto mt-12 px-4 sm:px-0">
         <p className="text-gray-600 text-xl mb-10 text-center">
           #1 tool used by developers and designers from leading companies. Fully
-          open source with 34k+ stars on GitHub.
+          open source with 35,000+ stars on GitHub.
         </p>
         <div
           className="mx-auto grid max-w-lg items-center gap-x-2 
