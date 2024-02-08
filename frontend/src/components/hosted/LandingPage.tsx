@@ -97,7 +97,7 @@ function LandingPage() {
               <FaGithub size={24} />
               <span>GitHub</span>
               <span className="text-sm bg-gray-200 rounded-full px-2 py-1">
-                34,458
+                35,311 stars
               </span>
             </Button>
           </div>
