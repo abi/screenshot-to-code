@@ -4,6 +4,8 @@ import { Button } from "../ui/button";
 import { SignUp } from "@clerk/clerk-react";
 import { useState } from "react";
 import { Dialog, DialogContent } from "../ui/dialog";
+import { Tweet } from "react-tweet";
+// import YouTube, { YouTubeProps } from "react-youtube";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
@@ -13,6 +15,14 @@ function LandingPage() {
   const signIn = () => {
     setIsAuthPopupOpen(true);
   };
+
+  // const youtubeOpts: YouTubeProps["opts"] = {
+  //   height: "262.5", // Increased by 50%
+  //   width: "480", // Increased by 50%
+  //   playerVars: {
+  //     autoplay: 1,
+  //   },
+  // };
 
   return (
     <div className="w-full xl:w-[1000px] mx-auto mt-4">
@@ -119,7 +129,7 @@ function LandingPage() {
       </div>
 
       {/* Video section */}
-      <div className="px-4 mt-20 mb-10 text-center">
+      {/* <div className="px-4 mt-20 mb-10 text-center">
         <video
           src="/demos/youtube.mp4"
           className="max-w-lg mx-auto rounded-md w-full sm:w-auto"
@@ -130,6 +140,21 @@ function LandingPage() {
         <div className="mt-6">
           Watch Screenshot to Code convert a screenshot of YouTube to
           HTML/Tailwind
+        </div>
+      </div> */}
+
+      {/* Here's what users have to say */}
+      <div className="mt-16">
+        <h2 className="text-gray-600 text-2xl mb-4 text-center">
+          Here's what users have to say
+        </h2>
+        <div className="grid grid-cols-2 gap-2 items-start">
+          {/* <YouTube videoId="b2xi5qiiTOI" opts={youtubeOpts} /> */}
+          <Tweet id="1733865178905661940" />
+          {/* <Tweet id="1727586760584991054" /> Other Rowan Cheung tweet */}
+          <Tweet id="1727105236811366669" />
+          <Tweet id="1732032876739224028" />
+          <Tweet id="1728496255473459339" />
         </div>
       </div>
 

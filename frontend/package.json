@@ -47,6 +47,8 @@
     "react-hot-toast": "^2.4.1",
     "react-icons": "^4.12.0",
     "react-router-dom": "^6.20.1",
+    "react-tweet": "^3.2.0",
+    "react-youtube": "^10.1.0",
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "thememirror": "^2.0.1",
