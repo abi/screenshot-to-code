@@ -23,7 +23,7 @@ async def main():
     for filename in evals:
         filepath = os.path.join(INPUT_DIR, filename)
         data_url = await image_to_data_url(filepath)
-        task = generate_code_core(data_url, "vue_tailwind")
+        task = generate_code_core(data_url, "html_tailwind")
         tasks.append(task)
 
     results = await asyncio.gather(*tasks)
