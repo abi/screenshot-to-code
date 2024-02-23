@@ -7,3 +7,12 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
+  - repo: local
+    hooks:
+      - id: poetry-pytest
+        name: Run pytest with Poetry
+        entry: cd backend && poetry run pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^backend/
