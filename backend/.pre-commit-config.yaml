@@ -11,7 +11,7 @@ repos:
     hooks:
       - id: poetry-pytest
         name: Run pytest with Poetry
-        entry: cd backend && poetry run pytest
+        entry: poetry run --directory backend pytest
         language: system
         pass_filenames: false
         always_run: true

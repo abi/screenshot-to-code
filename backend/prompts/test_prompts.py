@@ -392,6 +392,6 @@ def test_imported_code_prompts():
     svg = assemble_imported_code_prompt("code", "svg", "result_image_data_url")
     expected_svg = [
         {"role": "system", "content": IMPORTED_CODE_SVG_SYSTEM_PROMPT},
-        {"role": "user", "content": "Hee is the code of the SVG: code"},
+        {"role": "user", "content": "Here is the code of the SVG: code"},
     ]
     assert svg == expected_svg
