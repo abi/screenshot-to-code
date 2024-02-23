@@ -1,12 +1,10 @@
-# Load environment variables first
 from dotenv import load_dotenv
-
-load_dotenv()
-
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import screenshot, generate_code, home, evals
+
+# Load environment variables first
+load_dotenv()
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
