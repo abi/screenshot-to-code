@@ -14,6 +14,7 @@ openai = "^1.2.4"
 python-dotenv = "^1.0.0"
 beautifulsoup4 = "^4.12.2"
 httpx = "^0.25.1"
+pre-commit = "^3.6.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
