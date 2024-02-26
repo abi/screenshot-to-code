@@ -510,6 +510,7 @@ function App() {
                   code={generatedCode}
                   setCode={setGeneratedCode}
                   settings={settings}
+                  showOpenInCodepenio={true}
                 />
               </TabsContent>
             </Tabs>
@@ -522,6 +523,7 @@ function App() {
                   code={generatedCode}
                   setCode={setGeneratedCode}
                   settings={settings}
+                  showOpenInCodepenio={false}
                 />
           </div>
         )}
