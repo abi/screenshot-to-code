@@ -47,6 +47,8 @@ function App() {
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
 
+
+
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
     {
@@ -348,105 +350,105 @@ function App() {
 
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
-            <>
-              {/* Show code preview only when coding */}
-              {appState === AppState.CODING && (
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-x-1">
-                    <Spinner />
-                    {executionConsole.slice(-1)[0]}
-                  </div>
-                  <div className="flex mt-4 w-full">
-                    <Button
-                      onClick={cancelCodeGeneration}
-                      className="w-full dark:text-white dark:bg-gray-700"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                  <CodePreview code={generatedCode} />
-                </div>
-              )}
-
-              {appState === AppState.CODE_READY && (
-                <div>
-                  <div className="grid w-full gap-2">
-                    <Textarea
-                      placeholder="Tell the AI what to change..."
-                      onChange={(e) => setUpdateInstruction(e.target.value)}
-                      value={updateInstruction}
-                    />
-                    <div className="flex justify-between items-center gap-x-2">
-                      <div className="font-500 text-xs text-slate-700 dark:text-white">
-                        Include screenshot of current version?
-                      </div>
-                      <Switch
-                        checked={shouldIncludeResultImage}
-                        onCheckedChange={setShouldIncludeResultImage}
-                        className="dark:bg-gray-700"
-                      />
-                    </div>
-                    <Button
-                      onClick={doUpdate}
-                      className="dark:text-white dark:bg-gray-700"
-                    >
-                      Update
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-x-2 mt-2">
-                    <Button
-                      onClick={downloadCode}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
-                    >
-                      <FaDownload /> Download
-                    </Button>
-                    <Button
-                      onClick={reset}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
-                    >
-                      <FaUndo />
-                      Reset
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Reference image display */}
-              <div className="flex gap-x-2 mt-2">
-                {referenceImages.length > 0 && (
+              <>
+                {/* Show code preview only when coding */}
+                {appState === AppState.CODING && (
                   <div className="flex flex-col">
-                    <div
-                      className={classNames({
-                        "scanning relative": appState === AppState.CODING,
-                      })}
-                    >
-                      <img
-                        className="w-[340px] border border-gray-200 rounded-md"
-                        src={referenceImages[0]}
-                        alt="Reference"
-                      />
+                    <div className="flex items-center gap-x-1">
+                      <Spinner />
+                      {executionConsole.slice(-1)[0]}
                     </div>
-                    <div className="text-gray-400 uppercase text-sm text-center mt-1">
-                      Original Screenshot
+                    <div className="flex mt-4 w-full">
+                      <Button
+                        onClick={cancelCodeGeneration}
+                        className="w-full dark:text-white dark:bg-gray-700"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    <CodePreview code={generatedCode} />
+                  </div>
+                )}
+
+                {appState === AppState.CODE_READY && (
+                  <div>
+                    <div className="grid w-full gap-2">
+                      <Textarea
+                        placeholder="Tell the AI what to change..."
+                        onChange={(e) => setUpdateInstruction(e.target.value)}
+                        value={updateInstruction}
+                      />
+                      <div className="flex justify-between items-center gap-x-2">
+                        <div className="font-500 text-xs text-slate-700 dark:text-white">
+                          Include screenshot of current version?
+                        </div>
+                        <Switch
+                          checked={shouldIncludeResultImage}
+                          onCheckedChange={setShouldIncludeResultImage}
+                          className="dark:bg-gray-700"
+                        />
+                      </div>
+                      <Button
+                        onClick={doUpdate}
+                        className="dark:text-white dark:bg-gray-700"
+                      >
+                        Update
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-x-2 mt-2">
+                      <Button
+                        onClick={downloadCode}
+                        className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
+                      >
+                        <FaDownload /> Download
+                      </Button>
+                      <Button
+                        onClick={reset}
+                        className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
+                      >
+                        <FaUndo />
+                        Reset
+                      </Button>
                     </div>
                   </div>
                 )}
-                <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
-                  <h2 className="text-lg mb-4 border-b border-gray-800">
-                    Console
-                  </h2>
-                  {executionConsole.map((line, index) => (
-                    <div
-                      key={index}
-                      className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
-                    >
-                      {line}
+
+                {/* Reference image display */}
+                <div className="flex gap-x-2 mt-2">
+                  {referenceImages.length > 0 && (
+                    <div className="flex flex-col">
+                      <div
+                        className={classNames({
+                          "scanning relative": appState === AppState.CODING,
+                        })}
+                      >
+                        <img
+                          className="w-[340px] border border-gray-200 rounded-md"
+                          src={referenceImages[0]}
+                          alt="Reference"
+                        />
+                      </div>
+                      <div className="text-gray-400 uppercase text-sm text-center mt-1">
+                        Original Screenshot
+                      </div>
                     </div>
-                  ))}
+                  )}
+                  <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
+                    <h2 className="text-lg mb-4 border-b border-gray-800">
+                      Console
+                    </h2>
+                    {executionConsole.map((line, index) => (
+                      <div
+                        key={index}
+                        className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
+                      >
+                        {line}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
           {
             <HistoryDisplay
               history={appHistory}
@@ -479,11 +481,12 @@ function App() {
           </div>
         )}
 
-        {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
+        {(appState === AppState.CODING || appState === AppState.CODE_READY) && settings.generatedCodeConfig != Stack.FLUTTER && (
           <div className="ml-4">
             <Tabs defaultValue="desktop">
               <div className="flex justify-end mr-8 mb-4">
                 <TabsList>
+
                   <TabsTrigger value="desktop" className="flex gap-x-2">
                     <FaDesktop /> Desktop
                   </TabsTrigger>
@@ -510,6 +513,16 @@ function App() {
                 />
               </TabsContent>
             </Tabs>
+          </div>
+        )}
+
+        {(appState === AppState.CODING || appState === AppState.CODE_READY) && settings.generatedCodeConfig === Stack.FLUTTER && (
+          <div className="ml-4">
+            <CodeTab
+                  code={generatedCode}
+                  setCode={setGeneratedCode}
+                  settings={settings}
+                />
           </div>
         )}
       </main>

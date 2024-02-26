@@ -21,6 +21,7 @@ export enum AppState {
   INITIAL = "INITIAL",
   CODING = "CODING",
   CODE_READY = "CODE_READY",
+  CODE_READY_NO_PREVIEW = "CODE_READY_NO_PREVIEW",
 }
 
 export interface CodeGenerationParams {

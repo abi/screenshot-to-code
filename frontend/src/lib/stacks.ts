@@ -6,7 +6,6 @@ export enum Stack {
   VUE_TAILWIND = "vue_tailwind",
   VUE_CSS = "vue_css",
   IONIC_TAILWIND = "ionic_tailwind",
-  
   SVG = "svg",
   FLUTTER = "flutter",
 }
