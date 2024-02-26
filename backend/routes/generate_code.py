@@ -126,7 +126,7 @@ async def stream_code(websocket: WebSocket):
         else True
     )
 
-    print("generating code...")
+    print("that looks exac...")
     await websocket.send_json({"type": "status", "value": "Generating code..."})
 
     async def process_chunk(content: str):
