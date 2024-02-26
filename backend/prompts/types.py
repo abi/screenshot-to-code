@@ -9,6 +9,7 @@ class SystemPrompts(TypedDict):
     vue_tailwind: str
     vue_css: str
     svg: str
+    flutter:str
 
 
 Stack = Literal[
@@ -19,4 +20,5 @@ Stack = Literal[
     "vue_tailwind",
     "vue_css",
     "svg",
+    "flutter",
 ]

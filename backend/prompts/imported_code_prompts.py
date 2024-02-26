@@ -158,6 +158,30 @@ Return only the full code in <svg></svg> tags.
 Do not include markdown "```" or "```svg" at the start or end.
 """
 
+
+IMPORTED_CODE_FLUTTER_SYSTEM_PROMPT = """
+You are an expert Flutter web developer.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+- Generate running code like so:
+    
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+....
+
+Return only the full code of the widget.
+Do not include markdown "```" or "```dart" at the start or end.
+The return result must only include the code."""
+
+
 IMPORTED_CODE_SYSTEM_PROMPTS = SystemPrompts(
     html_tailwind=IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT,
     react_tailwind=IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT,
@@ -166,4 +190,5 @@ IMPORTED_CODE_SYSTEM_PROMPTS = SystemPrompts(
     vue_tailwind=IMPORTED_CODE_VUE_TAILWIND_SYSTEM_PROMPT,
     vue_css=IMPORTED_CODE_VUE_CSS_SYSTEM_PROMPT,
     svg=IMPORTED_CODE_SVG_SYSTEM_PROMPT,
+    flutter=IMPORTED_CODE_FLUTTER_SYSTEM_PROMPT
 )
