@@ -42,8 +42,8 @@ Run the frontend:
 
 ```bash
 cd frontend
-yarn
-yarn dev
+pnpm i
+pnpm run dev
 ```
 
 Open http://localhost:5173 to use the app.
