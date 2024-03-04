@@ -38,12 +38,6 @@ poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
 
-You can also run the backend (when you're in `backend`):
-
-```bash
-poetry run pyright
-```
-
 Run the frontend:
 
 ```bash
