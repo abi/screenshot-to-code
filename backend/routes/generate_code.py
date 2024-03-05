@@ -2,8 +2,12 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
-from config import IS_PROD, SHOULD_MOCK_AI_RESPONSE
-from llm import stream_openai_response
+from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
+from llm import (
+    CODE_GENERATION_MODELS,
+    stream_claude_response,
+    stream_openai_response,
+)
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
 from typing import Dict, List, cast, get_args
@@ -60,7 +64,16 @@ async def stream_code(websocket: WebSocket):
     generated_code_config = ""
     if "generatedCodeConfig" in params and params["generatedCodeConfig"]:
         generated_code_config = params["generatedCodeConfig"]
-    print(f"Generating {generated_code_config} code")
+
+    # Read the model from the request. Fall back to default if not provided.
+    code_generation_model = params.get("codeGenerationModel", "gpt_4_vision")
+    if code_generation_model not in CODE_GENERATION_MODELS:
+        await throw_error(f"Invalid model: {code_generation_model}")
+        raise Exception(f"Invalid model: {code_generation_model}")
+
+    print(
+        f"Generating {generated_code_config} code using {code_generation_model} model..."
+    )
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
@@ -196,12 +209,25 @@ async def stream_code(websocket: WebSocket):
         completion = await mock_completion(process_chunk)
     else:
         try:
-            completion = await stream_openai_response(
-                prompt_messages,
-                api_key=openai_api_key,
-                base_url=openai_base_url,
-                callback=lambda x: process_chunk(x),
-            )
+            if code_generation_model == "claude_3_sonnet":
+                if not ANTHROPIC_API_KEY:
+                    await throw_error(
+                        "No Anthropic API key found. Please add it to backend/.env"
+                    )
+                    raise Exception("No Anthropic key")
+
+                completion = await stream_claude_response(
+                    prompt_messages,
+                    api_key=ANTHROPIC_API_KEY,
+                    callback=lambda x: process_chunk(x),
+                )
+            else:
+                completion = await stream_openai_response(
+                    prompt_messages,
+                    api_key=openai_api_key,
+                    base_url=openai_base_url,
+                    callback=lambda x: process_chunk(x),
+                )
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
             error_message = (

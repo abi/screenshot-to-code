@@ -35,6 +35,8 @@ import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
 import ImportCodeSection from "./components/ImportCodeSection";
 import { Stack } from "./lib/stacks";
+import { CodeGenerationModel } from "./lib/models";
+import ModelSettingsSection from "./components/ModelSettingsSection";
 
 const IS_OPENAI_DOWN = false;
 
@@ -56,12 +58,17 @@ function App() {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
+      codeGenerationModel: CodeGenerationModel.GPT_4_VISION,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
       accessCode: null,
     },
     "setting"
   );
+
+  // Code generation model from local storage or the default value
+  const selectedCodeGenerationModel =
+    settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
 
   // App history
   const [appHistory, setAppHistory] = useState<History>([]);
@@ -291,6 +298,13 @@ function App() {
     }));
   }
 
+  function setCodeGenerationModel(codeGenerationModel: CodeGenerationModel) {
+    setSettings((prev) => ({
+      ...prev,
+      codeGenerationModel,
+    }));
+  }
+
   function importFromCode(code: string, stack: Stack) {
     setIsImportedFromCode(true);
 
@@ -329,6 +343,14 @@ function App() {
           <OutputSettingsSection
             stack={settings.generatedCodeConfig}
             setStack={(config) => setStack(config)}
+            shouldDisableUpdates={
+              appState === AppState.CODING || appState === AppState.CODE_READY
+            }
+          />
+
+          <ModelSettingsSection
+            codeGenerationModel={selectedCodeGenerationModel}
+            setCodeGenerationModel={setCodeGenerationModel}
             shouldDisableUpdates={
               appState === AppState.CODING || appState === AppState.CODE_READY
             }
