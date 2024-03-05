@@ -6,6 +6,8 @@ https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8
 
 See the [Examples](#-examples) section below for more demos.
 
+[Follow me on Twitter for updates](https://twitter.com/_abi_).
+
 ## 🚀 Try It Out!
 
 🆕 [Try it here](https://screenshottocode.com) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section below for details**). Or see [Getting Started](#-getting-started) below for local install instructions.
