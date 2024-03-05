@@ -69,13 +69,23 @@ async def stream_claude_response(
         for content in message["content"]:  # type: ignore
             if content["type"] == "image_url":
                 content["type"] = "image"
-                content["source"] = {
-                    "type": "base64",
-                    "media_type": "image/png",  # TODO: Automatically detect media type
-                    "data": content["image_url"]["url"].split(",")[1],  # type: ignore
-                }
+
+                # Extract base64 data and media type from data URL
+                # Example base64 data URL: data:image/png;base64,iVBOR...
+                image_data_url = cast(str, content["image_url"]["url"])
+                media_type = image_data_url.split(";")[0].split(":")[1]
+                base64_data = image_data_url.split(",")[1]
+
+                # Remove OpenAI parameter
                 del content["image_url"]
 
+                content["source"] = {
+                    "type": "base64",
+                    "media_type": media_type,
+                    "data": base64_data,
+                }
+
+    # Stream Claude response
     async with client.messages.stream(
         model=model,
         max_tokens=max_tokens,
@@ -86,5 +96,6 @@ async def stream_claude_response(
         async for text in stream.text_stream:
             await callback(text)
 
+    # Return final message
     response = await stream.get_final_message()
     return response.content[0].text
