@@ -212,7 +212,7 @@ async def stream_code(websocket: WebSocket):
             if code_generation_model == "claude_3_sonnet":
                 if not ANTHROPIC_API_KEY:
                     await throw_error(
-                        "No Anthropic API key found. Please add it to backend/.env"
+                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
                     )
                     raise Exception("No Anthropic key")
 
