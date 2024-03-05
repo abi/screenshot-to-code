@@ -38,7 +38,7 @@ function OutputSettingsSection({
   shouldDisableUpdates = false,
 }: Props) {
   return (
-    <div className="flex flex-col gap-y-2 justify-between text-sm">
+    <div className="flex flex-col gap-y-2 mt-3 justify-between text-sm">
       <div className="grid grid-cols-3 items-center gap-4">
         <span>{label}</span>
         <Select
