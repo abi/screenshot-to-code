@@ -1,6 +1,6 @@
 # screenshot-to-code
 
-This simple app converts a screenshot to code (HTML/Tailwind CSS, or React or Bootstrap or Vue). It uses GPT-4 Vision to generate the code and DALL-E 3 to generate similar-looking images. You can now also enter a URL to clone a live website!
+This simple app converts a screenshot to code (HTML/Tailwind CSS, or React or Bootstrap or Vue). It uses GPT-4 Vision (or Claude 3) to generate the code and DALL-E 3 to generate similar-looking images. You can now also enter a URL to clone a live website.
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
@@ -49,6 +49,13 @@ MOCK=true poetry run uvicorn main:app --reload --port 7001
 ## Configuration
 
 - You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
+
+## Using Claude 3
+
+We recently added support for Claude 3 Sonnet. It performs well, on par or better than GPT-4 vision for many inputs, and it tends to be faster. 
+
+1. Add an env var `ANTHROPIC_API_KEY` to `backend/.env` with your API key from Anthropic
+2. When using the front-end, select "Claude 3 Sonnet" from the model dropdown
 
 ## Docker
 
