@@ -19,7 +19,7 @@ anthropic = "^0.18.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
-pyright = "^1.1.345"
+pyright = "^1.1.352"
 
 [build-system]
 requires = ["poetry-core"]
