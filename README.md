@@ -10,6 +10,9 @@ See the [Examples](#-examples) section below for more demos.
 
 🆕 [Try it here](https://screenshottocode.com) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section below for details**). Or see [Getting Started](#-getting-started) below for local install instructions.
 
+## 🌟 Recent Updates
+
+- Mar 5 - Added support for Claude Sonnet 3 (as capable as or better than GPT-4 Vision, and faster!)
 
 ## 🛠 Getting Started
 
