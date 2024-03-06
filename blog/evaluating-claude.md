@@ -2,6 +2,8 @@
 
 Claude 3 dropped yesterday, claiming to rival GPT-4 on a wide variety of tasks. I maintain a very popular open source project called “screenshot-to-code” (this one!) that uses GPT-4 vision to convert screenshots/designs into clean code. Naturally, I was excited to see how good Claude 3 was at this task.
 
+**TLDR:** Claude 3 is on par with GPT-4 vision for screenshot to code, better in some ways but worse in others.
+
 ## Evaluation Setup
 
 I don’t know of a public benchmark for “screenshot to code” so I created simple evaluation setup for the purposes of testing:
