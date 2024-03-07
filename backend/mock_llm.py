@@ -1,12 +1,20 @@
 import asyncio
 from typing import Awaitable, Callable
 
+from custom_types import InputMode
 
-async def mock_completion(process_chunk: Callable[[str], Awaitable[None]]) -> str:
-    code_to_return = NO_IMAGES_NYTIMES_MOCK_CODE
 
-    for i in range(0, len(code_to_return), 10):
-        await process_chunk(code_to_return[i : i + 10])
+async def mock_completion(
+    process_chunk: Callable[[str], Awaitable[None]], input_mode: InputMode
+) -> str:
+    code_to_return = (
+        MORTGAGE_CALCULATOR_VIDEO_PROMPT_MOCK
+        if input_mode == "video"
+        else NO_IMAGES_NYTIMES_MOCK_CODE
+    )
+
+    for i in range(0, len(code_to_return), 100):
+        await process_chunk(code_to_return[i : i + 100])
         await asyncio.sleep(0.01)
 
     return code_to_return
@@ -203,6 +211,235 @@ NO_IMAGES_NYTIMES_MOCK_CODE = """
             </section>
         </main>
     </div>
+</body>
+</html>
+"""
+
+MORTGAGE_CALCULATOR_VIDEO_PROMPT_MOCK = """
+<thinking>
+The user flow in the video seems to be:
+1. The calculator starts with some default values for loan amount, loan term, interest rate, etc. 
+2. The user toggles the "Include taxes & fees" checkbox which shows an explanation tooltip.
+3. The user selects different loan terms from the dropdown, which updates the monthly payment amount.
+4. The user enters a custom loan amount.
+5. The user selects a different loan term (30-yr fixed FHA).
+6. The user enters additional details like home price, down payment, state, credit score, property tax, home insurance, and HOA fees.
+7. The calculator updates the total monthly payment breakdown.
+
+To build this:
+- Use a container div for the whole calculator
+- Have sections for Monthly Payment, Purchase Budget, loan details, additional costs
+- Use input fields, dropdowns, and checkboxes for user input
+- Update values dynamically using JavaScript when inputs change
+- Show/hide explanation tooltip when checkbox is toggled
+- Update monthly payment whenever loan amount, interest rate or term is changed
+- Allow selecting loan term from a dropdown 
+- Update total monthly payment breakdown as additional costs are entered
+- Style everything to match the screenshots using Tailwind utility classes
+</thinking>
+
+<html>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<div class="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-6 font-sans">
+  <div class="text-2xl font-semibold mb-6">Mortgage Calculator</div>
+  
+  <div class="flex justify-between text-sm uppercase font-semibold text-gray-500 border-b mb-4">
+    <div class="pb-2 border-b-2 border-blue-500">Monthly payment</div>
+    <div class="pb-2">Purchase budget</div>
+  </div>
+
+  <div class="flex items-center mb-4">
+    <input type="checkbox" class="mr-2 taxes-toggle" id="taxesToggle">
+    <label for="taxesToggle" class="text-sm">Include taxes & fees</label>
+    <i class="fas fa-info-circle ml-1 text-gray-400 cursor-pointer" id="taxesInfo"></i>
+    <div class="hidden bg-gray-100 text-xs p-2 ml-2 rounded" id="taxesTooltip">Your total monthly payment is more than just your mortgage. It can include property taxes, homeowners insurance, and HOA fees, among other things.</div>
+  </div>
+
+  <div class="text-3xl font-semibold mb-4">$<span id="monthlyPayment">1,696</span></div>
+
+  <div class="mb-4">
+    <div class="text-sm font-semibold mb-2">Loan amount</div>
+    <input type="text" value="240,000" class="w-full border rounded px-2 py-1 text-lg" id="loanAmount">
+  </div>
+
+  <div class="mb-4">
+    <div class="text-sm font-semibold mb-2">Loan term</div>
+    <select class="w-full border rounded px-2 py-1 text-lg" id="loanTerm">
+      <option>30-yr fixed</option>
+      <option>30-yr fixed FHA</option>
+      <option>30-yr fixed VA</option>
+      <option>30-yr fixed USDA</option>
+      <option>20-yr fixed</option>
+      <option>15-yr fixed</option>
+      <option>10 / 6 ARM</option>
+      <option>7 / 6 ARM</option>
+      <option>5 / 6 ARM</option>
+      <option>3 / 6 ARM</option>
+    </select>
+  </div>
+
+  <div class="flex justify-between mb-4">
+    <div>
+      <div class="text-sm font-semibold mb-2">Interest</div>
+      <div class="text-lg">7.61 %</div>
+    </div>
+    <i class="fas fa-info-circle text-gray-400 cursor-pointer self-center"></i>
+  </div>
+
+  <div class="border-t pt-4">
+    <div class="mb-4">
+      <div class="text-sm font-semibold mb-2">Home price</div>
+      <input type="text" value="300,000" class="w-full border rounded px-2 py-1 text-lg" id="homePrice">
+    </div>
+    <div class="mb-4">
+      <div class="text-sm font-semibold mb-2">Down payment</div>
+      <div class="flex">
+        <input type="text" value="60,000" class="w-full border rounded-l px-2 py-1 text-lg" id="downPayment">
+        <div class="bg-gray-200 rounded-r px-4 py-1 text-lg flex items-center">20 %</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t pt-4">
+    <div class="mb-4">
+      <div class="text-sm font-semibold mb-2">State</div>
+      <select class="w-full border rounded px-2 py-1 text-lg" id="state">
+        <option>New York</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <div class="text-sm font-semibold mb-2">Credit score</div>
+      <select class="w-full border rounded px-2 py-1 text-lg" id="creditScore">
+        <option>700 - 719</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="border-t pt-4">
+    <div class="mb-4">
+      <div class="text-sm font-semibold mb-2">Property tax (yearly)</div>
+      <input type="text" value="3,750" class="w-full border rounded px-2 py-1 text-lg" id="propertyTax">
+    </div>
+    <div class="mb-4">
+      <div class="text-sm font-semibold mb-2">Home insurance (yearly)</div>
+      <input type="text" value="1,050" class="w-full border rounded px-2 py-1 text-lg" id="homeInsurance">
+    </div>
+    <div class="mb-4">
+      <div class="text-sm font-semibold mb-2">Private mortgage insurance (monthly)</div>
+      <input type="text" value="0" class="w-full border rounded px-2 py-1 text-lg" id="mortgageInsurance">
+    </div>
+    <div class="mb-4">
+      <div class="text-sm font-semibold mb-2">Homeowners association (monthly)</div>
+      <input type="text" value="0" class="w-full border rounded px-2 py-1 text-lg" id="hoaFees">
+    </div>
+  </div>
+
+  <div class="flex justify-between pt-4">
+    <div class="text-sm">
+      <div class="font-semibold">Total monthly payment</div>
+      <div class="text-3xl font-semibold">$<span id="totalPayment">2,036</span></div>
+    </div>
+    <div class="text-right">
+      <div class="text-sm">Loan</div>
+      <div class="text-lg">$<span id="loanPayment">1,635</span></div>
+      <div class="text-sm">Taxes & fees</div>
+      <div>$<span id="taxesPayment">401</span></div>
+    </div>
+  </div>
+
+  <div class="text-xs text-gray-500 mt-4">
+    <div>Disclaimer • Feedback</div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  var loanAmount = 240000;
+  var interestRate = 7.61;
+  var loanTerm = 30;
+  var homePrice = 300000;
+  var downPayment = 60000;
+  var propertyTax = 3750;
+  var homeInsurance = 1050;
+  var mortgageInsurance = 0;
+  var hoaFees = 0;
+
+  function updateCalculations() {
+    var principal = loanAmount;
+    var monthlyInterest = interestRate / 100 / 12;
+    var numPayments = loanTerm * 12;
+    var monthlyPayment = principal * monthlyInterest / (1 - (Math.pow(1/(1 + monthlyInterest), numPayments)));
+    var totalPayment = monthlyPayment;
+    var taxesPayment = (propertyTax + homeInsurance) / 12;
+
+    if ($('#taxesToggle').is(':checked')) {
+      totalPayment += taxesPayment + mortgageInsurance + hoaFees;
+    }
+
+    $('#monthlyPayment').text(Math.round(monthlyPayment).toLocaleString());
+    $('#loanPayment').text(Math.round(monthlyPayment).toLocaleString());
+    $('#taxesPayment').text(Math.round(taxesPayment + mortgageInsurance + hoaFees).toLocaleString());
+    $('#totalPayment').text(Math.round(totalPayment).toLocaleString());
+  }
+
+  $('#taxesInfo').hover(function() {
+    $('#taxesTooltip').removeClass('hidden');
+  }, function() {
+    $('#taxesTooltip').addClass('hidden');
+  });
+
+  $('#loanTerm').change(function() {
+    loanTerm = parseInt($(this).val().split('-')[0]);
+    updateCalculations();
+  });
+
+  $('#loanAmount').change(function() {
+    loanAmount = parseInt($(this).val().replace(/,/g, ''));
+    updateCalculations();
+  });
+
+  $('#homePrice').change(function() {
+    homePrice = parseInt($(this).val().replace(/,/g, ''));
+    loanAmount = homePrice - downPayment;
+    $('#loanAmount').val(loanAmount.toLocaleString());
+    updateCalculations();
+  });
+
+  $('#downPayment').change(function() {
+    downPayment = parseInt($(this).val().replace(/,/g, ''));
+    loanAmount = homePrice - downPayment;
+    $('#loanAmount').val(loanAmount.toLocaleString());
+    updateCalculations();
+  });
+
+  $('#propertyTax').change(function() {
+    propertyTax = parseInt($(this).val().replace(/,/g, ''));
+    updateCalculations();
+  });
+
+  $('#homeInsurance').change(function() {
+    homeInsurance = parseInt($(this).val().replace(/,/g, ''));
+    updateCalculations();
+  });
+
+  $('#mortgageInsurance').change(function() {
+    mortgageInsurance = parseInt($(this).val().replace(/,/g, ''));
+    updateCalculations();
+  });
+
+  $('#hoaFees').change(function() {
+    hoaFees = parseInt($(this).val().replace(/,/g, ''));
+    updateCalculations();
+  });
+
+  updateCalculations();
+});
+</script>
 </body>
 </html>
 """

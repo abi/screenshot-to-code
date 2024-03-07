@@ -44,6 +44,8 @@ function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
 
+  const [inputMode, setInputMode] = useState<"image" | "video">("image");
+
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
@@ -140,6 +142,10 @@ function App() {
     cancelCodeGenerationAndReset();
   };
 
+  const shouldDisablePreview = inputMode === "video";
+  const previewCode =
+    shouldDisablePreview && appState === AppState.CODING ? "" : generatedCode;
+
   const cancelCodeGenerationAndReset = () => {
     // When this is the first version, reset the entire app state
     if (currentVersion === null) {
@@ -219,16 +225,18 @@ function App() {
   }
 
   // Initial version creation
-  function doCreate(referenceImages: string[]) {
+  function doCreate(referenceImages: string[], inputMode: "image" | "video") {
     // Reset any existing state
     reset();
 
     setReferenceImages(referenceImages);
+    setInputMode(inputMode);
     if (referenceImages.length > 0) {
       doGenerateCode(
         {
           generationType: "create",
           image: referenceImages[0],
+          inputMode,
         },
         currentVersion
       );
@@ -261,6 +269,7 @@ function App() {
       doGenerateCode(
         {
           generationType: "update",
+          inputMode,
           image: referenceImages[0],
           resultImage: resultImage,
           history: updatedHistory,
@@ -272,6 +281,7 @@ function App() {
       doGenerateCode(
         {
           generationType: "update",
+          inputMode,
           image: referenceImages[0],
           history: updatedHistory,
           isImportedFromCode,
@@ -519,14 +529,14 @@ function App() {
                 </TabsList>
               </div>
               <TabsContent value="desktop">
-                <Preview code={generatedCode} device="desktop" />
+                <Preview code={previewCode} device="desktop" />
               </TabsContent>
               <TabsContent value="mobile">
-                <Preview code={generatedCode} device="mobile" />
+                <Preview code={previewCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
                 <CodeTab
-                  code={generatedCode}
+                  code={previewCode}
                   setCode={setGeneratedCode}
                   settings={settings}
                 />
