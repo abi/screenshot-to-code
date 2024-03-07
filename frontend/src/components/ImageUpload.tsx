@@ -51,7 +51,10 @@ type FileWithPreview = {
 } & File;
 
 interface Props {
-  setReferenceImages: (referenceImages: string[]) => void;
+  setReferenceImages: (
+    referenceImages: string[],
+    inputMode: "image" | "video"
+  ) => void;
 }
 
 function ImageUpload({ setReferenceImages }: Props) {
@@ -59,11 +62,13 @@ function ImageUpload({ setReferenceImages }: Props) {
   const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
     useDropzone({
       maxFiles: 1,
-      maxSize: 1024 * 1024 * 5, // 5 MB
+      maxSize: 1024 * 1024 * 20, // 20 MB
       accept: {
         "image/png": [".png"],
         "image/jpeg": [".jpeg"],
         "image/jpg": [".jpg"],
+        "video/quicktime": [".mov"],
+        "video/mp4": [".mp4"],
       },
       onDrop: (acceptedFiles) => {
         // Set up the preview thumbnail images
@@ -78,7 +83,14 @@ function ImageUpload({ setReferenceImages }: Props) {
         // Convert images to data URLs and set the prompt images state
         Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
           .then((dataUrls) => {
-            setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
+            if (dataUrls.length > 0) {
+              setReferenceImages(
+                dataUrls.map((dataUrl) => dataUrl as string),
+                (dataUrls[0] as string).startsWith("data:video")
+                  ? "video"
+                  : "image"
+              );
+            }
           })
           .catch((error) => {
             toast.error("Error reading files" + error);

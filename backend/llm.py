@@ -1,4 +1,4 @@
-from typing import Awaitable, Callable, List, cast
+from typing import Any, Awaitable, Callable, List, cast
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
@@ -46,6 +46,7 @@ async def stream_openai_response(
     return full_response
 
 
+# TODO: Have a seperate function that translates OpenAI messages to Claude messages
 async def stream_claude_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
@@ -98,4 +99,48 @@ async def stream_claude_response(
 
     # Return final message
     response = await stream.get_final_message()
+    return response.content[0].text
+
+
+async def stream_claude_response_native(
+    system_prompt: str,
+    messages: list[Any],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    include_thinking: bool = False,
+    model: str = MODEL_CLAUDE_OPUS,
+) -> str:
+
+    client = AsyncAnthropic(api_key=api_key)
+
+    # Base parameters
+    max_tokens = 4096
+    temperature = 0.0
+
+    # Stream Claude response
+
+    # Set up message depending on whether we have a <thinking> prefix
+    messages = (
+        messages + [{"role": "assistant", "content": "<thinking>"}]
+        if include_thinking
+        else messages
+    )
+
+    async with client.messages.stream(
+        model=model,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        system=system_prompt,
+        messages=messages,  # type: ignore
+    ) as stream:
+        async for text in stream.text_stream:
+            await callback(text)
+
+    # Return final message
+    response = await stream.get_final_message()
+
+    print(
+        f"Token usage: Input Tokens: {response.usage.input_tokens}, Output Tokens: {response.usage.output_tokens}"
+    )
+
     return response.content[0].text

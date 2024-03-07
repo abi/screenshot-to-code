@@ -3,9 +3,12 @@ import traceback
 from fastapi import APIRouter, WebSocket
 import openai
 from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
+from custom_types import InputMode
 from llm import (
     CODE_GENERATION_MODELS,
+    MODEL_CLAUDE_OPUS,
     stream_claude_response,
+    stream_claude_response_native,
     stream_openai_response,
 )
 from openai.types.chat import ChatCompletionMessageParam
@@ -16,9 +19,11 @@ from prompts import assemble_imported_code_prompt, assemble_prompt
 from access_token import validate_access_token
 from datetime import datetime
 import json
+from prompts.claude_prompts import VIDEO_PROMPT
 from prompts.types import Stack
 
-from utils import pprint_prompt  # type: ignore
+# from utils import pprint_prompt
+from video.utils import extract_tag_content, assemble_claude_prompt_video  # type: ignore
 
 
 router = APIRouter()
@@ -64,6 +69,19 @@ async def stream_code(websocket: WebSocket):
     generated_code_config = ""
     if "generatedCodeConfig" in params and params["generatedCodeConfig"]:
         generated_code_config = params["generatedCodeConfig"]
+    if not generated_code_config in get_args(Stack):
+        await throw_error(f"Invalid generated code config: {generated_code_config}")
+        return
+    # Cast the variable to the Stack type
+    valid_stack = cast(Stack, generated_code_config)
+
+    # Validate the input mode
+    input_mode = params.get("inputMode")
+    if not input_mode in get_args(InputMode):
+        await throw_error(f"Invalid input mode: {input_mode}")
+        raise Exception(f"Invalid input mode: {input_mode}")
+    # Cast the variable to the right type
+    validated_input_mode = cast(InputMode, input_mode)
 
     # Read the model from the request. Fall back to default if not provided.
     code_generation_model = params.get("codeGenerationModel", "gpt_4_vision")
@@ -72,7 +90,7 @@ async def stream_code(websocket: WebSocket):
         raise Exception(f"Invalid model: {code_generation_model}")
 
     print(
-        f"Generating {generated_code_config} code using {code_generation_model} model..."
+        f"Generating {generated_code_config} code for uploaded {input_mode} using {code_generation_model} model..."
     )
 
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
@@ -109,13 +127,6 @@ async def stream_code(websocket: WebSocket):
             }
         )
         return
-
-    # Validate the generated code config
-    if not generated_code_config in get_args(Stack):
-        await throw_error(f"Invalid generated code config: {generated_code_config}")
-        return
-    # Cast the variable to the Stack type
-    valid_stack = cast(Stack, generated_code_config)
 
     # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
     openai_base_url = None
@@ -203,13 +214,34 @@ async def stream_code(websocket: WebSocket):
 
             image_cache = create_alt_url_mapping(params["history"][-2])
 
-    pprint_prompt(prompt_messages)
+    if validated_input_mode == "video":
+        video_data_url = params["image"]
+        prompt_messages = await assemble_claude_prompt_video(video_data_url)
+
+    # pprint_prompt(prompt_messages)  # type: ignore
 
     if SHOULD_MOCK_AI_RESPONSE:
-        completion = await mock_completion(process_chunk)
+        completion = await mock_completion(
+            process_chunk, input_mode=validated_input_mode
+        )
     else:
         try:
-            if code_generation_model == "claude_3_sonnet":
+            if validated_input_mode == "video":
+                if not ANTHROPIC_API_KEY:
+                    await throw_error(
+                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                    )
+                    raise Exception("No Anthropic key")
+
+                completion = await stream_claude_response_native(
+                    system_prompt=VIDEO_PROMPT,
+                    messages=prompt_messages,  # type: ignore
+                    api_key=ANTHROPIC_API_KEY,
+                    callback=lambda x: process_chunk(x),
+                    model=MODEL_CLAUDE_OPUS,
+                    include_thinking=True,
+                )
+            elif code_generation_model == "claude_3_sonnet":
                 if not ANTHROPIC_API_KEY:
                     await throw_error(
                         "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
@@ -217,13 +249,13 @@ async def stream_code(websocket: WebSocket):
                     raise Exception("No Anthropic key")
 
                 completion = await stream_claude_response(
-                    prompt_messages,
+                    prompt_messages,  # type: ignore
                     api_key=ANTHROPIC_API_KEY,
                     callback=lambda x: process_chunk(x),
                 )
             else:
                 completion = await stream_openai_response(
-                    prompt_messages,
+                    prompt_messages,  # type: ignore
                     api_key=openai_api_key,
                     base_url=openai_base_url,
                     callback=lambda x: process_chunk(x),
@@ -263,8 +295,11 @@ async def stream_code(websocket: WebSocket):
             )
             return await throw_error(error_message)
 
+    if validated_input_mode == "video":
+        completion = extract_tag_content("html", completion)
+
     # Write the messages dict into a log so that we can debug later
-    write_logs(prompt_messages, completion)
+    write_logs(prompt_messages, completion)  # type: ignore
 
     try:
         if should_generate_images:
