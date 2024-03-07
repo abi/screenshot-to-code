@@ -3,6 +3,8 @@ from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
 
+from utils import pprint_prompt
+
 MODEL_GPT_4_VISION = "gpt-4-vision-preview"
 MODEL_CLAUDE_SONNET = "claude-3-sonnet-20240229"
 MODEL_CLAUDE_OPUS = "claude-3-opus-20240229"
@@ -113,34 +115,57 @@ async def stream_claude_response_native(
 
     client = AsyncAnthropic(api_key=api_key)
 
-    # Base parameters
+    # Base model parameters
     max_tokens = 4096
     temperature = 0.0
 
-    # Stream Claude response
+    # Multi-pass flow
+    current_pass_num = 1
+    max_passes = 2
 
-    # Set up message depending on whether we have a <thinking> prefix
-    messages = (
-        messages + [{"role": "assistant", "content": "<thinking>"}]
-        if include_thinking
-        else messages
-    )
+    prefix = "<thinking>"
+    response = None
 
-    async with client.messages.stream(
-        model=model,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        system=system_prompt,
-        messages=messages,  # type: ignore
-    ) as stream:
-        async for text in stream.text_stream:
-            await callback(text)
+    while current_pass_num <= max_passes:
+        current_pass_num += 1
 
-    # Return final message
-    response = await stream.get_final_message()
+        # Set up message depending on whether we have a <thinking> prefix
+        messages_to_send = (
+            messages + [{"role": "assistant", "content": prefix}]
+            if include_thinking
+            else messages
+        )
 
-    print(
-        f"Token usage: Input Tokens: {response.usage.input_tokens}, Output Tokens: {response.usage.output_tokens}"
-    )
+        pprint_prompt(messages_to_send)
 
-    return response.content[0].text
+        async with client.messages.stream(
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            system=system_prompt,
+            messages=messages_to_send,  # type: ignore
+        ) as stream:
+            async for text in stream.text_stream:
+                print(text, end="", flush=True)
+                await callback(text)
+
+        # Return final message
+        response = await stream.get_final_message()
+
+        # Set up messages array for next pass
+        messages += [
+            {"role": "assistant", "content": str(prefix) + response.content[0].text},
+            {
+                "role": "user",
+                "content": "You've done a good job with a first draft. Improve this further based on the original instructions so that the app is fully functional and looks like the original video of the app we're trying to replicate.",
+            },
+        ]
+
+        print(
+            f"Token usage: Input Tokens: {response.usage.input_tokens}, Output Tokens: {response.usage.output_tokens}"
+        )
+
+    if not response:
+        raise Exception("No HTML response found in AI response")
+    else:
+        return response.content[0].text
