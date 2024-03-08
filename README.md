@@ -53,7 +53,7 @@ MOCK=true poetry run uvicorn main:app --reload --port 7001
 
 ## Video to app (experimental)
 
-[video]
+https://github.com/abi/screenshot-to-code/assets/23818/1468bef4-164f-4046-a6c8-4cfc40a5cdff
 
 Record yourself using any website or app or even a Figma prototype, drag & drop in a video and in a few minutes, get a functional, similar-looking app.
 
