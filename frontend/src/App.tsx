@@ -384,11 +384,25 @@ function App() {
               {/* Show code preview only when coding */}
               {appState === AppState.CODING && (
                 <div className="flex flex-col">
+                  {/* Speed disclaimer for video mode */}
+                  {inputMode === "video" && (
+                    <div
+                      className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 
+                    p-2 text-xs mb-4 mt-1"
+                    >
+                      Code generation from videos can take 3-4 minutes. We do
+                      multiple passes to get the best result. Please be patient.
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-x-1">
                     <Spinner />
                     {executionConsole.slice(-1)[0]}
                   </div>
-                  <div className="flex mt-4 w-full">
+
+                  <CodePreview code={generatedCode} />
+
+                  <div className="flex w-full">
                     <Button
                       onClick={cancelCodeGeneration}
                       className="w-full dark:text-white dark:bg-gray-700"
@@ -396,7 +410,6 @@ function App() {
                       Cancel
                     </Button>
                   </div>
-                  <CodePreview code={generatedCode} />
                 </div>
               )}
 
