@@ -16,6 +16,7 @@ See the [Examples](#-examples) section below for more demos.
 
 ## 🌟 Recent Updates
 
+- Mar 8 - 🔥🎉🎁 Video-to-app: turn videos/screen recordings into functional apps
 - Mar 5 - Added support for Claude Sonnet 3 (as capable as or better than GPT-4 Vision, and faster!)
 
 ## 🛠 Getting Started
@@ -50,13 +51,21 @@ For debugging purposes, if you don't want to waste GPT4-Vision credits, you can 
 MOCK=true poetry run uvicorn main:app --reload --port 7001
 ```
 
+## Video to app (experimental)
+
+[video]
+
+Record yourself using any website or app or even a Figma prototype, drag & drop in a video and in a few minutes, get a functional, similar-looking app.
+
+[You need an Anthropic API key for this functionality. Follow instructions here.](https://github.com/abi/screenshot-to-code/blob/main/blog/video-to-app.md)
+
 ## Configuration
 
 - You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
 
 ## Using Claude 3
 
-We recently added support for Claude 3 Sonnet. It performs well, on par or better than GPT-4 vision for many inputs, and it tends to be faster. 
+We recently added support for Claude 3 Sonnet. It performs well, on par or better than GPT-4 vision for many inputs, and it tends to be faster.
 
 1. Add an env var `ANTHROPIC_API_KEY` to `backend/.env` with your API key from Anthropic
 2. When using the front-end, select "Claude 3 Sonnet" from the model dropdown
