@@ -3,6 +3,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 // import { PromptImage } from "../../../types";
 import { toast } from "react-hot-toast";
+import { URLS } from "../urls";
+import { Badge } from "./ui/badge";
 
 const baseStyle = {
   flex: 1,
@@ -157,9 +159,15 @@ function ImageUpload({ setReferenceImages }: Props) {
         <input {...getInputProps()} />
         <p className="text-slate-700 text-lg">
           Drag & drop a screenshot here, <br />
-          or paste from clipboard, <br />
           or click to upload
         </p>
+      </div>
+      <div className="text-center text-sm text-slate-800 mt-4">
+        <Badge>New!</Badge> Upload a screen recording in .mp4 or .mov format to
+        clone a whole app (experimental).{" "}
+        <a className="underline" href={URLS["intro-to-video"]} target="_blank">
+          Learn more.
+        </a>
       </div>
     </section>
   );
