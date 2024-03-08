@@ -467,14 +467,27 @@ function App() {
                         "scanning relative": appState === AppState.CODING,
                       })}
                     >
-                      <img
-                        className="w-[340px] border border-gray-200 rounded-md"
-                        src={referenceImages[0]}
-                        alt="Reference"
-                      />
+                      {inputMode === "image" && (
+                        <img
+                          className="w-[340px] border border-gray-200 rounded-md"
+                          src={referenceImages[0]}
+                          alt="Reference"
+                        />
+                      )}
+                      {inputMode === "video" && (
+                        <video
+                          muted
+                          autoPlay
+                          loop
+                          className="w-[340px] border border-gray-200 rounded-md"
+                          src={referenceImages[0]}
+                        />
+                      )}
                     </div>
                     <div className="text-gray-400 uppercase text-sm text-center mt-1">
-                      Original Screenshot
+                      {inputMode === "video"
+                        ? "Original Video"
+                        : "Original Screenshot"}
                     </div>
                   </div>
                 )}
