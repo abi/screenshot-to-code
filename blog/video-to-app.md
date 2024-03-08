@@ -1,12 +1,17 @@
 
-* You can now capture a video of a web app in action and have the AI build it for you.
+## Capture a screen recording of a web site in action and have the AI build it for you.
+
 * Unlike screenshots, the app will not visually look exactly like the screen recording but it will be functional
-* This uses Claude 3 by Anthropic. You need to add an Anthropic API key to your .env file. See the README.md for details
-* IMPORTANT: This is very experimental and each call is expensive. I would recommend setting up usage limits on your Anthropic account to avoid excess charges.
+* IMPORTANT: This is very experimental and each call is expensive (a few dollars). I would recommend setting up usage limits on your Anthropic account to avoid excess charges.
+
+## Setup
+
+This uses Claude 3 by Anthropic. Add an env var ANTHROPIC_API_KEY to backend/.env with your API key from Anthropic.
+
 
 ## Examples
 
-TBD
+https://github.com/abi/screenshot-to-code/assets/23818/fe236c1e-ab92-4d84-b63d-e73e5be9a726
 
 ## Tips for taking videos
 
