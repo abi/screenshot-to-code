@@ -4,6 +4,9 @@ from typing import Awaitable, Callable
 from custom_types import InputMode
 
 
+STREAM_CHUNK_SIZE = 100
+
+
 async def mock_completion(
     process_chunk: Callable[[str], Awaitable[None]], input_mode: InputMode
 ) -> str:
@@ -13,8 +16,8 @@ async def mock_completion(
         else NO_IMAGES_NYTIMES_MOCK_CODE
     )
 
-    for i in range(0, len(code_to_return), 100):
-        await process_chunk(code_to_return[i : i + 100])
+    for i in range(0, len(code_to_return), STREAM_CHUNK_SIZE):
+        await process_chunk(code_to_return[i : i + STREAM_CHUNK_SIZE])
         await asyncio.sleep(0.01)
 
     return code_to_return
