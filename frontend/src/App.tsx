@@ -37,6 +37,7 @@ import ImportCodeSection from "./components/ImportCodeSection";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
 import ModelSettingsSection from "./components/ModelSettingsSection";
+import { extractHtml } from "./components/preview/extractHtml";
 
 const IS_OPENAI_DOWN = false;
 
@@ -142,9 +143,10 @@ function App() {
     cancelCodeGenerationAndReset();
   };
 
-  const shouldDisablePreview = inputMode === "video";
   const previewCode =
-    shouldDisablePreview && appState === AppState.CODING ? "" : generatedCode;
+    inputMode === "video" && appState === AppState.CODING
+      ? extractHtml(generatedCode)
+      : generatedCode;
 
   const cancelCodeGenerationAndReset = () => {
     // When this is the first version, reset the entire app state
