@@ -11,6 +11,8 @@ backend/backend/*
 # Env vars
 frontend/.env.local
 .env
+.env.local
+.env.*
 
 # Mac files
 .DS_Store
