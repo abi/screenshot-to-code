@@ -38,6 +38,7 @@ import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
 import ModelSettingsSection from "./components/ModelSettingsSection";
 import { extractHtml } from "./components/preview/extractHtml";
+import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 
 const IS_OPENAI_DOWN = false;
 
@@ -82,6 +83,9 @@ function App() {
     useState<boolean>(false);
 
   const wsRef = useRef<WebSocket>(null);
+
+  // Indicate coding state using the browser tab's favicon and title
+  useBrowserTabIndicator(appState === AppState.CODING);
 
   // When the user already has the settings in local storage, newly added keys
   // do not get added to the settings so if it's falsy, we populate it with the default
