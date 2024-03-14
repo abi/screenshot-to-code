@@ -45,7 +45,8 @@
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "thememirror": "^2.0.1",
-    "vite-plugin-checker": "^0.6.2"
+    "vite-plugin-checker": "^0.6.2",
+    "webm-duration-fix": "^1.0.4"
   },
   "devDependencies": {
     "@types/node": "^20.9.0",
