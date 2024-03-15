@@ -19,6 +19,7 @@ function ScreenRecorder({
   setScreenRecorderState,
   generateCode,
 }: Props) {
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
@@ -33,6 +34,7 @@ function ScreenRecorder({
         video: true,
         audio: { echoCancellation: true },
       });
+      setMediaStream(stream);
 
       // TODO: Test across different browsers
       // Create the media recorder
@@ -55,6 +57,7 @@ function ScreenRecorder({
         );
 
         const dataUrl = await blobToBase64DataUrl(completeBlob);
+
         setScreenRecordingDataUrl(dataUrl);
         setScreenRecorderState(ScreenRecorderState.FINISHED);
       };
@@ -69,9 +72,17 @@ function ScreenRecorder({
   };
 
   const stopScreenRecording = () => {
+    // Stop the recorder
     if (mediaRecorder) {
       mediaRecorder.stop();
       setMediaRecorder(null);
+    }
+
+    // Stop the screen sharing stream
+    if (mediaStream) {
+      mediaStream.getTracks().forEach((track) => {
+        track.stop();
+      });
     }
   };
 
