@@ -8,6 +8,7 @@ from utils import pprint_prompt
 MODEL_GPT_4_VISION = "gpt-4-vision-preview"
 MODEL_CLAUDE_SONNET = "claude-3-sonnet-20240229"
 MODEL_CLAUDE_OPUS = "claude-3-opus-20240229"
+MODEL_CLAUDE_HAIKU = "claude-3-haiku-20240307"
 
 
 # Keep in sync with frontend (lib/models.ts)
