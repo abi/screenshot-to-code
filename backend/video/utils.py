@@ -5,7 +5,7 @@ import mimetypes
 import os
 import tempfile
 import uuid
-from typing import Union, cast
+from typing import Any, Union, cast
 from moviepy.editor import VideoFileClip  # type: ignore
 from PIL import Image
 import math
@@ -17,7 +17,7 @@ TARGET_NUM_SCREENSHOTS = (
 )
 
 
-async def assemble_claude_prompt_video(video_data_url: str):
+async def assemble_claude_prompt_video(video_data_url: str) -> list[Any]:
     images = split_video_into_screenshots(video_data_url)
 
     # Save images to tmp if we're debugging
@@ -28,7 +28,7 @@ async def assemble_claude_prompt_video(video_data_url: str):
     print(f"Number of frames extracted from video: {len(images)}")
     if len(images) > 20:
         print(f"Too many screenshots: {len(images)}")
-        return
+        raise ValueError("Too many screenshots extracted from video")
 
     # Convert images to the message format for Claude
     content_messages: list[dict[str, Union[dict[str, str], str]]] = []

@@ -6,7 +6,7 @@ from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
 from custom_types import InputMode
 from llm import (
     CODE_GENERATION_MODELS,
-    MODEL_CLAUDE_OPUS,
+    Llm,
     stream_claude_response,
     stream_claude_response_native,
     stream_openai_response,
@@ -88,6 +88,7 @@ async def stream_code(websocket: WebSocket):
     if code_generation_model not in CODE_GENERATION_MODELS:
         await throw_error(f"Invalid model: {code_generation_model}")
         raise Exception(f"Invalid model: {code_generation_model}")
+    exact_llm_version = None
 
     print(
         f"Generating {generated_code_config} code for uploaded {input_mode} using {code_generation_model} model..."
@@ -238,9 +239,10 @@ async def stream_code(websocket: WebSocket):
                     messages=prompt_messages,  # type: ignore
                     api_key=ANTHROPIC_API_KEY,
                     callback=lambda x: process_chunk(x),
-                    model=MODEL_CLAUDE_OPUS,
+                    model=Llm.CLAUDE_3_OPUS,
                     include_thinking=True,
                 )
+                exact_llm_version = Llm.CLAUDE_3_OPUS
             elif code_generation_model == "claude_3_sonnet":
                 if not ANTHROPIC_API_KEY:
                     await throw_error(
@@ -253,6 +255,7 @@ async def stream_code(websocket: WebSocket):
                     api_key=ANTHROPIC_API_KEY,
                     callback=lambda x: process_chunk(x),
                 )
+                exact_llm_version = Llm.CLAUDE_3_SONNET
             else:
                 completion = await stream_openai_response(
                     prompt_messages,  # type: ignore
@@ -260,6 +263,7 @@ async def stream_code(websocket: WebSocket):
                     base_url=openai_base_url,
                     callback=lambda x: process_chunk(x),
                 )
+                exact_llm_version = Llm.GPT_4_VISION
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
             error_message = (
@@ -297,6 +301,8 @@ async def stream_code(websocket: WebSocket):
 
     if validated_input_mode == "video":
         completion = extract_tag_content("html", completion)
+
+    print("Exact used model for generation: ", exact_llm_version)
 
     # Write the messages dict into a log so that we can debug later
     write_logs(prompt_messages, completion)  # type: ignore
