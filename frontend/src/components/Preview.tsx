@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import classNames from "classnames";
-// import useThrottle from "../hooks/useThrottle";
+import useThrottle from "../hooks/useThrottle";
 
 interface Props {
   code: string;
@@ -8,17 +8,14 @@ interface Props {
 }
 
 function Preview({ code, device }: Props) {
-  const throttledCode = code;
-  // Temporary disable throttling for the preview not updating when the code changes
-  // useThrottle(code, 200);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
+  // Don't update code more often than every 200ms.
+  const throttledCode = useThrottle(code, 200);
+
   useEffect(() => {
-    const iframe = iframeRef.current;
-    if (iframe && iframe.contentDocument) {
-      iframe.contentDocument.open();
-      iframe.contentDocument.write(throttledCode);
-      iframe.contentDocument.close();
+    if (iframeRef.current) {
+      iframeRef.current.srcdoc = throttledCode;
     }
   }, [throttledCode]);
 

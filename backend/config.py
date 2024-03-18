@@ -3,6 +3,7 @@
 # TODO: Should only be set to true when value is 'True', not any abitrary truthy value
 import os
 
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 
 SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))
 

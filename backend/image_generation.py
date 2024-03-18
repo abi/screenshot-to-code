@@ -15,7 +15,7 @@ async def process_tasks(prompts: List[str], api_key: str, base_url: str):
             print(f"An exception occurred: {result}")
             processed_results.append(None)
         else:
-            processed_results.append(result)
+            processed_results.append(result)  # type: ignore
 
     return processed_results
 
@@ -30,7 +30,7 @@ async def generate_image(prompt: str, api_key: str, base_url: str):
         "size": "1024x1024",
         "prompt": prompt,
     }
-    res = await client.images.generate(**image_params)
+    res = await client.images.generate(**image_params)  # type: ignore
     await client.close()
     return res.data[0].url
 
@@ -77,26 +77,26 @@ async def generate_images(
             img["src"].startswith("https://placehold.co")
             and image_cache.get(img.get("alt")) is None
         ):
-            alts.append(img.get("alt", None))
+            alts.append(img.get("alt", None))  # type: ignore
 
     # Exclude images with no alt text
-    alts = [alt for alt in alts if alt is not None]
+    alts = [alt for alt in alts if alt is not None]  # type: ignore
 
     # Remove duplicates
-    prompts = list(set(alts))
+    prompts = list(set(alts))  # type: ignore
 
     # Return early if there are no images to replace
-    if len(prompts) == 0:
+    if len(prompts) == 0:  # type: ignore
         return code
 
     # Generate images
-    results = await process_tasks(prompts, api_key, base_url)
+    results = await process_tasks(prompts, api_key, base_url)  # type: ignore
 
     # Create a dict mapping alt text to image URL
-    mapped_image_urls = dict(zip(prompts, results))
+    mapped_image_urls = dict(zip(prompts, results))  # type: ignore
 
     # Merge with image_cache
-    mapped_image_urls = {**mapped_image_urls, **image_cache}
+    mapped_image_urls = {**mapped_image_urls, **image_cache}  # type: ignore
 
     # Replace old image URLs with the generated URLs
     for img in images:

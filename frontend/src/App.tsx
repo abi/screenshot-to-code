@@ -37,6 +37,10 @@ import ImportCodeSection from "./components/ImportCodeSection";
 import { useAuth } from "@clerk/clerk-react";
 import { useStore } from "./store/store";
 import { Stack } from "./lib/stacks";
+import { CodeGenerationModel } from "./lib/models";
+import ModelSettingsSection from "./components/ModelSettingsSection";
+import { extractHtml } from "./components/preview/extractHtml";
+import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 
 const IS_OPENAI_DOWN = false;
 
@@ -47,6 +51,8 @@ interface Props {
 function App({ navbarComponent }: Props) {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
+
+  const [inputMode, setInputMode] = useState<"image" | "video">("image");
 
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
@@ -67,12 +73,17 @@ function App({ navbarComponent }: Props) {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
+      codeGenerationModel: CodeGenerationModel.GPT_4_VISION,
       // Only relevant for hosted version
       isTermOfServiceAccepted: true,
       accessCode: null,
     },
     "setting"
   );
+
+  // Code generation model from local storage or the default value
+  const selectedCodeGenerationModel =
+    settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
 
   // App history
   const [appHistory, setAppHistory] = useState<History>([]);
@@ -83,6 +94,9 @@ function App({ navbarComponent }: Props) {
     useState<boolean>(false);
 
   const wsRef = useRef<WebSocket>(null);
+
+  // Indicate coding state using the browser tab's favicon and title
+  useBrowserTabIndicator(appState === AppState.CODING);
 
   // When the user already has the settings in local storage, newly added keys
   // do not get added to the settings so if it's falsy, we populate it with the default
@@ -145,6 +159,11 @@ function App({ navbarComponent }: Props) {
     // make sure stop can correct the state even if the websocket is already closed
     cancelCodeGenerationAndReset();
   };
+
+  const previewCode =
+    inputMode === "video" && appState === AppState.CODING
+      ? extractHtml(generatedCode)
+      : generatedCode;
 
   const cancelCodeGenerationAndReset = () => {
     // When this is the first version, reset the entire app state
@@ -231,16 +250,21 @@ function App({ navbarComponent }: Props) {
   }
 
   // Initial version creation
-  async function doCreate(referenceImages: string[]) {
+  async function doCreate(
+    referenceImages: string[],
+    inputMode: "image" | "video"
+  ) {
     // Reset any existing state
     reset();
 
     setReferenceImages(referenceImages);
+    setInputMode(inputMode);
     if (referenceImages.length > 0) {
       await doGenerateCode(
         {
           generationType: "create",
           image: referenceImages[0],
+          inputMode,
         },
         currentVersion
       );
@@ -275,6 +299,7 @@ function App({ navbarComponent }: Props) {
       await doGenerateCode(
         {
           generationType: "update",
+          inputMode,
           image: referenceImages[0],
           resultImage: resultImage,
           history: updatedHistory,
@@ -286,6 +311,7 @@ function App({ navbarComponent }: Props) {
       await doGenerateCode(
         {
           generationType: "update",
+          inputMode,
           image: referenceImages[0],
           history: updatedHistory,
           isImportedFromCode,
@@ -309,6 +335,13 @@ function App({ navbarComponent }: Props) {
     setSettings((prev) => ({
       ...prev,
       generatedCodeConfig: stack,
+    }));
+  }
+
+  function setCodeGenerationModel(codeGenerationModel: CodeGenerationModel) {
+    setSettings((prev) => ({
+      ...prev,
+      codeGenerationModel,
     }));
   }
 
@@ -355,6 +388,14 @@ function App({ navbarComponent }: Props) {
             }
           />
 
+          <ModelSettingsSection
+            codeGenerationModel={selectedCodeGenerationModel}
+            setCodeGenerationModel={setCodeGenerationModel}
+            shouldDisableUpdates={
+              appState === AppState.CODING || appState === AppState.CODE_READY
+            }
+          />
+
           {IS_RUNNING_ON_CLOUD &&
             !(settings.openAiApiKey || settings.accessCode) &&
             subscriberTier === "free" && <OnboardingNote />}
@@ -372,11 +413,25 @@ function App({ navbarComponent }: Props) {
               {/* Show code preview only when coding */}
               {appState === AppState.CODING && (
                 <div className="flex flex-col">
+                  {/* Speed disclaimer for video mode */}
+                  {inputMode === "video" && (
+                    <div
+                      className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 
+                    p-2 text-xs mb-4 mt-1"
+                    >
+                      Code generation from videos can take 3-4 minutes. We do
+                      multiple passes to get the best result. Please be patient.
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-x-1">
                     <Spinner />
                     {executionConsole.slice(-1)[0]}
                   </div>
-                  <div className="flex mt-4 w-full">
+
+                  <CodePreview code={generatedCode} />
+
+                  <div className="flex w-full">
                     <Button
                       onClick={cancelCodeGeneration}
                       className="w-full dark:text-white dark:bg-gray-700"
@@ -384,7 +439,6 @@ function App({ navbarComponent }: Props) {
                       Cancel
                     </Button>
                   </div>
-                  <CodePreview code={generatedCode} />
                 </div>
               )}
 
@@ -440,14 +494,27 @@ function App({ navbarComponent }: Props) {
                         "scanning relative": appState === AppState.CODING,
                       })}
                     >
-                      <img
-                        className="w-[340px] border border-gray-200 rounded-md"
-                        src={referenceImages[0]}
-                        alt="Reference"
-                      />
+                      {inputMode === "image" && (
+                        <img
+                          className="w-[340px] border border-gray-200 rounded-md"
+                          src={referenceImages[0]}
+                          alt="Reference"
+                        />
+                      )}
+                      {inputMode === "video" && (
+                        <video
+                          muted
+                          autoPlay
+                          loop
+                          className="w-[340px] border border-gray-200 rounded-md"
+                          src={referenceImages[0]}
+                        />
+                      )}
                     </div>
                     <div className="text-gray-400 uppercase text-sm text-center mt-1">
-                      Original Screenshot
+                      {inputMode === "video"
+                        ? "Original Video"
+                        : "Original Screenshot"}
                     </div>
                   </div>
                 )}
@@ -519,14 +586,14 @@ function App({ navbarComponent }: Props) {
                 </TabsList>
               </div>
               <TabsContent value="desktop">
-                <Preview code={generatedCode} device="desktop" />
+                <Preview code={previewCode} device="desktop" />
               </TabsContent>
               <TabsContent value="mobile">
-                <Preview code={generatedCode} device="mobile" />
+                <Preview code={previewCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
                 <CodeTab
-                  code={generatedCode}
+                  code={previewCode}
                   setCode={setGeneratedCode}
                   settings={settings}
                 />
