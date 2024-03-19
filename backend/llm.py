@@ -8,6 +8,7 @@ from utils import pprint_prompt
 
 
 # Actual model versions that are passed to the LLMs and stored in our logs
+# Keep in sync with s2c-saas repo & DB column `llm_version`
 class Llm(Enum):
     GPT_4_VISION = "gpt-4-vision-preview"
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"

@@ -5,6 +5,7 @@ from typing import List
 import json
 
 from config import BACKEND_SAAS_URL, IS_PROD
+from llm import Llm
 
 
 class PaymentMethod(Enum):
@@ -19,6 +20,7 @@ async def send_to_saas_backend(
     prompt_messages: List[ChatCompletionMessageParam],
     completion: str,
     payment_method: PaymentMethod,
+    llm_version: Llm,
     auth_token: str | None = None,
 ):
     if IS_PROD:
@@ -30,6 +32,7 @@ async def send_to_saas_backend(
                     "prompt": json.dumps(prompt_messages),
                     "completion": completion,
                     "payment_method": payment_method.value,
+                    "llm_version": llm_version.value,
                 }
             )
 

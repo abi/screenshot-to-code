@@ -343,10 +343,12 @@ async def stream_code(websocket: WebSocket):
     if IS_PROD:
         # Catch any errors from sending to SaaS backend and continue
         try:
+            assert exact_llm_version is not None, "exact_llm_version is not set"
             await send_to_saas_backend(
                 prompt_messages,
                 completion,
                 payment_method=payment_method,
+                llm_version=exact_llm_version,
                 auth_token=params["authToken"],
             )
         except Exception as e:
