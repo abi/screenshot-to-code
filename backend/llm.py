@@ -113,6 +113,10 @@ async def stream_claude_response(
 
     # Return final message
     response = await stream.get_final_message()
+
+    # Close the Anthropic client
+    await client.close()
+
     return response.content[0].text
 
 
@@ -176,6 +180,9 @@ async def stream_claude_response_native(
         print(
             f"Token usage: Input Tokens: {response.usage.input_tokens}, Output Tokens: {response.usage.output_tokens}"
         )
+
+    # Close the Anthropic client
+    await client.close()
 
     if not response:
         raise Exception("No HTML response found in AI response")
