@@ -35,7 +35,12 @@ async def stream_openai_response(
     model = Llm.GPT_4_VISION
 
     # Base parameters
-    params = {"model": model, "messages": messages, "stream": True, "timeout": 600}
+    params = {
+        "model": model.value,
+        "messages": messages,
+        "stream": True,
+        "timeout": 600,
+    }
 
     # Add 'max_tokens' only if the model is a GPT4 vision model
     if model == Llm.GPT_4_VISION:
