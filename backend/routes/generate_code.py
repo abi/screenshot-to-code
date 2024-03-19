@@ -76,7 +76,7 @@ async def stream_code(websocket: WebSocket):
     valid_stack = cast(Stack, generated_code_config)
 
     # Validate the input mode
-    input_mode = params.get("inputMode")
+    input_mode = params.get("inputMode", "image")
     if not input_mode in get_args(InputMode):
         await throw_error(f"Invalid input mode: {input_mode}")
         raise Exception(f"Invalid input mode: {input_mode}")
