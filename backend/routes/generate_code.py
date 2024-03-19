@@ -230,7 +230,7 @@ async def stream_code(websocket: WebSocket):
             if validated_input_mode == "video":
                 if not ANTHROPIC_API_KEY:
                     await throw_error(
-                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
                     )
                     raise Exception("No Anthropic key")
 
