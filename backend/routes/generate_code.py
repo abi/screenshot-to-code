@@ -119,7 +119,7 @@ async def stream_code(websocket: WebSocket):
             if openai_api_key:
                 print("Using OpenAI API key from environment variable")
 
-    if not openai_api_key:
+    if not openai_api_key and code_generation_model == "gpt_4_vision":
         print("OpenAI API key not found")
         await websocket.send_json(
             {
