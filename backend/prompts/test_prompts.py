@@ -311,35 +311,35 @@ def test_prompts():
     tailwind_prompt = assemble_prompt(
         "image_data_url", "html_tailwind", "result_image_data_url"
     )
-    assert tailwind_prompt[0]["content"] == TAILWIND_SYSTEM_PROMPT
+    assert tailwind_prompt[0].get("content") == TAILWIND_SYSTEM_PROMPT
     assert tailwind_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     react_tailwind_prompt = assemble_prompt(
         "image_data_url", "react_tailwind", "result_image_data_url"
     )
-    assert react_tailwind_prompt[0]["content"] == REACT_TAILWIND_SYSTEM_PROMPT
+    assert react_tailwind_prompt[0].get("content") == REACT_TAILWIND_SYSTEM_PROMPT
     assert react_tailwind_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     bootstrap_prompt = assemble_prompt(
         "image_data_url", "bootstrap", "result_image_data_url"
     )
-    assert bootstrap_prompt[0]["content"] == BOOTSTRAP_SYSTEM_PROMPT
+    assert bootstrap_prompt[0].get("content") == BOOTSTRAP_SYSTEM_PROMPT
     assert bootstrap_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     ionic_tailwind = assemble_prompt(
         "image_data_url", "ionic_tailwind", "result_image_data_url"
     )
-    assert ionic_tailwind[0]["content"] == IONIC_TAILWIND_SYSTEM_PROMPT
+    assert ionic_tailwind[0].get("content") == IONIC_TAILWIND_SYSTEM_PROMPT
     assert ionic_tailwind[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     vue_tailwind = assemble_prompt(
         "image_data_url", "vue_tailwind", "result_image_data_url"
     )
-    assert vue_tailwind[0]["content"] == VUE_TAILWIND_SYSTEM_PROMPT
+    assert vue_tailwind[0].get("content") == VUE_TAILWIND_SYSTEM_PROMPT
     assert vue_tailwind[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
     svg_prompt = assemble_prompt("image_data_url", "svg", "result_image_data_url")
-    assert svg_prompt[0]["content"] == SVG_SYSTEM_PROMPT
+    assert svg_prompt[0].get("content") == SVG_SYSTEM_PROMPT
     assert svg_prompt[1]["content"][2]["text"] == SVG_USER_PROMPT  # type: ignore
 
 

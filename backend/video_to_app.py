@@ -17,8 +17,7 @@ from utils import pprint_prompt
 from config import ANTHROPIC_API_KEY
 from video.utils import extract_tag_content, assemble_claude_prompt_video
 from llm import (
-    MODEL_CLAUDE_OPUS,
-    # MODEL_CLAUDE_SONNET,
+    Llm,
     stream_claude_response_native,
 )
 
@@ -87,7 +86,7 @@ async def main():
         messages=prompt_messages,
         api_key=ANTHROPIC_API_KEY,
         callback=lambda x: process_chunk(x),
-        model=MODEL_CLAUDE_OPUS,
+        model=Llm.CLAUDE_3_OPUS,
         include_thinking=True,
     )
 
