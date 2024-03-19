@@ -61,9 +61,7 @@ function ModelSettingsSection({
                     {IS_RUNNING_ON_CLOUD &&
                       subscriberTier === "free" &&
                       CODE_GENERATION_MODEL_DESCRIPTIONS[model].isPaid && (
-                        <Badge className="ml-2" variant="secondary">
-                          Upgrade to Paid
-                        </Badge>
+                        <Badge variant="default">Upgrade to Paid</Badge>
                       )}
                   </div>
                 </SelectItem>
