@@ -286,6 +286,13 @@ async def stream_code(websocket: WebSocket):
                     )
                     raise Exception("No Anthropic key")
 
+                # Do not allow non-subscribers to use Claude
+                if payment_method != PaymentMethod.SUBSCRIPTION:
+                    await throw_error(
+                        "Please subscribe to a paid plan to use the Claude models"
+                    )
+                    raise Exception("Not subscribed to a paid plan for Claude")
+
                 completion = await stream_claude_response(
                     prompt_messages,  # type: ignore
                     api_key=ANTHROPIC_API_KEY,
