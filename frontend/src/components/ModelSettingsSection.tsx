@@ -10,6 +10,8 @@ import {
   CodeGenerationModel,
 } from "../lib/models";
 import { Badge } from "./ui/badge";
+import { IS_RUNNING_ON_CLOUD } from "../config";
+import { useStore } from "../store/store";
 
 interface Props {
   codeGenerationModel: CodeGenerationModel;
@@ -22,6 +24,8 @@ function ModelSettingsSection({
   setCodeGenerationModel,
   shouldDisableUpdates = false,
 }: Props) {
+  const subscriberTier = useStore((state) => state.subscriberTier);
+
   return (
     <div className="flex flex-col gap-y-2 justify-between text-sm">
       <div className="grid grid-cols-3 items-center gap-4">
@@ -42,15 +46,25 @@ function ModelSettingsSection({
             <SelectGroup>
               {Object.values(CodeGenerationModel).map((model) => (
                 <SelectItem key={model} value={model}>
-                  <div className="flex items-center">
-                    <span className="font-semibold">
-                      {CODE_GENERATION_MODEL_DESCRIPTIONS[model].name}
-                    </span>
-                    {CODE_GENERATION_MODEL_DESCRIPTIONS[model].inBeta && (
-                      <Badge className="ml-2" variant="secondary">
-                        Beta
-                      </Badge>
-                    )}
+                  <div className="flex flex-col">
+                    <div className="flex items-center">
+                      <span className="font-semibold">
+                        {CODE_GENERATION_MODEL_DESCRIPTIONS[model].name}
+                      </span>
+                      {!IS_RUNNING_ON_CLOUD &&
+                        CODE_GENERATION_MODEL_DESCRIPTIONS[model].inBeta && (
+                          <Badge className="ml-2" variant="secondary">
+                            Beta
+                          </Badge>
+                        )}
+                    </div>
+                    {IS_RUNNING_ON_CLOUD &&
+                      subscriberTier === "free" &&
+                      CODE_GENERATION_MODEL_DESCRIPTIONS[model].isPaid && (
+                        <Badge className="ml-2" variant="secondary">
+                          Upgrade to Paid
+                        </Badge>
+                      )}
                   </div>
                 </SelectItem>
               ))}

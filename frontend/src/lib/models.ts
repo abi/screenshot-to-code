@@ -5,8 +5,12 @@ export enum CodeGenerationModel {
 }
 
 export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
-  [key in CodeGenerationModel]: { name: string; inBeta: boolean };
+  [key in CodeGenerationModel]: {
+    name: string;
+    inBeta: boolean;
+    isPaid: boolean;
+  };
 } = {
-  gpt_4_vision: { name: "GPT-4 Vision", inBeta: false },
-  claude_3_sonnet: { name: "Claude 3 Sonnet", inBeta: true },
+  gpt_4_vision: { name: "GPT-4 Vision", inBeta: false, isPaid: false },
+  claude_3_sonnet: { name: "Claude 3 Sonnet", inBeta: true, isPaid: true },
 };
