@@ -116,7 +116,7 @@ const PricingDialog: React.FC = () => {
                     </li>
                     <li className="flex items-center">
                       <FaCheckCircle className="text-black mr-2" />
-                      Slack support
+                      Email support
                     </li>
                   </ul>
                 </div>
@@ -158,6 +158,14 @@ const PricingDialog: React.FC = () => {
                     </li>
                     <li className="flex items-center">
                       <FaCheckCircle className="text-black mr-2" />
+                      OpenAI models
+                    </li>
+                    <li className="flex items-center">
+                      <FaCheckCircle className="text-black mr-2" />
+                      Claude models
+                    </li>
+                    <li className="flex items-center">
+                      <FaCheckCircle className="text-black mr-2" />
                       Email support
                     </li>
                   </ul>
@@ -196,7 +204,15 @@ const PricingDialog: React.FC = () => {
                     </li>
                     <li className="flex items-center">
                       <FaCheckCircle className="text-black mr-2" />
-                      Slack support
+                      OpenAI models
+                    </li>
+                    <li className="flex items-center">
+                      <FaCheckCircle className="text-black mr-2" />
+                      Claude models
+                    </li>
+                    <li className="flex items-center">
+                      <FaCheckCircle className="text-black mr-2" />
+                      Email support
                     </li>
                   </ul>
                 </div>
