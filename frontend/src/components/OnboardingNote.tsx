@@ -12,7 +12,8 @@ export function OnboardingNote() {
           onClick={() => setPricingDialogOpen(true)}
           target="_blank"
         >
-          subscribe (100 generations for $15)
+          subscribe to a paid plan ($15/month) to get access to all supported
+          models
         </a>{" "}
         or use your own OpenAI API key with GPT4 vision access (
         <a
