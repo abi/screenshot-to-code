@@ -80,7 +80,7 @@ function LandingPage() {
             Convert any screenshot or design to clean code (with support for
             most frameworks)
           </p>
-          <div className="flex space-x-4 flex-col sm:flex-row">
+          <div className="flex gap-4 flex-col sm:flex-row">
             <Button size="lg" className="text-lg py-6 px-8" onClick={signIn}>
               Get started
             </Button>
@@ -148,7 +148,7 @@ function LandingPage() {
         <h2 className="text-gray-600 text-2xl mb-4 text-center">
           Here's what users have to say
         </h2>
-        <div className="grid grid-cols-2 gap-2 items-start">
+        <div className="px-3 grid grid-cols-1 sm:grid-cols-2 gap-2 items-start justify-items-center">
           {/* <YouTube videoId="b2xi5qiiTOI" opts={youtubeOpts} /> */}
           <Tweet id="1733865178905661940" />
           {/* <Tweet id="1727586760584991054" /> Other Rowan Cheung tweet */}
