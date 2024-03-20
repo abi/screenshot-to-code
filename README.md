@@ -51,7 +51,7 @@ For debugging purposes, if you don't want to waste GPT4-Vision credits, you can 
 MOCK=true poetry run uvicorn main:app --reload --port 7001
 ```
 
-## Video to app (experimental)
+## Screen Recording to prototype (experimental)
 
 https://github.com/abi/screenshot-to-code/assets/23818/1468bef4-164f-4046-a6c8-4cfc40a5cdff
 
