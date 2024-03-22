@@ -21,7 +21,7 @@ See the [Examples](#-examples) section below for more demos.
 
 ## 🛠 Getting Started
 
-The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API.
+The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API or an Anthropic key if you want to use Claude Sonnet, or for experimental video support.
 
 Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
 
@@ -32,6 +32,8 @@ poetry install
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
+
+If you want to use Anthropic, add the `ANTHROPIC_API_KEY` to `backend/.env` with your API key from Anthropic.
 
 Run the frontend:
 
@@ -59,16 +61,6 @@ Record yourself using any website or app or even a Figma prototype, drag & drop 
 
 [You need an Anthropic API key for this functionality. Follow instructions here.](https://github.com/abi/screenshot-to-code/blob/main/blog/video-to-app.md)
 
-## Configuration
-
-- You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
-
-## Using Claude 3
-
-We recently added support for Claude 3 Sonnet. It performs well, on par or better than GPT-4 vision for many inputs, and it tends to be faster.
-
-1. Add an env var `ANTHROPIC_API_KEY` to `backend/.env` with your API key from Anthropic
-2. When using the front-end, select "Claude 3 Sonnet" from the model dropdown
 
 ## Docker
 
@@ -85,6 +77,7 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 
 - **I'm running into an error when setting up the backend. How can I fix it?** [Try this](https://github.com/abi/screenshot-to-code/issues/3#issuecomment-1814777959). If that still doesn't work, open an issue.
 - **How do I get an OpenAI API key?** See https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md
+- **How can I configure an OpenAI proxy?** - you can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
 - **How can I provide feedback?** For feedback, feature requests and bug reports, open an issue or ping me on [Twitter](https://twitter.com/_abi_).
 
 ## 📚 Examples
