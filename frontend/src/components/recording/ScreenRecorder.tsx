@@ -118,7 +118,26 @@ function ScreenRecorder({
           <div className="flex items-center mr-2 text-xl gap-x-1">
             <span>Screen Recording Captured.</span>
           </div>
-          <Button onClick={kickoffGeneration}>Generate</Button>
+          {screenRecordingDataUrl && (
+            <video
+              muted
+              autoPlay
+              loop
+              className="w-[340px] border border-gray-200 rounded-md"
+              src={screenRecordingDataUrl}
+            />
+          )}
+          <div className="flex gap-x-2">
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setScreenRecorderState(ScreenRecorderState.INITIAL)
+              }
+            >
+              Re-record
+            </Button>
+            <Button onClick={kickoffGeneration}>Generate</Button>
+          </div>
         </div>
       )}
     </div>
