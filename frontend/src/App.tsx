@@ -39,6 +39,7 @@ import { CodeGenerationModel } from "./lib/models";
 import ModelSettingsSection from "./components/ModelSettingsSection";
 import { extractHtml } from "./components/preview/extractHtml";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
+import { URLS } from "./urls";
 
 const IS_OPENAI_DOWN = false;
 
@@ -372,6 +373,15 @@ function App() {
             }
           />
 
+          <a
+            className="text-xs underline text-gray-500 text-right"
+            href={URLS.tips}
+            target="_blank"
+            rel="noopener"
+          >
+            Tips for better results
+          </a>
+
           {IS_RUNNING_ON_CLOUD &&
             !(settings.openAiApiKey || settings.accessCode) && (
               <OnboardingNote />
@@ -393,7 +403,7 @@ function App() {
                   {/* Speed disclaimer for video mode */}
                   {inputMode === "video" && (
                     <div
-                      className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 
+                      className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700
                     p-2 text-xs mb-4 mt-1"
                     >
                       Code generation from videos can take 3-4 minutes. We do
