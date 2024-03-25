@@ -58,8 +58,6 @@ function ScreenRecorder({
 
         const dataUrl = await blobToBase64DataUrl(completeBlob);
 
-        // downloadBlob(completeBlob);
-
         setScreenRecordingDataUrl(dataUrl);
         setScreenRecorderState(ScreenRecorderState.FINISHED);
       };

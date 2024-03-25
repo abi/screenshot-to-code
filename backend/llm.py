@@ -3,6 +3,8 @@ from typing import Any, Awaitable, Callable, List, cast
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
+from config import IS_DEBUG_ENABLED
+from debug.DebugFileWriter import DebugFileWriter
 
 from utils import pprint_prompt
 
@@ -142,6 +144,10 @@ async def stream_claude_response_native(
     prefix = "<thinking>"
     response = None
 
+    # For debugging
+    full_stream = ""
+    debug_file_writer = DebugFileWriter()
+
     while current_pass_num <= max_passes:
         current_pass_num += 1
 
@@ -163,10 +169,22 @@ async def stream_claude_response_native(
         ) as stream:
             async for text in stream.text_stream:
                 print(text, end="", flush=True)
+                full_stream += text
                 await callback(text)
 
-        # Return final message
         response = await stream.get_final_message()
+        response_text = response.content[0].text
+
+        # Write each pass's code to .html file and thinking to .txt file
+        if IS_DEBUG_ENABLED:
+            debug_file_writer.write_to_file(
+                f"pass_{current_pass_num - 1}.html",
+                debug_file_writer.extract_html_content(response_text),
+            )
+            debug_file_writer.write_to_file(
+                f"thinking_pass_{current_pass_num - 1}.txt",
+                response_text.split("</thinking>")[0],
+            )
 
         # Set up messages array for next pass
         messages += [
@@ -183,6 +201,9 @@ async def stream_claude_response_native(
 
     # Close the Anthropic client
     await client.close()
+
+    if IS_DEBUG_ENABLED:
+        debug_file_writer.write_to_file("full_stream.txt", full_stream)
 
     if not response:
         raise Exception("No HTML response found in AI response")
