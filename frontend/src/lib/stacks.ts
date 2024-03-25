@@ -2,6 +2,7 @@
 export enum Stack {
   HTML_TAILWIND = "html_tailwind",
   REACT_TAILWIND = "react_tailwind",
+  REACT_CSS = "react_css",
   BOOTSTRAP = "bootstrap",
   VUE_TAILWIND = "vue_tailwind",
   IONIC_TAILWIND = "ionic_tailwind",
@@ -13,6 +14,7 @@ export const STACK_DESCRIPTIONS: {
 } = {
   html_tailwind: { components: ["HTML", "Tailwind"], inBeta: false },
   react_tailwind: { components: ["React", "Tailwind"], inBeta: false },
+  react_css: { components: ["React", "CSS"], inBeta: false },
   bootstrap: { components: ["Bootstrap"], inBeta: false },
   vue_tailwind: { components: ["Vue", "Tailwind"], inBeta: true },
   ionic_tailwind: { components: ["Ionic", "Tailwind"], inBeta: true },

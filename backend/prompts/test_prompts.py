@@ -79,6 +79,27 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+REACT_CSS_SYSTEM_PROMPT = """
+You are an experienced React developer focusing on CSS Modules.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should include 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use these scripts to include React so that it can run on a standalone page:
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+- Instead of using Tailwind, you will apply styles using CSS Modules. Create `.module.css` files for your components and import them using module syntax, for example: `import styles from './MyComponent.module.css';`
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code inside <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
 IONIC_TAILWIND_SYSTEM_PROMPT = """
 You are an expert Ionic/Tailwind developer
 You take screenshots of a reference web page from the user, and then build single page apps 
@@ -210,6 +231,27 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+IMPORTED_CODE_REACT_CSS_SYSTEM_PROMPT = """
+You are an experienced React developer focusing on CSS Modules.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should include 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use these scripts to include React so that it can run on a standalone page:
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+- Instead of using Tailwind, you will apply styles using CSS Modules. Create `.module.css` files for your components and import them using module syntax, for example: `import styles from './MyComponent.module.css';`
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code inside <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
 IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT = """
 You are an expert Bootstrap developer.
 
@@ -320,6 +362,12 @@ def test_prompts():
     assert react_tailwind_prompt[0].get("content") == REACT_TAILWIND_SYSTEM_PROMPT
     assert react_tailwind_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
+    react_css_prompt = assemble_prompt(
+        "image_data_url", "react_css", "result_image_data_url"
+    )
+    assert react_css_prompt[0]["content"] == REACT_CSS_SYSTEM_PROMPT
+    assert react_css_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
+
     bootstrap_prompt = assemble_prompt(
         "image_data_url", "bootstrap", "result_image_data_url"
     )
@@ -361,6 +409,15 @@ def test_imported_code_prompts():
         {"role": "user", "content": "Here is the code of the app: code"},
     ]
     assert react_tailwind_prompt == expected_react_tailwind_prompt
+
+    react_css_prompt = assemble_imported_code_prompt(
+        "code", "react_css", "result_image_data_url"
+    )
+    expected_react_css_prompt = [
+        {"role": "system", "content": IMPORTED_CODE_REACT_CSS_SYSTEM_PROMPT},
+        {"role": "user", "content": "Here is the code of the app: code"},
+    ]
+    assert react_css_prompt == expected_react_css_prompt
 
     bootstrap_prompt = assemble_imported_code_prompt(
         "code", "bootstrap", "result_image_data_url"

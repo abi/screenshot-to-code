@@ -39,6 +39,27 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+IMPORTED_CODE_REACT_CSS_SYSTEM_PROMPT = """
+You are an experienced React developer focusing on CSS Modules.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should include 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- Use these scripts to include React so that it can run on a standalone page:
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+- Instead of using Tailwind, you will apply styles using CSS Modules. Create `.module.css` files for your components and import them using module syntax, for example: `import styles from './MyComponent.module.css';`
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code inside <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
 IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT = """
 You are an expert Bootstrap developer.
 
@@ -129,6 +150,7 @@ Do not include markdown "```" or "```svg" at the start or end.
 IMPORTED_CODE_SYSTEM_PROMPTS = SystemPrompts(
     html_tailwind=IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT,
     react_tailwind=IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT,
+    react_css=IMPORTED_CODE_REACT_CSS_SYSTEM_PROMPT,
     bootstrap=IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT,
     ionic_tailwind=IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT,
     vue_tailwind=IMPORTED_CODE_VUE_TAILWIND_SYSTEM_PROMPT,
