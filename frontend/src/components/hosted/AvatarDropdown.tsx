@@ -17,6 +17,7 @@ import { SAAS_BACKEND_URL } from "../../config";
 import { CreditsUsage } from "./types";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { URLS } from "../../urls";
 
 export default function AvatarDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -108,6 +109,11 @@ export default function AvatarDropdown() {
                 </>
               )}
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild={true}>
+                <a href={URLS.tips} target="_blank">
+                  Tips for better results
+                </a>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild={true}>
                 <a href="mailto:support@picoapps.xyz" target="_blank">
                   Email support
