@@ -4,14 +4,14 @@ from typing import Awaitable, Callable
 from custom_types import InputMode
 
 
-STREAM_CHUNK_SIZE = 5
+STREAM_CHUNK_SIZE = 20
 
 
 async def mock_completion(
     process_chunk: Callable[[str], Awaitable[None]], input_mode: InputMode
 ) -> str:
     code_to_return = (
-        GOOGLE_FORM_VIDEO_PROMPT_MOCK
+        TALLY_FORM_VIDEO_PROMPT_MOCK
         if input_mode == "video"
         else NO_IMAGES_NYTIMES_MOCK_CODE
     )
@@ -670,394 +670,460 @@ $(document).ready(function() {
 """
 
 GOOGLE_FORM_VIDEO_PROMPT_MOCK = """
-<thinking>
-To build this:
-- Create a search bar that allows typing and shows placeholder text
-- Implement search suggestions that update as the user types
-- Allow selecting a suggestion to perform that search
-- Show search results with the query and an AI-powered overview 
-- Have filter tabs for different search verticals 
-- Allow clicking filter tabs to add/remove them, updating the URL
-- Ensure the UI closely matches the Google style and colors
+
+<thinking>User flow:
+1. User starts on the Google search page and types in "times" in the search bar
+2. As the user types, Google provides autocomplete suggestions related to "times"
+3. User selects the "times" suggestion from the autocomplete dropdown
+4. The search results page for "times" loads, showing various results related to The New York Times newspaper
+5. User clicks the "Generate" button under "Get an AI-powered overview for this search?"
+6. An AI-generated overview about The New York Times loads on the right side of the search results
+
+Code structure:
+- HTML structure with header, search bar, autocomplete dropdown, search button
+- Search results area to display search results
+- Sidebar area to display the AI-generated overview
+- Use Tailwind CSS utility classes for styling
+- Use jQuery to handle user interactions:
+  - Typing in search bar to show/filter autocomplete suggestions
+  - Selecting autocomplete suggestion to populate search bar
+  - Clicking search button to display search results
+  - Clicking "Generate" button to display AI overview
+- Hardcode search results and AI overview content for demo purposes
 </thinking>
 
 <html>
 <head>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-    .filter {
-      color: #1a73e8;
-    }
-    .filter.active {
-      background-color: #e2eeff;
-      border-bottom: 3px solid #1a73e8;
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body>
 
-<div class="flex justify-end items-center p-4 text-sm text-gray-700">
-  <div class="mr-4">Gmail</div>
-  <div class="mr-4">Images</div>
-  <img class="h-8 w-8 rounded-full" src="https://via.placeholder.com/150" alt="User avatar">
-</div>
-
-<div class="flex flex-col items-center mt-44">
-  <img class="w-72" src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" alt="Google logo">
+<div class="flex flex-col h-screen">
+  <div class="flex items-center gap-4 px-5 py-3">
+    <img class="w-24" src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" alt="Google logo">
+    <div class="flex-grow relative">
+      <input type="text" id="search" class="w-full px-4 py-2 text-lg border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search Google or type a URL">
+      <div id="autocomplete" class="absolute w-full bg-white border border-gray-100 rounded-md shadow-lg z-10 hidden">
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">times</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">ts-ebml</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">tiktok ceo</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">two videos</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Taskrabbit</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">translate</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Target</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Taylor Swift</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Travis Kelce</div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Temu</div>
+      </div>
+    </div>
+    <button id="search-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md ml-2">
+      <i class="fas fa-search"></i>
+    </button>
+    <img class="w-8 h-8 rounded-full ml-4" src="https://via.placeholder.com/150" alt="Profile picture of the user">
+  </div>
   
-  <div class="relative mt-8 w-full max-w-xl">
-    <input id="search" type="text" class="w-full px-4 py-3 text-lg rounded-full border border-gray-200 hover:shadow-lg focus:outline-none focus:shadow-lg" placeholder="Google Search">
-    <i class="absolute right-0 top-0 m-3 text-blue-500 text-xl fas fa-microphone"></i>
-  </div>
+  <div class="flex-grow overflow-y-auto">
+    <div id="search-results" class="p-8 hidden">
+      <div class="text-sm text-gray-600 mb-4">Results for New York, NY 10022 - Choose area</div>
+      
+      <div class="bg-blue-50 p-4 mb-4">
+        <button id="overview-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Get an AI-powered overview for this search?</button>
+      </div>
+      
+      <div class="mb-4">
+        <div class="text-xl text-blue-800 mb-1">
+          <a href="https://www.nytimes.com">The New York Times</a>
+        </div>
+        <div class="text-sm text-gray-800 mb-1">https://www.nytimes.com</div>
+        <div class="text-sm text-gray-600">
+          The New York Times - Breaking News, US News, World News ...
+        </div>
+        <div class="text-sm text-gray-600">  
+          Live news, investigations, opinion, photos and video by the journalists of The New York Times from more than 150 countries around the world.
+        </div>
+      </div>
 
-  <div id="suggestions" class="flex flex-col w-full max-w-xl border border-gray-100 shadow-lg mt-1 rounded-lg hidden">
-  </div>
+      <div class="mb-4">
+        <div class="text-sm text-gray-600 mb-1">Opinion | The House Vote to Force TikTok's Sale Is a Mistake - The ...</div>
+        <div class="text-sm text-gray-600">Why Are Lawmakers Trying to Ban TikTok Instead of Doing What ...</div>
+      </div>
 
-  <div class="flex justify-center space-x-4 mt-8">
-    <button class="px-6 py-3 bg-gray-100 text-gray-800 rounded-md hover:shadow-md focus:outline-none">Google Search</button>
-    <button class="px-6 py-3 bg-gray-100 text-gray-800 rounded-md hover:shadow-md focus:outline-none">I'm Feeling Lucky</button>
-  </div>
-</div>
+      <div class="mb-4">  
+        <div class="text-sm text-gray-600 mb-1">The Crossword</div>
+        <div class="text-sm text-gray-600">Play the Daily New York Times Crossword puzzle edited by Will ...</div>
+      </div>
 
-<div id="results" class="mt-8 hidden">
-  <div class="flex justify-between items-center px-5 py-3 text-sm">
-    <div>
-      <span class="text-blue-600 mr-3 filter active" data-filter="all">All</span>
-      <span class="text-blue-600 mr-3 filter" data-filter="news">News</span>
-      <span class="text-blue-600 mr-3 filter" data-filter="images">Images</span>
-      <span class="text-blue-600 mr-3 filter" data-filter="videos">Videos</span>
-      <span class="text-blue-600 mr-3 filter" data-filter="shopping">Shopping</span>
-      <span class="text-blue-600 mr-3 filter" data-filter="maps">Maps</span>
-      <span class="text-blue-600 mr-3 filter" data-filter="books">Books</span>
-      <span class="text-blue-600 mr-3 filter" data-filter="flights">Flights</span>
-      <span class="text-blue-600 mr-3 filter" data-filter="finance">Finance</span>
+      <div class="mb-4">
+        <div class="text-sm text-gray-600 mb-1">Today's Paper</div>
+        <div class="text-sm text-gray-600">Today's Paper · The Front Page · Highlights · Lawyer, Author ...</div>
+      </div>
+
+      <div class="mb-4">
+        <div class="text-sm text-gray-600 mb-1">Word game Wordle</div>
+        <div class="text-sm text-gray-600">Get 6 chances to guess a 5-letter word.Get 6 chances to guess a ...</div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-600">Connections</div>
+        <div class="text-sm text-gray-600">A look at the links between The Times and the world it covers.</div>
+      </div>
     </div>
-    <div>
-      <span class="text-gray-600">Settings</span>
-      <span class="text-gray-600 ml-3">Tools</span>
-      <span class="text-gray-600 ml-3">SafeSearch</span>
+    
+    <div id="overview" class="p-8 hidden">
+      <h2 class="text-2xl font-bold mb-4">The New York Times</h2>
+      <div class="mb-4">
+        <div class="font-bold">Newspaper</div>
+      </div>
+      <div class="mb-4">  
+        <div class="font-bold">Owner:</div>
+        <div>The New York Times Company</div>
+      </div>
+      <div class="mb-4">
+        <div class="font-bold">Publisher:</div>  
+        <div>The New York Times Company</div>
+      </div>
+      <div class="mb-4">
+        <div class="font-bold">Founders:</div>
+        <div>George Jones, Henry Jarvis Raymond</div>  
+      </div>
+      <div class="mb-4">
+        <div class="font-bold">Circulation:</div>
+        <div>10,360,000 news subscribers (as of February 2024)</div>
+      </div>
+      <div class="mb-4">  
+        <div class="font-bold">Editor-in-chief:</div>
+        <div>Joseph Kahn</div>
+      </div>
+      <div class="mb-4">
+        <div class="font-bold">Format:</div>
+        <div>Broadsheet</div>
+      </div>
+      <div>  
+        <div class="font-bold">Founded:</div> 
+        <div>September 18, 1851; 172 years ago</div>
+      </div>
     </div>
-  </div>
-
-  <div class="px-5 py-3">
-    <div class="text-sm text-gray-600">Results for <span id="location">New York, NY 10022</span> - Choose area</div>
-    <button id="overview" class="px-4 py-2 mt-2 text-white bg-blue-500 rounded-md">Get an AI-powered overview for this search</button>
-  </div>
-
-  <div id="overview-text" class="px-5 py-3"></div>
-
-  <div class="px-5 py-3">
-    <div class="text-xl text-blue-600">The New York Times</div>
-    <div class="text-sm text-green-700">https://www.nytimes.com</div>
-    <div class="mt-2">The New York Times - Breaking News, US News, World News ...</div>
-    <div class="text-sm text-gray-600">Live news, investigations, opinion, photos and video by the journalists of The New York Times from more than 150 countries around the world.</div>
   </div>
 </div>
 
 <script>
-const searchSuggestions = {
-  "t": ["times", "translate", "twitter", "target"],
-  "ti": ["times", "times square", "tiktok", "tires"],
-  "tim": ["times", "times square", "time", "timer"],
-  "time": ["times", "times square", "time", "time magazine"],
-  "times": ["times", "times square", "times table", "times of india"]
-};
-
-let currentSearch = '';
-
-$('#search').on('input', function() {
-  currentSearch = $(this).val().trim().toLowerCase();
-
-  if (currentSearch.length > 0) {
-    const suggestions = searchSuggestions[currentSearch] || [];
-    const suggestionsHtml = suggestions.map(s => `<div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">${s}</div>`).join('');
-    $('#suggestions').html(suggestionsHtml).show();
-  } else {
-    $('#suggestions').empty().hide();
-  }
-});
-
-$('#suggestions').on('click', 'div', function() {
-  const suggestion = $(this).text();
-  $('#search').val(suggestion);
-  $('#suggestions').empty().hide();
-  performSearch(suggestion);
-});
-
-$('#search').on('keypress', function(e) {
-  if (e.which === 13) {
-    const query = $(this).val();
-    performSearch(query);
-  }
-});
-
-function performSearch(query) {
-  $('#results').show();
-  $('.filter').removeClass('active');
-  $('.filter[data-filter="all"]').addClass('active');
-  updateFilters('all');
-  $('#overview-text').empty();
-}
-
-$('.filter').on('click', function() {
-  $('.filter').removeClass('active');
-  $(this).addClass('active');
-  const filter = $(this).data('filter');
-  updateFilters(filter);
-});
-
-function updateFilters(activeFilter) {
-  const filters = ['all', 'news', 'images', 'videos', 'shopping', 'maps', 'books', 'flights', 'finance'];
-  let filtersHtml = '';
-
-  filters.forEach(filter => {
-    if (filter === activeFilter) {
-      filtersHtml += `<span class="text-blue-600 mr-3 filter active" data-filter="${filter}">${filter.charAt(0).toUpperCase() + filter.slice(1)}</span>`;
-    } else if (filters.indexOf(filter) <= filters.indexOf(activeFilter)) {
-      filtersHtml += `<span class="text-blue-600 mr-3 filter" data-filter="${filter}">${filter.charAt(0).toUpperCase() + filter.slice(1)}</span>`;
+$(document).ready(function() {
+  let selectedText = "";
+  
+  $("#search").on("input", function() {
+    const searchText = $(this).val().trim();
+    
+    if (searchText !== "") {
+      $("#autocomplete").removeClass("hidden");
+      $("#autocomplete div").each(function() {
+        if ($(this).text().toLowerCase().startsWith(searchText.toLowerCase())) {
+          $(this).removeClass("hidden");
+        } else {
+          $(this).addClass("hidden");
+        }
+      });
+    } else {
+      $("#autocomplete").addClass("hidden");
     }
   });
-
-  $('.flex.justify-between').find('div:first-child').html(filtersHtml);
-  window.history.pushState({}, '', `?q=${encodeURIComponent(currentSearch)}&filter=${activeFilter}`);
-}
-
-$('#overview').on('click', function() {
-  $('#overview-text').text('Try AI-powered overviews when you search');
+  
+  $("#autocomplete div").click(function() {
+    selectedText = $(this).text();
+    $("#search").val(selectedText);
+    $("#autocomplete").addClass("hidden");
+  });
+  
+  $("#search-btn").click(function() {
+    if (selectedText !== "") {
+      $("#search-results").removeClass("hidden");
+      $("#overview").addClass("hidden");
+    }
+  });
+  
+  $("#overview-btn").click(function() {
+    $("#overview").removeClass("hidden");
+  });
 });
 </script>
+
 </body>
 </html>
 
-<thinking>To further improve the app based on the original instructions:
+<thinking>
+To improve the app further and make it fully functional like the original video:
 
-1. Adjust the font sizes, colors, and spacing to more closely match the Google style.
-2. Add the hover effect on the search bar to expand its shadow.
-3. Position the microphone icon correctly inside the search bar.
-4. Implement the "I'm Feeling Lucky" functionality to redirect to the first search result.
-5. Add the "Search by voice" and "Search by image" options that appear on hover.
-6. Show the "Clear" button in the search bar when there's text entered.
-7. Make the search suggestions clickable to perform the search.
-8. Update the page title and URL when a search is performed.
-9. Show a more realistic search result with a link, description, and URL.
-10. Add more filter options and make them functional to update the search results.
-11. Generate a more realistic AI-powered overview of the search topic.
-12. Refine the responsive layout for different screen sizes.
+1. Add more visual styling to match the original, including:
+   - Google logo and favicon
+   - User profile icon
+   - Search bar styling and hover effects
+   - Search button icon and styling
+   - Fonts and text sizes
+   - Spacing and layout adjustments
+
+2. Implement the search functionality:
+   - Perform a search when the user presses Enter or clicks the search button
+   - Show a loading state while searching
+   - Display the search results dynamically based on the query
+   - Handle cases when no results are found
+
+3. Enhance the autocomplete functionality:
+   - Fetch autocomplete suggestions from a data source based on the user's input
+   - Highlight the text match in the suggestions
+   - Allow navigating the suggestions with arrow keys
+   - Update the search input when a suggestion is selected
+
+4. Improve the AI-powered overview:
+   - Fetch the overview content dynamically based on the search query
+   - Display a loading state while generating the overview
+   - Enhance the styling of the overview to match the original
+
+5. Add additional UI elements:
+   - Header navigation tabs (About, Store, Gmail, Images)
+   - Footer links (Advertising, Business, How Search works, Privacy, Terms)
+   - Pagination for search results
+   - Feedback link
+
+6. Optimize performance:
+   - Lazy-load images and content
+   - Implement caching mechanisms
+   - Minify and compress assets
+
+7. Ensure responsiveness:
+   - Make the layout responsive and mobile-friendly
+   - Adjust font sizes, padding, and margins for different screen sizes
+   - Hide/collapse certain elements on smaller screens
+
+8. Enhance accessibility:
+   - Add appropriate ARIA attributes
+   - Ensure keyboard navigation works properly
+   - Provide alternative text for images
+
+9. Implement error handling:
+   - Handle network errors gracefully
+   - Display user-friendly error messages
+   - Provide options to retry or refresh
+
+10. Add smooth animations and transitions:
+    - Fade in/out effects for loading states
+    - Smooth sliding animations for autocomplete suggestions
+    - Subtle hover and click animations for interactive elements
 </thinking>
 
 <html>
 <head>
-  <title>Google</title>
+  <title>Google Search</title>
+  <link rel="icon" href="https://www.google.com/favicon.ico" type="image/x-icon">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Roboto', Arial, sans-serif;
-      font-size: 14px;
-      color: #202124;
-    }
-    .filter {
-      color: #1a73e8;
-    }
-    .filter.active {
-      border-bottom: 3px solid #1a73e8;
-    }
-    .search-bar:hover {
-      box-shadow: 0 1px 6px rgb(32 33 36 / 28%);
-      border-color: rgba(223,225,229,0);
-    }
-    .search-bar:focus-within {
-      box-shadow: 0 1px 6px rgb(32 33 36 / 28%);
-      border-color: rgba(223,225,229,0);
-    }
-  </style>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
-<body>
+<body class="font-roboto">
 
-<div class="flex justify-end items-center p-2 text-sm">
-  <div class="mr-4 hover:underline cursor-pointer">Gmail</div>
-  <div class="mr-4 hover:underline cursor-pointer">Images</div>
-  <img class="h-8 w-8 rounded-full" src="https://via.placeholder.com/150" alt="User avatar">
-</div>
-
-<div class="flex flex-col items-center mt-40">
-  <img class="w-72" src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" alt="Google logo">
+<div class="flex flex-col min-h-screen">
+  <header class="flex items-center justify-end space-x-4 px-5 py-2 text-sm text-gray-700">
+    <a href="#" class="hover:underline">About</a>
+    <a href="#" class="hover:underline">Store</a>
+    <a href="#" class="hover:underline">Gmail</a>
+    <a href="#" class="hover:underline">Images</a>
+    <img class="w-8 h-8 rounded-full" src="https://via.placeholder.com/150" alt="Profile picture of the user">
+  </header>
   
-  <div class="relative mt-6 w-full max-w-[584px]">
-    <input id="search" type="text" class="w-full px-5 py-3 text-base rounded-full border border-gray-200 hover:shadow-lg focus:outline-none focus:shadow-lg search-bar" placeholder="Google Search" autocomplete="off">
-    <i class="absolute right-0 top-0 m-3.5 text-[#4285f4] text-xl fas fa-microphone"></i>
-    <i id="clear-search" class="absolute right-0 top-0 m-3.5 text-gray-500 text-2xl fas fa-times cursor-pointer hidden"></i>
-  </div>
-
-  <div id="search-options" class="flex justify-center space-x-2 mt-2 text-sm text-[#4285f4] hidden">
-    <div class="flex items-center cursor-pointer">
-      <i class="fas fa-search mr-1"></i>
-      <span>Search by voice</span>
-    </div>
-    <div class="flex items-center cursor-pointer">
-      <i class="fas fa-camera mr-1"></i>
-      <span>Search by image</span>
-    </div>
-  </div>
-
-  <div id="suggestions" class="flex flex-col w-full max-w-[584px] border border-gray-100 shadow-lg rounded-lg bg-white hidden">
-  </div>
-
-  <div class="flex justify-center space-x-4 mt-8">
-    <button id="search-button" class="px-6 py-2 bg-[#f8f9fa] text-[#3c4043] rounded text-sm hover:shadow-md focus:outline-none">Google Search</button>
-    <button id="lucky-button" class="px-6 py-2 bg-[#f8f9fa] text-[#3c4043] rounded text-sm hover:shadow-md focus:outline-none">I'm Feeling Lucky</button>
-  </div>
-</div>
-
-<div id="results" class="mt-6 hidden">
-  <div class="flex justify-between items-center px-4 py-2.5 text-sm">
-    <div>
-      <span class="text-[#4285f4] mr-3 filter active" data-filter="all">All</span>
-      <span class="text-[#4285f4] mr-3 filter" data-filter="news">News</span>
-      <span class="text-[#4285f4] mr-3 filter" data-filter="images">Images</span>
-      <span class="text-[#4285f4] mr-3 filter" data-filter="videos">Videos</span>
-      <span class="text-[#4285f4] mr-3 filter" data-filter="shopping">Shopping</span>
-      <span class="text-[#4285f4] mr-3 filter" data-filter="maps">Maps</span>
-      <span class="text-[#4285f4] mr-3 filter" data-filter="books">Books</span>
-      <span class="text-[#4285f4] mr-3 filter" data-filter="flights">Flights</span>
-      <span class="text-[#4285f4] mr-3 filter" data-filter="finance">Finance</span>
-    </div>
-    <div>
-      <span class="text-[#70757a] hover:underline cursor-pointer">Settings</span>
-      <span class="text-[#70757a] ml-6 hover:underline cursor-pointer">Tools</span>
-      <span class="text-[#70757a] ml-6 hover:underline cursor-pointer">SafeSearch</span>
+  <div class="flex items-center justify-center flex-grow">
+    <div class="flex flex-col items-center w-full max-w-[584px]">
+      <img class="w-[272px] mb-8" src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" alt="Google logo">
+      <div class="relative w-full mb-3">
+        <input type="text" id="search" class="w-full px-5 py-3 text-lg border border-gray-200 rounded-full hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search Google or type a URL" autocomplete="off">
+        <div id="autocomplete" class="absolute w-full bg-white border border-gray-100 rounded-md shadow-lg z-10 hidden">
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">times</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">ts-ebml</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">tiktok ceo</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">two videos</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Taskrabbit</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">translate</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Target</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Taylor Swift</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Travis Kelce</div>
+          <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">Temu</div>
+        </div>
+      </div>
+      <div class="flex space-x-2">
+        <button id="search-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded">Google Search</button>
+        <button class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded">I'm Feeling Lucky</button>
+      </div>
     </div>
   </div>
+  
+  <div id="search-results" class="flex-grow p-8 overflow-y-auto hidden">
+    <div class="text-sm text-gray-600 mb-4">Results for New York, NY 10022 - Choose area</div>
+    
+    <div class="bg-blue-50 p-4 mb-4">
+      <button id="overview-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Get an AI-powered overview for this search</button>
+    </div>
+    
+    <div id="results-list">
+      <div class="mb-4">
+        <div class="text-xl text-blue-800 mb-1">
+          <a href="https://www.nytimes.com">The New York Times</a>
+        </div>
+        <div class="text-sm text-gray-800 mb-1">https://www.nytimes.com</div>
+        <div class="text-sm text-gray-600">
+          The New York Times - Breaking News, US News, World News ...
+        </div>
+        <div class="text-sm text-gray-600">  
+          Live news, investigations, opinion, photos and video by the journalists of The New York Times from more than 150 countries around the world.
+        </div>
+      </div>
 
-  <div class="px-4 py-3">
-    <div class="text-[#70757a]">Results for <span id="location">New York, NY 10022</span> - <span class="hover:underline cursor-pointer">Choose area</span></div>
-    <button id="overview" class="px-4 py-2.5 mt-2 text-white bg-[#1a73e8] rounded text-sm hover:bg-[#1a65c7]">Get an AI-powered overview for this search</button>
+      <div class="mb-4">
+        <div class="text-sm text-gray-600 mb-1">Opinion | The House Vote to Force TikTok's Sale Is a Mistake - The ...</div>
+        <div class="text-sm text-gray-600">Why Are Lawmakers Trying to Ban TikTok Instead of Doing What ...</div>
+      </div>
+
+      <div class="mb-4">  
+        <div class="text-sm text-gray-600 mb-1">The Crossword</div>
+        <div class="text-sm text-gray-600">Play the Daily New York Times Crossword puzzle edited by Will ...</div>
+      </div>
+
+      <div class="mb-4">
+        <div class="text-sm text-gray-600 mb-1">Today's Paper</div>
+        <div class="text-sm text-gray-600">Today's Paper · The Front Page · Highlights · Lawyer, Author ...</div>
+      </div>
+
+      <div class="mb-4">
+        <div class="text-sm text-gray-600 mb-1">Word game Wordle</div>
+        <div class="text-sm text-gray-600">Get 6 chances to guess a 5-letter word.Get 6 chances to guess a ...</div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-600">Connections</div>
+        <div class="text-sm text-gray-600">A look at the links between The Times and the world it covers.</div>
+      </div>
+    </div>
+    
+    <div id="pagination" class="flex justify-center mt-8">
+      <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mr-2">Previous</button>
+      <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Next</button>
+    </div>
   </div>
-
-  <div id="overview-text" class="px-4 py-3 text-sm"></div>
-
-  <div class="px-4 py-3">
-    <div class="text-xl text-[#1a0dab] hover:underline cursor-pointer">The New York Times</div>
-    <div class="text-sm text-[#006621] hover:underline cursor-pointer">https://www.nytimes.com</div>
-    <div class="mt-1">The New York Times - Breaking News, US News, World News ...</div>
-    <div class="text-sm text-[#545454]">Live news, investigations, opinion, photos and video by the journalists of The New York Times from more than 150 countries around the world.</div>
+  
+  <div id="overview" class="flex-grow p-8 overflow-y-auto hidden">
+    <h2 class="text-2xl font-medium mb-4">The New York Times</h2>
+    <div class="mb-4">
+      <div class="font-medium">Newspaper</div>
+    </div>
+    <div class="mb-4">  
+      <div class="font-medium">Owner:</div>
+      <div>The New York Times Company</div>
+    </div>
+    <div class="mb-4">
+      <div class="font-medium">Publisher:</div>  
+      <div>The New York Times Company</div>
+    </div>
+    <div class="mb-4">
+      <div class="font-medium">Founders:</div>
+      <div>George Jones, Henry Jarvis Raymond</div>  
+    </div>
+    <div class="mb-4">
+      <div class="font-medium">Circulation:</div>
+      <div>10,360,000 news subscribers (as of February 2024)</div>
+    </div>
+    <div class="mb-4">  
+      <div class="font-medium">Editor-in-chief:</div>
+      <div>Joseph Kahn</div>
+    </div>
+    <div class="mb-4">
+      <div class="font-medium">Format:</div>
+      <div>Broadsheet</div>
+    </div>
+    <div>  
+      <div class="font-medium">Founded:</div> 
+      <div>September 18, 1851; 172 years ago</div>
+    </div>
   </div>
+  
+  <footer class="bg-gray-100 text-sm text-gray-600 px-8 py-3">
+    <div class="flex justify-between">
+      <div class="flex space-x-6">
+        <a href="#" class="hover:underline">Advertising</a>
+        <a href="#" class="hover:underline">Business</a>
+        <a href="#" class="hover:underline">How Search works</a>
+      </div>
+      <div class="flex space-x-6">
+        <a href="#" class="hover:underline">Privacy</a>
+        <a href="#" class="hover:underline">Terms</a>
+        <a href="#" class="hover:underline">Settings</a>
+      </div>
+    </div>
+  </footer>
 </div>
 
 <script>
-const searchSuggestions = {
-  "t": ["times", "translate", "twitter", "target"],
-  "ti": ["times", "times square", "tiktok", "tires"],
-  "tim": ["times", "times square", "time", "timer"],
-  "time": ["times", "times square", "time", "time magazine"],
-  "times": ["times", "times square", "times table", "times of india"]
-};
-
-let currentSearch = '';
-
-$('#search').on('input', function() {
-  currentSearch = $(this).val().trim().toLowerCase();
-
-  if (currentSearch.length > 0) {
-    const suggestions = searchSuggestions[currentSearch] || [];
-    const suggestionsHtml = suggestions.map(s => `<div class="px-4 py-2 hover:bg-gray-100 cursor-pointer">${s}</div>`).join('');
-    $('#suggestions').html(suggestionsHtml).show();
-    $('#clear-search').show();
-    $('#search-options').hide();
-  } else {
-    $('#suggestions').empty().hide();
-    $('#clear-search').hide();
-    $('#search-options').show();
-  }
-});
-
-$('#suggestions').on('click', 'div', function() {
-  const suggestion = $(this).text();
-  $('#search').val(suggestion);
-  $('#suggestions').empty().hide();
-  performSearch(suggestion);
-});
-
-$('#search').on('keypress', function(e) {
-  if (e.which === 13) {
-    const query = $(this).val();
-    performSearch(query);
-  }
-});
-
-$('#search-button').on('click', function() {
-  const query = $('#search').val();
-  performSearch(query);
-});
-
-$('#lucky-button').on('click', function() {
-  window.location.href = 'https://www.google.com/doodles';
-});
-
-$('#clear-search').on('click', function() {
-  $('#search').val('');
-  $('#suggestions').empty().hide();
-  $(this).hide();
-  $('#search-options').show();
-  $('#search').focus();
-});
-
-$('#search').on('focus', function() {
-  if ($(this).val().length > 0) {
-    $('#search-options').hide();
-  } else {
-    $('#search-options').show();
-  }
-});
-
-$('#search').on('blur', function() {
-  $('#search-options').hide();
-});
-
-function performSearch(query) {
-  $('#results').show();
-  $('.filter').removeClass('active');
-  $('.filter[data-filter="all"]').addClass('active');
-  updateFilters('all');
-  $('#overview-text').empty();
-  window.history.pushState({}, '', `?q=${encodeURIComponent(query)}`);
-  document.title = `${query} - Google Search`;
-}
-
-$('.filter').on('click', function() {
-  $('.filter').removeClass('active');
-  $(this).addClass('active');
-  const filter = $(this).data('filter');
-  updateFilters(filter);
-});
-
-function updateFilters(activeFilter) {
-  const filters = ['all', 'news', 'images', 'videos', 'shopping', 'maps', 'books', 'flights', 'finance'];
-  let filtersHtml = '';
-
-  filters.forEach(filter => {
-    if (filter === activeFilter) {
-      filtersHtml += `<span class="text-[#4285f4] mr-3 filter active" data-filter="${filter}">${filter.charAt(0).toUpperCase() + filter.slice(1)}</span>`;
-    } else if (filters.indexOf(filter) <= filters.indexOf(activeFilter)) {
-      filtersHtml += `<span class="text-[#4285f4] mr-3 filter" data-filter="${filter}">${filter.charAt(0).toUpperCase() + filter.slice(1)}</span>`;
+$(document).ready(function() {
+  let selectedText = "";
+  
+  $("#search").on("input", function() {
+    const searchText = $(this).val().trim();
+    
+    if (searchText !== "") {
+      $("#autocomplete").removeClass("hidden");
+      $("#autocomplete div").each(function() {
+        if ($(this).text().toLowerCase().includes(searchText.toLowerCase())) {
+          $(this).removeClass("hidden");
+          $(this).html($(this).text().replace(new RegExp(searchText, "gi"), "<strong>$&</strong>"));
+        } else {
+          $(this).addClass("hidden");
+        }
+      });
+    } else {
+      $("#autocomplete").addClass("hidden");
     }
   });
-
-  $('.flex.justify-between').find('div:first-child').html(filtersHtml);
-  window.history.pushState({}, '', `?q=${encodeURIComponent(currentSearch)}&filter=${activeFilter}`);
-}
-
-$('#overview').on('click', function() {
-  $('#overview-text').text('Try AI-powered overviews when you search. These provide a quick understanding of topics based on information from across the web.');
+  
+  $("#autocomplete div").click(function() {
+    selectedText = $(this).text();
+    $("#search").val(selectedText);
+    $("#autocomplete").addClass("hidden");
+  });
+  
+  $("#search").keydown(function(e) {
+    if (e.which === 13) {
+      performSearch();
+    }
+  });
+  
+  $("#search-btn").click(performSearch);
+  
+  $("#overview-btn").click(function() {
+    $("#overview").removeClass("hidden");
+    $("#search-results").addClass("hidden");
+  });
+  
+  function performSearch() {
+    const query = $("#search").val().trim();
+    if (query !== "") {
+      $("#search-results").removeClass("hidden");
+      $("#overview").addClass("hidden");
+      
+      // Simulating search results for demo purposes
+      $("#results-list").empty();
+      for (let i = 0; i < 6; i++) {
+        $("#results-list").append(`
+          <div class="mb-4">
+            <div class="text-xl text-blue-800 mb-1">
+              <a href="#">Search Result ${i + 1}</a>
+            </div>
+            <div class="text-sm text-gray-800 mb-1">https://example.com/result${i + 1}</div>
+            <div class="text-sm text-gray-600">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nulla sit amet aliquam lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl sit amet nisl.
+            </div>
+          </div>
+        `);
+      }
+    }
+  }
 });
 </script>
 

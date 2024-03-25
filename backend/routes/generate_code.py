@@ -155,7 +155,7 @@ async def stream_code(websocket: WebSocket):
             print("Using OpenAI API key from environment variable")
 
     # If we still don't have an API key, throw an error
-    if not openai_api_key:
+    if not openai_api_key and code_generation_model == "gpt_4_vision":
         print("OpenAI API key not found")
         await throw_error(
             "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file."
@@ -266,7 +266,7 @@ async def stream_code(websocket: WebSocket):
 
                 if not ANTHROPIC_API_KEY:
                     await throw_error(
-                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
                     )
                     raise Exception("No Anthropic key")
 

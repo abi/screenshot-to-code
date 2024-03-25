@@ -5,7 +5,11 @@ import os
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 
+# Debugging-related
+
 SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))
+IS_DEBUG_ENABLED = bool(os.environ.get("IS_DEBUG_ENABLED", False))
+DEBUG_DIR = os.environ.get("DEBUG_DIR", "")
 
 # Set to True when running in production (on the hosted version)
 # Used as a feature flag to enable or disable certain features
