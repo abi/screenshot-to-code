@@ -16,8 +16,8 @@ class Eval(BaseModel):
 @router.get("/evals")
 async def get_evals():
     # Get all evals from EVALS_DIR
-    input_dir = EVALS_DIR + "/inputs"
-    output_dir = EVALS_DIR + "/outputs"
+    input_dir = f"{EVALS_DIR}/inputs"
+    output_dir = f"{EVALS_DIR}/outputs"
 
     evals: list[Eval] = []
     for file in os.listdir(input_dir):

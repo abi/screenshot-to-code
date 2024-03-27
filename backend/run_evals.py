@@ -15,8 +15,8 @@ STACK = "html_tailwind"
 
 
 async def main():
-    INPUT_DIR = EVALS_DIR + "/inputs"
-    OUTPUT_DIR = EVALS_DIR + "/outputs"
+    INPUT_DIR = f"{EVALS_DIR}/inputs"
+    OUTPUT_DIR = f"{EVALS_DIR}/outputs"
 
     # Get all the files in the directory (only grab pngs)
     evals = [f for f in os.listdir(INPUT_DIR) if f.endswith(".png")]
