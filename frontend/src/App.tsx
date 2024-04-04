@@ -39,7 +39,7 @@ import { CodeGenerationModel } from "./lib/models";
 import ModelSettingsSection from "./components/ModelSettingsSection";
 import { extractHtml } from "./components/preview/extractHtml";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
-import { URLS } from "./urls";
+import TipLink from "./components/core/TipLink";
 
 const IS_OPENAI_DOWN = false;
 
@@ -140,6 +140,25 @@ function App() {
     setAppHistory([]);
     setCurrentVersion(null);
     setShouldIncludeResultImage(false);
+  };
+
+  const regenerate = () => {
+    if (currentVersion === null) {
+      toast.error(
+        "No current version set. Please open a Github issue as this shouldn't happen."
+      );
+      return;
+    }
+
+    // Retrieve the previous command
+    const previousCommand = appHistory[currentVersion];
+    if (previousCommand.type !== "ai_create") {
+      toast.error("Only the first version can be regenerated.");
+      return;
+    }
+
+    // Re-run the create
+    doCreate(referenceImages, inputMode);
   };
 
   const cancelCodeGeneration = () => {
@@ -373,14 +392,7 @@ function App() {
             }
           />
 
-          <a
-            className="text-xs underline text-gray-500 text-right"
-            href={URLS.tips}
-            target="_blank"
-            rel="noopener"
-          >
-            Tips for better results
-          </a>
+          {appState !== AppState.CODE_READY && <TipLink />}
 
           {IS_RUNNING_ON_CLOUD &&
             !(settings.openAiApiKey || settings.accessCode) && (
@@ -454,20 +466,16 @@ function App() {
                       Update
                     </Button>
                   </div>
-                  <div className="flex items-center gap-x-2 mt-2">
+                  <div className="flex items-center justify-end gap-x-2 mt-2">
                     <Button
-                      onClick={downloadCode}
+                      onClick={regenerate}
                       className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
                     >
-                      <FaDownload /> Download
+                      🔄 Regenerate
                     </Button>
-                    <Button
-                      onClick={reset}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
-                    >
-                      <FaUndo />
-                      Reset
-                    </Button>
+                  </div>
+                  <div className="flex justify-end items-center mt-2">
+                    <TipLink />
                   </div>
                 </div>
               )}
@@ -556,19 +564,41 @@ function App() {
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
           <div className="ml-4">
             <Tabs defaultValue="desktop">
-              <div className="flex justify-end mr-8 mb-4">
-                <TabsList>
-                  <TabsTrigger value="desktop" className="flex gap-x-2">
-                    <FaDesktop /> Desktop
-                  </TabsTrigger>
-                  <TabsTrigger value="mobile" className="flex gap-x-2">
-                    <FaMobile /> Mobile
-                  </TabsTrigger>
-                  <TabsTrigger value="code" className="flex gap-x-2">
-                    <FaCode />
-                    Code
-                  </TabsTrigger>
-                </TabsList>
+              <div className="flex justify-between mr-8 mb-4">
+                <div className="flex items-center gap-x-2">
+                  {appState === AppState.CODE_READY && (
+                    <>
+                      <Button
+                        onClick={reset}
+                        className="flex items-center ml-4 gap-x-2 dark:text-white dark:bg-gray-700"
+                      >
+                        <FaUndo />
+                        Reset
+                      </Button>
+                      <Button
+                        onClick={downloadCode}
+                        variant="secondary"
+                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700"
+                      >
+                        <FaDownload /> Download
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center">
+                  <TabsList>
+                    <TabsTrigger value="desktop" className="flex gap-x-2">
+                      <FaDesktop /> Desktop
+                    </TabsTrigger>
+                    <TabsTrigger value="mobile" className="flex gap-x-2">
+                      <FaMobile /> Mobile
+                    </TabsTrigger>
+                    <TabsTrigger value="code" className="flex gap-x-2">
+                      <FaCode />
+                      Code
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
               </div>
               <TabsContent value="desktop">
                 <Preview code={previewCode} device="desktop" />
