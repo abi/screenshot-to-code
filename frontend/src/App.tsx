@@ -157,6 +157,8 @@ function App({ navbarComponent }: Props) {
 
   const regenerate = () => {
     if (currentVersion === null) {
+      // This would be a error that I log to Sentry
+      addEvent("RegenerateCurrentVersionNull");
       toast.error(
         "No current version set. Please open a Github issue as this shouldn't happen."
       );
@@ -166,9 +168,12 @@ function App({ navbarComponent }: Props) {
     // Retrieve the previous command
     const previousCommand = appHistory[currentVersion];
     if (previousCommand.type !== "ai_create") {
+      addEvent("RegenerateNotFirstVersion");
       toast.error("Only the first version can be regenerated.");
       return;
     }
+
+    addEvent("Regenerate");
 
     // Re-run the create
     doCreate(referenceImages, inputMode);
