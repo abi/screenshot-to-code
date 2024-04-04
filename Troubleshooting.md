@@ -13,6 +13,9 @@ You don't need a ChatGPT Pro account. Screenshot to code uses API keys from your
 
 6. Go to Screenshot to code and paste it in the Settings dialog under OpenAI key (gear icon). Your key is only stored in your browser. Never stored on our servers.
 
-Some users have also reported that it can take upto 30 minutes after your credit purchase for the GPT4 vision model to be activated.
+## Still not working?
 
-If you've followed these steps, and it still doesn't work, feel free to open a Github issue.
+- Some users have also reported that it can take upto 30 minutes after your credit purchase for the GPT4 vision model to be activated.
+- You need to add credits to your account AND set it to renew when credits run out in order to be upgraded to Tier 1. Make sure your "Settings > Limits" page shows that you are at Tier 1.
+
+If you've followed these steps, and it still doesn't work, feel free to open a Github issue. We only provide support for the open source version since we don't have debugging logs on the hosted version. If you're looking to use the hosted version, we recommend getting a paid subscription on screenshottocode.com
