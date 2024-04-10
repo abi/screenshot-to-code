@@ -105,10 +105,9 @@ async def stream_code(websocket: WebSocket):
         raise Exception("No auth token")
 
     # Get the OpenAI key by waterfalling through the different payment methods
-    # 1. Subcription
-    # 2. Access code
-    # 3. User's API key from client-side settings dialog
-    # 4. User's API key from environment variable
+    # 1. Subscription
+    # 2. User's API key from client-side settings dialog
+    # 3. User's API key from environment variable
 
     # If the user is a subscriber, use the platform API key
     # TODO: Rename does_user_have_subscription_credits
