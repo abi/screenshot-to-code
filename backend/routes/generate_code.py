@@ -159,7 +159,7 @@ async def stream_code(websocket: WebSocket):
     if not openai_api_key and code_generation_model == "gpt_4_vision":
         print("OpenAI API key not found")
         await throw_error(
-            "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file. If you add it to .env, make sure to restart the backend server."
+            "Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
         )
         raise Exception("No OpenAI API key found")
 
