@@ -23,7 +23,8 @@ from prompts.claude_prompts import VIDEO_PROMPT
 from prompts.types import Stack
 
 # from utils import pprint_prompt
-from video.utils import extract_tag_content, assemble_claude_prompt_video  # type: ignore
+from video.utils import extract_tag_content, assemble_claude_prompt_video
+from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 
 router = APIRouter()
@@ -58,7 +59,7 @@ async def stream_code(websocket: WebSocket):
         message: str,
     ):
         await websocket.send_json({"type": "error", "value": message})
-        await websocket.close()
+        await websocket.close(APP_ERROR_WEB_SOCKET_CODE)
 
     # TODO: Are the values always strings?
     params: Dict[str, str] = await websocket.receive_json()
@@ -121,11 +122,8 @@ async def stream_code(websocket: WebSocket):
 
     if not openai_api_key and code_generation_model == "gpt_4_vision":
         print("OpenAI API key not found")
-        await websocket.send_json(
-            {
-                "type": "error",
-                "value": "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file. If you add it to .env, make sure to restart the backend server.",
-            }
+        await throw_error(
+            "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file. If you add it to .env, make sure to restart the backend server."
         )
         return
 
