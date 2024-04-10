@@ -1,6 +1,9 @@
 import toast from "react-hot-toast";
 import { WS_BACKEND_URL } from "./config";
-import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
+import {
+  APP_ERROR_WEB_SOCKET_CODE,
+  USER_CLOSE_WEB_SOCKET_CODE,
+} from "./constants";
 import { FullGenerationSettings } from "./types";
 
 const ERROR_MESSAGE =
@@ -46,9 +49,13 @@ export function generateCode(
     if (event.code === USER_CLOSE_WEB_SOCKET_CODE) {
       toast.success(CANCEL_MESSAGE);
       onCancel();
+    } else if (event.code === APP_ERROR_WEB_SOCKET_CODE) {
+      console.error("Known server error", event);
+      onCancel();
     } else if (event.code !== 1000) {
-      console.error("WebSocket error code", event);
+      console.error("Unknown server or connection error", event);
       toast.error(ERROR_MESSAGE);
+      onCancel();
     } else {
       onComplete();
     }
