@@ -16,7 +16,6 @@ export interface Settings {
   codeGenerationModel: CodeGenerationModel;
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
-  accessCode: string | null;
 }
 
 export enum AppState {

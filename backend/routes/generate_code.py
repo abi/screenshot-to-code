@@ -16,7 +16,6 @@ from mock_llm import mock_completion
 from typing import Dict, List, cast, get_args
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_imported_code_prompt, assemble_prompt
-from access_token import validate_access_token
 from datetime import datetime
 import json
 from routes.logging_utils import PaymentMethod, send_to_saas_backend
@@ -128,21 +127,7 @@ async def stream_code(websocket: WebSocket):
             await throw_error("Unknown error occurred. Contact support.")
             raise Exception("Unknown error occurred when checking subscription credits")
 
-    # For non-subscribers, if they have an access code, validate it
-    # and use the platform API key
-    if not openai_api_key:
-        accessCode = params.get("accessCode", None)
-        if accessCode:
-            print("Access code - using platform API key")
-            res = await validate_access_token(accessCode)
-            if res["success"]:
-                payment_method = PaymentMethod.ACCESS_CODE
-                openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
-            else:
-                await throw_error(res["failure_reason"])
-                raise Exception("Invalid access code: " + accessCode)
-
-    # If we still don't have an API key, use the user's API key from client-side settings dialog
+    # For non-subscribers, use the user's API key from client-side settings dialog
     if not openai_api_key:
         openai_api_key = params.get("openAiApiKey", None)
         payment_method = PaymentMethod.OPENAI_API_KEY

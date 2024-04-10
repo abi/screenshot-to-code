@@ -22,7 +22,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
-import AccessCodeSection from "./settings/AccessCodeSection";
 
 interface Props {
   settings: Settings;
@@ -46,11 +45,6 @@ function SettingsDialog({ settings, setSettings }: Props) {
         <DialogHeader>
           <DialogTitle className="mb-4">Settings</DialogTitle>
         </DialogHeader>
-
-        {/* Access code */}
-        {IS_RUNNING_ON_CLOUD && (
-          <AccessCodeSection settings={settings} setSettings={setSettings} />
-        )}
 
         <div className="flex items-center space-x-2">
           <Label htmlFor="image-generation">

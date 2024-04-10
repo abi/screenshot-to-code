@@ -76,8 +76,7 @@ function App({ navbarComponent }: Props) {
       generatedCodeConfig: Stack.HTML_TAILWIND,
       codeGenerationModel: CodeGenerationModel.GPT_4_VISION,
       // Only relevant for hosted version
-      isTermOfServiceAccepted: true,
-      accessCode: null,
+      isTermOfServiceAccepted: false,
     },
     "setting"
   );
@@ -391,7 +390,7 @@ function App({ navbarComponent }: Props) {
 
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
-      {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
+      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
           open={false}
@@ -424,7 +423,7 @@ function App({ navbarComponent }: Props) {
           {appState !== AppState.CODE_READY && <TipLink />}
 
           {IS_RUNNING_ON_CLOUD &&
-            !(settings.openAiApiKey || settings.accessCode) &&
+            !settings.openAiApiKey &&
             subscriberTier === "free" && <OnboardingNote />}
 
           {IS_OPENAI_DOWN && (
