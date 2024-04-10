@@ -16,7 +16,6 @@ from mock_llm import mock_completion
 from typing import Dict, List, cast, get_args
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_imported_code_prompt, assemble_prompt
-from access_token import validate_access_token
 from datetime import datetime
 import json
 from prompts.claude_prompts import VIDEO_PROMPT
@@ -98,27 +97,13 @@ async def stream_code(websocket: WebSocket):
     # Get the OpenAI API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error.
     openai_api_key = None
-    if "accessCode" in params and params["accessCode"]:
-        print("Access code - using platform API key")
-        res = await validate_access_token(params["accessCode"])
-        if res["success"]:
-            openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
-        else:
-            await websocket.send_json(
-                {
-                    "type": "error",
-                    "value": res["failure_reason"],
-                }
-            )
-            return
+    if params["openAiApiKey"]:
+        openai_api_key = params["openAiApiKey"]
+        print("Using OpenAI API key from client-side settings dialog")
     else:
-        if params["openAiApiKey"]:
-            openai_api_key = params["openAiApiKey"]
-            print("Using OpenAI API key from client-side settings dialog")
-        else:
-            openai_api_key = os.environ.get("OPENAI_API_KEY")
-            if openai_api_key:
-                print("Using OpenAI API key from environment variable")
+        openai_api_key = os.environ.get("OPENAI_API_KEY")
+        if openai_api_key:
+            print("Using OpenAI API key from environment variable")
 
     if not openai_api_key and code_generation_model == "gpt_4_vision":
         print("OpenAI API key not found")

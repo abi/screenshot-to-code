@@ -66,7 +66,6 @@ function App() {
       codeGenerationModel: CodeGenerationModel.GPT_4_VISION,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
-      accessCode: null,
     },
     "setting"
   );
@@ -362,7 +361,7 @@ function App() {
 
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
-      {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
+      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
           open={!settings.isTermOfServiceAccepted}
@@ -394,10 +393,7 @@ function App() {
 
           {appState !== AppState.CODE_READY && <TipLink />}
 
-          {IS_RUNNING_ON_CLOUD &&
-            !(settings.openAiApiKey || settings.accessCode) && (
-              <OnboardingNote />
-            )}
+          {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
           {IS_OPENAI_DOWN && (
             <div className="bg-black text-white dark:bg-white dark:text-black p-3 rounded">
