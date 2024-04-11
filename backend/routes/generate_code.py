@@ -5,8 +5,8 @@ import openai
 from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
 from custom_types import InputMode
 from llm import (
-    CODE_GENERATION_MODELS,
     Llm,
+    convert_frontend_str_to_llm,
     stream_claude_response,
     stream_claude_response_native,
     stream_openai_response,
@@ -84,10 +84,14 @@ async def stream_code(websocket: WebSocket):
     validated_input_mode = cast(InputMode, input_mode)
 
     # Read the model from the request. Fall back to default if not provided.
-    code_generation_model = params.get("codeGenerationModel", "gpt_4_vision")
-    if code_generation_model not in CODE_GENERATION_MODELS:
-        await throw_error(f"Invalid model: {code_generation_model}")
-        raise Exception(f"Invalid model: {code_generation_model}")
+    code_generation_model_str = params.get(
+        "codeGenerationModel", Llm.GPT_4_VISION.value
+    )
+    try:
+        code_generation_model = convert_frontend_str_to_llm(code_generation_model_str)
+    except:
+        await throw_error(f"Invalid model: {code_generation_model_str}")
+        raise Exception(f"Invalid model: {code_generation_model_str}")
     exact_llm_version = None
 
     print(
@@ -105,7 +109,10 @@ async def stream_code(websocket: WebSocket):
         if openai_api_key:
             print("Using OpenAI API key from environment variable")
 
-    if not openai_api_key and code_generation_model == "gpt_4_vision":
+    if not openai_api_key and (
+        code_generation_model == Llm.GPT_4_VISION
+        or code_generation_model == Llm.GPT_4_TURBO_2024_04_09
+    ):
         print("OpenAI API key not found")
         await throw_error(
             "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file. If you add it to .env, make sure to restart the backend server."
@@ -226,7 +233,7 @@ async def stream_code(websocket: WebSocket):
                     include_thinking=True,
                 )
                 exact_llm_version = Llm.CLAUDE_3_OPUS
-            elif code_generation_model == "claude_3_sonnet":
+            elif code_generation_model == Llm.CLAUDE_3_SONNET:
                 if not ANTHROPIC_API_KEY:
                     await throw_error(
                         "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
@@ -238,15 +245,16 @@ async def stream_code(websocket: WebSocket):
                     api_key=ANTHROPIC_API_KEY,
                     callback=lambda x: process_chunk(x),
                 )
-                exact_llm_version = Llm.CLAUDE_3_SONNET
+                exact_llm_version = code_generation_model
             else:
                 completion = await stream_openai_response(
                     prompt_messages,  # type: ignore
                     api_key=openai_api_key,
                     base_url=openai_base_url,
                     callback=lambda x: process_chunk(x),
+                    model=code_generation_model,
                 )
-                exact_llm_version = Llm.GPT_4_VISION
+                exact_llm_version = code_generation_model
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
             error_message = (

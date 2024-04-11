@@ -12,18 +12,20 @@ from utils import pprint_prompt
 # Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
     GPT_4_VISION = "gpt-4-vision-preview"
+    GPT_4_TURBO_2024_04_09 = "gpt-4-turbo-2024-04-09"
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
     CLAUDE_3_OPUS = "claude-3-opus-20240229"
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
 
 
-# Keep in sync with frontend (lib/models.ts)
-# User-facing names for the models (for example, in the future, gpt_4_vision might
-# be backed by a different model version)
-CODE_GENERATION_MODELS = [
-    "gpt_4_vision",
-    "claude_3_sonnet",
-]
+# Will throw errors if you send a garbage string
+def convert_frontend_str_to_llm(frontend_str: str) -> Llm:
+    if frontend_str == "gpt_4_vision":
+        return Llm.GPT_4_VISION
+    elif frontend_str == "claude_3_sonnet":
+        return Llm.CLAUDE_3_SONNET
+    else:
+        return Llm(frontend_str)
 
 
 async def stream_openai_response(
@@ -31,10 +33,9 @@ async def stream_openai_response(
     api_key: str,
     base_url: str | None,
     callback: Callable[[str], Awaitable[None]],
+    model: Llm,
 ) -> str:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-
-    model = Llm.GPT_4_VISION
 
     # Base parameters
     params = {
@@ -42,12 +43,12 @@ async def stream_openai_response(
         "messages": messages,
         "stream": True,
         "timeout": 600,
+        "temperature": 0.0,
     }
 
-    # Add 'max_tokens' only if the model is a GPT4 vision model
-    if model == Llm.GPT_4_VISION:
+    # Add 'max_tokens' only if the model is a GPT4 vision or Turbo model
+    if model == Llm.GPT_4_VISION or model == Llm.GPT_4_TURBO_2024_04_09:
         params["max_tokens"] = 4096
-        params["temperature"] = 0
 
     stream = await client.chat.completions.create(**params)  # type: ignore
     full_response = ""
