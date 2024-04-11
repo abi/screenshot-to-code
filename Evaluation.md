@@ -5,8 +5,8 @@ Evaluation dataset consists of 16 screenshots. A Python script for running scree
 ### Running evals
 
 - Input screenshots should be located at `backend/evals_data/inputs` and the outputs will be `backend/evals_data/outputs`. If you want to modify this, modify `EVALS_DIR` in `backend/evals/config.py`. You can download the input screenshot dataset here: TODO.
-- Set a stack (`STACK` var) in `backend/run_evals.py`
-- Run `python backend/run_evals.py` - this runs the screenshot-to-code on the input dataset in parallel but it will still take a few minutes to complete.
+- Set a stack and model (`STACK` var, `MODEL` var) in `backend/run_evals.py`
+- Run `OPENAI_API_KEY=sk-... python run_evals.py` - this runs the screenshot-to-code on the input dataset in parallel but it will still take a few minutes to complete.
 - Once the script is done, you can find the outputs in `backend/evals_data/outputs`.
 
 ### Rating evals
