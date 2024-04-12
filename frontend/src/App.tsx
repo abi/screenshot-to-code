@@ -457,7 +457,7 @@ function App() {
                     </div>
                     <Button
                       onClick={doUpdate}
-                      className="dark:text-white dark:bg-gray-700"
+                      className="dark:text-white dark:bg-gray-700 update-btn"
                     >
                       Update
                     </Button>
@@ -574,7 +574,7 @@ function App() {
                       <Button
                         onClick={downloadCode}
                         variant="secondary"
-                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700"
+                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
                       >
                         <FaDownload /> Download
                       </Button>
