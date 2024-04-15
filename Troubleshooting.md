@@ -11,7 +11,8 @@ You don't need a ChatGPT Pro account. Screenshot to code uses API keys from your
 5. Go to Settings > Limits and check at the bottom of the page, your current tier has to be "Tier 1" to have GPT4 access
 <img width="900" alt="285636973-da38bd4d-8a78-4904-8027-ca67d729b933" src="https://github.com/abi/screenshot-to-code/assets/23818/8d07cd84-0cf9-4f88-bc00-80eba492eadf">
 
-6. Go to Screenshot to code and paste it in the Settings dialog under OpenAI key (gear icon). Your key is only stored in your browser. Never stored on our servers.
+6. Navigate to OpenAI [api keys](https://platform.openai.com/api-keys) page and create and copy a new secret key.
+7. Go to Screenshot to code and paste it in the Settings dialog under OpenAI key (gear icon). Your key is only stored in your browser. Never stored on our servers.
 
 ## Still not working?
 
