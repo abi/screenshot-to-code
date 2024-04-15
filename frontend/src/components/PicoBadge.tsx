@@ -14,7 +14,7 @@ export function PicoBadge() {
           className="fixed z-50 bottom-16 right-5 rounded-md shadow bg-black
          text-white px-4 text-xs py-3 cursor-pointer"
         >
-          feature requests
+          feedback
         </div>
       </a>
     </>
