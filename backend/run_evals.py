@@ -1,6 +1,8 @@
 # Load environment variables first
 from dotenv import load_dotenv
 
+from llm import Llm
+
 load_dotenv()
 
 import os
@@ -12,6 +14,7 @@ from evals.core import generate_code_core
 from evals.utils import image_to_data_url
 
 STACK = "html_tailwind"
+MODEL = Llm.CLAUDE_3_SONNET
 
 
 async def main():
@@ -25,7 +28,7 @@ async def main():
     for filename in evals:
         filepath = os.path.join(INPUT_DIR, filename)
         data_url = await image_to_data_url(filepath)
-        task = generate_code_core(data_url, STACK)
+        task = generate_code_core(image_url=data_url, stack=STACK, model=MODEL)
         tasks.append(task)
 
     results = await asyncio.gather(*tasks)
