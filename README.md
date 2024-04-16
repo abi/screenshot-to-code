@@ -15,8 +15,9 @@ Supported stacks:
 
 Supported AI models:
 
-- GPT-4 Vision
-- Claude 3 Sonnet (faster, and on par or better than GPT-4 vision for many inputs)
+- GPT-4 Turbo (Apr 2024) - Best model
+- GPT-4 Vision (Nov 2023) - Good model that's better than GPT-4 Turbo on some inputs
+- Claude 3 Sonnet - Faster, and on par or better than GPT-4 vision for many inputs
 - DALL-E 3 for image generation
 
 See the [Examples](#-examples) section below for more demos.

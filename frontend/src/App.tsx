@@ -74,7 +74,7 @@ function App({ navbarComponent }: Props) {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
-      codeGenerationModel: CodeGenerationModel.GPT_4_VISION,
+      codeGenerationModel: CodeGenerationModel.GPT_4_TURBO_2024_04_09,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
