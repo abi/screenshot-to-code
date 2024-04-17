@@ -63,7 +63,7 @@ async def stream_openai_response(
     return full_response
 
 
-# TODO: Have a seperate function that translates OpenAI messages to Claude messages
+# TODO: Have a separate function that translates OpenAI messages to Claude messages
 async def stream_claude_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
