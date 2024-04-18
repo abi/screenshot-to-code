@@ -184,6 +184,8 @@ function App({ navbarComponent }: Props) {
   };
 
   const cancelCodeGeneration = () => {
+    addEvent("Cancel");
+
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
     // make sure stop can correct the state even if the websocket is already closed
     cancelCodeGenerationAndReset();
@@ -289,6 +291,7 @@ function App({ navbarComponent }: Props) {
     setReferenceImages(referenceImages);
     setInputMode(inputMode);
     if (referenceImages.length > 0) {
+      addEvent("Create");
       await doGenerateCode(
         {
           generationType: "create",
