@@ -95,6 +95,11 @@ function App({ navbarComponent }: Props) {
 
   const wsRef = useRef<WebSocket>(null);
 
+  const showReactWarning =
+    selectedCodeGenerationModel ===
+      CodeGenerationModel.GPT_4_TURBO_2024_04_09 &&
+    settings.generatedCodeConfig === Stack.REACT_TAILWIND;
+
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
 
@@ -419,6 +424,13 @@ function App({ navbarComponent }: Props) {
               appState === AppState.CODING || appState === AppState.CODE_READY
             }
           />
+
+          {showReactWarning && (
+            <div className="text-sm bg-yellow-200 rounded p-2">
+              Sorry - React is not currently working with GPT-4 Turbo. Please
+              use GPT-4 Vision or Claude Sonnet. We are working on a fix.
+            </div>
+          )}
 
           {appState !== AppState.CODE_READY && <TipLink />}
 
