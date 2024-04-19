@@ -42,7 +42,16 @@ function AppContainer() {
         setSubscriberTier("free");
       } else {
         // Initialize PostHog only for paid users
-        posthog.init(POSTHOG_KEY, { api_host: POSTHOG_HOST });
+        // and unmask all inputs except for passwords
+        posthog.init(POSTHOG_KEY, {
+          api_host: POSTHOG_HOST,
+          session_recording: {
+            maskAllInputs: false,
+            maskInputOptions: {
+              password: true,
+            },
+          },
+        });
         // Identify the user to PostHog
         posthog.identify(user.email, {
           email: user.email,
