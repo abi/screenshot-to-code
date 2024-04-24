@@ -14,7 +14,8 @@ from evals.core import generate_code_core
 from evals.utils import image_to_data_url
 
 STACK = "html_tailwind"
-MODEL = Llm.CLAUDE_3_SONNET
+MODEL = Llm.GPT_4_TURBO_2024_04_09
+N = 1  # Number of outputs to generate
 
 
 async def main():
@@ -28,16 +29,21 @@ async def main():
     for filename in evals:
         filepath = os.path.join(INPUT_DIR, filename)
         data_url = await image_to_data_url(filepath)
-        task = generate_code_core(image_url=data_url, stack=STACK, model=MODEL)
-        tasks.append(task)
+        for _ in range(N):  # Generate N tasks for each input
+            task = generate_code_core(image_url=data_url, stack=STACK, model=MODEL)
+            tasks.append(task)
 
     results = await asyncio.gather(*tasks)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    for filename, content in zip(evals, results):
-        # File name is derived from the original filename in evals
-        output_filename = f"{os.path.splitext(filename)[0]}.html"
+    for i, content in enumerate(results):
+        # Calculate index for filename and output number
+        eval_index = i // N
+        output_number = i % N
+        filename = evals[eval_index]
+        # File name is derived from the original filename in evals with an added output number
+        output_filename = f"{os.path.splitext(filename)[0]}_{output_number}.html"
         output_filepath = os.path.join(OUTPUT_DIR, output_filename)
         with open(output_filepath, "w") as file:
             file.write(content)
