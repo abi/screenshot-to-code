@@ -12,6 +12,7 @@ Supported stacks:
 - Bootstrap
 - Ionic + Tailwind
 - SVG
+- Typescript
 
 Supported AI models:
 
