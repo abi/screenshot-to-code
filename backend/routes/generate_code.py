@@ -2,14 +2,14 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
-from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
+from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE, AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY
 from custom_types import InputMode
 from llm import (
     Llm,
     convert_frontend_str_to_llm,
     stream_claude_response,
     stream_claude_response_native,
-    stream_openai_response,
+    stream_openai_response, stream_claude_response_aws_bedrock, stream_claude_response_native_aws_bedrock,
 )
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
@@ -55,7 +55,7 @@ async def stream_code(websocket: WebSocket):
     print("Incoming websocket connection...")
 
     async def throw_error(
-        message: str,
+            message: str,
     ):
         await websocket.send_json({"type": "error", "value": message})
         await websocket.close(APP_ERROR_WEB_SOCKET_CODE)
@@ -110,8 +110,8 @@ async def stream_code(websocket: WebSocket):
             print("Using OpenAI API key from environment variable")
 
     if not openai_api_key and (
-        code_generation_model == Llm.GPT_4_VISION
-        or code_generation_model == Llm.GPT_4_TURBO_2024_04_09
+            code_generation_model == Llm.GPT_4_VISION
+            or code_generation_model == Llm.GPT_4_TURBO_2024_04_09
     ):
         print("OpenAI API key not found")
         await throw_error(
@@ -218,33 +218,51 @@ async def stream_code(websocket: WebSocket):
     else:
         try:
             if validated_input_mode == "video":
-                if not ANTHROPIC_API_KEY:
+                if not ANTHROPIC_API_KEY and not AWS_ACCESS_KEY and not AWS_SECRET_ACCESS_KEY:
                     await throw_error(
-                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                        "Video only works with Anthropic models. Neither Anthropic API key or AWS Access Key found. Please add the environment variable ANTHROPIC_API_KEY or AWS_ACCESS_KEY/AWS_SECRET_ACCESS_KEY to backend/.env"
                     )
                     raise Exception("No Anthropic key")
 
-                completion = await stream_claude_response_native(
-                    system_prompt=VIDEO_PROMPT,
-                    messages=prompt_messages,  # type: ignore
-                    api_key=ANTHROPIC_API_KEY,
-                    callback=lambda x: process_chunk(x),
-                    model=Llm.CLAUDE_3_OPUS,
-                    include_thinking=True,
-                )
+                if ANTHROPIC_API_KEY:
+                    completion = await stream_claude_response_native(
+                        system_prompt=VIDEO_PROMPT,
+                        messages=prompt_messages,  # type: ignore
+                        api_key=ANTHROPIC_API_KEY,
+                        callback=lambda x: process_chunk(x),
+                        model=Llm.CLAUDE_3_OPUS,
+                        include_thinking=True,
+                    )
+                else:
+                    completion = await stream_claude_response_native_aws_bedrock(
+                        system_prompt=VIDEO_PROMPT,
+                        messages=prompt_messages,  # type: ignore
+                        access_key=AWS_ACCESS_KEY,
+                        secret_access_key=AWS_SECRET_ACCESS_KEY,
+                        callback=lambda x: process_chunk(x),
+                        model=Llm.CLAUDE_3_OPUS,
+                        include_thinking=True,
+                    )
                 exact_llm_version = Llm.CLAUDE_3_OPUS
             elif code_generation_model == Llm.CLAUDE_3_SONNET:
-                if not ANTHROPIC_API_KEY:
+                if not ANTHROPIC_API_KEY and not AWS_ACCESS_KEY and not AWS_SECRET_ACCESS_KEY:
                     await throw_error(
-                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                        "No Anthropic API key or AWS Access Key found. Please add the environment variable ANTHROPIC_API_KEY or AWS_ACCESS_KEY/AWS_SECRET_ACCESS_KEY to backend/.env"
                     )
                     raise Exception("No Anthropic key")
-
-                completion = await stream_claude_response(
-                    prompt_messages,  # type: ignore
-                    api_key=ANTHROPIC_API_KEY,
-                    callback=lambda x: process_chunk(x),
-                )
+                if ANTHROPIC_API_KEY:
+                    completion = await stream_claude_response(
+                        prompt_messages,  # type: ignore
+                        api_key=ANTHROPIC_API_KEY,
+                        callback=lambda x: process_chunk(x),
+                    )
+                else:
+                    completion = await stream_claude_response_aws_bedrock(
+                        prompt_messages,  # type: ignore
+                        access_key=AWS_ACCESS_KEY,
+                        secret_access_key=AWS_SECRET_ACCESS_KEY,
+                        callback=lambda x: process_chunk(x),
+                    )
                 exact_llm_version = code_generation_model
             else:
                 completion = await stream_openai_response(
@@ -258,35 +276,35 @@ async def stream_code(websocket: WebSocket):
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
             error_message = (
-                "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, or create a new OpenAI API key on your OpenAI dashboard."
-                + (
-                    " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
-                    else ""
-                )
+                    "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, or create a new OpenAI API key on your OpenAI dashboard."
+                    + (
+                        " Alternatively, you can purchase code generation credits directly on this website."
+                        if IS_PROD
+                        else ""
+                    )
             )
             return await throw_error(error_message)
         except openai.NotFoundError as e:
             print("[GENERATE_CODE] Model not found", e)
             error_message = (
-                e.message
-                + ". Please make sure you have followed the instructions correctly to obtain an OpenAI key with GPT vision access: https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
-                + (
-                    " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
-                    else ""
-                )
+                    e.message
+                    + ". Please make sure you have followed the instructions correctly to obtain an OpenAI key with GPT vision access: https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
+                    + (
+                        " Alternatively, you can purchase code generation credits directly on this website."
+                        if IS_PROD
+                        else ""
+                    )
             )
             return await throw_error(error_message)
         except openai.RateLimitError as e:
             print("[GENERATE_CODE] Rate limit exceeded", e)
             error_message = (
-                "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
-                + (
-                    " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
-                    else ""
-                )
+                    "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
+                    + (
+                        " Alternatively, you can purchase code generation credits directly on this website."
+                        if IS_PROD
+                        else ""
+                    )
             )
             return await throw_error(error_message)
 

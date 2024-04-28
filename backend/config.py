@@ -4,6 +4,8 @@
 import os
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
+AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", None)
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
 
 # Debugging-related
 
