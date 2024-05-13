@@ -63,7 +63,7 @@ function App() {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
-      codeGenerationModel: CodeGenerationModel.GPT_4_TURBO_2024_04_09,
+      codeGenerationModel: CodeGenerationModel.GPT_4O_2024_05_13,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
