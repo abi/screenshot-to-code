@@ -15,7 +15,7 @@ Supported stacks:
 
 Supported AI models:
 
-- GPT-4 O - Best model!
+- GPT-4O - Best model!
 - GPT-4 Turbo (Apr 2024)
 - GPT-4 Vision (Nov 2023)
 - Claude 3 Sonnet
