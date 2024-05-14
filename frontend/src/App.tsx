@@ -89,6 +89,10 @@ function App() {
       CodeGenerationModel.GPT_4_TURBO_2024_04_09 &&
     settings.generatedCodeConfig === Stack.REACT_TAILWIND;
 
+  const showGpt4OMessage =
+    selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
+    appState === AppState.INITIAL;
+
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
 
@@ -400,6 +404,15 @@ function App() {
             <div className="text-sm bg-yellow-200 rounded p-2">
               Sorry - React is not currently working with GPT-4 Turbo. Please
               use GPT-4 Vision or Claude Sonnet. We are working on a fix.
+            </div>
+          )}
+
+          {showGpt4OMessage && (
+            <div className="rounded-lg p-2 bg-fuchsia-200">
+              <p className="text-gray-800 text-sm">
+                Now supporting GPT-4o. Higher quality and 2x faster. Give it a
+                try!
+              </p>
             </div>
           )}
 
