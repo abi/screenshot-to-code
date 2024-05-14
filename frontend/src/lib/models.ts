@@ -15,7 +15,7 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
     isPaid: boolean;
   };
 } = {
-  "gpt-4o-2024-05-13": { name: "GPT-4O 🌟", inBeta: false, isPaid: false },
+  "gpt-4o-2024-05-13": { name: "GPT-4o 🌟", inBeta: false, isPaid: false },
   "gpt-4-turbo-2024-04-09": {
     name: "GPT-4 Turbo (Apr 2024)",
     inBeta: false,
