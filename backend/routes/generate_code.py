@@ -125,7 +125,6 @@ async def stream_code(websocket: WebSocket):
             await throw_error(
                 "Your subscription has run out of monthly credits. Contact support and we can add more credits to your account for free."
             )
-            raise Exception("User has no credits")
         else:
             await throw_error("Unknown error occurred. Contact support.")
             raise Exception("Unknown error occurred when checking subscription credits")
