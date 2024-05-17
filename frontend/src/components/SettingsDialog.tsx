@@ -108,6 +108,26 @@ function SettingsDialog({ settings, setSettings }: Props) {
             </>
           )}
 
+          <Label htmlFor="anthropic-api-key">
+            <div>Anthropic API key</div>
+            <div className="font-light mt-2 leading-relaxed">
+              Only stored in your browser. Never stored on servers. Overrides
+              your .env config.
+            </div>
+          </Label>
+
+          <Input
+            id="anthropic-api-key"
+            placeholder="Anthropic API key"
+            value={settings.anthropicApiKey || ""}
+            onChange={(e) =>
+              setSettings((s) => ({
+                ...s,
+                anthropicApiKey: e.target.value,
+              }))
+            }
+          />
+
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
               <AccordionTrigger>Screenshot by URL Config</AccordionTrigger>
