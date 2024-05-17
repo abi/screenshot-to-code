@@ -1,5 +1,6 @@
 import puppeteer, { Browser, Page, ElementHandle } from "puppeteer";
 import { Stack } from "../lib/stacks";
+import { CodeGenerationModel } from "../lib/models";
 
 const REPO_PATH = "/Users/abi/Documents/GitHub/screenshot-to-code/frontend";
 const DOWNLOAD_PATH = `${REPO_PATH}/qa`;
@@ -32,42 +33,46 @@ describe("Simple Puppeteer Test", () => {
     await browser.close();
   });
 
-  const stacks = Object.values(Stack);
-
+  const stacks = Object.values(Stack).slice(0, 1);
+  const models = Object.values(CodeGenerationModel);
   // For debugging
   //.slice(0, 1);
 
-  stacks.forEach((stack) => {
-    it(`should load the homepage and check the title for stack: ${stack}`, async () => {
-      const codeGenerationModel = "claude_3_sonnet";
-      const testId = `${codeGenerationModel}_${stack}`;
+  models.forEach((model) => {
+    stacks.forEach((stack) => {
+      it(`should load the homepage and check the title for stack: ${stack}`, async () => {
+        const testId = `${model}_${stack}`;
 
-      await setupLocalStorage(page, stack, codeGenerationModel);
+        await setupLocalStorage(page, stack, model);
 
-      // Upload file
-      const fileInput = (await page.$(
-        ".file-input"
-      )) as ElementHandle<HTMLInputElement>;
+        // Upload file
+        const fileInput = (await page.$(
+          ".file-input"
+        )) as ElementHandle<HTMLInputElement>;
 
-      if (!fileInput) {
-        throw new Error("File input element not found");
-      }
+        if (!fileInput) {
+          throw new Error("File input element not found");
+        }
 
-      await fileInput.uploadFile(IMAGE_PATH);
+        await fileInput.uploadFile(IMAGE_PATH);
 
-      // Screenshot the first step
-      await page.screenshot({
-        path: `${SCREENSHOTS_PATH}/${testId}_image_uploaded.png`,
-      });
+        // Screenshot the first step
+        await page.screenshot({
+          path: `${SCREENSHOTS_PATH}/${testId}_image_uploaded.png`,
+        });
 
-      // Click the generate button and wait for the code to be generated
-      await page.waitForNetworkIdle();
-      await page.waitForFunction(() => document.body.innerText.includes("v1"), {
-        timeout: 30000,
-      });
+        // Click the generate button and wait for the code to be generated
+        await page.waitForNetworkIdle();
+        await page.waitForFunction(
+          () => document.body.innerText.includes("v1"),
+          {
+            timeout: 30000,
+          }
+        );
 
-      await page.screenshot({
-        path: `${SCREENSHOTS_PATH}/${testId}_image_results.png`,
+        await page.screenshot({
+          path: `${SCREENSHOTS_PATH}/${testId}_image_results.png`,
+        });
       });
     });
   });
