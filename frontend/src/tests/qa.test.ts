@@ -32,52 +32,33 @@ describe("Simple Puppeteer Test", () => {
     await browser.close();
   });
 
-  const stacks = Object.values(Stack).slice(0, 1);
+  const stacks = Object.values(Stack);
+
+  // For debugging
+  //.slice(0, 1);
 
   stacks.forEach((stack) => {
     it(`should load the homepage and check the title for stack: ${stack}`, async () => {
       const codeGenerationModel = "claude_3_sonnet";
+      const testId = `${codeGenerationModel}_${stack}`;
 
-      // Set up local storage
-      const setting = {
-        openAiApiKey: null,
-        openAiBaseURL: null,
-        screenshotOneApiKey: null,
-        isImageGenerationEnabled: false,
-        editorTheme: "cobalt",
-        generatedCodeConfig: stack,
-        codeGenerationModel: codeGenerationModel,
-        isTermOfServiceAccepted: false,
-        accessCode: null,
-      };
+      await setupLocalStorage(page, stack, codeGenerationModel);
 
-      await page.evaluate((setting) => {
-        localStorage.setItem("setting", JSON.stringify(setting));
-      }, setting);
-
-      // Reload the page to apply the local storage
-      await page.reload();
-
-      // Generate from image
-
+      // Upload file
       const fileInput = (await page.$(
         ".file-input"
       )) as ElementHandle<HTMLInputElement>;
-      // Replace with the path to your image
-      const imagePath = IMAGE_PATH;
+
       if (!fileInput) {
         throw new Error("File input element not found");
       }
 
-      // Upload file
-      await fileInput.uploadFile(imagePath);
+      await fileInput.uploadFile(IMAGE_PATH);
 
-      // Screenshot of the uploaded image
+      // Screenshot the first step
       await page.screenshot({
-        path: `${SCREENSHOTS_PATH}/${codeGenerationModel}_${stack}_image_uploaded.png`,
+        path: `${SCREENSHOTS_PATH}/${testId}_image_uploaded.png`,
       });
-
-      console.log("starting image code generation for stack: ", stack);
 
       // Click the generate button and wait for the code to be generated
       await page.waitForNetworkIdle();
@@ -86,10 +67,29 @@ describe("Simple Puppeteer Test", () => {
       });
 
       await page.screenshot({
-        path: `${SCREENSHOTS_PATH}/${codeGenerationModel}_${stack}_image_generation_results.png`,
+        path: `${SCREENSHOTS_PATH}/${testId}_image_results.png`,
       });
-
-      console.log(`done with image code generation for stack: ${stack}`);
     });
   });
 });
+
+async function setupLocalStorage(page: Page, stack: string, model: string) {
+  const setting = {
+    openAiApiKey: null,
+    openAiBaseURL: null,
+    screenshotOneApiKey: null,
+    isImageGenerationEnabled: false,
+    editorTheme: "cobalt",
+    generatedCodeConfig: stack,
+    codeGenerationModel: model,
+    isTermOfServiceAccepted: false,
+    accessCode: null,
+  };
+
+  await page.evaluate((setting) => {
+    localStorage.setItem("setting", JSON.stringify(setting));
+  }, setting);
+
+  // Reload the page to apply the local storage
+  await page.reload();
+}
