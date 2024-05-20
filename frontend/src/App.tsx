@@ -465,7 +465,7 @@ function App() {
                   <div className="flex items-center justify-end gap-x-2 mt-2">
                     <Button
                       onClick={regenerate}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
                     >
                       🔄 Regenerate
                     </Button>
