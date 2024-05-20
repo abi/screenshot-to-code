@@ -8,7 +8,7 @@ const SCREENSHOTS_PATH = `${REPO_PATH}/qa/results`;
 const IMAGE_PATH = DOWNLOAD_PATH + "/simple_button.png";
 const SCREENSHOT_WITH_IMAGES = `${DOWNLOAD_PATH}/simple_ui_with_image.png`;
 
-describe("Simple Puppeteer Test", () => {
+describe("e2e tests", () => {
   let browser: Browser;
   let page: Page;
 
@@ -105,6 +105,32 @@ describe("Simple Puppeteer Test", () => {
       );
     });
   });
+
+  // Start from code tests - for every model (doesn’t need to be repeated for each stack - fix to HTML Tailwind only)
+  models.forEach((model) => {
+    ["html_tailwind"].forEach((stack) => {
+      it(
+        `Start from code for : ${model}`,
+        async () => {
+          const app = new App(page, stack, model, `update_${model}_${stack}`);
+          await app.init();
+
+          // Generate from screenshot
+          await app.uploadImage(IMAGE_PATH);
+          // Regenerate works for v1
+          await app.regenerate();
+          // Make an update
+          await app.edit("make the header blue", "v2");
+          // Make another update
+          await app.edit("make all text italic", "v3");
+          // Branch off v2 and make an update
+          await app.clickVersion("v2");
+          await app.edit("make all text red", "v4");
+        },
+        90 * 1000
+      );
+    });
+  });
 });
 
 class App {
@@ -132,7 +158,7 @@ class App {
     const setting = {
       openAiApiKey: null,
       openAiBaseURL: null,
-      screenshotOneApiKey: null,
+      screenshotOneApiKey: process.env.TEST_SCREENSHOTONE_API_KEY,
       isImageGenerationEnabled: true,
       editorTheme: "cobalt",
       generatedCodeConfig: this.stack,
@@ -155,21 +181,27 @@ class App {
     });
   }
 
-  async generateFromUrl(url: string) {
-    await this.page.type('input[placeholder="Enter URL"]', url);
+  async _waitUntilVersionIsReady(version: string) {
+    await this.page.waitForNetworkIdle();
+    await this.page.waitForFunction(
+      (version) => document.body.innerText.includes(version),
+      {
+        timeout: 30000,
+      },
+      version
+    );
+    // Wait for 3s so that the HTML and JS has time to render before screenshotting
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
 
+  async generateFromUrl(url: string) {
+    // Type in the URL
+    await this.page.type('input[placeholder="Enter URL"]', url);
     await this._screenshot("typed_url");
 
     // Click the capture button and wait for the code to be generated
     await this.page.click("button.capture-btn");
-    await this.page.waitForNetworkIdle();
-    await this.page.waitForFunction(
-      () => document.body.innerText.includes("v1"),
-      {
-        timeout: 30000,
-      }
-    );
-
+    await this._waitUntilVersionIsReady("v1");
     await this._screenshot("url_result");
   }
 
@@ -179,33 +211,15 @@ class App {
     const fileInput = (await this.page.$(
       ".file-input"
     )) as ElementHandle<HTMLInputElement>;
-
     if (!fileInput) {
       throw new Error("File input element not found");
     }
-
     await fileInput.uploadFile(screenshotPath);
-
-    // Screenshot the first step
-    await this.page.screenshot({
-      path: `${this.screenshotPathPrefix}_image_uploaded.png`,
-    });
+    await this._screenshot("image_uploaded");
 
     // Click the generate button and wait for the code to be generated
-    await this.page.waitForNetworkIdle();
-    await this.page.waitForFunction(
-      () => document.body.innerText.includes("v1"),
-      {
-        timeout: 30000,
-      }
-    );
-
-    // Wait for 1s so that the HTML and JS has time to render before screenshotting
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    await this.page.screenshot({
-      path: `${this.screenshotPathPrefix}_image_results.png`,
-    });
+    await this._waitUntilVersionIsReady("v1");
+    await this._screenshot("image_results");
   }
 
   // Makes a text edit and waits for a new version
@@ -246,16 +260,7 @@ class App {
 
   async regenerate() {
     await this.page.click(".regenerate-btn");
-
-    await this.page.waitForFunction(
-      () => document.body.innerText.includes("v1"),
-      {
-        timeout: 30000,
-      }
-    );
-
-    await this.page.screenshot({
-      path: `${this.screenshotPathPrefix}_regenerate_results.png`,
-    });
+    await this._waitUntilVersionIsReady("v1");
+    await this._screenshot("regenerate_results");
   }
 }
