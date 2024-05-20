@@ -13,7 +13,7 @@ describe("e2e tests", () => {
   let page: Page;
 
   const DEBUG = true;
-  const IS_HEADLESS = false;
+  const IS_HEADLESS = true;
 
   const stacks = Object.values(Stack).slice(0, DEBUG ? 1 : undefined);
   const models = Object.values(CodeGenerationModel).slice(
@@ -82,7 +82,7 @@ describe("e2e tests", () => {
   // Update tests - for every model (doesn’t need to be repeated for each stack - fix to HTML Tailwind only)
   models.forEach((model) => {
     ["html_tailwind"].forEach((stack) => {
-      it(
+      it.only(
         `update: ${model}`,
         async () => {
           const app = new App(page, stack, model, `update_${model}_${stack}`);
@@ -105,26 +105,31 @@ describe("e2e tests", () => {
     });
   });
 
-  // Start from code tests - for every model (doesn’t need to be repeated for each stack - fix to HTML Tailwind only)
+  // Start from code tests - for every model
   models.forEach((model) => {
     ["html_tailwind"].forEach((stack) => {
-      it(
-        `Start from code for : ${model}`,
+      it.skip(
+        `Start from code: ${model}`,
         async () => {
-          const app = new App(page, stack, model, `update_${model}_${stack}`);
+          const app = new App(
+            page,
+            stack,
+            model,
+            `start_from_code_${model}_${stack}`
+          );
           await app.init();
 
-          // Generate from screenshot
-          await app.uploadImage(SIMPLE_SCREENSHOT);
+          await app.importFromCode();
+
           // Regenerate works for v1
-          await app.regenerate();
-          // Make an update
-          await app.edit("make the header blue", "v2");
-          // Make another update
-          await app.edit("make all text italic", "v3");
-          // Branch off v2 and make an update
-          await app.clickVersion("v2");
-          await app.edit("make all text red", "v4");
+          // await app.regenerate();
+          // // Make an update
+          // await app.edit("make the header blue", "v2");
+          // // Make another update
+          // await app.edit("make all text italic", "v3");
+          // // Branch off v2 and make an update
+          // await app.clickVersion("v2");
+          // await app.edit("make all text red", "v4");
         },
         90 * 1000
       );
@@ -137,10 +142,6 @@ class App {
   private page: Page;
   private stack: string;
   private model: string;
-
-  // TODOs
-  // - Abstract screenshot functionality
-  // - Abstract waiting for version to be done
 
   constructor(page: Page, stack: string, model: string, testId: string) {
     this.page = page;
@@ -223,28 +224,17 @@ class App {
 
   // Makes a text edit and waits for a new version
   async edit(edit: string, version: string) {
+    // Type in the edit
     await this.page.type(
       'textarea[placeholder="Tell the AI what to change..."]',
       edit
     );
+    await this._screenshot(`typed_${version}`);
 
-    await this.page.screenshot({
-      path: `${this.screenshotPathPrefix}_typed_${version}.png`,
-    });
-
+    // Click the update button and wait for the code to be generated
     await this.page.click(".update-btn");
-
-    await this.page.waitForFunction(
-      (version: string) => document.body.innerText.includes(version),
-      {
-        timeout: 30000,
-      },
-      version
-    );
-
-    await this.page.screenshot({
-      path: `${this.screenshotPathPrefix}_done_${version}.png`,
-    });
+    await this._waitUntilVersionIsReady(version);
+    await this._screenshot(`done_${version}`);
   }
 
   async clickVersion(version: string) {
@@ -261,5 +251,20 @@ class App {
     await this.page.click(".regenerate-btn");
     await this._waitUntilVersionIsReady("v1");
     await this._screenshot("regenerate_results");
+  }
+
+  // Work in progress
+  async importFromCode() {
+    await this.page.click(".import-from-code-btn");
+
+    await this.page.type("textarea", "<html>hello world</html>");
+
+    await this.page.select("#output-settings-js", "HTML + Tailwind");
+
+    await this._screenshot("typed_code");
+
+    await this.page.click(".import-btn");
+
+    await this._waitUntilVersionIsReady("v1");
   }
 }
