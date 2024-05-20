@@ -146,8 +146,6 @@ async function makeEdit(
 
   await page.click(".update-btn");
 
-  console.log(version);
-
   await page.waitForFunction(
     (version: string) => document.body.innerText.includes(version),
     {
