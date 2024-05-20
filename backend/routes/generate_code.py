@@ -85,7 +85,7 @@ async def stream_code(websocket: WebSocket):
 
     # Read the model from the request. Fall back to default if not provided.
     code_generation_model_str = params.get(
-        "codeGenerationModel", Llm.GPT_4_VISION.value
+        "codeGenerationModel", Llm.GPT_4O_2024_05_13.value
     )
     try:
         code_generation_model = convert_frontend_str_to_llm(code_generation_model_str)
@@ -112,6 +112,7 @@ async def stream_code(websocket: WebSocket):
     if not openai_api_key and (
         code_generation_model == Llm.GPT_4_VISION
         or code_generation_model == Llm.GPT_4_TURBO_2024_04_09
+        or code_generation_model == Llm.GPT_4O_2024_05_13
     ):
         print("OpenAI API key not found")
         await throw_error(
