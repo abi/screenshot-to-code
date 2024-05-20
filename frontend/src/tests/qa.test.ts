@@ -12,7 +12,7 @@ describe("e2e tests", () => {
   let browser: Browser;
   let page: Page;
 
-  const DEBUG = true;
+  const DEBUG = false;
   const IS_HEADLESS = true;
 
   const stacks = Object.values(Stack).slice(0, DEBUG ? 1 : undefined);
@@ -82,7 +82,7 @@ describe("e2e tests", () => {
   // Update tests - for every model (doesn’t need to be repeated for each stack - fix to HTML Tailwind only)
   models.forEach((model) => {
     ["html_tailwind"].forEach((stack) => {
-      it.only(
+      it(
         `update: ${model}`,
         async () => {
           const app = new App(page, stack, model, `update_${model}_${stack}`);
@@ -98,7 +98,7 @@ describe("e2e tests", () => {
           await app.edit("make the text italic", "v3");
           // Branch off v2 and make an update
           await app.clickVersion("v2");
-          await app.edit("make the text white", "v4");
+          await app.edit("make the text yellow", "v4");
         },
         90 * 1000
       );
