@@ -26,5 +26,5 @@ dist-ssr
 # Env files
 .env*
 
-# QA files
-qa/**/*
+# Test files
+src/tests/results/

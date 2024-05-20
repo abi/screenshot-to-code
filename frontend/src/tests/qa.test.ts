@@ -2,11 +2,11 @@ import puppeteer, { Browser, Page, ElementHandle } from "puppeteer";
 import { Stack } from "../lib/stacks";
 import { CodeGenerationModel } from "../lib/models";
 
-const REPO_PATH = "/Users/abi/Documents/GitHub/screenshot-to-code/frontend";
-const DOWNLOAD_PATH = `${REPO_PATH}/qa`;
-const SCREENSHOTS_PATH = `${REPO_PATH}/qa/results`;
-const IMAGE_PATH = DOWNLOAD_PATH + "/simple_button.png";
-const SCREENSHOT_WITH_IMAGES = `${DOWNLOAD_PATH}/simple_ui_with_image.png`;
+const TESTS_ROOT_PATH = process.env.TEST_ROOT_PATH;
+const RESULTS_DIR = `${TESTS_ROOT_PATH}/results`;
+const FIXTURES_PATH = `${TESTS_ROOT_PATH}/fixtures`;
+const SIMPLE_SCREENSHOT = FIXTURES_PATH + "/simple_button.png";
+const SCREENSHOT_WITH_IMAGES = `${FIXTURES_PATH}/simple_ui_with_image.png`;
 
 describe("e2e tests", () => {
   let browser: Browser;
@@ -30,13 +30,12 @@ describe("e2e tests", () => {
     await page.setViewport({ width: 1080, height: 1024 });
 
     // TODO: Does this need to be moved?
-    const client = await page.createCDPSession();
-
+    // const client = await page.createCDPSession();
     // Set download behavior path
-    await client.send("Page.setDownloadBehavior", {
-      behavior: "allow",
-      downloadPath: DOWNLOAD_PATH,
-    });
+    // await client.send("Page.setDownloadBehavior", {
+    //   behavior: "allow",
+    //   downloadPath: DOWNLOAD_PATH,
+    // });
   });
 
   afterAll(async () => {
@@ -83,14 +82,14 @@ describe("e2e tests", () => {
   // Update tests - for every model (doesn’t need to be repeated for each stack - fix to HTML Tailwind only)
   models.forEach((model) => {
     ["html_tailwind"].forEach((stack) => {
-      it(
+      it.only(
         `Update for : ${model}`,
         async () => {
           const app = new App(page, stack, model, `update_${model}_${stack}`);
           await app.init();
 
           // Generate from screenshot
-          await app.uploadImage(IMAGE_PATH);
+          await app.uploadImage(SIMPLE_SCREENSHOT);
           // Regenerate works for v1
           await app.regenerate();
           // Make an update
@@ -116,7 +115,7 @@ describe("e2e tests", () => {
           await app.init();
 
           // Generate from screenshot
-          await app.uploadImage(IMAGE_PATH);
+          await app.uploadImage(SIMPLE_SCREENSHOT);
           // Regenerate works for v1
           await app.regenerate();
           // Make an update
@@ -147,7 +146,7 @@ class App {
     this.page = page;
     this.stack = stack;
     this.model = model;
-    this.screenshotPathPrefix = `${SCREENSHOTS_PATH}/${testId}`;
+    this.screenshotPathPrefix = `${RESULTS_DIR}/${testId}`;
   }
 
   async init() {
