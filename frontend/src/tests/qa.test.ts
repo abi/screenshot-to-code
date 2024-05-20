@@ -82,8 +82,8 @@ describe("e2e tests", () => {
   // Update tests - for every model (doesn’t need to be repeated for each stack - fix to HTML Tailwind only)
   models.forEach((model) => {
     ["html_tailwind"].forEach((stack) => {
-      it.only(
-        `Update for : ${model}`,
+      it(
+        `update: ${model}`,
         async () => {
           const app = new App(page, stack, model, `update_${model}_${stack}`);
           await app.init();
@@ -93,12 +93,12 @@ describe("e2e tests", () => {
           // Regenerate works for v1
           await app.regenerate();
           // Make an update
-          await app.edit("make the header blue", "v2");
+          await app.edit("make the button background blue", "v2");
           // Make another update
-          await app.edit("make all text italic", "v3");
+          await app.edit("make the text italic", "v3");
           // Branch off v2 and make an update
           await app.clickVersion("v2");
-          await app.edit("make all text red", "v4");
+          await app.edit("make the text white", "v4");
         },
         90 * 1000
       );
