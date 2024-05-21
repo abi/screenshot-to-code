@@ -3,10 +3,14 @@ import { Stack } from "../lib/stacks";
 import { CodeGenerationModel } from "../lib/models";
 
 const TESTS_ROOT_PATH = process.env.TEST_ROOT_PATH;
-const RESULTS_DIR = `${TESTS_ROOT_PATH}/results`;
+
+// Fixtures
 const FIXTURES_PATH = `${TESTS_ROOT_PATH}/fixtures`;
 const SIMPLE_SCREENSHOT = FIXTURES_PATH + "/simple_button.png";
 const SCREENSHOT_WITH_IMAGES = `${FIXTURES_PATH}/simple_ui_with_image.png`;
+
+// Results
+const RESULTS_DIR = `${TESTS_ROOT_PATH}/results`;
 
 describe("e2e tests", () => {
   let browser: Browser;
