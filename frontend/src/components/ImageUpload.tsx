@@ -166,7 +166,7 @@ function ImageUpload({ setReferenceImages }: Props) {
       {screenRecorderState === ScreenRecorderState.INITIAL && (
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         <div {...getRootProps({ style: style as any })}>
-          <input {...getInputProps()} />
+          <input {...getInputProps()} className="file-input" />
           <p className="text-slate-700 text-lg">
             Drag & drop a screenshot here, <br />
             or click to upload

@@ -482,7 +482,7 @@ function App() {
                     </div>
                     <Button
                       onClick={doUpdate}
-                      className="dark:text-white dark:bg-gray-700"
+                      className="dark:text-white dark:bg-gray-700 update-btn"
                     >
                       Update
                     </Button>
@@ -490,7 +490,7 @@ function App() {
                   <div className="flex items-center justify-end gap-x-2 mt-2">
                     <Button
                       onClick={regenerate}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
                     >
                       🔄 Regenerate
                     </Button>
@@ -599,7 +599,7 @@ function App() {
                       <Button
                         onClick={downloadCode}
                         variant="secondary"
-                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700"
+                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
                       >
                         <FaDownload /> Download
                       </Button>
