@@ -9,7 +9,7 @@ function FeedbackCallNote() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          15 min call and get $50 via Paypal or Amazon gift card.
+          15 min call (in English) and get $50 via Paypal or Amazon gift card.
         </a>
       </p>
     </div>
