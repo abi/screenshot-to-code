@@ -42,6 +42,7 @@ import ModelSettingsSection from "./components/ModelSettingsSection";
 import { extractHtml } from "./components/preview/extractHtml";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import TipLink from "./components/core/TipLink";
+import FeedbackCallNote from "./components/user-feedback/FeedbackCallNote";
 
 const IS_OPENAI_DOWN = false;
 
@@ -103,6 +104,8 @@ function App({ navbarComponent }: Props) {
   const showGpt4OMessage =
     selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
     appState === AppState.INITIAL;
+
+  const showFeedbackCallNote = subscriberTier !== "free";
 
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
@@ -461,6 +464,10 @@ function App({ navbarComponent }: Props) {
             </div>
           )}
 
+          {showFeedbackCallNote && appState === AppState.INITIAL && (
+            <FeedbackCallNote />
+          )}
+
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
             <>
@@ -534,6 +541,8 @@ function App({ navbarComponent }: Props) {
                   </div>
                 </div>
               )}
+
+              {showFeedbackCallNote && <FeedbackCallNote />}
 
               {/* Reference image display */}
               <div className="flex gap-x-2 mt-2">
