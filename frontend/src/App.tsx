@@ -516,7 +516,7 @@ function App({ navbarComponent }: Props) {
                     </div>
                     <Button
                       onClick={doUpdate}
-                      className="dark:text-white dark:bg-gray-700 plausible-event-name=Edit"
+                      className="dark:text-white dark:bg-gray-700 plausible-event-name=Edit update-btn"
                     >
                       Update
                     </Button>
@@ -524,7 +524,7 @@ function App({ navbarComponent }: Props) {
                   <div className="flex items-center justify-end gap-x-2 mt-2">
                     <Button
                       onClick={regenerate}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
                     >
                       🔄 Regenerate
                     </Button>
@@ -635,7 +635,7 @@ function App({ navbarComponent }: Props) {
                       <Button
                         onClick={downloadCode}
                         variant="secondary"
-                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700"
+                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
                       >
                         <FaDownload /> Download
                       </Button>
