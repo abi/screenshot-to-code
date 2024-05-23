@@ -31,6 +31,11 @@ We also just added experimental support for taking a video/screen recording of a
 
 [Follow me on Twitter for updates](https://twitter.com/_abi_).
 
+## Sponsors
+
+<a href="https://platform.sh/try-it-now/?utm_source=fastapi-signup&utm_medium=banner&utm_campaign=FastAPI-signup-June-2023" target="_blank" title="Build, run and scale your apps on a modern, reliable, and secure PaaS."><img src="https://fastapi.tiangolo.com/img/sponsors/platform-sh.png"></a>
+
+
 ## 🚀 Try It Out without no install
 
 [Try it live on the hosted version (paid)](https://screenshottocode.com).
