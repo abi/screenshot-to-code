@@ -29,3 +29,14 @@ services:
       - "5173:5173"
 
     restart: always
+
+  nginx:
+    image: nginx:latest
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:5173" 
+    network_mode: host
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf  # 挂载自定义的nginx配置文件
