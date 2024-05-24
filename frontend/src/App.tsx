@@ -35,12 +35,19 @@ import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
 import ImportCodeSection from "./components/ImportCodeSection";
 import { Stack } from "./lib/stacks";
+import { CodeGenerationModel } from "./lib/models";
+import ModelSettingsSection from "./components/ModelSettingsSection";
+import { extractHtml } from "./components/preview/extractHtml";
+import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
+import TipLink from "./components/core/TipLink";
 
 const IS_OPENAI_DOWN = false;
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
+
+  const [inputMode, setInputMode] = useState<"image" | "video">("image");
 
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
@@ -58,12 +65,16 @@ function App() {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
+      codeGenerationModel: CodeGenerationModel.GPT_4O_2024_05_13,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
-      accessCode: null,
     },
     "setting"
   );
+
+  // Code generation model from local storage or the default value
+  const selectedCodeGenerationModel =
+    settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
 
   // App history
   const [appHistory, setAppHistory] = useState<History>([]);
@@ -74,6 +85,18 @@ function App() {
     useState<boolean>(false);
 
   const wsRef = useRef<WebSocket>(null);
+
+  const showReactWarning =
+    selectedCodeGenerationModel ===
+      CodeGenerationModel.GPT_4_TURBO_2024_04_09 &&
+    settings.generatedCodeConfig === Stack.REACT_TAILWIND;
+
+  const showGpt4OMessage =
+    selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
+    appState === AppState.INITIAL;
+
+  // Indicate coding state using the browser tab's favicon and title
+  useBrowserTabIndicator(appState === AppState.CODING);
 
   // When the user already has the settings in local storage, newly added keys
   // do not get added to the settings so if it's falsy, we populate it with the default
@@ -129,11 +152,35 @@ function App() {
     setShouldIncludeResultImage(false);
   };
 
+  const regenerate = () => {
+    if (currentVersion === null) {
+      toast.error(
+        "No current version set. Please open a Github issue as this shouldn't happen."
+      );
+      return;
+    }
+
+    // Retrieve the previous command
+    const previousCommand = appHistory[currentVersion];
+    if (previousCommand.type !== "ai_create") {
+      toast.error("Only the first version can be regenerated.");
+      return;
+    }
+
+    // Re-run the create
+    doCreate(referenceImages, inputMode);
+  };
+
   const cancelCodeGeneration = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
     // make sure stop can correct the state even if the websocket is already closed
     cancelCodeGenerationAndReset();
   };
+
+  const previewCode =
+    inputMode === "video" && appState === AppState.CODING
+      ? extractHtml(generatedCode)
+      : generatedCode;
 
   const cancelCodeGenerationAndReset = () => {
     // When this is the first version, reset the entire app state
@@ -214,16 +261,18 @@ function App() {
   }
 
   // Initial version creation
-  function doCreate(referenceImages: string[]) {
+  function doCreate(referenceImages: string[], inputMode: "image" | "video") {
     // Reset any existing state
     reset();
 
     setReferenceImages(referenceImages);
+    setInputMode(inputMode);
     if (referenceImages.length > 0) {
       doGenerateCode(
         {
           generationType: "create",
           image: referenceImages[0],
+          inputMode,
         },
         currentVersion
       );
@@ -256,6 +305,7 @@ function App() {
       doGenerateCode(
         {
           generationType: "update",
+          inputMode,
           image: referenceImages[0],
           resultImage: resultImage,
           history: updatedHistory,
@@ -267,6 +317,7 @@ function App() {
       doGenerateCode(
         {
           generationType: "update",
+          inputMode,
           image: referenceImages[0],
           history: updatedHistory,
           isImportedFromCode,
@@ -293,6 +344,13 @@ function App() {
     }));
   }
 
+  function setCodeGenerationModel(codeGenerationModel: CodeGenerationModel) {
+    setSettings((prev) => ({
+      ...prev,
+      codeGenerationModel,
+    }));
+  }
+
   function importFromCode(code: string, stack: Stack) {
     setIsImportedFromCode(true);
 
@@ -314,7 +372,7 @@ function App() {
 
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
-      {IS_RUNNING_ON_CLOUD && <PicoBadge settings={settings} />}
+      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
           open={!settings.isTermOfServiceAccepted}
@@ -336,10 +394,33 @@ function App() {
             }
           />
 
-          {IS_RUNNING_ON_CLOUD &&
-            !(settings.openAiApiKey || settings.accessCode) && (
-              <OnboardingNote />
-            )}
+          <ModelSettingsSection
+            codeGenerationModel={selectedCodeGenerationModel}
+            setCodeGenerationModel={setCodeGenerationModel}
+            shouldDisableUpdates={
+              appState === AppState.CODING || appState === AppState.CODE_READY
+            }
+          />
+
+          {showReactWarning && (
+            <div className="text-sm bg-yellow-200 rounded p-2">
+              Sorry - React is not currently working with GPT-4 Turbo. Please
+              use GPT-4 Vision or Claude Sonnet. We are working on a fix.
+            </div>
+          )}
+
+          {showGpt4OMessage && (
+            <div className="rounded-lg p-2 bg-fuchsia-200">
+              <p className="text-gray-800 text-sm">
+                Now supporting GPT-4o. Higher quality and 2x faster. Give it a
+                try!
+              </p>
+            </div>
+          )}
+
+          {appState !== AppState.CODE_READY && <TipLink />}
+
+          {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
           {IS_OPENAI_DOWN && (
             <div className="bg-black text-white dark:bg-white dark:text-black p-3 rounded">
@@ -350,6 +431,7 @@ function App() {
 
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
+<<<<<<< HEAD
               <>
                 {/* Show code preview only when coding */}
                 {appState === AppState.CODING && (
@@ -409,6 +491,110 @@ function App() {
                         <FaUndo />
                         Reset
                       </Button>
+=======
+            <>
+              {/* Show code preview only when coding */}
+              {appState === AppState.CODING && (
+                <div className="flex flex-col">
+                  {/* Speed disclaimer for video mode */}
+                  {inputMode === "video" && (
+                    <div
+                      className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700
+                    p-2 text-xs mb-4 mt-1"
+                    >
+                      Code generation from videos can take 3-4 minutes. We do
+                      multiple passes to get the best result. Please be patient.
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-x-1">
+                    <Spinner />
+                    {executionConsole.slice(-1)[0]}
+                  </div>
+
+                  <CodePreview code={generatedCode} />
+
+                  <div className="flex w-full">
+                    <Button
+                      onClick={cancelCodeGeneration}
+                      className="w-full dark:text-white dark:bg-gray-700"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {appState === AppState.CODE_READY && (
+                <div>
+                  <div className="grid w-full gap-2">
+                    <Textarea
+                      placeholder="Tell the AI what to change..."
+                      onChange={(e) => setUpdateInstruction(e.target.value)}
+                      value={updateInstruction}
+                    />
+                    <div className="flex justify-between items-center gap-x-2">
+                      <div className="font-500 text-xs text-slate-700 dark:text-white">
+                        Include screenshot of current version?
+                      </div>
+                      <Switch
+                        checked={shouldIncludeResultImage}
+                        onCheckedChange={setShouldIncludeResultImage}
+                        className="dark:bg-gray-700"
+                      />
+                    </div>
+                    <Button
+                      onClick={doUpdate}
+                      className="dark:text-white dark:bg-gray-700 update-btn"
+                    >
+                      Update
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-end gap-x-2 mt-2">
+                    <Button
+                      onClick={regenerate}
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
+                    >
+                      🔄 Regenerate
+                    </Button>
+                  </div>
+                  <div className="flex justify-end items-center mt-2">
+                    <TipLink />
+                  </div>
+                </div>
+              )}
+
+              {/* Reference image display */}
+              <div className="flex gap-x-2 mt-2">
+                {referenceImages.length > 0 && (
+                  <div className="flex flex-col">
+                    <div
+                      className={classNames({
+                        "scanning relative": appState === AppState.CODING,
+                      })}
+                    >
+                      {inputMode === "image" && (
+                        <img
+                          className="w-[340px] border border-gray-200 rounded-md"
+                          src={referenceImages[0]}
+                          alt="Reference"
+                        />
+                      )}
+                      {inputMode === "video" && (
+                        <video
+                          muted
+                          autoPlay
+                          loop
+                          className="w-[340px] border border-gray-200 rounded-md"
+                          src={referenceImages[0]}
+                        />
+                      )}
+                    </div>
+                    <div className="text-gray-400 uppercase text-sm text-center mt-1">
+                      {inputMode === "video"
+                        ? "Original Video"
+                        : "Original Screenshot"}
+>>>>>>> main
                     </div>
                   </div>
                 )}
@@ -484,6 +670,7 @@ function App() {
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && settings.generatedCodeConfig != Stack.FLUTTER && (
           <div className="ml-4">
             <Tabs defaultValue="desktop">
+<<<<<<< HEAD
               <div className="flex justify-end mr-8 mb-4">
                 <TabsList>
 
@@ -498,16 +685,53 @@ function App() {
                     Code
                   </TabsTrigger>
                 </TabsList>
+=======
+              <div className="flex justify-between mr-8 mb-4">
+                <div className="flex items-center gap-x-2">
+                  {appState === AppState.CODE_READY && (
+                    <>
+                      <Button
+                        onClick={reset}
+                        className="flex items-center ml-4 gap-x-2 dark:text-white dark:bg-gray-700"
+                      >
+                        <FaUndo />
+                        Reset
+                      </Button>
+                      <Button
+                        onClick={downloadCode}
+                        variant="secondary"
+                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
+                      >
+                        <FaDownload /> Download
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center">
+                  <TabsList>
+                    <TabsTrigger value="desktop" className="flex gap-x-2">
+                      <FaDesktop /> Desktop
+                    </TabsTrigger>
+                    <TabsTrigger value="mobile" className="flex gap-x-2">
+                      <FaMobile /> Mobile
+                    </TabsTrigger>
+                    <TabsTrigger value="code" className="flex gap-x-2">
+                      <FaCode />
+                      Code
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+>>>>>>> main
               </div>
               <TabsContent value="desktop">
-                <Preview code={generatedCode} device="desktop" />
+                <Preview code={previewCode} device="desktop" />
               </TabsContent>
               <TabsContent value="mobile">
-                <Preview code={generatedCode} device="mobile" />
+                <Preview code={previewCode} device="mobile" />
               </TabsContent>
               <TabsContent value="code">
                 <CodeTab
-                  code={generatedCode}
+                  code={previewCode}
                   setCode={setGeneratedCode}
                   settings={settings}
                   showOpenInCodepenio={true}

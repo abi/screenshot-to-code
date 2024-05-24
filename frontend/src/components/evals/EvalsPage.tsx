@@ -4,7 +4,7 @@ import RatingPicker from "./RatingPicker";
 
 interface Eval {
   input: string;
-  output: string;
+  outputs: string[];
 }
 
 function EvalsPage() {
@@ -38,18 +38,22 @@ function EvalsPage() {
       <div className="flex flex-col gap-y-4 mt-4 mx-auto justify-center">
         {evals.map((e, index) => (
           <div className="flex flex-col justify-center" key={index}>
-            <div className="flex gap-x-2 justify-center">
+            <h2 className="font-bold text-lg ml-4">{index}</h2>
+            <div className="flex gap-x-2 justify-center ml-4">
+              {/* Update w if N changes to a fixed number like w-[600px] */}
               <div className="w-1/2 p-1 border">
-                <img src={e.input} />
+                <img src={e.input} alt={`Input for eval ${index}`} />
               </div>
-              <div className="w-1/2 p-1 border">
-                {/* Put output into an iframe */}
-                <iframe
-                  srcDoc={e.output}
-                  className="w-[1200px] h-[800px] transform scale-[0.60]"
-                  style={{ transformOrigin: "top left" }}
-                ></iframe>
-              </div>
+              {e.outputs.map((output, outputIndex) => (
+                <div className="w-1/2 p-1 border" key={outputIndex}>
+                  {/* Put output into an iframe */}
+                  <iframe
+                    srcDoc={output}
+                    className="w-[1200px] h-[800px] transform scale-[0.60]"
+                    style={{ transformOrigin: "top left" }}
+                  ></iframe>
+                </div>
+              ))}
             </div>
             <div className="ml-8 mt-4 flex justify-center">
               <RatingPicker
