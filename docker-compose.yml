@@ -32,6 +32,7 @@ services:
 
   nginx:
     image: nginx:latest
+    restart: always
     depends_on:
       - backend
       - frontend
