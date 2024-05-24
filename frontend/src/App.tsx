@@ -106,7 +106,7 @@ function App({ navbarComponent }: Props) {
     appState === AppState.INITIAL;
 
   // const showFeedbackCallNote = subscriberTier !== "free";
-  const showFeedbackCallNote = false;
+  const showFeedbackCallNote = true;
 
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
