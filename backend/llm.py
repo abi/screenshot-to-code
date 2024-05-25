@@ -59,7 +59,7 @@ async def stream_openai_response(
     full_response = ""
     async for chunk in stream:  # type: ignore
         assert isinstance(chunk, ChatCompletionChunk)
-        if chunk.choices and chunk.choices[0].delta.content:
+        if chunk.choices and len(chunk.choices) > 0 and chunk.choices[0].delta and chunk.choices[0].delta.content:
             content = chunk.choices[0].delta.content or ""
             full_response += content
             await callback(content)
