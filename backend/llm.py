@@ -73,9 +73,10 @@ async def stream_claude_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
+    base_url:str|None = None
 ) -> str:
 
-    client = AsyncAnthropic(api_key=api_key)
+    client = AsyncAnthropic(api_key=api_key,base_url=base_url)
 
     # Base parameters
     model = Llm.CLAUDE_3_SONNET
@@ -135,9 +136,10 @@ async def stream_claude_response_native(
     callback: Callable[[str], Awaitable[None]],
     include_thinking: bool = False,
     model: Llm = Llm.CLAUDE_3_OPUS,
+    base_url: str | None = None,
 ) -> str:
 
-    client = AsyncAnthropic(api_key=api_key)
+    client = AsyncAnthropic(api_key=api_key,base_url=base_url)
 
     # Base model parameters
     max_tokens = 4096

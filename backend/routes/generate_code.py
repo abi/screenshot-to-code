@@ -2,7 +2,7 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
-from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
+from config import CFG_ANTHROPIC_API_KEY,CFG_ANTHROPIC_BASE_URL,CFG_OPENAI_API_KEY,CFG_OPENAI_BASE_URL, IS_PROD, SHOULD_MOCK_AI_RESPONSE
 from custom_types import InputMode
 from llm import (
     Llm,
@@ -105,7 +105,7 @@ async def stream_code(websocket: WebSocket):
         openai_api_key = params["openAiApiKey"]
         print("Using OpenAI API key from client-side settings dialog")
     else:
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
+        openai_api_key = CFG_OPENAI_API_KEY
         if openai_api_key:
             print("Using OpenAI API key from environment variable")
 
@@ -119,7 +119,7 @@ async def stream_code(websocket: WebSocket):
             "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file. If you add it to .env, make sure to restart the backend server."
         )
         return
-
+    openai_api_key:str = openai_api_key
     # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
     openai_base_url = None
     # Disable user-specified OpenAI Base URL in prod
@@ -219,7 +219,7 @@ async def stream_code(websocket: WebSocket):
     else:
         try:
             if validated_input_mode == "video":
-                if not ANTHROPIC_API_KEY:
+                if not CFG_ANTHROPIC_API_KEY:
                     await throw_error(
                         "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
                     )
@@ -228,14 +228,15 @@ async def stream_code(websocket: WebSocket):
                 completion = await stream_claude_response_native(
                     system_prompt=VIDEO_PROMPT,
                     messages=prompt_messages,  # type: ignore
-                    api_key=ANTHROPIC_API_KEY,
+                    api_key=CFG_ANTHROPIC_API_KEY,
                     callback=lambda x: process_chunk(x),
                     model=Llm.CLAUDE_3_OPUS,
                     include_thinking=True,
+                    base_url=CFG_ANTHROPIC_BASE_URL
                 )
                 exact_llm_version = Llm.CLAUDE_3_OPUS
             elif code_generation_model == Llm.CLAUDE_3_SONNET:
-                if not ANTHROPIC_API_KEY:
+                if not CFG_ANTHROPIC_API_KEY:
                     await throw_error(
                         "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
                     )
@@ -243,17 +244,19 @@ async def stream_code(websocket: WebSocket):
 
                 completion = await stream_claude_response(
                     prompt_messages,  # type: ignore
-                    api_key=ANTHROPIC_API_KEY,
+                    api_key=CFG_ANTHROPIC_API_KEY,
                     callback=lambda x: process_chunk(x),
+                    base_url=CFG_ANTHROPIC_BASE_URL
                 )
                 exact_llm_version = code_generation_model
             else:
                 completion = await stream_openai_response(
                     prompt_messages,  # type: ignore
                     api_key=openai_api_key,
-                    base_url=openai_base_url,
+                    base_url=CFG_OPENAI_BASE_URL,
                     callback=lambda x: process_chunk(x),
                     model=code_generation_model,
+
                 )
                 exact_llm_version = code_generation_model
         except openai.AuthenticationError as e:
@@ -307,7 +310,7 @@ async def stream_code(websocket: WebSocket):
             updated_html = await generate_images(
                 completion,
                 api_key=openai_api_key,
-                base_url=openai_base_url,
+                base_url=CFG_OPENAI_BASE_URL,
                 image_cache=image_cache,
             )
         else:
