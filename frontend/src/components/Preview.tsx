@@ -53,9 +53,20 @@ function Preview({ code, device }: Props) {
     // Highlight the selected element
     updateHighlight(targetElement);
 
-    // Show popup at click position
+    // Show popup at click position, slightly offset to be right under the cursor
     setPopupVisible(false);
-    setPopupPosition({ x: clientX, y: clientY });
+
+    // Calculate offsets
+    const rect = iframeRef.current?.getBoundingClientRect();
+    const offsetX = rect ? rect.left : 0;
+    const offsetY = rect ? rect.top : 0;
+
+    // Adjust for scale
+    const scale = 1; // the scale factor applied to the iframe
+    const scaledX = clientX / scale + offsetX;
+    const scaledY = clientY / scale + offsetY;
+
+    setPopupPosition({ x: scaledX, y: scaledY });
     setPopupVisible(true);
   }
 
