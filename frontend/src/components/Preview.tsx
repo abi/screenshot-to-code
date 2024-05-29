@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import useThrottle from "../hooks/useThrottle";
+import EditPopup from "./select-and-edit/EditPopup";
 
 interface Props {
   code: string;
@@ -13,9 +14,70 @@ function Preview({ code, device }: Props) {
   // Don't update code more often than every 200ms.
   const throttledCode = useThrottle(code, 200);
 
+  const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(
+    null
+  );
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [editText, setEditText] = useState("");
+
+  console.log(selectedElement);
+
+  function updateHighlight(targetElement: HTMLElement) {
+    setSelectedElement((prev) => {
+      // Remove style from previous element
+      if (prev) {
+        prev.style.outline = "";
+        prev.style.backgroundColor = "";
+      }
+      // Add style to new element
+      targetElement.style.outline = "2px dashed #1846db";
+      targetElement.style.backgroundColor = "#bfcbf5";
+      return targetElement;
+    });
+  }
+
+  function handleClick(event: MouseEvent) {
+    const { clientX, clientY } = event;
+
+    // Prevent default to avoid issues like label clicks triggering textareas, etc.
+    event.preventDefault();
+
+    const targetElement = event.target as HTMLElement;
+
+    // Return if no target element
+    if (!targetElement) {
+      return;
+    }
+
+    // Highlight the selected element
+    updateHighlight(targetElement);
+
+    // Show popup at click position
+    setPopupVisible(false);
+    setPopupPosition({ x: clientX, y: clientY });
+    setPopupVisible(true);
+  }
+
+  function handleEditSubmit() {
+    if (selectedElement) {
+      selectedElement.innerText = editText;
+    }
+    setPopupVisible(false);
+  }
+
   useEffect(() => {
-    if (iframeRef.current) {
-      iframeRef.current.srcdoc = throttledCode;
+    const iframe = iframeRef.current;
+    if (iframe) {
+      iframe.srcdoc = throttledCode;
+
+      // Related to
+      iframe.addEventListener("load", function () {
+        iframe.contentWindow?.document.body.addEventListener(
+          "click",
+          handleClick
+        );
+      });
     }
   }, [throttledCode]);
 
@@ -34,6 +96,15 @@ function Preview({ code, device }: Props) {
           }
         )}
       ></iframe>
+      <EditPopup
+        {...{
+          popupVisible,
+          popupPosition,
+          editText,
+          setEditText,
+          handleEditSubmit,
+        }}
+      />
     </div>
   );
 }
