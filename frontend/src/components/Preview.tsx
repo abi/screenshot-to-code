@@ -6,29 +6,38 @@ import EditPopup from "./select-and-edit/EditPopup";
 interface Props {
   code: string;
   device: "mobile" | "desktop";
+  doUpdate: (
+    selectedUpdateInstruction?: string,
+    selectedElement?: HTMLElement
+  ) => void;
+  inSelectAndEditMode: boolean;
 }
 
-function Preview({ code, device }: Props) {
+function Preview({ code, device, doUpdate, inSelectAndEditMode }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   // Don't update code more often than every 200ms.
   const throttledCode = useThrottle(code, 200);
 
-  const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(
-    null
-  );
+  const inSelectAndEditModeRef = useRef(inSelectAndEditMode); // Create a ref for the state
+
+  const [selectedElement, setSelectedElement] = useState<
+    HTMLElement | undefined
+  >(undefined);
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-  const [editText, setEditText] = useState("");
 
-  console.log(selectedElement);
+  function removeHighlight(element: HTMLElement) {
+    element.style.outline = "";
+    element.style.backgroundColor = "";
+    return element;
+  }
 
   function updateHighlight(targetElement: HTMLElement) {
     setSelectedElement((prev) => {
       // Remove style from previous element
       if (prev) {
-        prev.style.outline = "";
-        prev.style.backgroundColor = "";
+        removeHighlight(prev);
       }
       // Add style to new element
       targetElement.style.outline = "2px dashed #1846db";
@@ -38,6 +47,11 @@ function Preview({ code, device }: Props) {
   }
 
   function handleClick(event: MouseEvent) {
+    // Return if not in select and edit mode
+    if (!inSelectAndEditModeRef.current) {
+      return;
+    }
+
     const { clientX, clientY } = event;
 
     // Prevent default to avoid issues like label clicks triggering textareas, etc.
@@ -70,12 +84,27 @@ function Preview({ code, device }: Props) {
     setPopupVisible(true);
   }
 
-  function handleEditSubmit() {
-    if (selectedElement) {
-      selectedElement.innerText = editText;
-    }
+  function handleEditSubmit(editText: string) {
+    doUpdate(
+      editText,
+      selectedElement ? removeHighlight(selectedElement) : selectedElement
+    );
+    setSelectedElement(undefined);
     setPopupVisible(false);
   }
+
+  useEffect(() => {
+    if (!inSelectAndEditMode) {
+      if (selectedElement) removeHighlight(selectedElement);
+      setSelectedElement(undefined);
+      setPopupVisible(false);
+    }
+  }, [inSelectAndEditMode, selectedElement]);
+
+  // Update the ref whenever the state changes
+  useEffect(() => {
+    inSelectAndEditModeRef.current = inSelectAndEditMode;
+  }, [inSelectAndEditMode]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -111,8 +140,6 @@ function Preview({ code, device }: Props) {
         {...{
           popupVisible,
           popupPosition,
-          editText,
-          setEditText,
           handleEditSubmit,
         }}
       />

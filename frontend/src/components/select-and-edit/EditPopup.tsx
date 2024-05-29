@@ -1,22 +1,19 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 
 interface EditPopupProps {
   popupVisible: boolean;
   popupPosition: { x: number; y: number };
-  editText: string;
-  setEditText: (text: string) => void;
-  handleEditSubmit: () => void;
+  handleEditSubmit: (editText: string) => void;
 }
 
 const EditPopup: React.FC<EditPopupProps> = ({
   popupVisible,
   popupPosition,
-  editText,
-  setEditText,
   handleEditSubmit,
 }) => {
+  const [editText, setEditText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -45,7 +42,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
         placeholder="Tell the AI what to change about this element..."
       />
       <div className="flex justify-end mt-2">
-        <Button onClick={handleEditSubmit}>Update</Button>
+        <Button onClick={() => handleEditSubmit(editText)}>Update</Button>
       </div>
     </div>
   );
