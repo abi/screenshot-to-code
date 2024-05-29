@@ -25,26 +25,28 @@ const EditPopup: React.FC<EditPopupProps> = ({
     }
   }, [popupVisible]);
 
-  //   useEffect(() => {
-  //     if (!popupVisible) {
-  //       setEditText("");
-  //     }
-  //   }, [popupVisible, setEditText]);
+  useEffect(() => {
+    if (!popupVisible) {
+      setEditText("");
+    }
+  }, [popupVisible, setEditText]);
+
+  if (!popupVisible) return;
 
   return (
     <div
-      className="absolute bg-white p-4 border border-gray-300 rounded shadow-lg"
+      className="absolute bg-white p-4 border border-gray-300 rounded shadow-lg w-60"
       style={{ top: popupPosition.y, left: popupPosition.x }}
     >
       <Textarea
         ref={textareaRef}
         value={editText}
         onChange={(e) => setEditText(e.target.value)}
-        placeholder="Edit text"
+        placeholder="Tell the AI what to change about this element..."
       />
-      <Button onClick={handleEditSubmit} className="mt-2">
-        Submit
-      </Button>
+      <div className="flex justify-end mt-2">
+        <Button onClick={handleEditSubmit}>Update</Button>
+      </div>
     </div>
   );
 };
