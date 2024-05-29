@@ -65,6 +65,7 @@ async def generate_images(
     code: str, api_key: str, base_url: Union[str, None], image_cache: Dict[str, str]
 ):
     # Find all images
+    print('code', code)
     soup = BeautifulSoup(code, "html.parser")
     images = soup.find_all("img")
 

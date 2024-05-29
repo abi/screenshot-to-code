@@ -2,6 +2,7 @@ import copy
 import json
 from typing import List
 from openai.types.chat import ChatCompletionMessageParam
+import base64
 
 
 def pprint_prompt(prompt_messages: List[ChatCompletionMessageParam]):
@@ -28,3 +29,12 @@ def truncate_data_strings(data: List[ChatCompletionMessageParam]):  # type: igno
         cloned_data = [truncate_data_strings(item) for item in cloned_data]  # type: ignore
 
     return cloned_data  # type: ignore
+
+def make_json_serializable(content):
+    if isinstance(content, bytes):
+        return base64.b64encode(content).decode('utf-8')
+    elif isinstance(content, dict):
+        return {key: make_json_serializable(value) for key, value in content.items()}
+    elif isinstance(content, list):
+        return [make_json_serializable(item) for item in content]
+    return content

@@ -17,6 +17,7 @@ httpx = "^0.25.1"
 pre-commit = "^3.6.2"
 anthropic = "^0.18.0"
 moviepy = "^1.0.3"
+google-generativeai = "^0.5.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

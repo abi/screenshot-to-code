@@ -5,6 +5,9 @@ from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
 from config import IS_DEBUG_ENABLED
 from debug.DebugFileWriter import DebugFileWriter
+import google.generativeai as genai
+import base64
+
 
 from utils import pprint_prompt
 
@@ -17,6 +20,7 @@ class Llm(Enum):
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
     CLAUDE_3_OPUS = "claude-3-opus-20240229"
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
+    GEMINI_1_5_FLASH = "gemini-1.5-flash"
 
 
 # Will throw errors if you send a garbage string
@@ -85,6 +89,7 @@ async def stream_claude_response(
     # Translate OpenAI messages to Claude messages
     system_prompt = cast(str, messages[0].get("content"))
     claude_messages = [dict(message) for message in messages[1:]]
+    print(claude_messages)
     for message in claude_messages:
         if not isinstance(message["content"], list):
             continue
@@ -215,3 +220,68 @@ async def stream_claude_response_native(
         raise Exception("No HTML response found in AI response")
     else:
         return response.content[0].text
+
+
+async def stream_gemini_response(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+) -> str:
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+
+    # Translate OpenAI messages to Gemini messages
+    gemini_messages = []
+
+    for message in messages:
+        if isinstance(message["content"], str):
+            gemini_messages.append(
+                {
+                    "role": (
+                        "model" if message["role"] == "system" else message["role"]
+                    ),
+                    "parts": [message["content"]],
+                }
+            )
+        elif isinstance(message["content"], list):
+            for content in message["content"]:
+                if content["type"] == "text":
+                    gemini_messages.append(
+                        {
+                            "role": (
+                                "model"
+                                if message["role"] == "system"
+                                else message["role"]
+                            ),
+                            "parts": [content["text"]],
+                        }
+                    )
+                elif content["type"] == "image_url":
+                    # Extract base64 data and media type from data URL
+                    # Example base64 data URL: data:image/png;base64,iVBOR...
+                    image_data_url = cast(str, content["image_url"]["url"])
+                    media_type = image_data_url.split(";")[0].split(":")[1]
+                    base64_data = image_data_url.split(",")[1]
+
+                    content["mime_type"] = media_type
+                    content["data"] = base64.b64decode(base64_data)
+                    # Remove OpenAI parameter
+                    del content["image_url"]
+                    del content["type"]
+                    gemini_messages.append(
+                        {"role": "user", "parts": {"inline": content}}
+                    )
+
+    response = model.generate_content(gemini_messages, stream=True)
+    
+    for chunk in response:
+        await callback(chunk.text)
+        
+    if response._result and response._result.candidates:
+        candidate = response._result.candidates[0]
+        if candidate.content and candidate.content.parts:
+            part = candidate.content.parts[0]
+            if part.text:
+                return part.text
+    return ""
