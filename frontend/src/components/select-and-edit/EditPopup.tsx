@@ -1,12 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
-
-function removeHighlight(element: HTMLElement) {
-  element.style.outline = "";
-  element.style.backgroundColor = "";
-  return element;
-}
+import { addHighlight, getAdjustedCoordinates, removeHighlight } from "./utils";
 
 interface EditPopupProps {
   event: MouseEvent | null;
@@ -24,50 +19,43 @@ const EditPopup: React.FC<EditPopupProps> = ({
   doUpdate,
   iframeRef,
 }) => {
-  const [editText, setEditText] = useState("");
+  // Edit state
   const [selectedElement, setSelectedElement] = useState<
     HTMLElement | undefined
   >(undefined);
+  const [updateText, setUpdateText] = useState("");
+
+  // Popup state
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
-  const inSelectAndEditModeRef = useRef(inSelectAndEditMode); // Create a ref for the state
+  // Create a wrapper ref to store inSelectAndEditMode so the value is not stale
+  // in a event listener
+  const inSelectAndEditModeRef = useRef(inSelectAndEditMode);
+
+  // Textarea ref for focusing
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  function updateHighlight(targetElement: HTMLElement) {
-    setSelectedElement((prev) => {
-      // Remove style from previous element
-      if (prev) {
-        removeHighlight(prev);
-      }
-      // Add style to new element
-      targetElement.style.outline = "2px dashed #1846db";
-      targetElement.style.backgroundColor = "#bfcbf5";
-      return targetElement;
-    });
-  }
-
-  function handleEditSubmit(editText: string) {
+  function onUpdate(updateText: string) {
+    // Perform the update
     doUpdate(
-      editText,
+      updateText,
       selectedElement ? removeHighlight(selectedElement) : selectedElement
     );
+
+    // Unselect the element
     setSelectedElement(undefined);
+
+    // Hide the popup
     setPopupVisible(false);
   }
 
+  // Update the ref whenever the state changes
   useEffect(() => {
-    if (popupVisible && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [popupVisible]);
+    inSelectAndEditModeRef.current = inSelectAndEditMode;
+  }, [inSelectAndEditMode]);
 
-  useEffect(() => {
-    if (!popupVisible) {
-      setEditText("");
-    }
-  }, [popupVisible, setEditText]);
-
+  // Remove highlight and reset state when not in select and edit mode
   useEffect(() => {
     if (!inSelectAndEditMode) {
       if (selectedElement) removeHighlight(selectedElement);
@@ -76,13 +64,12 @@ const EditPopup: React.FC<EditPopupProps> = ({
     }
   }, [inSelectAndEditMode, selectedElement]);
 
+  // Handle the click event
   useEffect(() => {
     // Return if not in select and edit mode
     if (!inSelectAndEditModeRef.current || !event) {
       return;
     }
-
-    const { clientX, clientY } = event;
 
     // Prevent default to avoid issues like label clicks triggering textareas, etc.
     event.preventDefault();
@@ -90,34 +77,34 @@ const EditPopup: React.FC<EditPopupProps> = ({
     const targetElement = event.target as HTMLElement;
 
     // Return if no target element
-    if (!targetElement) {
-      return;
-    }
+    if (!targetElement) return;
 
-    // Highlight the selected element
-    updateHighlight(targetElement);
+    // Highlight and set the selected element
+    setSelectedElement((prev) => {
+      // Remove style from previous element
+      if (prev) {
+        removeHighlight(prev);
+      }
+      return addHighlight(targetElement);
+    });
 
-    // Show popup at click position, slightly offset to be right under the cursor
-    setPopupVisible(false);
+    // Calculate adjusted coordinates
+    const adjustedCoordinates = getAdjustedCoordinates(
+      event.clientX,
+      event.clientY,
+      iframeRef.current?.getBoundingClientRect()
+    );
 
-    // Calculate offsets
-    const rect = iframeRef.current?.getBoundingClientRect();
-    const offsetX = rect ? rect.left : 0;
-    const offsetY = rect ? rect.top : 0;
-
-    // Adjust for scale
-    const scale = 1; // the scale factor applied to the iframe
-    const scaledX = clientX / scale + offsetX;
-    const scaledY = clientY / scale + offsetY;
-
-    setPopupPosition({ x: scaledX, y: scaledY });
+    // Show the popup at the click position
     setPopupVisible(true);
-  }, [event]);
+    setPopupPosition({ x: adjustedCoordinates.x, y: adjustedCoordinates.y });
 
-  // Update the ref whenever the state changes
-  useEffect(() => {
-    inSelectAndEditModeRef.current = inSelectAndEditMode;
-  }, [inSelectAndEditMode]);
+    // Reset the update text
+    setUpdateText("");
+
+    // Focus the textarea
+    textareaRef.current?.focus();
+  }, [event, iframeRef]);
 
   if (!popupVisible) return;
 
@@ -128,12 +115,12 @@ const EditPopup: React.FC<EditPopupProps> = ({
     >
       <Textarea
         ref={textareaRef}
-        value={editText}
-        onChange={(e) => setEditText(e.target.value)}
+        value={updateText}
+        onChange={(e) => setUpdateText(e.target.value)}
         placeholder="Tell the AI what to change about this element..."
       />
       <div className="flex justify-end mt-2">
-        <Button onClick={() => handleEditSubmit(editText)}>Update</Button>
+        <Button onClick={() => onUpdate(updateText)}>Update</Button>
       </div>
     </div>
   );
