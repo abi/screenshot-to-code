@@ -89,7 +89,6 @@ async def stream_claude_response(
     # Translate OpenAI messages to Claude messages
     system_prompt = cast(str, messages[0].get("content"))
     claude_messages = [dict(message) for message in messages[1:]]
-    print(claude_messages)
     for message in claude_messages:
         if not isinstance(message["content"], list):
             continue

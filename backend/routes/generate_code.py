@@ -32,8 +32,6 @@ router = APIRouter()
 
 
 def write_logs(prompt_messages: List[ChatCompletionMessageParam], completion: str):
-    print(prompt_messages)
-    print(completion)
     # Get the logs path from environment, default to the current working directory
     logs_path = os.environ.get("LOGS_PATH", os.getcwd())
 
