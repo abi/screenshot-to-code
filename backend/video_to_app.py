@@ -14,7 +14,7 @@ import asyncio
 from datetime import datetime
 from prompts.claude_prompts import VIDEO_PROMPT
 from utils import pprint_prompt
-from config import ANTHROPIC_API_KEY
+from config import CFG_ANTHROPIC_API_KEY,CFG_ANTHROPIC_BASE_URL,CFG_OPENAI_API_KEY,CFG_OPENAI_BASE_URL
 from video.utils import extract_tag_content, assemble_claude_prompt_video
 from llm import (
     Llm,
@@ -32,7 +32,7 @@ async def main():
     video_filename = "shortest.mov"
     is_followup = False
 
-    if not ANTHROPIC_API_KEY:
+    if not CFG_ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY is not set")
 
     # Get previous HTML
@@ -84,10 +84,11 @@ async def main():
     completion = await stream_claude_response_native(
         system_prompt=VIDEO_PROMPT,
         messages=prompt_messages,
-        api_key=ANTHROPIC_API_KEY,
+        api_key=CFG_ANTHROPIC_API_KEY,
         callback=lambda x: process_chunk(x),
         model=Llm.CLAUDE_3_OPUS,
         include_thinking=True,
+        base_url=CFG_ANTHROPIC_BASE_URL
     )
 
     end_time = time.time()

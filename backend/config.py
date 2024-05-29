@@ -3,10 +3,13 @@
 # TODO: Should only be set to true when value is 'True', not any abitrary truthy value
 import os
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
+CFG_ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
+CFG_ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", None)
+
+CFG_OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY",None)
+CFG_OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL",None)
 
 # Debugging-related
-
 SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))
 IS_DEBUG_ENABLED = bool(os.environ.get("IS_DEBUG_ENABLED", False))
 DEBUG_DIR = os.environ.get("DEBUG_DIR", "")
