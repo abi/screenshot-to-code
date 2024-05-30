@@ -2,18 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import useThrottle from "../hooks/useThrottle";
 import EditPopup from "./select-and-edit/EditPopup";
+import { useAppStore } from "../store/app-store";
 
 interface Props {
   code: string;
   device: "mobile" | "desktop";
-  doUpdate: (
-    selectedUpdateInstruction?: string,
-    selectedElement?: HTMLElement
-  ) => void;
-  inSelectAndEditMode: boolean;
+  doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
 }
 
-function Preview({ code, device, doUpdate, inSelectAndEditMode }: Props) {
+function Preview({ code, device, doUpdate }: Props) {
+  const { inSelectAndEditMode } = useAppStore();
+
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   // Don't update code more often than every 200ms.

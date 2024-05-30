@@ -6,10 +6,7 @@ import { addHighlight, getAdjustedCoordinates, removeHighlight } from "./utils";
 interface EditPopupProps {
   event: MouseEvent | null;
   inSelectAndEditMode: boolean;
-  doUpdate: (
-    selectedUpdateInstruction?: string,
-    selectedElement?: HTMLElement
-  ) => void;
+  doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
   iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
