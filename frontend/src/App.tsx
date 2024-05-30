@@ -43,6 +43,7 @@ import { extractHtml } from "./components/preview/extractHtml";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import TipLink from "./components/core/TipLink";
 import FeedbackCallNote from "./components/user-feedback/FeedbackCallNote";
+import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
 
 const IS_OPENAI_DOWN = false;
 
@@ -107,6 +108,10 @@ function App({ navbarComponent }: Props) {
 
   // const showFeedbackCallNote = subscriberTier !== "free";
   const showFeedbackCallNote = false;
+
+  const showSelectAndEditFeature =
+    selectedCodeGenerationModel === CodeGenerationModel.GPT_4O_2024_05_13 &&
+    settings.generatedCodeConfig === Stack.HTML_TAILWIND;
 
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
@@ -266,7 +271,9 @@ function App({ navbarComponent }: Props) {
                 parentIndex: parentVersion,
                 code,
                 inputs: {
-                  prompt: updateInstruction,
+                  prompt: params.history
+                    ? params.history[params.history.length - 1]
+                    : updateInstruction,
                 },
               },
             ];
@@ -312,7 +319,10 @@ function App({ navbarComponent }: Props) {
   }
 
   // Subsequent updates
-  async function doUpdate() {
+  async function doUpdate(
+    updateInstruction: string,
+    selectedElement?: HTMLElement
+  ) {
     if (currentVersion === null) {
       toast.error(
         "No current version set. Contact support or open a Github issue."
@@ -332,7 +342,17 @@ function App({ navbarComponent }: Props) {
       return;
     }
 
-    const updatedHistory = [...historyTree, updateInstruction];
+    let modifiedUpdateInstruction = updateInstruction;
+
+    // Send in a reference to the selected element if it exists
+    if (selectedElement) {
+      modifiedUpdateInstruction =
+        updateInstruction +
+        " referring to this element specifically: " +
+        selectedElement.outerHTML;
+    }
+
+    const updatedHistory = [...historyTree, modifiedUpdateInstruction];
 
     if (shouldIncludeResultImage) {
       const resultImage = await takeScreenshot();
@@ -523,8 +543,8 @@ function App({ navbarComponent }: Props) {
                       />
                     </div>
                     <Button
-                      onClick={doUpdate}
-                      className="dark:text-white dark:bg-gray-700 plausible-event-name=Edit update-btn"
+                      onClick={() => doUpdate(updateInstruction)}
+                      className="dark:text-white dark:bg-gray-700 update-btn plausible-event-name=Edit update-btn"
                     >
                       Update
                     </Button>
@@ -536,6 +556,9 @@ function App({ navbarComponent }: Props) {
                     >
                       🔄 Regenerate
                     </Button>
+                    {showSelectAndEditFeature && (
+                      <SelectAndEditModeToggleButton />
+                    )}
                   </div>
                   <div className="flex justify-end items-center mt-2">
                     <TipLink />
@@ -668,10 +691,18 @@ function App({ navbarComponent }: Props) {
                 </div>
               </div>
               <TabsContent value="desktop">
-                <Preview code={previewCode} device="desktop" />
+                <Preview
+                  code={previewCode}
+                  device="desktop"
+                  doUpdate={doUpdate}
+                />
               </TabsContent>
               <TabsContent value="mobile">
-                <Preview code={previewCode} device="mobile" />
+                <Preview
+                  code={previewCode}
+                  device="mobile"
+                  doUpdate={doUpdate}
+                />
               </TabsContent>
               <TabsContent value="code">
                 <CodeTab

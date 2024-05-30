@@ -23,7 +23,7 @@ from routes.saas_utils import does_user_have_subscription_credits
 from prompts.claude_prompts import VIDEO_PROMPT
 from prompts.types import Stack
 
-# from utils import pprint_prompt
+from utils import pprint_prompt
 from video.utils import extract_tag_content, assemble_claude_prompt_video
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
@@ -243,7 +243,7 @@ async def stream_code(websocket: WebSocket):
         video_data_url = params["image"]
         prompt_messages = await assemble_claude_prompt_video(video_data_url)
 
-    # pprint_prompt(prompt_messages)  # type: ignore
+    pprint_prompt(prompt_messages)  # type: ignore
 
     if SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(
