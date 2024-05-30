@@ -22,8 +22,8 @@ export const STRIPE_PUBLISHABLE_KEY =
 export const SAAS_BACKEND_URL = import.meta.env.VITE_SAAS_BACKEND_URL || null;
 
 // Feature flags
-export const SHOULD_SHOW_FEEDBACK_CALL_NOTE = true;
-export const IS_FREE_TRIAL_ENABLED = true;
+export const SHOULD_SHOW_FEEDBACK_CALL_NOTE = false;
+export const IS_FREE_TRIAL_ENABLED = false;
 
 // PostHog
 export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || null;
