@@ -18,7 +18,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
 import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
-import { IS_RUNNING_ON_CLOUD, SHOULD_SHOW_FEEDBACK_CALL_NOTE } from "./config";
+import {
+  IS_FREE_TRIAL_ENABLED,
+  IS_RUNNING_ON_CLOUD,
+  SHOULD_SHOW_FEEDBACK_CALL_NOTE,
+} from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
@@ -476,6 +480,7 @@ function App({ navbarComponent }: Props) {
 
           {IS_RUNNING_ON_CLOUD &&
             !settings.openAiApiKey &&
+            !IS_FREE_TRIAL_ENABLED &&
             subscriberTier === "free" && <OnboardingNote />}
 
           {IS_OPENAI_DOWN && (
