@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
 import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
-import { IS_RUNNING_ON_CLOUD } from "./config";
+import { IS_RUNNING_ON_CLOUD, SHOULD_SHOW_FEEDBACK_CALL_NOTE } from "./config";
 import { PicoBadge } from "./components/PicoBadge";
 import { OnboardingNote } from "./components/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
@@ -106,8 +106,8 @@ function App({ navbarComponent }: Props) {
     selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
     appState === AppState.INITIAL;
 
-  // const showFeedbackCallNote = subscriberTier !== "free";
-  const showFeedbackCallNote = false;
+  const showFeedbackCallNote =
+    subscriberTier !== "free" && SHOULD_SHOW_FEEDBACK_CALL_NOTE;
 
   const showSelectAndEditFeature =
     selectedCodeGenerationModel === CodeGenerationModel.GPT_4O_2024_05_13 &&
