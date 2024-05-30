@@ -2,6 +2,7 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
+import sentry_sdk
 from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
 from custom_types import InputMode
 from llm import (
@@ -191,6 +192,10 @@ async def stream_code(websocket: WebSocket):
             original_imported_code, valid_stack
         )
         for index, text in enumerate(params["history"][1:]):
+            # TODO: Remove after "Select and edit" is fully implemented
+            if "referring to this element specifically" in text:
+                sentry_sdk.capture_exception(Exception("Point and edit used"))
+
             if index % 2 == 0:
                 message: ChatCompletionMessageParam = {
                     "role": "user",
