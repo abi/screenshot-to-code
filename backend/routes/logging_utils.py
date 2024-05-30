@@ -13,6 +13,7 @@ class PaymentMethod(Enum):
     UNKNOWN = "unknown"
     OPENAI_API_KEY = "openai_api_key"
     SUBSCRIPTION = "subscription"
+    TRIAL = "trial"
 
 
 async def send_to_saas_backend(

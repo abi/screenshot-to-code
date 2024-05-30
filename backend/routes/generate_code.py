@@ -118,8 +118,15 @@ async def stream_code(websocket: WebSocket):
     # TODO: Rename does_user_have_subscription_credits
     res = await does_user_have_subscription_credits(auth_token)
     if res.status != "not_subscriber":
-        if res.status == "subscriber_has_credits":
-            payment_method = PaymentMethod.SUBSCRIPTION
+        if (
+            res.status == "subscriber_has_credits"
+            or res.status == "subscriber_is_trialing"
+        ):
+            payment_method = (
+                PaymentMethod.SUBSCRIPTION
+                if res.status == "subscriber_has_credits"
+                else PaymentMethod.TRIAL
+            )
             openai_api_key = os.environ.get("PLATFORM_OPENAI_API_KEY")
             print("Subscription - using platform API key")
         elif res.status == "subscriber_has_no_credits":
