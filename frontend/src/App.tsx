@@ -105,8 +105,8 @@ function App({ navbarComponent }: Props) {
     selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
     appState === AppState.INITIAL;
 
-  const showFeedbackCallNote = subscriberTier !== "free";
-  // const showFeedbackCallNote = false;
+  // const showFeedbackCallNote = subscriberTier !== "free";
+  const showFeedbackCallNote = false;
 
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
