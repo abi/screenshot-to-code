@@ -49,7 +49,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
         <div className="flex items-center space-x-2">
           <Label htmlFor="image-generation">
             <div>DALL-E Placeholder Image Generation</div>
-            <div className="font-light mt-2">
+            <div className="font-light mt-2 text-xs">
               More fun with it but if you want to save money, turn it off.
             </div>
           </Label>
@@ -64,29 +64,31 @@ function SettingsDialog({ settings, setSettings }: Props) {
             }
           />
         </div>
-        <div className="flex flex-col space-y-4">
-          <Label htmlFor="openai-api-key">
-            <div>OpenAI API key</div>
-            <div className="font-light mt-2 leading-relaxed">
-              Only stored in your browser. Never stored on servers. Overrides
-              your .env config.
-            </div>
-          </Label>
+        <div className="flex flex-col space-y-6">
+          <div>
+            <Label htmlFor="openai-api-key">
+              <div>OpenAI API key</div>
+              <div className="font-light mt-1 mb-2 text-xs leading-relaxed">
+                Only stored in your browser. Never stored on servers. Overrides
+                your .env config.
+              </div>
+            </Label>
 
-          <Input
-            id="openai-api-key"
-            placeholder="OpenAI API key"
-            value={settings.openAiApiKey || ""}
-            onChange={(e) =>
-              setSettings((s) => ({
-                ...s,
-                openAiApiKey: e.target.value,
-              }))
-            }
-          />
+            <Input
+              id="openai-api-key"
+              placeholder="OpenAI API key"
+              value={settings.openAiApiKey || ""}
+              onChange={(e) =>
+                setSettings((s) => ({
+                  ...s,
+                  openAiApiKey: e.target.value,
+                }))
+              }
+            />
+          </div>
 
           {!IS_RUNNING_ON_CLOUD && (
-            <>
+            <div>
               <Label htmlFor="openai-api-key">
                 <div>OpenAI Base URL (optional)</div>
                 <div className="font-light mt-2 leading-relaxed">
@@ -105,8 +107,30 @@ function SettingsDialog({ settings, setSettings }: Props) {
                   }))
                 }
               />
-            </>
+            </div>
           )}
+
+          <div>
+            <Label htmlFor="anthropic-api-key">
+              <div>Anthropic API key</div>
+              <div className="font-light mt-1 text-xs leading-relaxed">
+                Only stored in your browser. Never stored on servers. Overrides
+                your .env config.
+              </div>
+            </Label>
+
+            <Input
+              id="anthropic-api-key"
+              placeholder="Anthropic API key"
+              value={settings.anthropicApiKey || ""}
+              onChange={(e) =>
+                setSettings((s) => ({
+                  ...s,
+                  anthropicApiKey: e.target.value,
+                }))
+              }
+            />
+          </div>
 
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
