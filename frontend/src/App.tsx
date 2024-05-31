@@ -379,7 +379,10 @@ function App() {
         />
       )}
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
-        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+        <div
+          className="flex grow flex-col gap-y-2 overflow-y-auto border-r 
+          border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white"
+        >
           <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
@@ -483,7 +486,7 @@ function App() {
                     </div>
                     <Button
                       onClick={doUpdate}
-                      className="dark:text-white dark:bg-gray-700"
+                      className="dark:text-white dark:bg-gray-700 update-btn"
                     >
                       Update
                     </Button>
@@ -491,7 +494,7 @@ function App() {
                   <div className="flex items-center justify-end gap-x-2 mt-2">
                     <Button
                       onClick={regenerate}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
+                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
                     >
                       🔄 Regenerate
                     </Button>
@@ -600,7 +603,7 @@ function App() {
                       <Button
                         onClick={downloadCode}
                         variant="secondary"
-                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700"
+                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
                       >
                         <FaDownload /> Download
                       </Button>
