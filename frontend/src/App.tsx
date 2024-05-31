@@ -41,6 +41,7 @@ import { extractHtml } from "./components/preview/extractHtml";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import TipLink from "./components/core/TipLink";
 import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
+import { useAppStore } from "./store/app-store";
 
 const IS_OPENAI_DOWN = false;
 
@@ -54,6 +55,8 @@ function App() {
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
+
+  const { disableInSelectAndEditMode } = useAppStore();
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -153,6 +156,7 @@ function App() {
     setAppHistory([]);
     setCurrentVersion(null);
     setShouldIncludeResultImage(false);
+    disableInSelectAndEditMode();
   };
 
   const regenerate = () => {
