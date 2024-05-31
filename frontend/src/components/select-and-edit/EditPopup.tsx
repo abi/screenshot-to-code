@@ -98,10 +98,14 @@ const EditPopup: React.FC<EditPopupProps> = ({
 
     // Reset the update text
     setUpdateText("");
+
+    // Focus the textarea
+    textareaRef.current?.focus();
   }, [event, iframeRef]);
 
-  // Focus the textarea when the popup is visible (we can't do this when handling the click event
+  // Focus the textarea when the popup is visible (we can't do this only when handling the click event
   // because the textarea is not rendered yet)
+  // We need to also do it in the click event because popupVisible doesn't change values in that event
   useEffect(() => {
     if (popupVisible) {
       textareaRef.current?.focus();
