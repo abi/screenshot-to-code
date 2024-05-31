@@ -124,6 +124,12 @@ const EditPopup: React.FC<EditPopupProps> = ({
         value={updateText}
         onChange={(e) => setUpdateText(e.target.value)}
         placeholder="Tell the AI what to change about this element..."
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            onUpdate(updateText);
+          }
+        }}
       />
       <div className="flex justify-end mt-2">
         <Button onClick={() => onUpdate(updateText)}>Update</Button>
