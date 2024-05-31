@@ -123,7 +123,7 @@ async def stream_code(websocket: WebSocket):
     # Get the Anthropic API key from the request. Fall back to environment variable if not provided.
     # If neither is provided, we throw an error later only if Claude is used.
     anthropic_api_key = None
-    if params["anthropicApiKey"]:
+    if "anthropicApiKey" in params and params["anthropicApiKey"]:
         anthropic_api_key = params["anthropicApiKey"]
         print("Using Anthropic API key from client-side settings dialog")
     else:
