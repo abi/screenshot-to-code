@@ -2,33 +2,40 @@ import React, { useEffect, useRef, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { addHighlight, getAdjustedCoordinates, removeHighlight } from "./utils";
+import { useAppStore } from "../../store/app-store";
 
 interface EditPopupProps {
   event: MouseEvent | null;
-  inSelectAndEditMode: boolean;
-  doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
   iframeRef: React.RefObject<HTMLIFrameElement>;
+  doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
 }
 
 const EditPopup: React.FC<EditPopupProps> = ({
   event,
-  inSelectAndEditMode,
-  doUpdate,
   iframeRef,
+  doUpdate,
 }) => {
-  // Edit state
-  const [selectedElement, setSelectedElement] = useState<
-    HTMLElement | undefined
-  >(undefined);
-  const [updateText, setUpdateText] = useState("");
+  // App state
+  const { inSelectAndEditMode } = useAppStore();
+
+  // Create a wrapper ref to store inSelectAndEditMode so the value is not stale
+  // in a event listener
+  const inSelectAndEditModeRef = useRef(inSelectAndEditMode);
+
+  // Update the ref whenever the state changes
+  useEffect(() => {
+    inSelectAndEditModeRef.current = inSelectAndEditMode;
+  }, [inSelectAndEditMode]);
 
   // Popup state
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
-  // Create a wrapper ref to store inSelectAndEditMode so the value is not stale
-  // in a event listener
-  const inSelectAndEditModeRef = useRef(inSelectAndEditMode);
+  // Edit state
+  const [selectedElement, setSelectedElement] = useState<
+    HTMLElement | undefined
+  >(undefined);
+  const [updateText, setUpdateText] = useState("");
 
   // Textarea ref for focusing
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -46,11 +53,6 @@ const EditPopup: React.FC<EditPopupProps> = ({
     // Hide the popup
     setPopupVisible(false);
   }
-
-  // Update the ref whenever the state changes
-  useEffect(() => {
-    inSelectAndEditModeRef.current = inSelectAndEditMode;
-  }, [inSelectAndEditMode]);
 
   // Remove highlight and reset state when not in select and edit mode
   useEffect(() => {
