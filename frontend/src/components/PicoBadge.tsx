@@ -6,7 +6,7 @@ export function PicoBadge() {
       <div>
         <PricingDialog />
       </div>
-      <a
+      {/* <a
         href="https://screenshot-to-code.canny.io/feature-requests"
         target="_blank"
       >
@@ -16,7 +16,7 @@ export function PicoBadge() {
         >
           feedback
         </div>
-      </a>
+      </a> */}
     </>
   );
 }
