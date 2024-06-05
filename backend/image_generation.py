@@ -24,15 +24,14 @@ async def generate_image(
     prompt: str, api_key: str, base_url: str | None
 ) -> Union[str, None]:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-    image_params: Dict[str, Union[str, int]] = {
-        "model": "dall-e-3",
-        "quality": "standard",
-        "style": "natural",
-        "n": 1,
-        "size": "1024x1024",
-        "prompt": prompt,
-    }
-    res = await client.images.generate(**image_params)  # type: ignore
+    res = await client.images.generate(
+        model="dall-e-3",
+        quality="standard",
+        style="natural",
+        n=1,
+        size="1024x1024",
+        prompt=prompt,
+    )
     await client.close()
     return res.data[0].url
 
