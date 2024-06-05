@@ -13,7 +13,7 @@ from llm import (
 )
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
-from typing import Dict, List, cast, get_args
+from typing import Dict, List, Union, cast, get_args
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_imported_code_prompt, assemble_prompt
 from datetime import datetime
@@ -132,7 +132,7 @@ async def stream_code(websocket: WebSocket):
             print("Using Anthropic API key from environment variable")
 
     # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
-    openai_base_url = None
+    openai_base_url: Union[str, None] = None
     # Disable user-specified OpenAI Base URL in prod
     if not os.environ.get("IS_PROD"):
         if "openAiBaseURL" in params and params["openAiBaseURL"]:
