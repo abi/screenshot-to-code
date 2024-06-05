@@ -5,13 +5,13 @@ from openai import AsyncOpenAI
 from bs4 import BeautifulSoup
 
 
-async def process_tasks(prompts: List[str], api_key: str, base_url: str):
+async def process_tasks(prompts: List[str], api_key: str, base_url: str | None):
     tasks = [generate_image(prompt, api_key, base_url) for prompt in prompts]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     processed_results: List[Union[str, None]] = []
     for result in results:
-        if isinstance(result, BaseException):
+        if isinstance(result, Exception):
             print(f"An exception occurred: {result}")
             processed_results.append(None)
         else:
@@ -20,7 +20,9 @@ async def process_tasks(prompts: List[str], api_key: str, base_url: str):
     return processed_results
 
 
-async def generate_image(prompt: str, api_key: str, base_url: str) -> Union[str, None]:
+async def generate_image(
+    prompt: str, api_key: str, base_url: str | None
+) -> Union[str, None]:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
     image_params: Dict[str, Union[str, int]] = {
         "model": "dall-e-3",
@@ -63,9 +65,7 @@ def create_alt_url_mapping(code: str) -> Dict[str, str]:
 
 async def generate_images(
     code: str, api_key: str, base_url: Union[str, None], image_cache: Dict[str, str]
-) -> Union[str, None]:
-    if base_url is None:
-        return code
+) -> str:
     # Find all images
     soup = BeautifulSoup(code, "html.parser")
     images = soup.find_all("img")
