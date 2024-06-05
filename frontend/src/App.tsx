@@ -48,6 +48,7 @@ import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import TipLink from "./components/core/TipLink";
 import FeedbackCallNote from "./components/user-feedback/FeedbackCallNote";
 import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
+import { useAppStore } from "./store/app-store";
 
 const IS_OPENAI_DOWN = false;
 
@@ -70,6 +71,8 @@ function App({ navbarComponent }: Props) {
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
   const subscriberTier = useStore((state) => state.subscriberTier);
+
+  const { disableInSelectAndEditMode } = useAppStore();
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -174,6 +177,7 @@ function App({ navbarComponent }: Props) {
     setAppHistory([]);
     setCurrentVersion(null);
     setShouldIncludeResultImage(false);
+    disableInSelectAndEditMode();
   };
 
   const regenerate = () => {
