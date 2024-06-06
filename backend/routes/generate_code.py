@@ -166,7 +166,7 @@ async def stream_code(websocket: WebSocket):
     if params.get("isImportedFromCode") and params["isImportedFromCode"]:
         original_imported_code = params["history"][0]
         prompt_messages = assemble_imported_code_prompt(
-            original_imported_code, valid_stack
+            original_imported_code, valid_stack, params["tailwindConfig"]
         )
         for index, text in enumerate(params["history"][1:]):
             if index % 2 == 0:
@@ -185,10 +185,10 @@ async def stream_code(websocket: WebSocket):
         try:
             if params.get("resultImage") and params["resultImage"]:
                 prompt_messages = assemble_prompt(
-                    params["image"], valid_stack, params["resultImage"]
+                    params["image"], valid_stack, params["tailwindConfig"], params["resultImage"],
                 )
             else:
-                prompt_messages = assemble_prompt(params["image"], valid_stack)
+                prompt_messages = assemble_prompt(params["image"], valid_stack, params["tailwindConfig"])
         except:
             await websocket.send_json(
                 {

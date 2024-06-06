@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 import {
   Dialog,
   DialogClose,
@@ -36,7 +36,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
     }));
   };
 
-  const handleFileChange = (event: Event) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const target= event.target as HTMLInputElement;
     const file: File = (target.files as FileList)[0];
     if (file) {
