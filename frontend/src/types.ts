@@ -17,6 +17,7 @@ export interface Settings {
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
   anthropicApiKey: string | null; // Added property for anthropic API key
+  tailwindConfig: string | null; // Added property for tailwind config
 }
 
 export enum AppState {
