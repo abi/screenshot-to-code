@@ -2,9 +2,14 @@ import { create } from "zustand";
 
 // Store for app-wide state
 interface AppStore {
-  inputMode: "image" | "video";
+  inSelectAndEditMode: boolean;
+  toggleInSelectAndEditMode: () => void;
+  disableInSelectAndEditMode: () => void;
 }
 
-export const useStore = create<AppStore>(() => ({
-  inputMode: "image",
+export const useAppStore = create<AppStore>((set) => ({
+  inSelectAndEditMode: false,
+  toggleInSelectAndEditMode: () =>
+    set((state) => ({ inSelectAndEditMode: !state.inSelectAndEditMode })),
+  disableInSelectAndEditMode: () => set({ inSelectAndEditMode: false }),
 }));
