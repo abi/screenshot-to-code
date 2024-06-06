@@ -18,7 +18,5 @@ export function getAdjustedCoordinates(
   const offsetX = rect ? rect.left : 0;
   const offsetY = rect ? rect.top : 0;
 
-  // Adjust for scale
-  const scale = 1; // the scale factor applied to the iframe
-  return { x: x / scale + offsetX, y: y / scale + offsetY };
+  return { x: x + offsetX, y: y + offsetY };
 }
