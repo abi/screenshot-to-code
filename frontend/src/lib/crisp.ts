@@ -26,7 +26,7 @@ export const loadCrispChat = (): (() => void) => {
 declare global {
   interface Window {
     // Crisp
-    $crisp: unknown[];
+    $crisp: unknown[]; // TODO: Replace with better type
     CRISP_WEBSITE_ID: string;
   }
 }
