@@ -6,6 +6,7 @@ import json
 
 from config import BACKEND_SAAS_URL, IS_PROD
 from llm import Llm
+from prompts.types import Stack
 
 
 class PaymentMethod(Enum):
@@ -21,6 +22,9 @@ async def send_to_saas_backend(
     completion: str,
     payment_method: PaymentMethod,
     llm_version: Llm,
+    stack: Stack,
+    is_imported_from_code: bool,
+    includes_result_image: bool,
     auth_token: str | None = None,
 ):
     if IS_PROD:
@@ -33,6 +37,9 @@ async def send_to_saas_backend(
                     "completion": completion,
                     "payment_method": payment_method.value,
                     "llm_version": llm_version.value,
+                    "stack": stack,
+                    "is_imported_from_code": is_imported_from_code,
+                    "includes_result_image": includes_result_image,
                 }
             )
 

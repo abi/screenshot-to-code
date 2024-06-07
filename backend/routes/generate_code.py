@@ -363,6 +363,9 @@ async def stream_code(websocket: WebSocket):
                 completion,
                 payment_method=payment_method,
                 llm_version=exact_llm_version,
+                stack=valid_stack,
+                is_imported_from_code=bool(params.get("isImportedFromCode", False)),
+                includes_result_image=bool(params.get("resultImage", False)),
                 auth_token=params["authToken"],
             )
         except Exception as e:
