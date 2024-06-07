@@ -9,6 +9,7 @@ import AvatarDropdown from "./AvatarDropdown";
 import { UserResponse } from "./types";
 import { POSTHOG_HOST, POSTHOG_KEY, SAAS_BACKEND_URL } from "../../config";
 import LandingPage from "./LandingPage";
+import { loadCrispChat } from "../../lib/crisp";
 
 function AppContainer() {
   const { isSignedIn, isLoaded } = useUser();
@@ -59,12 +60,9 @@ function AppContainer() {
           last_name: user.last_name,
         });
 
-        // Initialize Help Scout Beacon
-        window.Beacon("init", "8bcd8d6f-f25d-4339-8f49-703b9f165cdc");
-        window.Beacon("identify", {
-          name: user.first_name + " " + user.last_name,
-          email: user.email,
-        });
+        // Initialize Crisp Chat
+        loadCrispChat();
+        window.$crisp.push(["set", "user:email", [user.email]]);
 
         setSubscriberTier(user.subscriber_tier);
       }

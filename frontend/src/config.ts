@@ -28,3 +28,6 @@ export const IS_FREE_TRIAL_ENABLED = false;
 // PostHog
 export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || null;
 export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || null;
+
+// Crisp
+export const CRISP_WEBSITE_ID = import.meta.env.VITE_CRISP_WEBSITE_ID || null;
