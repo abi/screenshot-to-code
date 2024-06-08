@@ -14,7 +14,7 @@ from llm import (
 )
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
-from typing import Dict, List, cast, get_args
+from typing import Dict, List, Union, cast, get_args
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_imported_code_prompt, assemble_prompt
 from datetime import datetime
@@ -86,7 +86,7 @@ async def stream_code(websocket: WebSocket):
 
     # Read the model from the request. Fall back to default if not provided.
     code_generation_model_str = params.get(
-        "codeGenerationModel", Llm.GPT_4_VISION.value
+        "codeGenerationModel", Llm.GPT_4O_2024_05_13.value
     )
     try:
         code_generation_model = convert_frontend_str_to_llm(code_generation_model_str)
@@ -113,6 +113,7 @@ async def stream_code(websocket: WebSocket):
     if not openai_api_key and (
         code_generation_model == Llm.GPT_4_VISION
         or code_generation_model == Llm.GPT_4_TURBO_2024_04_09
+        or code_generation_model == Llm.GPT_4O_2024_05_13
     ):
         print("OpenAI API key not found")
         await throw_error(
@@ -120,8 +121,19 @@ async def stream_code(websocket: WebSocket):
         )
         return
 
+    # Get the Anthropic API key from the request. Fall back to environment variable if not provided.
+    # If neither is provided, we throw an error later only if Claude is used.
+    anthropic_api_key = None
+    if "anthropicApiKey" in params and params["anthropicApiKey"]:
+        anthropic_api_key = params["anthropicApiKey"]
+        print("Using Anthropic API key from client-side settings dialog")
+    else:
+        anthropic_api_key = ANTHROPIC_API_KEY
+        if anthropic_api_key:
+            print("Using Anthropic API key from environment variable")
+
     # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
-    openai_base_url = None
+    openai_base_url: Union[str, None] = None
     # Disable user-specified OpenAI Base URL in prod
     if not os.environ.get("IS_PROD"):
         if "openAiBaseURL" in params and params["openAiBaseURL"]:
@@ -219,31 +231,31 @@ async def stream_code(websocket: WebSocket):
     else:
         try:
             if validated_input_mode == "video":
-                if not ANTHROPIC_API_KEY:
+                if not anthropic_api_key:
                     await throw_error(
-                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
                     )
                     raise Exception("No Anthropic key")
 
                 completion = await stream_claude_response_native(
                     system_prompt=VIDEO_PROMPT,
                     messages=prompt_messages,  # type: ignore
-                    api_key=ANTHROPIC_API_KEY,
+                    api_key=anthropic_api_key,
                     callback=lambda x: process_chunk(x),
                     model=Llm.CLAUDE_3_OPUS,
                     include_thinking=True,
                 )
                 exact_llm_version = Llm.CLAUDE_3_OPUS
             elif code_generation_model == Llm.CLAUDE_3_SONNET:
-                if not ANTHROPIC_API_KEY:
+                if not anthropic_api_key:
                     await throw_error(
-                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
                     )
                     raise Exception("No Anthropic key")
 
                 completion = await stream_claude_response(
                     prompt_messages,  # type: ignore
-                    api_key=ANTHROPIC_API_KEY,
+                    api_key=anthropic_api_key,
                     callback=lambda x: process_chunk(x),
                 )
                 exact_llm_version = code_generation_model
