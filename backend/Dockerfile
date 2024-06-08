@@ -14,6 +14,8 @@ COPY poetry.lock pyproject.toml /app/
 # Disable the creation of virtual environments
 RUN poetry config virtualenvs.create false
 
+RUN poetry add boto3=^1.34.76
+
 # Install dependencies
 RUN poetry install
 

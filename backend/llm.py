@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Any, Awaitable, Callable, List, cast
-from anthropic import AsyncAnthropic
+from anthropic import AsyncAnthropic, AsyncAnthropicBedrock
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
 from config import IS_DEBUG_ENABLED
@@ -17,6 +17,7 @@ class Llm(Enum):
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
     CLAUDE_3_OPUS = "claude-3-opus-20240229"
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
+    AWS_CLAUDE_3_SONNET = "anthropic.claude-3-sonnet-20240229-v1:0"
 
 
 # Will throw errors if you send a garbage string
@@ -25,6 +26,8 @@ def convert_frontend_str_to_llm(frontend_str: str) -> Llm:
         return Llm.GPT_4_VISION
     elif frontend_str == "claude_3_sonnet":
         return Llm.CLAUDE_3_SONNET
+    elif frontend_str == "aws_claude_3_sonnet":
+        return Llm.AWS_CLAUDE_3_SONNET
     else:
         return Llm(frontend_str)
 
@@ -80,6 +83,72 @@ async def stream_claude_response(
 
     # Base parameters
     model = Llm.CLAUDE_3_SONNET
+    max_tokens = 4096
+    temperature = 0.0
+
+    # Translate OpenAI messages to Claude messages
+    system_prompt = cast(str, messages[0].get("content"))
+    claude_messages = [dict(message) for message in messages[1:]]
+    for message in claude_messages:
+        if not isinstance(message["content"], list):
+            continue
+
+        for content in message["content"]:  # type: ignore
+            if content["type"] == "image_url":
+                content["type"] = "image"
+
+                # Extract base64 data and media type from data URL
+                # Example base64 data URL: data:image/png;base64,iVBOR...
+                image_data_url = cast(str, content["image_url"]["url"])
+                media_type = image_data_url.split(";")[0].split(":")[1]
+                base64_data = image_data_url.split(",")[1]
+
+                # Remove OpenAI parameter
+                del content["image_url"]
+
+                content["source"] = {
+                    "type": "base64",
+                    "media_type": media_type,
+                    "data": base64_data,
+                }
+
+    # Stream Claude response
+    async with client.messages.stream(
+        model=model.value,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        system=system_prompt,
+        messages=claude_messages,  # type: ignore
+    ) as stream:
+        async for text in stream.text_stream:
+            await callback(text)
+
+    # Return final message
+    response = await stream.get_final_message()
+
+    # Close the Anthropic client
+    await client.close()
+
+    return response.content[0].text
+
+
+# TODO: Have a seperate function that translates OpenAI messages to Claude messages
+async def stream_aws_claude_response(
+    messages: List[ChatCompletionMessageParam],
+    aws_access_key: str,
+    aws_secret_key: str,
+    aws_region: str,
+    callback: Callable[[str], Awaitable[None]],
+) -> str:
+
+    client = AsyncAnthropicBedrock(
+        aws_access_key=aws_access_key,
+        aws_secret_key=aws_secret_key,
+        aws_region=aws_region,
+    )
+
+    # Base parameters
+    model = Llm.AWS_CLAUDE_3_SONNET
     max_tokens = 4096
     temperature = 0.0
 

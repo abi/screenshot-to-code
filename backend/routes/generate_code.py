@@ -7,6 +7,7 @@ from custom_types import InputMode
 from llm import (
     Llm,
     convert_frontend_str_to_llm,
+    stream_aws_claude_response,
     stream_claude_response,
     stream_claude_response_native,
     stream_openai_response,
@@ -255,6 +256,21 @@ async def stream_code(websocket: WebSocket):
                 completion = await stream_claude_response(
                     prompt_messages,  # type: ignore
                     api_key=anthropic_api_key,
+                    callback=lambda x: process_chunk(x),
+                )
+                exact_llm_version = code_generation_model
+            elif code_generation_model == Llm.AWS_CLAUDE_3_SONNET:
+                if not os.environ.get("AWS_AK", None):
+                    await throw_error(
+                        "No AWS Bedrock Anthropic API Access Key found. Please add the environment variable AWS_AK to backend/.env"
+                    )
+                    raise Exception("No AWS Bedrock Anthropic Access key")
+
+                completion = await stream_aws_claude_response(
+                    prompt_messages,  # type: ignore
+                    aws_access_key=os.environ.get("AWS_AK"),
+                    aws_secret_key=os.environ.get("AWS_SK"),
+                    aws_region=os.environ.get("AWS_REGION"),
                     callback=lambda x: process_chunk(x),
                 )
                 exact_llm_version = code_generation_model
