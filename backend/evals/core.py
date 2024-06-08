@@ -1,4 +1,6 @@
 import os
+
+from config import AWS_REGION_NAME
 from config import AWS_ACCESS_KEY
 from config import AWS_SECRET_ACCESS_KEY
 from config import ANTHROPIC_API_KEY
@@ -14,6 +16,7 @@ async def generate_code_core(image_url: str, stack: Stack, model: Llm) -> str:
     anthropic_api_key = ANTHROPIC_API_KEY
     aws_access_key = AWS_ACCESS_KEY
     aws_secret_access_key = AWS_SECRET_ACCESS_KEY
+    aws_region_name = AWS_REGION_NAME,
     openai_base_url = None
 
     async def process_chunk(content: str):
@@ -34,6 +37,7 @@ async def generate_code_core(image_url: str, stack: Stack, model: Llm) -> str:
                 prompt_messages,
                 access_key=aws_access_key,
                 secret_access_key=aws_secret_access_key,
+                aws_region_name=aws_region_name,
                 callback=lambda x: process_chunk(x),
             )
     else:

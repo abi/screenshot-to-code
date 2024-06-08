@@ -2,7 +2,7 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
-from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE, AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY
+from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE, AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION_NAME
 from custom_types import InputMode
 from llm import (
     Llm,
@@ -24,7 +24,6 @@ from prompts.types import Stack
 # from utils import pprint_prompt
 from video.utils import extract_tag_content, assemble_claude_prompt_video
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
-
 
 router = APIRouter()
 
@@ -110,8 +109,8 @@ async def stream_code(websocket: WebSocket):
             print("Using OpenAI API key from environment variable")
 
     if not openai_api_key and (
-            code_generation_model == Llm.GPT_4_VISION
-            or code_generation_model == Llm.GPT_4_TURBO_2024_04_09
+        code_generation_model == Llm.GPT_4_VISION
+        or code_generation_model == Llm.GPT_4_TURBO_2024_04_09
     ):
         print("OpenAI API key not found")
         await throw_error(
@@ -239,6 +238,7 @@ async def stream_code(websocket: WebSocket):
                         messages=prompt_messages,  # type: ignore
                         access_key=AWS_ACCESS_KEY,
                         secret_access_key=AWS_SECRET_ACCESS_KEY,
+                        aws_region_name=AWS_REGION_NAME,
                         callback=lambda x: process_chunk(x),
                         model=Llm.CLAUDE_3_OPUS,
                         include_thinking=True,
@@ -261,6 +261,7 @@ async def stream_code(websocket: WebSocket):
                         prompt_messages,  # type: ignore
                         access_key=AWS_ACCESS_KEY,
                         secret_access_key=AWS_SECRET_ACCESS_KEY,
+                        aws_region_name=AWS_REGION_NAME,
                         callback=lambda x: process_chunk(x),
                     )
                 exact_llm_version = code_generation_model
@@ -276,35 +277,35 @@ async def stream_code(websocket: WebSocket):
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
             error_message = (
-                    "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, or create a new OpenAI API key on your OpenAI dashboard."
-                    + (
-                        " Alternatively, you can purchase code generation credits directly on this website."
-                        if IS_PROD
-                        else ""
-                    )
+                "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, or create a new OpenAI API key on your OpenAI dashboard."
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
             )
             return await throw_error(error_message)
         except openai.NotFoundError as e:
             print("[GENERATE_CODE] Model not found", e)
             error_message = (
-                    e.message
-                    + ". Please make sure you have followed the instructions correctly to obtain an OpenAI key with GPT vision access: https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
-                    + (
-                        " Alternatively, you can purchase code generation credits directly on this website."
-                        if IS_PROD
-                        else ""
-                    )
+                e.message
+                + ". Please make sure you have followed the instructions correctly to obtain an OpenAI key with GPT vision access: https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
             )
             return await throw_error(error_message)
         except openai.RateLimitError as e:
             print("[GENERATE_CODE] Rate limit exceeded", e)
             error_message = (
-                    "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
-                    + (
-                        " Alternatively, you can purchase code generation credits directly on this website."
-                        if IS_PROD
-                        else ""
-                    )
+                "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
             )
             return await throw_error(error_message)
 
