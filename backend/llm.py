@@ -16,6 +16,7 @@ from utils import pprint_prompt
 class Llm(Enum):
     GPT_4_VISION = "gpt-4-vision-preview"
     GPT_4_TURBO_2024_04_09 = "gpt-4-turbo-2024-04-09"
+    GPT_4O_2024_05_13 = "gpt-4o-2024-05-13"
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
     CLAUDE_3_SONNET_BEDROCK = "anthropic.claude-3-sonnet-20240229-v1:0"
     CLAUDE_3_OPUS = "claude-3-opus-20240229"
@@ -51,16 +52,21 @@ async def stream_openai_response(
     }
 
     # Add 'max_tokens' only if the model is a GPT4 vision or Turbo model
-    if model == Llm.GPT_4_VISION or model == Llm.GPT_4_TURBO_2024_04_09:
+    if (
+        model == Llm.GPT_4_VISION
+        or model == Llm.GPT_4_TURBO_2024_04_09
+        or model == Llm.GPT_4O_2024_05_13
+    ):
         params["max_tokens"] = 4096
 
     stream = await client.chat.completions.create(**params)  # type: ignore
     full_response = ""
     async for chunk in stream:  # type: ignore
         assert isinstance(chunk, ChatCompletionChunk)
-        content = chunk.choices[0].delta.content or ""
-        full_response += content
-        await callback(content)
+        if chunk.choices and len(chunk.choices) > 0 and chunk.choices[0].delta and chunk.choices[0].delta.content:
+            content = chunk.choices[0].delta.content or ""
+            full_response += content
+            await callback(content)
 
     await client.close()
 

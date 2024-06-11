@@ -25,3 +25,6 @@ dist-ssr
 
 # Env files
 .env*
+
+# Test files
+src/tests/results/

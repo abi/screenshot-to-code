@@ -1,4 +1,3 @@
-import { expect, test } from "vitest";
 import { extractHistoryTree, renderHistory } from "./utils";
 import type { History } from "./history_types";
 
@@ -84,147 +83,149 @@ const basicBadHistory: History = [
   },
 ];
 
-test("should correctly extract the history tree", () => {
-  expect(extractHistoryTree(basicLinearHistory, 2)).toEqual([
-    "<html>1. create</html>",
-    "use better icons",
-    "<html>2. edit with better icons</html>",
-    "make text red",
-    "<html>3. edit with better icons and red text</html>",
-  ]);
+describe("History Utils", () => {
+  test("should correctly extract the history tree", () => {
+    expect(extractHistoryTree(basicLinearHistory, 2)).toEqual([
+      "<html>1. create</html>",
+      "use better icons",
+      "<html>2. edit with better icons</html>",
+      "make text red",
+      "<html>3. edit with better icons and red text</html>",
+    ]);
 
-  expect(extractHistoryTree(basicLinearHistory, 0)).toEqual([
-    "<html>1. create</html>",
-  ]);
+    expect(extractHistoryTree(basicLinearHistory, 0)).toEqual([
+      "<html>1. create</html>",
+    ]);
 
-  // Test branching
-  expect(extractHistoryTree(basicBranchingHistory, 3)).toEqual([
-    "<html>1. create</html>",
-    "use better icons",
-    "<html>2. edit with better icons</html>",
-    "make text green",
-    "<html>4. edit with better icons and green text</html>",
-  ]);
+    // Test branching
+    expect(extractHistoryTree(basicBranchingHistory, 3)).toEqual([
+      "<html>1. create</html>",
+      "use better icons",
+      "<html>2. edit with better icons</html>",
+      "make text green",
+      "<html>4. edit with better icons and green text</html>",
+    ]);
 
-  expect(extractHistoryTree(longerBranchingHistory, 4)).toEqual([
-    "<html>1. create</html>",
-    "use better icons",
-    "<html>2. edit with better icons</html>",
-    "make text green",
-    "<html>4. edit with better icons and green text</html>",
-    "make text bold",
-    "<html>5. edit with better icons and green, bold text</html>",
-  ]);
+    expect(extractHistoryTree(longerBranchingHistory, 4)).toEqual([
+      "<html>1. create</html>",
+      "use better icons",
+      "<html>2. edit with better icons</html>",
+      "make text green",
+      "<html>4. edit with better icons and green text</html>",
+      "make text bold",
+      "<html>5. edit with better icons and green, bold text</html>",
+    ]);
 
-  expect(extractHistoryTree(longerBranchingHistory, 2)).toEqual([
-    "<html>1. create</html>",
-    "use better icons",
-    "<html>2. edit with better icons</html>",
-    "make text red",
-    "<html>3. edit with better icons and red text</html>",
-  ]);
+    expect(extractHistoryTree(longerBranchingHistory, 2)).toEqual([
+      "<html>1. create</html>",
+      "use better icons",
+      "<html>2. edit with better icons</html>",
+      "make text red",
+      "<html>3. edit with better icons and red text</html>",
+    ]);
 
-  // Errors
+    // Errors
 
-  // Bad index
-  expect(() => extractHistoryTree(basicLinearHistory, 100)).toThrow();
-  expect(() => extractHistoryTree(basicLinearHistory, -2)).toThrow();
+    // Bad index
+    expect(() => extractHistoryTree(basicLinearHistory, 100)).toThrow();
+    expect(() => extractHistoryTree(basicLinearHistory, -2)).toThrow();
 
-  // Bad tree
-  expect(() => extractHistoryTree(basicBadHistory, 1)).toThrow();
-});
+    // Bad tree
+    expect(() => extractHistoryTree(basicBadHistory, 1)).toThrow();
+  });
 
-test("should correctly render the history tree", () => {
-  expect(renderHistory(basicLinearHistory, 2)).toEqual([
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "Create",
-      type: "Create",
-    },
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "use better icons",
-      type: "Edit",
-    },
-    {
-      isActive: true,
-      parentVersion: null,
-      summary: "make text red",
-      type: "Edit",
-    },
-  ]);
+  test("should correctly render the history tree", () => {
+    expect(renderHistory(basicLinearHistory, 2)).toEqual([
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "Create",
+        type: "Create",
+      },
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "use better icons",
+        type: "Edit",
+      },
+      {
+        isActive: true,
+        parentVersion: null,
+        summary: "make text red",
+        type: "Edit",
+      },
+    ]);
 
-  // Current version is the first version
-  expect(renderHistory(basicLinearHistory, 0)).toEqual([
-    {
-      isActive: true,
-      parentVersion: null,
-      summary: "Create",
-      type: "Create",
-    },
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "use better icons",
-      type: "Edit",
-    },
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "make text red",
-      type: "Edit",
-    },
-  ]);
+    // Current version is the first version
+    expect(renderHistory(basicLinearHistory, 0)).toEqual([
+      {
+        isActive: true,
+        parentVersion: null,
+        summary: "Create",
+        type: "Create",
+      },
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "use better icons",
+        type: "Edit",
+      },
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "make text red",
+        type: "Edit",
+      },
+    ]);
 
-  // Render a history with code
-  expect(renderHistory(basicLinearHistoryWithCode, 0)).toEqual([
-    {
-      isActive: true,
-      parentVersion: null,
-      summary: "Imported from code",
-      type: "Imported from code",
-    },
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "use better icons",
-      type: "Edit",
-    },
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "make text red",
-      type: "Edit",
-    },
-  ]);
+    // Render a history with code
+    expect(renderHistory(basicLinearHistoryWithCode, 0)).toEqual([
+      {
+        isActive: true,
+        parentVersion: null,
+        summary: "Imported from code",
+        type: "Imported from code",
+      },
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "use better icons",
+        type: "Edit",
+      },
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "make text red",
+        type: "Edit",
+      },
+    ]);
 
-  // Render a non-linear history
-  expect(renderHistory(basicBranchingHistory, 3)).toEqual([
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "Create",
-      type: "Create",
-    },
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "use better icons",
-      type: "Edit",
-    },
-    {
-      isActive: false,
-      parentVersion: null,
-      summary: "make text red",
-      type: "Edit",
-    },
-    {
-      isActive: true,
-      parentVersion: "v2",
-      summary: "make text green",
-      type: "Edit",
-    },
-  ]);
+    // Render a non-linear history
+    expect(renderHistory(basicBranchingHistory, 3)).toEqual([
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "Create",
+        type: "Create",
+      },
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "use better icons",
+        type: "Edit",
+      },
+      {
+        isActive: false,
+        parentVersion: null,
+        summary: "make text red",
+        type: "Edit",
+      },
+      {
+        isActive: true,
+        parentVersion: "v2",
+        summary: "make text green",
+        type: "Edit",
+      },
+    ]);
+  });
 });

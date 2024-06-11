@@ -1,4 +1,4 @@
-### Getting an OpenAI API key with GPT4-Vision model access
+### Getting an OpenAI API key with GPT-4 model access
 
 You don't need a ChatGPT Pro account. Screenshot to code uses API keys from your OpenAI developer account. In order to get access to the GPT4 Vision model, log into your OpenAI account and then, follow these instructions:
 
