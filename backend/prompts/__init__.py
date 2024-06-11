@@ -33,9 +33,7 @@ def assemble_imported_code_prompt(
     tailwind_config: Union[str, None],
     result_image_data_url: Union[str, None] = None,
 ) -> List[ChatCompletionMessageParam]:
-    
-    print('Tailwind config', tailwind_config)
-        
+            
     system_content = IMPORTED_CODE_SYSTEM_PROMPTS[stack]
 
     user_content: List[ChatCompletionContentPartParam] = [
@@ -77,9 +75,7 @@ def assemble_prompt(
     tailwind_config: Union[str, None],
     result_image_data_url: Union[str, None] = None,
 ) -> List[ChatCompletionMessageParam]:
-    
-    print('Tailwind config', tailwind_config)
-    
+        
     system_content = SYSTEM_PROMPTS[stack]
     user_prompt = USER_PROMPT if stack != "svg" else SVG_USER_PROMPT
 
