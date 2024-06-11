@@ -2,14 +2,14 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
-from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
+from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE, AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION_NAME
 from custom_types import InputMode
 from llm import (
     Llm,
     convert_frontend_str_to_llm,
     stream_claude_response,
     stream_claude_response_native,
-    stream_openai_response,
+    stream_openai_response, stream_claude_response_aws_bedrock, stream_claude_response_native_aws_bedrock,
 )
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
@@ -24,7 +24,6 @@ from prompts.types import Stack
 # from utils import pprint_prompt
 from video.utils import extract_tag_content, assemble_claude_prompt_video
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
-
 
 router = APIRouter()
 
@@ -55,7 +54,7 @@ async def stream_code(websocket: WebSocket):
     print("Incoming websocket connection...")
 
     async def throw_error(
-        message: str,
+            message: str,
     ):
         await websocket.send_json({"type": "error", "value": message})
         await websocket.close(APP_ERROR_WEB_SOCKET_CODE)
@@ -230,33 +229,53 @@ async def stream_code(websocket: WebSocket):
     else:
         try:
             if validated_input_mode == "video":
-                if not anthropic_api_key:
-                    await throw_error(
-                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
-                    )
-                    raise Exception("No Anthropic key")
+              if not anthropic_api_key and not AWS_ACCESS_KEY and not AWS_SECRET_ACCESS_KEY:
+                      await throw_error(
+                          "Video only works with Anthropic models. Neither Anthropic API key or AWS Access Key found. Please add the environment variable ANTHROPIC_API_KEY or AWS_ACCESS_KEY/AWS_SECRET_ACCESS_KEY to backend/.env or in the settings dialog"
+                      )
+                      raise Exception("No Anthropic key")
 
-                completion = await stream_claude_response_native(
-                    system_prompt=VIDEO_PROMPT,
-                    messages=prompt_messages,  # type: ignore
-                    api_key=anthropic_api_key,
-                    callback=lambda x: process_chunk(x),
-                    model=Llm.CLAUDE_3_OPUS,
-                    include_thinking=True,
-                )
-                exact_llm_version = Llm.CLAUDE_3_OPUS
-            elif code_generation_model == Llm.CLAUDE_3_SONNET:
-                if not anthropic_api_key:
-                    await throw_error(
-                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
-                    )
-                    raise Exception("No Anthropic key")
-
-                completion = await stream_claude_response(
-                    prompt_messages,  # type: ignore
-                    api_key=anthropic_api_key,
-                    callback=lambda x: process_chunk(x),
-                )
+                  if anthropic_api_key:
+                      completion = await stream_claude_response_native(
+                          system_prompt=VIDEO_PROMPT,
+                          messages=prompt_messages,  # type: ignore
+                          api_key=anthropic_api_key,
+                          callback=lambda x: process_chunk(x),
+                          model=Llm.CLAUDE_3_OPUS,
+                          include_thinking=True,
+                      )
+                  else:
+                      completion = await stream_claude_response_native_aws_bedrock(
+                          system_prompt=VIDEO_PROMPT,
+                          messages=prompt_messages,  # type: ignore
+                          access_key=AWS_ACCESS_KEY,
+                          secret_access_key=AWS_SECRET_ACCESS_KEY,
+                          aws_region_name=AWS_REGION_NAME,
+                          callback=lambda x: process_chunk(x),
+                          model=Llm.CLAUDE_3_OPUS,
+                          include_thinking=True,
+                      )
+                  exact_llm_version = Llm.CLAUDE_3_OPUS
+              elif code_generation_model == Llm.CLAUDE_3_SONNET:
+                  if not anthropic_api_key and not AWS_ACCESS_KEY and not AWS_SECRET_ACCESS_KEY:
+                      await throw_error(
+                          "No Anthropic API key or AWS Access Key found. Please add the environment variable ANTHROPIC_API_KEY or AWS_ACCESS_KEY/AWS_SECRET_ACCESS_KEY to backend/.env or in the settings dialog"
+                      )
+                      raise Exception("No Anthropic key")
+                  if anthropic_api_key:
+                      completion = await stream_claude_response(
+                          prompt_messages,  # type: ignore
+                          api_key=anthropic_api_key,
+                          callback=lambda x: process_chunk(x),
+                      )
+                  else:
+                      completion = await stream_claude_response_aws_bedrock(
+                          prompt_messages,  # type: ignore
+                          access_key=AWS_ACCESS_KEY,
+                          secret_access_key=AWS_SECRET_ACCESS_KEY,
+                          aws_region_name=AWS_REGION_NAME,
+                          callback=lambda x: process_chunk(x),
+                      )
                 exact_llm_version = code_generation_model
             else:
                 completion = await stream_openai_response(

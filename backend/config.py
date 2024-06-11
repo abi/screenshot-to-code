@@ -5,6 +5,11 @@ import os
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 
+# AWS
+AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", None)
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
+AWS_REGION_NAME = os.environ.get("AWS_REGION_NAME", "us-west-2")
+
 # Debugging-related
 
 SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))
