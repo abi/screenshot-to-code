@@ -30,7 +30,7 @@ interface Props {
 
 function SettingsDialog({ settings, setSettings }: Props) {
   const handleThemeChange = (theme: EditorTheme) => {
-    setSettings((s) => ({
+    setSettings((s: Settings) => ({
       ...s,
       editorTheme: theme,
     }));
@@ -49,7 +49,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
         <div className="flex items-center space-x-2">
           <Label htmlFor="image-generation">
             <div>DALL-E Placeholder Image Generation</div>
-            <div className="font-light mt-2 text-xs">
+            <div className="mt-2 text-xs font-light">
               More fun with it but if you want to save money, turn it off.
             </div>
           </Label>
@@ -68,7 +68,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
           <div>
             <Label htmlFor="openai-api-key">
               <div>OpenAI API key</div>
-              <div className="font-light mt-1 mb-2 text-xs leading-relaxed">
+              <div className="mt-1 mb-2 text-xs font-light leading-relaxed">
                 Only stored in your browser. Never stored on servers. Overrides
                 your .env config.
               </div>
@@ -91,7 +91,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
             <div>
               <Label htmlFor="openai-api-key">
                 <div>OpenAI Base URL (optional)</div>
-                <div className="font-light mt-2 leading-relaxed">
+                <div className="mt-2 font-light leading-relaxed">
                   Replace with a proxy URL if you don't want to use the default.
                 </div>
               </Label>
@@ -113,7 +113,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
           <div>
             <Label htmlFor="anthropic-api-key">
               <div>Anthropic API key</div>
-              <div className="font-light mt-1 text-xs leading-relaxed">
+              <div className="mt-1 text-xs font-light leading-relaxed">
                 Only stored in your browser. Never stored on servers. Overrides
                 your .env config.
               </div>
@@ -137,7 +137,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
               <AccordionTrigger>Screenshot by URL Config</AccordionTrigger>
               <AccordionContent>
                 <Label htmlFor="screenshot-one-api-key">
-                  <div className="leading-normal font-normal text-xs">
+                  <div className="text-xs font-normal leading-normal">
                     If you want to use URLs directly instead of taking the
                     screenshot yourself, add a ScreenshotOne API key.{" "}
                     <a
@@ -169,14 +169,14 @@ function SettingsDialog({ settings, setSettings }: Props) {
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
               <AccordionTrigger>Theme Settings</AccordionTrigger>
-              <AccordionContent className="space-y-4 flex flex-col">
+              <AccordionContent className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="app-theme">
                     <div>App Theme</div>
                   </Label>
                   <div>
                     <button
-                      className="flex rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50t"
+                      className="flex px-3 py-1 text-sm transition-colors bg-transparent border rounded-md shadow-sm border-input file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50t"
                       onClick={() => {
                         document
                           .querySelector("div.mt-2")

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, ChangeEvent } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -14,7 +14,9 @@ import {
 } from "react-icons/fa";
 
 import { Switch } from "./components/ui/switch";
+// import { Label } from "./components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
@@ -49,6 +51,8 @@ function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
 
+  const [enableCustomTailwindConfig, setEnableCustomTailwindConfig] = useState<boolean>(false);
+
   const [inputMode, setInputMode] = useState<"image" | "video">("image");
 
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
@@ -71,6 +75,7 @@ function App() {
       codeGenerationModel: CodeGenerationModel.GPT_4O_2024_05_13,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
+      tailwindConfig: null,
     },
     "setting"
   );
@@ -393,6 +398,44 @@ function App() {
     setAppState(AppState.CODE_READY);
   }
 
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const target = event.target as HTMLInputElement;
+    const file: File = (target.files as FileList)[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e!.target!.result;
+        if (typeof content === 'string') {
+          setSettings((s: Settings) => ({
+            ...s,
+            tailwindConfig: content,
+          }));
+        } else {
+          toast.error('Please select a valid Tailwind config file');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    try {
+      const input = document.getElementById('config-file') as HTMLInputElement;
+      const dt = new DataTransfer();
+      if(input == null) {
+        return;
+      }
+      input.files = dt.files
+      setSettings((s: Settings) => ({
+        ...s,
+        tailwindConfig: null,
+      }));
+    } catch (err) {
+      toast.error('Please select a valid Tailwind config file');
+    }
+  };
+
+
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
@@ -403,7 +446,7 @@ function App() {
         />
       )}
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
-        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+        <div className="flex flex-col px-6 overflow-y-auto bg-white border-r border-gray-200 grow gap-y-2 dark:bg-zinc-950 dark:text-white">
           <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
@@ -425,16 +468,39 @@ function App() {
             }
           />
 
+          <div className="flex flex-row items-center justify-between w-full gap-4 my-2 text-sm m-y-2">
+            <span>Enable custom Tailwind configuration:</span>
+            <Switch
+              id="image-generation"
+              checked={enableCustomTailwindConfig}
+              onCheckedChange={() =>
+                setEnableCustomTailwindConfig(!enableCustomTailwindConfig)
+              }
+            />
+          </div>
+
+          {enableCustomTailwindConfig && (<div className="flex flex-row gap-2">
+            <Input
+              id="config-file"
+              type="file"
+              accept=".js,.ts"
+              onChange={handleFileChange}
+            />
+            <Button onClick={handleRemoveFile}>
+              Remove
+            </Button>
+          </div>)}
+
           {showReactWarning && (
-            <div className="text-sm bg-yellow-200 rounded p-2">
+            <div className="p-2 text-sm bg-yellow-200 rounded">
               Sorry - React is not currently working with GPT-4 Turbo. Please
               use GPT-4 Vision or Claude Sonnet. We are working on a fix.
             </div>
           )}
 
           {showGpt4OMessage && (
-            <div className="rounded-lg p-2 bg-fuchsia-200">
-              <p className="text-gray-800 text-sm">
+            <div className="p-2 rounded-lg bg-fuchsia-200">
+              <p className="text-sm text-gray-800">
                 Now supporting GPT-4o. Higher quality and 2x faster. Give it a
                 try!
               </p>
@@ -446,7 +512,7 @@ function App() {
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
           {IS_OPENAI_DOWN && (
-            <div className="bg-black text-white dark:bg-white dark:text-black p-3 rounded">
+            <div className="p-3 text-white bg-black rounded dark:bg-white dark:text-black">
               OpenAI API is currently down. Try back in 30 minutes or later. We
               apologize for the inconvenience.
             </div>
@@ -461,8 +527,7 @@ function App() {
                   {/* Speed disclaimer for video mode */}
                   {inputMode === "video" && (
                     <div
-                      className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700
-                    p-2 text-xs mb-4 mt-1"
+                      className="p-2 mt-1 mb-4 text-xs text-yellow-700 bg-yellow-100 border-l-4 border-yellow-500"
                     >
                       Code generation from videos can take 3-4 minutes. We do
                       multiple passes to get the best result. Please be patient.
@@ -495,8 +560,8 @@ function App() {
                       onChange={(e) => setUpdateInstruction(e.target.value)}
                       value={updateInstruction}
                     />
-                    <div className="flex justify-between items-center gap-x-2">
-                      <div className="font-500 text-xs text-slate-700 dark:text-white">
+                    <div className="flex items-center justify-between gap-x-2">
+                      <div className="text-xs font-500 text-slate-700 dark:text-white">
                         Include screenshot of current version?
                       </div>
                       <Switch
@@ -512,7 +577,7 @@ function App() {
                       Update
                     </Button>
                   </div>
-                  <div className="flex items-center justify-end gap-x-2 mt-2">
+                  <div className="flex items-center justify-end mt-2 gap-x-2">
                     <Button
                       onClick={regenerate}
                       className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
@@ -523,14 +588,14 @@ function App() {
                       <SelectAndEditModeToggleButton />
                     )}
                   </div>
-                  <div className="flex justify-end items-center mt-2">
+                  <div className="flex items-center justify-end mt-2">
                     <TipLink />
                   </div>
                 </div>
               )}
 
               {/* Reference image display */}
-              <div className="flex gap-x-2 mt-2">
+              <div className="flex mt-2 gap-x-2">
                 {referenceImages.length > 0 && (
                   <div className="flex flex-col">
                     <div
@@ -555,21 +620,21 @@ function App() {
                         />
                       )}
                     </div>
-                    <div className="text-gray-400 uppercase text-sm text-center mt-1">
+                    <div className="mt-1 text-sm text-center text-gray-400 uppercase">
                       {inputMode === "video"
                         ? "Original Video"
                         : "Original Screenshot"}
                     </div>
                   </div>
                 )}
-                <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
-                  <h2 className="text-lg mb-4 border-b border-gray-800">
+                <div className="hidden px-4 py-2 text-sm bg-gray-400 rounded">
+                  <h2 className="mb-4 text-lg border-b border-gray-800">
                     Console
                   </h2>
                   {executionConsole.map((line, index) => (
                     <div
                       key={index}
-                      className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
+                      className="mb-2 font-mono text-gray-600 border-b border-gray-400"
                     >
                       {line}
                     </div>
@@ -600,7 +665,7 @@ function App() {
 
       <main className="py-2 lg:pl-96">
         {appState === AppState.INITIAL && (
-          <div className="flex flex-col justify-center items-center gap-y-10">
+          <div className="flex flex-col items-center justify-center gap-y-10">
             <ImageUpload setReferenceImages={doCreate} />
             <UrlInputSection
               doCreate={doCreate}
@@ -613,7 +678,7 @@ function App() {
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
           <div className="ml-4">
             <Tabs defaultValue="desktop">
-              <div className="flex justify-between mr-8 mb-4">
+              <div className="flex justify-between mb-4 mr-8">
                 <div className="flex items-center gap-x-2">
                   {appState === AppState.CODE_READY && (
                     <>
@@ -627,7 +692,7 @@ function App() {
                       <Button
                         onClick={downloadCode}
                         variant="secondary"
-                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
+                        className="flex items-center mr-4 gap-x-2 dark:text-white dark:bg-gray-700 download-btn"
                       >
                         <FaDownload /> Download
                       </Button>
