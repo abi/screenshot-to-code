@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
 import {
   Dialog,
   DialogClose,
@@ -34,24 +34,6 @@ function SettingsDialog({ settings, setSettings }: Props) {
       ...s,
       editorTheme: theme,
     }));
-  };
-
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const target= event.target as HTMLInputElement;
-    const file: File = (target.files as FileList)[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e!.target!.result;
-        // Here you can set the file content to the settings
-        console.log(content);
-        setSettings((s: any) => ({
-          ...s,
-          tailwindConfig: content,
-        }));
-      };
-      reader.readAsText(file);
-    }
   };
 
   return (
@@ -231,27 +213,6 @@ function SettingsDialog({ settings, setSettings }: Props) {
                         <SelectItem value="espresso">Espresso</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Tailwind Configuration</AccordionTrigger>
-              <AccordionContent className="flex flex-col space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="app-theme">
-                    <div>Upload config file</div>
-                  </Label>
-                  <div>
-                    <Input
-                      id="config-file"
-                      type="file"
-                      accept=".js,.ts"
-                      onChange={handleFileChange}
-                    />
                   </div>
                 </div>
               </AccordionContent>

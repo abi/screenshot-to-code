@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, ChangeEvent } from "react";
 import ImageUpload from "./components/ImageUpload";
 import CodePreview from "./components/CodePreview";
 import Preview from "./components/Preview";
@@ -14,7 +14,9 @@ import {
 } from "react-icons/fa";
 
 import { Switch } from "./components/ui/switch";
+// import { Label } from "./components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
@@ -48,6 +50,8 @@ const IS_OPENAI_DOWN = false;
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
+
+  const [enableCustomTailwindConfig, setEnableCustomTailwindConfig] = useState<boolean>(false);
 
   const [inputMode, setInputMode] = useState<"image" | "video">("image");
 
@@ -394,6 +398,44 @@ function App() {
     setAppState(AppState.CODE_READY);
   }
 
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const target = event.target as HTMLInputElement;
+    const file: File = (target.files as FileList)[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e!.target!.result;
+        if (typeof content === 'string') {
+          setSettings((s: Settings) => ({
+            ...s,
+            tailwindConfig: content,
+          }));
+        } else {
+          toast.error('Please select a valid Tailwind config file');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    try {
+      const input = document.getElementById('config-file') as HTMLInputElement;
+      const dt = new DataTransfer();
+      if(input == null) {
+        return;
+      }
+      input.files = dt.files
+      setSettings((s: Settings) => ({
+        ...s,
+        tailwindConfig: null,
+      }));
+    } catch (err) {
+      toast.error('Please select a valid Tailwind config file');
+    }
+  };
+
+
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
@@ -425,6 +467,29 @@ function App() {
               appState === AppState.CODING || appState === AppState.CODE_READY
             }
           />
+
+          <div className="flex flex-row items-center justify-between w-full gap-4 my-2 text-sm m-y-2">
+            <span>Enable custom Tailwind configuration:</span>
+            <Switch
+              id="image-generation"
+              checked={enableCustomTailwindConfig}
+              onCheckedChange={() =>
+                setEnableCustomTailwindConfig(!enableCustomTailwindConfig)
+              }
+            />
+          </div>
+
+          {enableCustomTailwindConfig && (<div className="flex flex-row gap-2">
+            <Input
+              id="config-file"
+              type="file"
+              accept=".js,.ts"
+              onChange={handleFileChange}
+            />
+            <Button onClick={handleRemoveFile}>
+              Remove
+            </Button>
+          </div>)}
 
           {showReactWarning && (
             <div className="p-2 text-sm bg-yellow-200 rounded">
