@@ -1,31 +1,22 @@
+import { Stack } from "./lib/stacks";
+import { CodeGenerationModel } from "./lib/models";
+
 export enum EditorTheme {
   ESPRESSO = "espresso",
   COBALT = "cobalt",
 }
 
-export enum CSSOption {
-  TAILWIND = "tailwind",
-  BOOTSTRAP = "bootstrap",
-}
-
-export enum JSFrameworkOption {
-  NO_FRAMEWORK = "vanilla",
-  REACT = "react",
-  VUE = "vue",
-}
-
-export interface OutputSettings {
-  css: CSSOption;
-  js: JSFrameworkOption;
-}
-
 export interface Settings {
   openAiApiKey: string | null;
+  openAiBaseURL: string | null;
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;
-  isTermOfServiceAccepted: boolean; // Only relevant for hosted version
-  accessCode: string | null; // Only relevant for hosted version
+  generatedCodeConfig: Stack;
+  codeGenerationModel: CodeGenerationModel;
+  // Only relevant for hosted version
+  isTermOfServiceAccepted: boolean;
+  anthropicApiKey: string | null; // Added property for anthropic API key
 }
 
 export enum AppState {
@@ -33,3 +24,20 @@ export enum AppState {
   CODING = "CODING",
   CODE_READY = "CODE_READY",
 }
+
+export enum ScreenRecorderState {
+  INITIAL = "initial",
+  RECORDING = "recording",
+  FINISHED = "finished",
+}
+
+export interface CodeGenerationParams {
+  generationType: "create" | "update";
+  inputMode: "image" | "video";
+  image: string;
+  resultImage?: string;
+  history?: string[];
+  isImportedFromCode?: boolean;
+}
+
+export type FullGenerationSettings = CodeGenerationParams & Settings;

@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 
 interface Props {
   screenshotOneApiKey: string | null;
-  doCreate: (urls: string[]) => void;
+  doCreate: (urls: string[], inputMode: "image" | "video") => void;
 }
 
 export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
@@ -46,7 +46,7 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
         }
 
         const res = await response.json();
-        doCreate([res.url]);
+        doCreate([res.url], "image");
       } catch (error) {
         console.error(error);
         toast.error(
@@ -59,7 +59,7 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
   }
 
   return (
-    <div className="w-[400px] gap-y-2 flex flex-col">
+    <div className="max-w-[90%] min-w-[40%] gap-y-2 flex flex-col">
       <div className="text-gray-500 text-sm">Or screenshot a URL...</div>
       <Input
         placeholder="Enter URL"
@@ -69,7 +69,7 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
       <Button
         onClick={takeScreenshot}
         disabled={isLoading}
-        className="bg-slate-400"
+        className="bg-slate-400 capture-btn"
       >
         {isLoading ? "Capturing..." : "Capture"}
       </Button>
