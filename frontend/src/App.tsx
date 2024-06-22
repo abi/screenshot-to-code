@@ -94,8 +94,10 @@ function App() {
       CodeGenerationModel.GPT_4_TURBO_2024_04_09 &&
     settings.generatedCodeConfig === Stack.REACT_TAILWIND;
 
-  const showGpt4OMessage =
+  const showBetterModelMessage =
     selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
+    selectedCodeGenerationModel !==
+      CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20 &&
     appState === AppState.INITIAL;
 
   const showSelectAndEditFeature =
@@ -432,11 +434,11 @@ function App() {
             </div>
           )}
 
-          {showGpt4OMessage && (
+          {showBetterModelMessage && (
             <div className="rounded-lg p-2 bg-fuchsia-200">
               <p className="text-gray-800 text-sm">
-                Now supporting GPT-4o. Higher quality and 2x faster. Give it a
-                try!
+                Now supporting GPT-4o and Claude Sonnet 3.5. Higher quality and
+                2x faster. Give it a try!
               </p>
             </div>
           )}
