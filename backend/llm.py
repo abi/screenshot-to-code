@@ -18,6 +18,7 @@ class Llm(Enum):
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
     CLAUDE_3_OPUS = "claude-3-opus-20240229"
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
+    CLAUDE_3_5_SONNET_2024_06_20 = "claude-3-5-sonnet-20240620"
 
 
 # Will throw errors if you send a garbage string
@@ -60,9 +61,15 @@ async def stream_openai_response(
     full_response = ""
     async for chunk in stream:  # type: ignore
         assert isinstance(chunk, ChatCompletionChunk)
-        content = chunk.choices[0].delta.content or ""
-        full_response += content
-        await callback(content)
+        if (
+            chunk.choices
+            and len(chunk.choices) > 0
+            and chunk.choices[0].delta
+            and chunk.choices[0].delta.content
+        ):
+            content = chunk.choices[0].delta.content or ""
+            full_response += content
+            await callback(content)
 
     await client.close()
 
@@ -74,12 +81,12 @@ async def stream_claude_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
+    model: Llm,
 ) -> str:
 
     client = AsyncAnthropic(api_key=api_key)
 
     # Base parameters
-    model = Llm.CLAUDE_3_SONNET
     max_tokens = 4096
     temperature = 0.0
 

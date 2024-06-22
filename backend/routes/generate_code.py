@@ -14,7 +14,7 @@ from llm import (
 )
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
-from typing import Dict, List, cast, get_args
+from typing import Dict, List, Union, cast, get_args
 from image_generation import create_alt_url_mapping, generate_images
 from prompts import assemble_imported_code_prompt, assemble_prompt
 from datetime import datetime
@@ -24,7 +24,7 @@ from routes.saas_utils import does_user_have_subscription_credits
 from prompts.claude_prompts import VIDEO_PROMPT
 from prompts.types import Stack
 
-from utils import pprint_prompt
+# from utils import pprint_prompt
 from video.utils import extract_tag_content, assemble_claude_prompt_video
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
@@ -161,8 +161,19 @@ async def stream_code(websocket: WebSocket):
         )
         raise Exception("No OpenAI API key found")
 
+    # Get the Anthropic API key from the request. Fall back to environment variable if not provided.
+    # If neither is provided, we throw an error later only if Claude is used.
+    anthropic_api_key = None
+    if "anthropicApiKey" in params and params["anthropicApiKey"]:
+        anthropic_api_key = params["anthropicApiKey"]
+        print("Using Anthropic API key from client-side settings dialog")
+    else:
+        anthropic_api_key = ANTHROPIC_API_KEY
+        if anthropic_api_key:
+            print("Using Anthropic API key from environment variable")
+
     # Get the OpenAI Base URL from the request. Fall back to environment variable if not provided.
-    openai_base_url = None
+    openai_base_url: Union[str, None] = None
     # Disable user-specified OpenAI Base URL in prod
     if not os.environ.get("IS_PROD"):
         if "openAiBaseURL" in params and params["openAiBaseURL"]:
@@ -255,7 +266,7 @@ async def stream_code(websocket: WebSocket):
         video_data_url = params["image"]
         prompt_messages = await assemble_claude_prompt_video(video_data_url)
 
-    pprint_prompt(prompt_messages)  # type: ignore
+    # pprint_prompt(prompt_messages)  # type: ignore
 
     if SHOULD_MOCK_AI_RESPONSE:
         completion = await mock_completion(
@@ -267,25 +278,28 @@ async def stream_code(websocket: WebSocket):
                 if IS_PROD:
                     raise Exception("Video mode is not supported in prod")
 
-                if not ANTHROPIC_API_KEY:
+                if not anthropic_api_key:
                     await throw_error(
-                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
                     )
                     raise Exception("No Anthropic key")
 
                 completion = await stream_claude_response_native(
                     system_prompt=VIDEO_PROMPT,
                     messages=prompt_messages,  # type: ignore
-                    api_key=ANTHROPIC_API_KEY,
+                    api_key=anthropic_api_key,
                     callback=lambda x: process_chunk(x),
                     model=Llm.CLAUDE_3_OPUS,
                     include_thinking=True,
                 )
                 exact_llm_version = Llm.CLAUDE_3_OPUS
-            elif code_generation_model == Llm.CLAUDE_3_SONNET:
-                if not ANTHROPIC_API_KEY:
+            elif (
+                code_generation_model == Llm.CLAUDE_3_SONNET
+                or code_generation_model == Llm.CLAUDE_3_5_SONNET_2024_06_20
+            ):
+                if not anthropic_api_key:
                     await throw_error(
-                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
                     )
                     raise Exception("No Anthropic key")
 
@@ -298,8 +312,9 @@ async def stream_code(websocket: WebSocket):
 
                 completion = await stream_claude_response(
                     prompt_messages,  # type: ignore
-                    api_key=ANTHROPIC_API_KEY,
+                    api_key=anthropic_api_key,
                     callback=lambda x: process_chunk(x),
+                    model=code_generation_model,
                 )
                 exact_llm_version = code_generation_model
             else:
