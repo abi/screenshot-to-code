@@ -15,7 +15,7 @@ async def generate_code_core(image_url: str, stack: Stack, model: Llm) -> str:
     async def process_chunk(content: str):
         pass
 
-    if model == Llm.CLAUDE_3_SONNET:
+    if model == Llm.CLAUDE_3_SONNET or model == Llm.CLAUDE_3_5_SONNET_2024_06_20:
         if not anthropic_api_key:
             raise Exception("Anthropic API key not found")
 
@@ -23,6 +23,7 @@ async def generate_code_core(image_url: str, stack: Stack, model: Llm) -> str:
             prompt_messages,
             api_key=anthropic_api_key,
             callback=lambda x: process_chunk(x),
+            model=model,
         )
     else:
         if not openai_api_key:

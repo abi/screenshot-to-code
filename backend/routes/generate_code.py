@@ -245,7 +245,10 @@ async def stream_code(websocket: WebSocket):
                     include_thinking=True,
                 )
                 exact_llm_version = Llm.CLAUDE_3_OPUS
-            elif code_generation_model == Llm.CLAUDE_3_SONNET:
+            elif (
+                code_generation_model == Llm.CLAUDE_3_SONNET
+                or code_generation_model == Llm.CLAUDE_3_5_SONNET_2024_06_20
+            ):
                 if not anthropic_api_key:
                     await throw_error(
                         "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
@@ -256,6 +259,7 @@ async def stream_code(websocket: WebSocket):
                     prompt_messages,  # type: ignore
                     api_key=anthropic_api_key,
                     callback=lambda x: process_chunk(x),
+                    model=code_generation_model,
                 )
                 exact_llm_version = code_generation_model
             else:
