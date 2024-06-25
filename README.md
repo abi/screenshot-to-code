@@ -1,6 +1,6 @@
 # screenshot-to-code
 
-A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. **Now supporting GPT-4O!**
+A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. **Now supporting Claude Sonnet 3.5 and GPT-4O!**
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
@@ -15,7 +15,8 @@ Supported stacks:
 
 Supported AI models:
 
-- GPT-4O - Best model!
+- Claude Sonnet 3.5 - Best model!
+- GPT-4O - also recommended!
 - GPT-4 Turbo (Apr 2024)
 - GPT-4 Vision (Nov 2023)
 - Claude 3 Sonnet
@@ -31,7 +32,11 @@ We also just added experimental support for taking a video/screen recording of a
 
 [Follow me on Twitter for updates](https://twitter.com/_abi_).
 
-## 🚀 Try It Out without no install
+## Sponsors
+
+<a href="https://konghq.com/products/kong-konnect/register?utm_medium=referral&utm_source=github&utm_campaign=platform&utm_content=screenshot-to-code" target="_blank" title="Kong - powering the API world"><img src="https://picoapps.xyz/s2c-sponsors/Kong-GitHub-240x100.png"></a>
+
+## 🚀 Hosted Version
 
 [Try it live on the hosted version (paid)](https://screenshottocode.com).
 
@@ -41,8 +46,8 @@ We also just added experimental support for taking a video/screen recording of a
 - 如果使用Bedrock Claude 3/3.5需要在运行机器上安装 https://aws.amazon.com/cn/cli/， 并配置aws iam 账号的ak sk，另外还需要开通该账号Bedrock Claude 3 访问的权限。
 - 如果使用Bedrock Claude 3/3.5，则无须配置OPENAI_API_KEY 或者 ANTHROPIC_API_KEY 到.env中
 
-
 The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API or an Anthropic key if you want to use Claude Sonnet, or for experimental video support.
+
 
 Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
 
@@ -55,7 +60,7 @@ poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
 
-If you want to use Anthropic, add the `ANTHROPIC_API_KEY` to `backend/.env` with your API key from Anthropic.
+If you want to use Anthropic, add `ANTHROPIC_API_KEY` to `backend/.env`. You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
 
 Run the frontend:
 
@@ -114,5 +119,3 @@ https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-a
 ## 🌍 Hosted Version
 
 🆕 [Try it here (paid)](https://screenshottocode.com). Or see [Getting Started](#-getting-started) for local install instructions to use with your own API keys.
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/abiraja)
