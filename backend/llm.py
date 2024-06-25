@@ -19,22 +19,27 @@ from datetime import datetime
 from botocore.config import Config
 	
 #get modelARN
-region = 'us-west-2' 
+REGION = os.environ.get('region','us-east-1') 
+PROFILE = os.environ.get('profile', 'default')
+session = boto3.Session(profile_name=PROFILE,region_name=REGION)
+bedrock_runtime = session.client(
+    service_name="bedrock-runtime",
+    region_name=REGION
+)
 
-config = Config(read_timeout=1000) #timeout
-                      
-boto3_bedrock = boto3.client('bedrock',region)
-bedrock_runtime = boto3.client('bedrock-runtime',config=config)
-modelId = "anthropic.claude-3-sonnet-20240229-v1:0"
 # Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
     GPT_4_VISION = "gpt-4-vision-preview"
     GPT_4_TURBO_2024_04_09 = "gpt-4-turbo-2024-04-09"
     GPT_4O_2024_05_13 = "gpt-4o-2024-05-13"
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
+    CLAUDE_3_5_SONNET = "claude-3-5-sonnet-20240620"
     CLAUDE_3_OPUS = "claude-3-opus-20240229"
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
 
+
+BEDROCK_LLM_MODELID_LIST = {Llm.CLAUDE_3_5_SONNET: 'anthropic.claude-3-sonnet-20240229-v1:0',
+                            Llm.CLAUDE_3_SONNET: 'anthropic.claude-3-5-sonnet-20240620-v1:0',}
 
 # Will throw errors if you send a garbage string
 def convert_frontend_str_to_llm(frontend_str: str) -> Llm:
@@ -42,6 +47,8 @@ def convert_frontend_str_to_llm(frontend_str: str) -> Llm:
         return Llm.GPT_4_VISION
     elif frontend_str == "claude_3_sonnet":
         return Llm.CLAUDE_3_SONNET
+    elif frontend_str == "claude_3_5_sonnet":
+        return Llm.CLAUDE_3_5_SONNET
     else:
         return Llm(frontend_str)
 
@@ -85,65 +92,6 @@ async def stream_openai_response(
     return full_response
 
 
-# TODO: Have a seperate function that translates OpenAI messages to Claude messages
-async def stream_claude_response_bak(
-    messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-) -> str:
-
-    client = AsyncAnthropic(api_key=api_key)
-
-    # Base parameters
-    model = Llm.CLAUDE_3_SONNET
-    max_tokens = 4096
-    temperature = 0.0
-
-    # Translate OpenAI messages to Claude messages
-    system_prompt = cast(str, messages[0].get("content"))
-    claude_messages = [dict(message) for message in messages[1:]]
-    for message in claude_messages:
-        if not isinstance(message["content"], list):
-            continue
-
-        for content in message["content"]:  # type: ignore
-            if content["type"] == "image_url":
-                content["type"] = "image"
-
-                # Extract base64 data and media type from data URL
-                # Example base64 data URL: data:image/png;base64,iVBOR...
-                image_data_url = cast(str, content["image_url"]["url"])
-                media_type = image_data_url.split(";")[0].split(":")[1]
-                base64_data = image_data_url.split(",")[1]
-
-                # Remove OpenAI parameter
-                del content["image_url"]
-
-                content["source"] = {
-                    "type": "base64",
-                    "media_type": media_type,
-                    "data": base64_data,
-                }
-
-    # Stream Claude response
-    async with client.messages.stream(
-        model=model.value,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        system=system_prompt,
-        messages=claude_messages,  # type: ignore
-    ) as stream:
-        async for text in stream.text_stream:
-            await callback(text)
-
-    # Return final message
-    response = await stream.get_final_message()
-
-    # Close the Anthropic client
-    await client.close()
-
-    return response.content[0].text
-
 async def stream_claude_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
@@ -153,7 +101,6 @@ async def stream_claude_response(
     # client = AsyncAnthropic(api_key=api_key)
 
     # Base parameters
-    model = Llm.CLAUDE_3_SONNET
     max_tokens = 4096
     temperature = 0.0
 
@@ -190,7 +137,8 @@ async def stream_claude_response(
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": max_tokens,
             "messages": claude_messages,
-            "temperature":temperature
+            "temperature":temperature,
+            "system":system_prompt,
         }
     }
     
@@ -224,10 +172,11 @@ async def stream_claude_response_native(
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
     include_thinking: bool = False,
-    model: Llm = Llm.CLAUDE_3_OPUS,
+    model: Llm = Llm.CLAUDE_3_5_SONNET,
 ) -> str:
 
     # client = AsyncAnthropic(api_key=api_key)
+    modelId = BEDROCK_LLM_MODELID_LIST[model]
 
     # Base model parameters
     max_tokens = 4096
