@@ -1,3 +1,4 @@
+import base64
 from enum import Enum
 from typing import Any, Awaitable, Callable, List, cast
 from anthropic import AsyncAnthropic
@@ -5,6 +6,7 @@ from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
 from config import IS_DEBUG_ENABLED
 from debug.DebugFileWriter import DebugFileWriter
+from image_processing.utils import process_image
 
 from utils import pprint_prompt
 
@@ -103,8 +105,10 @@ async def stream_claude_response(
                 # Extract base64 data and media type from data URL
                 # Example base64 data URL: data:image/png;base64,iVBOR...
                 image_data_url = cast(str, content["image_url"]["url"])
-                media_type = image_data_url.split(";")[0].split(":")[1]
-                base64_data = image_data_url.split(",")[1]
+
+                # Process image and split media type and data
+                # so it works with Claude (under 5mb in base64 encoding)
+                (media_type, base64_data) = process_image(image_data_url)
 
                 # Remove OpenAI parameter
                 del content["image_url"]
