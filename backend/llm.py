@@ -62,7 +62,7 @@ async def stream_openai_response(
     model: Llm,
 ) -> str:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-
+    print(f"--stream_openai_response--{model}")
     # Base parameters
     params = {
         "model": model.value,
@@ -105,9 +105,9 @@ async def stream_claude_response(
     callback: Callable[[str], Awaitable[None]],
     model: Llm,
 ) -> str:
-
+    print(f"--stream_openai_response--{model}")
     # client = AsyncAnthropic(api_key=api_key)
-
+    modelId = BEDROCK_LLM_MODELID_LIST[model]
     # Base parameters
     max_tokens = 4096
     temperature = 0.0
@@ -256,17 +256,6 @@ async def stream_claude_response_native(
                             response_text += chunk_obj['delta']['text']
                             await callback(chunk_obj['delta']['text'])
                     
-                    # if chunk_obj['type'] == 'content_block_delta':
-                    #     print(f"\nStop reason: {chunk_obj['delta']['stop_reason']}")
-                    #     print(f"Stop sequence: {chunk_obj['delta']['stop_sequence']}")
-                    #     print(f"Output tokens: {chunk_obj['usage']['output_tokens']}")
-                    #     output_tokens  = chunk_obj['usage']['output_tokens']
-                    #     # input_tokens  = chunk_obj['usage']['input_tokens']
-                    #     # input_tokens = chunk_obj['amazon-bedrock-invocationMetrics']['inputTokenCount']
-                    # if chunk_obj['type'] == 'text_delta':
-                    #     print(chunk_obj['delta']['text'])
-                    #     response_text += chunk_obj['delta']['text']
-                    #     await callback(chunk_obj['delta']['text'])
         print(response_text)
 
         # Write each pass's code to .html file and thinking to .txt file
@@ -304,91 +293,3 @@ async def stream_claude_response_native(
         raise Exception("No HTML response found in AI response")
     else:
         return response_text
-    
-async def stream_claude_response_native_bak(
-    system_prompt: str,
-    messages: list[Any],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    include_thinking: bool = False,
-    model: Llm = Llm.CLAUDE_3_OPUS,
-) -> str:
-
-    client = AsyncAnthropic(api_key=api_key)
-
-    # Base model parameters
-    max_tokens = 4096
-    temperature = 0.0
-
-    # Multi-pass flow
-    current_pass_num = 1
-    max_passes = 2
-
-    prefix = "<thinking>"
-    response = None
-
-    # For debugging
-    full_stream = ""
-    debug_file_writer = DebugFileWriter()
-
-    while current_pass_num <= max_passes:
-        current_pass_num += 1
-
-        # Set up message depending on whether we have a <thinking> prefix
-        messages_to_send = (
-            messages + [{"role": "assistant", "content": prefix}]
-            if include_thinking
-            else messages
-        )
-
-        pprint_prompt(messages_to_send)
-
-        async with client.messages.stream(
-            model=model.value,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            system=system_prompt,
-            messages=messages_to_send,  # type: ignore
-        ) as stream:
-            async for text in stream.text_stream:
-                print(text, end="", flush=True)
-                full_stream += text
-                await callback(text)
-
-        response = await stream.get_final_message()
-        response_text = response.content[0].text
-
-        # Write each pass's code to .html file and thinking to .txt file
-        if IS_DEBUG_ENABLED:
-            debug_file_writer.write_to_file(
-                f"pass_{current_pass_num - 1}.html",
-                debug_file_writer.extract_html_content(response_text),
-            )
-            debug_file_writer.write_to_file(
-                f"thinking_pass_{current_pass_num - 1}.txt",
-                response_text.split("</thinking>")[0],
-            )
-
-        # Set up messages array for next pass
-        messages += [
-            {"role": "assistant", "content": str(prefix) + response.content[0].text},
-            {
-                "role": "user",
-                "content": "You've done a good job with a first draft. Improve this further based on the original instructions so that the app is fully functional and looks like the original video of the app we're trying to replicate.",
-            },
-        ]
-
-        print(
-            f"Token usage: Input Tokens: {response.usage.input_tokens}, Output Tokens: {response.usage.output_tokens}"
-        )
-
-    # Close the Anthropic client
-    await client.close()
-
-    if IS_DEBUG_ENABLED:
-        debug_file_writer.write_to_file("full_stream.txt", full_stream)
-
-    if not response:
-        raise Exception("No HTML response found in AI response")
-    else:
-        return response.content[0].text

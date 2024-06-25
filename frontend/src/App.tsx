@@ -441,7 +441,7 @@ function App() {
                 2x faster. Give it a try!
               </p>
             </div>
-          )} */}
+          )} 
 
           {appState !== AppState.CODE_READY && <TipLink />}
 
