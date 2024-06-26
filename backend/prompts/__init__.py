@@ -1,6 +1,7 @@
 from typing import List, NoReturn, Union
 
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
+from llm import Llm
 
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
@@ -17,7 +18,7 @@ Generate code for a SVG that looks exactly like this.
 
 
 def assemble_imported_code_prompt(
-    code: str, stack: Stack, result_image_data_url: Union[str, None] = None
+    code: str, stack: Stack, model: Llm
 ) -> List[ChatCompletionMessageParam]:
     system_content = IMPORTED_CODE_SYSTEM_PROMPTS[stack]
 
@@ -26,16 +27,25 @@ def assemble_imported_code_prompt(
         if stack != "svg"
         else "Here is the code of the SVG: " + code
     )
-    return [
-        {
-            "role": "system",
-            "content": system_content,
-        },
-        {
-            "role": "user",
-            "content": user_content,
-        },
-    ]
+
+    if model == Llm.CLAUDE_3_5_SONNET_2024_06_20:
+        return [
+            {
+                "role": "system",
+                "content": system_content + "\n " + user_content,
+            }
+        ]
+    else:
+        return [
+            {
+                "role": "system",
+                "content": system_content,
+            },
+            {
+                "role": "user",
+                "content": user_content,
+            },
+        ]
     # TODO: Use result_image_data_url
 
 

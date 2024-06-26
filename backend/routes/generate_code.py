@@ -20,6 +20,7 @@ from datetime import datetime
 import json
 from prompts.claude_prompts import VIDEO_PROMPT
 from prompts.types import Stack
+from utils import pprint_prompt
 
 # from utils import pprint_prompt
 from video.utils import extract_tag_content, assemble_claude_prompt_video
@@ -166,7 +167,7 @@ async def stream_code(websocket: WebSocket):
     if params.get("isImportedFromCode") and params["isImportedFromCode"]:
         original_imported_code = params["history"][0]
         prompt_messages = assemble_imported_code_prompt(
-            original_imported_code, valid_stack
+            original_imported_code, valid_stack, code_generation_model
         )
         for index, text in enumerate(params["history"][1:]):
             if index % 2 == 0:
