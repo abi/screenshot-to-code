@@ -230,30 +230,31 @@ async def stream_code(websocket: WebSocket):
     else:
         try:
             if validated_input_mode == "video":
-                if not anthropic_api_key:
-                    await throw_error(
-                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
-                    )
-                    raise Exception("No Anthropic key")
+
+                # if not ANTHROPIC_API_KEY:
+                #     await throw_error(
+                #         "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env"
+                #     )
+                #     raise Exception("No Anthropic key")
 
                 completion = await stream_claude_response_native(
                     system_prompt=VIDEO_PROMPT,
                     messages=prompt_messages,  # type: ignore
                     api_key=anthropic_api_key,
                     callback=lambda x: process_chunk(x),
-                    model=Llm.CLAUDE_3_OPUS,
+                    model=Llm.CLAUDE_3_5_SONNET,
                     include_thinking=True,
                 )
-                exact_llm_version = Llm.CLAUDE_3_OPUS
+                exact_llm_version = Llm.CLAUDE_3_5_SONNET
             elif (
                 code_generation_model == Llm.CLAUDE_3_SONNET
                 or code_generation_model == Llm.CLAUDE_3_5_SONNET_2024_06_20
             ):
-                if not anthropic_api_key:
-                    await throw_error(
-                        "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
-                    )
-                    raise Exception("No Anthropic key")
+#                 if not anthropic_api_key:
+#                     await throw_error(
+#                         "No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
+#                     )
+#                     raise Exception("No Anthropic key")
 
                 completion = await stream_claude_response(
                     prompt_messages,  # type: ignore

@@ -437,11 +437,11 @@ function App() {
           {showBetterModelMessage && (
             <div className="rounded-lg p-2 bg-fuchsia-200">
               <p className="text-gray-800 text-sm">
-                Now supporting GPT-4o and Claude Sonnet 3.5. Higher quality and
+                Now supporting Claude Sonnet 3.5. Higher quality and
                 2x faster. Give it a try!
               </p>
             </div>
-          )}
+          )} 
 
           {appState !== AppState.CODE_READY && <TipLink />}
 

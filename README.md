@@ -42,17 +42,18 @@ We also just added experimental support for taking a video/screen recording of a
 
 ## 🛠 Getting Started
 
-The app has a React/Vite frontend and a FastAPI backend. 
+### 使用AWS Bedrock Claude 3/3.5 sonnet注意事项
+- 如果使用Bedrock Claude 3/3.5需要在运行机器上安装 https://aws.amazon.com/cn/cli/， 并配置aws iam 账号的ak sk，另外还需要开通该账号Bedrock Claude 3 访问的权限。
+- 如果使用Bedrock Claude 3/3.5，则无须配置OPENAI_API_KEY 或者 ANTHROPIC_API_KEY 到.env中
 
-Keys needed:
+The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API or an Anthropic key if you want to use Claude Sonnet, or for experimental video support.
 
-* [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md)
-* Anthropic key (optional) - only if you want to use Claude Sonnet, or for experimental video support.
 
 Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
 
 ```bash
 cd backend
+# optional
 echo "OPENAI_API_KEY=sk-your-key" > .env
 poetry install
 poetry shell
