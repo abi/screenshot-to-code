@@ -2,6 +2,7 @@ import os
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
+from codegen.utils import extract_html_content
 from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
 from custom_types import InputMode
 from llm import (
@@ -311,6 +312,9 @@ async def stream_code(websocket: WebSocket):
         completion = extract_tag_content("html", completion)
 
     print("Exact used model for generation: ", exact_llm_version)
+
+    # Strip the completion of everything except the HTML content
+    completion = extract_html_content(completion)
 
     # Write the messages dict into a log so that we can debug later
     write_logs(prompt_messages, completion)  # type: ignore
