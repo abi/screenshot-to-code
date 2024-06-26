@@ -336,6 +336,11 @@ function App({ navbarComponent }: Props) {
     updateInstruction: string,
     selectedElement?: HTMLElement
   ) {
+    if (updateInstruction.trim() === "") {
+      toast.error("Please include some instructions for AI on what to update.");
+      return;
+    }
+
     if (currentVersion === null) {
       toast.error(
         "No current version set. Contact support or open a Github issue."
