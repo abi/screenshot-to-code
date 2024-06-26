@@ -18,6 +18,8 @@ pre-commit = "^3.6.2"
 anthropic = "^0.18.0"
 moviepy = "^1.0.3"
 sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
+pillow = "^10.3.0"
+types-pillow = "^10.2.0.20240520"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
