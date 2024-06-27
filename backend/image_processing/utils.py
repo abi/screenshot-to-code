@@ -4,6 +4,7 @@ import time
 from PIL import Image
 
 CLAUDE_IMAGE_MAX_SIZE = 5 * 1024 * 1024
+CLAUDE_MAX_IMAGE_DIMENSION = 7900
 
 
 # Process image so it meets Claude requirements
@@ -22,6 +23,25 @@ def process_image(image_data_url: str) -> tuple[str, str]:
 
     image_bytes = base64.b64decode(base64_data)
     img = Image.open(io.BytesIO(image_bytes))
+
+    # Check if either dimension exceeds 7900px (Claude disallows >= 8000px)
+    if (
+        img.width > CLAUDE_MAX_IMAGE_DIMENSION
+        or img.height > CLAUDE_MAX_IMAGE_DIMENSION
+    ):
+        # Calculate the new dimensions while maintaining aspect ratio
+        if img.width > img.height:
+            new_width = CLAUDE_MAX_IMAGE_DIMENSION
+            new_height = int((CLAUDE_MAX_IMAGE_DIMENSION / img.width) * img.height)
+        else:
+            new_height = CLAUDE_MAX_IMAGE_DIMENSION
+            new_width = int((CLAUDE_MAX_IMAGE_DIMENSION / img.height) * img.width)
+
+        # Resize the image
+        img = img.resize((new_width, new_height), Image.DEFAULT_STRATEGY)
+        print(
+            f"[CLAUDE IMAGE PROCESSING] image resized: width = {new_width}, height = {new_height}"
+        )
 
     # Convert and compress as JPEG
     quality = 95
