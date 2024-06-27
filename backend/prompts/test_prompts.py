@@ -1,3 +1,4 @@
+from llm import Llm
 from prompts import assemble_imported_code_prompt, assemble_prompt
 
 TAILWIND_SYSTEM_PROMPT = """
@@ -345,7 +346,7 @@ def test_prompts():
 
 def test_imported_code_prompts():
     tailwind_prompt = assemble_imported_code_prompt(
-        "code", "html_tailwind", "result_image_data_url"
+        "code", "html_tailwind", Llm.GPT_4O_2024_05_13
     )
     expected_tailwind_prompt = [
         {"role": "system", "content": IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT},
@@ -354,7 +355,7 @@ def test_imported_code_prompts():
     assert tailwind_prompt == expected_tailwind_prompt
 
     react_tailwind_prompt = assemble_imported_code_prompt(
-        "code", "react_tailwind", "result_image_data_url"
+        "code", "react_tailwind", Llm.GPT_4O_2024_05_13
     )
     expected_react_tailwind_prompt = [
         {"role": "system", "content": IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT},
@@ -363,7 +364,7 @@ def test_imported_code_prompts():
     assert react_tailwind_prompt == expected_react_tailwind_prompt
 
     bootstrap_prompt = assemble_imported_code_prompt(
-        "code", "bootstrap", "result_image_data_url"
+        "code", "bootstrap", Llm.GPT_4O_2024_05_13
     )
     expected_bootstrap_prompt = [
         {"role": "system", "content": IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT},
@@ -372,7 +373,7 @@ def test_imported_code_prompts():
     assert bootstrap_prompt == expected_bootstrap_prompt
 
     ionic_tailwind = assemble_imported_code_prompt(
-        "code", "ionic_tailwind", "result_image_data_url"
+        "code", "ionic_tailwind", Llm.GPT_4O_2024_05_13
     )
     expected_ionic_tailwind = [
         {"role": "system", "content": IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT},
@@ -381,7 +382,7 @@ def test_imported_code_prompts():
     assert ionic_tailwind == expected_ionic_tailwind
 
     vue_tailwind = assemble_imported_code_prompt(
-        "code", "vue_tailwind", "result_image_data_url"
+        "code", "vue_tailwind", Llm.GPT_4O_2024_05_13
     )
     expected_vue_tailwind = [
         {"role": "system", "content": IMPORTED_CODE_VUE_TAILWIND_PROMPT},
@@ -389,7 +390,7 @@ def test_imported_code_prompts():
     ]
     assert vue_tailwind == expected_vue_tailwind
 
-    svg = assemble_imported_code_prompt("code", "svg", "result_image_data_url")
+    svg = assemble_imported_code_prompt("code", "svg", Llm.GPT_4O_2024_05_13)
     expected_svg = [
         {"role": "system", "content": IMPORTED_CODE_SVG_SYSTEM_PROMPT},
         {"role": "user", "content": "Here is the code of the SVG: code"},
