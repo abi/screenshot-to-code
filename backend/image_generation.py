@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 from bs4 import BeautifulSoup
 
 
-async def process_tasks(prompts: List[str], api_key: str, base_url: str):
+async def process_tasks(prompts: List[str], api_key: str, base_url: str | None):
     tasks = [generate_image(prompt, api_key, base_url) for prompt in prompts]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -20,17 +20,18 @@ async def process_tasks(prompts: List[str], api_key: str, base_url: str):
     return processed_results
 
 
-async def generate_image(prompt: str, api_key: str, base_url: str):
+async def generate_image(
+    prompt: str, api_key: str, base_url: str | None
+) -> Union[str, None]:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-    image_params: Dict[str, Union[str, int]] = {
-        "model": "dall-e-3",
-        "quality": "standard",
-        "style": "natural",
-        "n": 1,
-        "size": "1024x1024",
-        "prompt": prompt,
-    }
-    res = await client.images.generate(**image_params)
+    res = await client.images.generate(
+        model="dall-e-3",
+        quality="standard",
+        style="natural",
+        n=1,
+        size="1024x1024",
+        prompt=prompt,
+    )
     await client.close()
     return res.data[0].url
 
@@ -63,13 +64,13 @@ def create_alt_url_mapping(code: str) -> Dict[str, str]:
 
 async def generate_images(
     code: str, api_key: str, base_url: Union[str, None], image_cache: Dict[str, str]
-):
+) -> str:
     # Find all images
     soup = BeautifulSoup(code, "html.parser")
     images = soup.find_all("img")
 
     # Extract alt texts as image prompts
-    alts = []
+    alts: List[str | None] = []
     for img in images:
         # Only include URL if the image starts with https://placehold.co
         # and it's not already in the image_cache
@@ -80,10 +81,10 @@ async def generate_images(
             alts.append(img.get("alt", None))
 
     # Exclude images with no alt text
-    alts = [alt for alt in alts if alt is not None]
+    filtered_alts: List[str] = [alt for alt in alts if alt is not None]
 
     # Remove duplicates
-    prompts = list(set(alts))
+    prompts = list(set(filtered_alts))
 
     # Return early if there are no images to replace
     if len(prompts) == 0:

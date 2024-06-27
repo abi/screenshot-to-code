@@ -14,10 +14,15 @@ openai = "^1.2.4"
 python-dotenv = "^1.0.0"
 beautifulsoup4 = "^4.12.2"
 httpx = "^0.25.1"
+pre-commit = "^3.6.2"
+anthropic = "^0.18.0"
+moviepy = "^1.0.3"
+pillow = "^10.3.0"
+types-pillow = "^10.2.0.20240520"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
-pyright = "^1.1.345"
+pyright = "^1.1.352"
 
 [build-system]
 requires = ["poetry-core"]

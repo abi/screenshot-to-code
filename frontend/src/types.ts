@@ -1,4 +1,5 @@
 import { Stack } from "./lib/stacks";
+import { CodeGenerationModel } from "./lib/models";
 
 export enum EditorTheme {
   ESPRESSO = "espresso",
@@ -12,9 +13,10 @@ export interface Settings {
   isImageGenerationEnabled: boolean;
   editorTheme: EditorTheme;
   generatedCodeConfig: Stack;
+  codeGenerationModel: CodeGenerationModel;
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
-  accessCode: string | null;
+  anthropicApiKey: string | null; // Added property for anthropic API key
 }
 
 export enum AppState {
@@ -23,8 +25,15 @@ export enum AppState {
   CODE_READY = "CODE_READY",
 }
 
+export enum ScreenRecorderState {
+  INITIAL = "initial",
+  RECORDING = "recording",
+  FINISHED = "finished",
+}
+
 export interface CodeGenerationParams {
   generationType: "create" | "update";
+  inputMode: "image" | "video";
   image: string;
   resultImage?: string;
   history?: string[];

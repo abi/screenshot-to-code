@@ -7,10 +7,13 @@ from evals.config import EVALS_DIR
 
 router = APIRouter()
 
+# Update this if the number of outputs generated per input changes
+N = 1
+
 
 class Eval(BaseModel):
     input: str
-    output: str
+    outputs: list[str]
 
 
 @router.get("/evals")
@@ -25,21 +28,27 @@ async def get_evals():
             input_file_path = os.path.join(input_dir, file)
             input_file = await image_to_data_url(input_file_path)
 
-            # Construct the corresponding output file name
-            output_file_name = file.replace(".png", ".html")
-            output_file_path = os.path.join(output_dir, output_file_name)
+            # Construct the corresponding output file names
+            output_file_names = [
+                file.replace(".png", f"_{i}.html") for i in range(0, N)
+            ]  # Assuming 3 outputs for each input
 
-            # Check if the output file exists
-            if os.path.exists(output_file_path):
-                with open(output_file_path, "r") as f:
-                    output_file_data = f.read()
-            else:
-                output_file_data = "Output file not found."
+            output_files_data: list[str] = []
+            for output_file_name in output_file_names:
+                output_file_path = os.path.join(output_dir, output_file_name)
+                # Check if the output file exists
+                if os.path.exists(output_file_path):
+                    with open(output_file_path, "r") as f:
+                        output_files_data.append(f.read())
+                else:
+                    output_files_data.append(
+                        "<html><h1>Output file not found.</h1></html>"
+                    )
 
             evals.append(
                 Eval(
                     input=input_file,
-                    output=output_file_data,
+                    outputs=output_files_data,
                 )
             )
 

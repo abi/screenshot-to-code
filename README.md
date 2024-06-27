@@ -1,32 +1,53 @@
 # screenshot-to-code
 
-This simple app converts a screenshot to code (HTML/Tailwind CSS, or React or Bootstrap or Vue). It uses GPT-4 Vision to generate the code and DALL-E 3 to generate similar-looking images. You can now also enter a URL to clone a live website!
+A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. **Now supporting Claude Sonnet 3.5 and GPT-4O!**
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
+Supported stacks:
+
+- HTML + Tailwind
+- React + Tailwind
+- Vue + Tailwind
+- Bootstrap
+- Ionic + Tailwind
+- SVG
+
+Supported AI models:
+
+- Claude Sonnet 3.5 - Best model!
+- GPT-4O - also recommended!
+- GPT-4 Turbo (Apr 2024)
+- GPT-4 Vision (Nov 2023)
+- Claude 3 Sonnet
+- DALL-E 3 for image generation
+
 See the [Examples](#-examples) section below for more demos.
 
-## 🚀 Try It Out!
+We also just added experimental support for taking a video/screen recording of a website in action and turning that into a functional prototype. 
 
-🆕 [Try it here](https://screenshottocode.com) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section below for details**). Or see [Getting Started](#-getting-started) below for local install instructions.
+![google in app quick 3](https://github.com/abi/screenshot-to-code/assets/23818/8758ffa4-9483-4b9b-bb66-abd6d1594c33)
 
-## 🌟 Recent Updates
+[Learn more about video here](https://github.com/abi/screenshot-to-code/wiki/Screen-Recording-to-Code).
 
-- Dec 11 - Start a new project from existing code (allows you to come back to an older project)
-- Dec 7 - 🔥 🔥 🔥 View a history of your edits, and branch off them
-- Nov 30 - Dark mode, output code in Ionic (thanks [@dialmedu](https://github.com/dialmedu)), set OpenAI base URL
-- Nov 28 - 🔥 🔥 🔥 Customize your stack: React or Bootstrap or TailwindCSS
-- Nov 23 - Send in a screenshot of the current replicated version (sometimes improves quality of subsequent generations)
-- Nov 21 - Edit code in the code editor and preview changes live thanks to [@clean99](https://github.com/clean99)
-- Nov 20 - Paste in a URL to screenshot and clone (requires [ScreenshotOne free API key](https://screenshotone.com?via=screenshot-to-code))
-- Nov 19 - Support for dark/light code editor theme - thanks [@kachbit](https://github.com/kachbit)
-- Nov 16 - Added a setting to disable DALL-E image generation if you don't need that
-- Nov 16 - View code directly within the app
-- Nov 15 - You can now instruct the AI to update the code as you wish. It is helpful if the AI messed up some styles or missed a section.
+[Follow me on Twitter for updates](https://twitter.com/_abi_).
+
+## Sponsors
+
+<a href="https://konghq.com/products/kong-konnect?utm_medium=referral&utm_source=github&utm_campaign=platform&utm_content=screenshot-to-code" target="_blank" title="Kong - powering the API world"><img src="https://picoapps.xyz/s2c-sponsors/Kong-GitHub-240x100.png"></a>
+
+## 🚀 Hosted Version
+
+[Try it live on the hosted version (paid)](https://screenshottocode.com).
 
 ## 🛠 Getting Started
 
-The app has a React/Vite frontend and a FastAPI backend. You will need an OpenAI API key with access to the GPT-4 Vision API.
+The app has a React/Vite frontend and a FastAPI backend. 
+
+Keys needed:
+
+* [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md)
+* Anthropic key (optional) - only if you want to use Claude Sonnet, or for experimental video support.
 
 Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
 
@@ -38,11 +59,7 @@ poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
 
-You can also run the backend (when you're in `backend`):
-
-```bash
-poetry run pyright
-```
+If you want to use Anthropic, add `ANTHROPIC_API_KEY` to `backend/.env`. You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
 
 Run the frontend:
 
@@ -62,10 +79,6 @@ For debugging purposes, if you don't want to waste GPT4-Vision credits, you can 
 MOCK=true poetry run uvicorn main:app --reload --port 7001
 ```
 
-## Configuration
-
-- You can configure the OpenAI base URL if you need to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog
-
 ## Docker
 
 If you have Docker installed on your system, in the root directory, run:
@@ -81,6 +94,9 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 
 - **I'm running into an error when setting up the backend. How can I fix it?** [Try this](https://github.com/abi/screenshot-to-code/issues/3#issuecomment-1814777959). If that still doesn't work, open an issue.
 - **How do I get an OpenAI API key?** See https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md
+- **How can I configure an OpenAI proxy?** - If you're not able to access the OpenAI API directly (due to e.g. country restrictions), you can try a VPN or you can configure the OpenAI base URL to use a proxy: Set OPENAI_BASE_URL in the `backend/.env` or directly in the UI in the settings dialog. Make sure the URL has "v1" in the path so it should look like this:  `https://xxx.xxxxx.xxx/v1`
+- **How can I update the backend host that my front-end connects to?** - Configure VITE_HTTP_BACKEND_URL and VITE_WS_BACKEND_URL in front/.env.local For example, set VITE_HTTP_BACKEND_URL=http://124.10.20.1:7001
+- **Seeing UTF-8 errors when running the backend?** - On windows, open the .env file with notepad++, then go to Encoding and select UTF-8. 
 - **How can I provide feedback?** For feedback, feature requests and bug reports, open an issue or ping me on [Twitter](https://twitter.com/_abi_).
 
 ## 📚 Examples
@@ -101,6 +117,4 @@ https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-a
 
 ## 🌍 Hosted Version
 
-🆕 [Try it here](https://screenshottocode.com) (bring your own OpenAI key - **your key must have access to GPT-4 Vision. See [FAQ](#%EF%B8%8F-faqs) section for details**). Or see [Getting Started](#-getting-started) for local install instructions.
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/abiraja)
+🆕 [Try it here (paid)](https://screenshottocode.com). Or see [Getting Started](#-getting-started) for local install instructions to use with your own API keys.
