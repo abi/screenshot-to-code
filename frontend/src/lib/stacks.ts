@@ -12,7 +12,7 @@ export enum Stack {
 export const STACK_DESCRIPTIONS: {
   [key in Stack]: { components: string[]; inBeta: boolean };
 } = {
-  html_css: { components: ["HTML", "Css"], inBeta: false },
+  html_css: { components: ["HTML", "CSS"], inBeta: false },
   html_tailwind: { components: ["HTML", "Tailwind"], inBeta: false },
   react_tailwind: { components: ["React", "Tailwind"], inBeta: false },
   bootstrap: { components: ["Bootstrap"], inBeta: false },
