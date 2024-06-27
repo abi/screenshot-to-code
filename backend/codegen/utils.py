@@ -1,5 +1,7 @@
 import re
 
+import sentry_sdk
+
 
 def extract_html_content(text: str):
     # Use regex to find content within <html> tags and include the tags themselves
@@ -10,5 +12,8 @@ def extract_html_content(text: str):
         # Otherwise, we just send the previous HTML over
         print(
             "[HTML Extraction] No <html> tags found in the generated content: " + text
+        )
+        sentry_sdk.capture_exception(
+            Exception(" No <html> tags found in the generated content")
         )
         return text
