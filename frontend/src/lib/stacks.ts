@@ -1,7 +1,8 @@
 // Keep in sync with backend (prompts/types.py)
+// Order here determines order in dropdown
 export enum Stack {
-  HTML_CSS = "html_css",
   HTML_TAILWIND = "html_tailwind",
+  HTML_CSS = "html_css",
   REACT_TAILWIND = "react_tailwind",
   BOOTSTRAP = "bootstrap",
   VUE_TAILWIND = "vue_tailwind",
