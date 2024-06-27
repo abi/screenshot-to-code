@@ -26,6 +26,30 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+HTML_CSS_SYSTEM_PROMPT = """
+You are an expert CSS developer
+You take screenshots of a reference web page from the user, and then build single page apps 
+using CSS, HTML and JS.
+You might also be given a screenshot(The second image) of a web page that you have already built, and asked to
+update it to look more like the reference image(The first image).
+
+- Make sure the app looks exactly like the screenshot.
+- Pay close attention to background color, text color, font size, font family, 
+padding, margin, border, etc. Match the colors and sizes exactly.
+- Use the exact text from the screenshot.
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed to match the screenshot. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code in <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
 BOOTSTRAP_SYSTEM_PROMPT = """
 You are an expert Bootstrap developer
 You take screenshots of a reference web page from the user, and then build single page apps 
@@ -190,6 +214,22 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 """
 
+IMPORTED_CODE_HTML_CSS_SYSTEM_PROMPT = """
+You are an expert CSS developer.
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+
+In terms of libraries,
+
+- You can use Google Fonts
+- Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+
+Return only the full code in <html></html> tags.
+Do not include markdown "```" or "```html" at the start or end.
+"""
+
 IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT = """
 You are an expert React/Tailwind developer
 
@@ -315,6 +355,12 @@ def test_prompts():
     assert tailwind_prompt[0].get("content") == TAILWIND_SYSTEM_PROMPT
     assert tailwind_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
 
+    html_css_prompt = assemble_prompt(
+        "image_data_url", "html_css", "result_image_data_url"
+    )
+    assert html_css_prompt[0].get("content") == HTML_CSS_SYSTEM_PROMPT
+    assert html_css_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
+
     react_tailwind_prompt = assemble_prompt(
         "image_data_url", "react_tailwind", "result_image_data_url"
     )
@@ -353,6 +399,15 @@ def test_imported_code_prompts():
         {"role": "user", "content": "Here is the code of the app: code"},
     ]
     assert tailwind_prompt == expected_tailwind_prompt
+
+    html_css_prompt = assemble_imported_code_prompt(
+        "code", "html_css", Llm.GPT_4O_2024_05_13
+    )
+    expected_html_css_prompt = [
+        {"role": "system", "content": IMPORTED_CODE_HTML_CSS_SYSTEM_PROMPT},
+        {"role": "user", "content": "Here is the code of the app: code"},
+    ]
+    assert html_css_prompt == expected_html_css_prompt
 
     react_tailwind_prompt = assemble_imported_code_prompt(
         "code", "react_tailwind", Llm.GPT_4O_2024_05_13
