@@ -13,7 +13,8 @@ def extract_html_content(text: str):
         print(
             "[HTML Extraction] No <html> tags found in the generated content: " + text
         )
-        sentry_sdk.capture_exception(
-            Exception(" No <html> tags found in the generated content")
-        )
+        try:
+            raise Exception("No <html> tags found in the generated content")
+        except:
+            sentry_sdk.capture_exception()
         return text
