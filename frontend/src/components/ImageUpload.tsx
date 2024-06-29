@@ -69,8 +69,7 @@ function ImageUpload({ setReferenceImages }: Props) {
 
   const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
     useDropzone({
-      maxFiles: 1,
-      maxSize: 1024 * 1024 * 20, // 20 MB
+      maxSize: 1024 * 1024 * 5, // 5 MB
       accept: {
         // Image formats
         "image/png": [".png"],
