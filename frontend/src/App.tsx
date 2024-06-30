@@ -678,6 +678,7 @@ function App() {
                   code={previewCode}
                   setCode={setGeneratedCode}
                   settings={settings}
+                  showOpenInCodepenio={true}
                 />
               </TabsContent>
             </Tabs>

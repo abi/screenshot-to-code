@@ -10,9 +10,10 @@ interface Props {
   code: string;
   setCode: React.Dispatch<React.SetStateAction<string>>;
   settings: Settings;
+  showOpenInCodepenio: boolean;
 }
 
-function CodeTab({ code, setCode, settings }: Props) {
+function CodeTab({ code, setCode, settings,showOpenInCodepenio}: Props) {
   const copyCode = useCallback(() => {
     copy(code);
     toast.success("Copied to clipboard");
@@ -63,6 +64,7 @@ function CodeTab({ code, setCode, settings }: Props) {
         >
           Copy Code <FaCopy className="ml-2" />
         </span>
+        { showOpenInCodepenio!=false && (
         <Button
           onClick={doOpenInCodepenio}
           className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
@@ -74,6 +76,7 @@ function CodeTab({ code, setCode, settings }: Props) {
             className="h-4 ml-1"
           />
         </Button>
+        )}
       </div>
       <CodeMirror
         code={code}
