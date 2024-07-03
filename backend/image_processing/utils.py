@@ -4,31 +4,37 @@ import time
 from PIL import Image
 
 CLAUDE_IMAGE_MAX_SIZE = 5 * 1024 * 1024
-CLAUDE_MAX_IMAGE_DIMENSION = 7900
+CLAUDE_MAX_IMAGE_DIMENSION = 7990
 
 
 # Process image so it meets Claude requirements
 def process_image(image_data_url: str) -> tuple[str, str]:
 
+    # Extract bytes and media type from base64 data URL
     media_type = image_data_url.split(";")[0].split(":")[1]
     base64_data = image_data_url.split(",")[1]
+    image_bytes = base64.b64decode(base64_data)
 
-    # If image is already under max size, return as is
-    if len(base64_data) <= CLAUDE_IMAGE_MAX_SIZE:
+    img = Image.open(io.BytesIO(image_bytes))
+
+    # Check if image is under max dimensions and size
+    is_under_dimension_limit = (
+        img.width < CLAUDE_MAX_IMAGE_DIMENSION
+        and img.height < CLAUDE_MAX_IMAGE_DIMENSION
+    )
+    is_under_size_limit = len(base64_data) <= CLAUDE_IMAGE_MAX_SIZE
+
+    # If image is under both limits, no processing needed
+    if is_under_dimension_limit and is_under_size_limit:
         print("[CLAUDE IMAGE PROCESSING] no processing needed")
         return (media_type, base64_data)
 
     # Time image processing
     start_time = time.time()
 
-    image_bytes = base64.b64decode(base64_data)
-    img = Image.open(io.BytesIO(image_bytes))
-
     # Check if either dimension exceeds 7900px (Claude disallows >= 8000px)
-    if (
-        img.width > CLAUDE_MAX_IMAGE_DIMENSION
-        or img.height > CLAUDE_MAX_IMAGE_DIMENSION
-    ):
+    # Resize image if needed
+    if not is_under_dimension_limit:
         # Calculate the new dimensions while maintaining aspect ratio
         if img.width > img.height:
             new_width = CLAUDE_MAX_IMAGE_DIMENSION
@@ -44,6 +50,8 @@ def process_image(image_data_url: str) -> tuple[str, str]:
         )
 
     # Convert and compress as JPEG
+    # We always compress as JPEG (95% at the least) even when we resize and the original image
+    # is under the size limit.
     quality = 95
     output = io.BytesIO()
     img = img.convert("RGB")  # Ensure image is in RGB mode for JPEG conversion
