@@ -65,16 +65,16 @@ function AppContainer() {
         // loadCrispChat();
         // window.$crisp.push(["set", "user:email", [user.email]]);
 
-        // Initialize Intercom
-        Intercom({
-          app_id: "c5eiaj9m",
-          user_id: user.email,
-          name: user.first_name,
-          email: user.email,
-        });
-
         setSubscriberTier(user.subscriber_tier);
       }
+
+      // Initialize Intercom
+      Intercom({
+        app_id: "c5eiaj9m",
+        user_id: user.email,
+        name: user.first_name,
+        email: user.email,
+      });
 
       isInitRequestInProgress.current = false;
     };
