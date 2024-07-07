@@ -9,7 +9,8 @@ import AvatarDropdown from "./AvatarDropdown";
 import { UserResponse } from "./types";
 import { POSTHOG_HOST, POSTHOG_KEY, SAAS_BACKEND_URL } from "../../config";
 import LandingPage from "./LandingPage";
-import { loadCrispChat } from "../../lib/crisp";
+// import { loadCrispChat } from "../../lib/crisp";
+import Intercom from "@intercom/messenger-js-sdk";
 
 function AppContainer() {
   const { isSignedIn, isLoaded } = useUser();
@@ -61,8 +62,16 @@ function AppContainer() {
         });
 
         // Initialize Crisp Chat
-        loadCrispChat();
-        window.$crisp.push(["set", "user:email", [user.email]]);
+        // loadCrispChat();
+        // window.$crisp.push(["set", "user:email", [user.email]]);
+
+        // Initialize Intercom
+        Intercom({
+          app_id: "c5eiaj9m",
+          user_id: user.email,
+          name: user.first_name,
+          email: user.email,
+        });
 
         setSubscriberTier(user.subscriber_tier);
       }

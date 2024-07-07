@@ -919,6 +919,11 @@
   resolved "https://registry.npmjs.org/@humanwhocodes/object-schema/-/object-schema-2.0.1.tgz"
   integrity sha512-dvuCeX5fC9dXgJn9t+X5atfmgQAzUOWqS1254Gh0m6i8wKd10ebXkfNKiRK+1GWi/yTvvLDHpoxLr0xxxeslWw==
 
+"@intercom/messenger-js-sdk@^0.0.11":
+  version "0.0.11"
+  resolved "https://registry.yarnpkg.com/@intercom/messenger-js-sdk/-/messenger-js-sdk-0.0.11.tgz#ffdf37891826296d514a496e13a8d07e3d101c7e"
+  integrity sha512-jBHXO2+cGoBHYQMPaLP8eUm4AREcTWXlfd9shlBLSyEkFuW8+So/ynUDlftvWYz81KvGohRWYauw6vLRH/AlfA==
+
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz#fd3db1d59ecf7cf121e80650bb86712f9b55eced"

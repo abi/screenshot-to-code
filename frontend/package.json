@@ -15,6 +15,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^4.29.0",
     "@codemirror/lang-html": "^6.4.6",
+    "@intercom/messenger-js-sdk": "^0.0.11",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
