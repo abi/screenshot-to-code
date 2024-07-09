@@ -5,6 +5,7 @@ from typing import List
 import json
 
 from config import BACKEND_SAAS_URL, IS_PROD
+from custom_types import InputMode
 from llm import Llm
 from prompts.types import Stack
 
@@ -25,6 +26,7 @@ async def send_to_saas_backend(
     stack: Stack,
     is_imported_from_code: bool,
     includes_result_image: bool,
+    input_mode: InputMode,
     auth_token: str | None = None,
 ):
     if IS_PROD:
@@ -40,6 +42,7 @@ async def send_to_saas_backend(
                     "stack": stack,
                     "is_imported_from_code": is_imported_from_code,
                     "includes_result_image": includes_result_image,
+                    "input_mode": input_mode,
                 }
             )
 

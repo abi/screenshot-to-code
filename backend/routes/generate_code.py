@@ -393,6 +393,7 @@ async def stream_code(websocket: WebSocket):
                 stack=valid_stack,
                 is_imported_from_code=bool(params.get("isImportedFromCode", False)),
                 includes_result_image=bool(params.get("resultImage", False)),
+                input_mode=validated_input_mode,
                 auth_token=params["authToken"],
             )
         except Exception as e:
