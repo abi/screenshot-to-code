@@ -5,6 +5,7 @@ from llm import Llm
 
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
+from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
 from prompts.types import Stack
 
 
@@ -85,5 +86,24 @@ def assemble_prompt(
         {
             "role": "user",
             "content": user_content,
+        },
+    ]
+
+
+def assemble_text_prompt(
+    text_prompt: str,
+    stack: Stack,
+) -> List[ChatCompletionMessageParam]:
+
+    system_content = TEXT_SYSTEM_PROMPTS[stack]
+
+    return [
+        {
+            "role": "system",
+            "content": system_content,
+        },
+        {
+            "role": "user",
+            "content": "Generate UI for " + text_prompt,
         },
     ]
