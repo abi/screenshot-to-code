@@ -33,7 +33,7 @@ export enum ScreenRecorderState {
 
 export interface CodeGenerationParams {
   generationType: "create" | "update";
-  inputMode: "image" | "video";
+  inputMode: "image" | "video" | "text";
   image: string;
   resultImage?: string;
   history?: string[];

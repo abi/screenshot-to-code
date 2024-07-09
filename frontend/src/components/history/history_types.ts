@@ -8,7 +8,7 @@ type CommonHistoryItem = {
 export type HistoryItem =
   | ({
       type: "ai_create";
-      inputs: AiCreateInputs;
+      inputs: AiCreateInputs | AiCreateInputsText;
     } & CommonHistoryItem)
   | ({
       type: "ai_edit";
@@ -21,6 +21,10 @@ export type HistoryItem =
 
 export type AiCreateInputs = {
   image_url: string;
+};
+
+export type AiCreateInputsText = {
+  text: string;
 };
 
 export type AiEditInputs = {

@@ -17,7 +17,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
 from typing import Dict, List, Union, cast, get_args
 from image_generation import create_alt_url_mapping, generate_images
-from prompts import assemble_imported_code_prompt, assemble_prompt
+from prompts import assemble_imported_code_prompt, assemble_prompt, assemble_text_prompt
 from datetime import datetime
 import json
 from routes.logging_utils import PaymentMethod, send_to_saas_backend
@@ -230,12 +230,18 @@ async def stream_code(websocket: WebSocket):
     else:
         # Assemble the prompt
         try:
-            if params.get("resultImage") and params["resultImage"]:
-                prompt_messages = assemble_prompt(
-                    params["image"], valid_stack, params["resultImage"]
-                )
+            if validated_input_mode == "image":
+                if params.get("resultImage") and params["resultImage"]:
+                    prompt_messages = assemble_prompt(
+                        params["image"], valid_stack, params["resultImage"]
+                    )
+                else:
+                    prompt_messages = assemble_prompt(params["image"], valid_stack)
+            elif validated_input_mode == "text":
+                prompt_messages = assemble_text_prompt(params["image"], valid_stack)
             else:
-                prompt_messages = assemble_prompt(params["image"], valid_stack)
+                await throw_error("Invalid input mode")
+                return
         except:
             await websocket.send_json(
                 {
@@ -246,8 +252,8 @@ async def stream_code(websocket: WebSocket):
             await websocket.close()
             return
 
+        # Transform the history tree into message format for updates
         if params["generationType"] == "update":
-            # Transform the history tree into message format
             # TODO: Move this to frontend
             for index, text in enumerate(params["history"]):
                 if index % 2 == 0:

@@ -49,6 +49,7 @@ import TipLink from "./components/core/TipLink";
 import FeedbackCallNote from "./components/user-feedback/FeedbackCallNote";
 import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
 import { useAppStore } from "./store/app-store";
+import GenerateFromText from "./components/generate-from-text/GenerateFromText";
 
 const IS_OPENAI_DOWN = false;
 
@@ -60,7 +61,11 @@ function App({ navbarComponent }: Props) {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
   const [generatedCode, setGeneratedCode] = useState<string>("");
 
-  const [inputMode, setInputMode] = useState<"image" | "video">("image");
+  const [inputMode, setInputMode] = useState<"image" | "video" | "text">(
+    "image"
+  );
+
+  const [initialPrompt, setInitialPrompt] = useState<string>("");
 
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
@@ -177,6 +182,7 @@ function App({ navbarComponent }: Props) {
     setAppState(AppState.INITIAL);
     setGeneratedCode("");
     setReferenceImages([]);
+    setInitialPrompt("");
     setExecutionConsole([]);
     setUpdateInstruction("");
     setIsImportedFromCode(false);
@@ -207,7 +213,12 @@ function App({ navbarComponent }: Props) {
     addEvent("Regenerate");
 
     // Re-run the create
-    doCreate(referenceImages, inputMode);
+    if (inputMode === "image" || inputMode === "video") {
+      doCreate(referenceImages, inputMode);
+    } else {
+      // TODO: Fix this
+      doCreateFromText(initialPrompt);
+    }
   };
 
   const cancelCodeGeneration = () => {
@@ -258,14 +269,25 @@ function App({ navbarComponent }: Props) {
       (code) => {
         setGeneratedCode(code);
         if (params.generationType === "create") {
-          setAppHistory([
-            {
-              type: "ai_create",
-              parentIndex: null,
-              code,
-              inputs: { image_url: referenceImages[0] },
-            },
-          ]);
+          if (inputMode === "image" || inputMode === "video") {
+            setAppHistory([
+              {
+                type: "ai_create",
+                parentIndex: null,
+                code,
+                inputs: { image_url: referenceImages[0] },
+              },
+            ]);
+          } else {
+            setAppHistory([
+              {
+                type: "ai_create",
+                parentIndex: null,
+                code,
+                inputs: { text: params.image },
+              },
+            ]);
+          }
           setCurrentVersion(0);
         } else {
           setAppHistory((prev) => {
@@ -332,6 +354,22 @@ function App({ navbarComponent }: Props) {
     }
   }
 
+  function doCreateFromText(text: string) {
+    // Reset any existing state
+    reset();
+
+    setInputMode("text");
+    setInitialPrompt(text);
+    doGenerateCode(
+      {
+        generationType: "create",
+        inputMode: "text",
+        image: text,
+      },
+      currentVersion
+    );
+  }
+
   // Subsequent updates
   async function doUpdate(
     updateInstruction: string,
@@ -391,7 +429,7 @@ function App({ navbarComponent }: Props) {
         {
           generationType: "update",
           inputMode,
-          image: referenceImages[0],
+          image: inputMode === "text" ? initialPrompt : referenceImages[0],
           history: updatedHistory,
           isImportedFromCode,
         },
@@ -507,6 +545,10 @@ function App({ navbarComponent }: Props) {
 
           {showFeedbackCallNote && appState === AppState.INITIAL && (
             <FeedbackCallNote />
+          )}
+
+          {appState === AppState.INITIAL && (
+            <GenerateFromText doCreateFromText={doCreateFromText} />
           )}
 
           {(appState === AppState.CODING ||
