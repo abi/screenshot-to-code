@@ -238,6 +238,7 @@ async def stream_code(websocket: WebSocket):
                 else:
                     prompt_messages = assemble_prompt(params["image"], valid_stack)
             elif validated_input_mode == "text":
+                sentry_sdk.capture_exception(Exception("Text generation used"))
                 prompt_messages = assemble_text_prompt(params["image"], valid_stack)
             else:
                 await throw_error("Invalid input mode")
