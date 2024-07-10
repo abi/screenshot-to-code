@@ -166,7 +166,7 @@ const PricingDialog: React.FC = () => {
                     </li>
                     <li className="flex items-center">
                       <FaCheckCircle className="text-black mr-2" />
-                      Email support
+                      Chat support
                     </li>
                   </ul>
                 </div>
@@ -212,7 +212,7 @@ const PricingDialog: React.FC = () => {
                     </li>
                     <li className="flex items-center">
                       <FaCheckCircle className="text-black mr-2" />
-                      Email support
+                      Chat support
                     </li>
                   </ul>
                 </div>
