@@ -17,6 +17,7 @@ import { SAAS_BACKEND_URL } from "../../config";
 import { CreditsUsage } from "./types";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { showNewMessage } from "@intercom/messenger-js-sdk";
 import { URLS } from "../../urls";
 
 export default function AvatarDropdown() {
@@ -115,9 +116,7 @@ export default function AvatarDropdown() {
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild={true}>
-                <a href="mailto:support@picoapps.xyz" target="_blank">
-                  Email support
-                </a>
+                <a onClick={() => showNewMessage("")}>Contact support</a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild={true}>
                 <StripeCustomerPortalLink label="Manage billing" />
