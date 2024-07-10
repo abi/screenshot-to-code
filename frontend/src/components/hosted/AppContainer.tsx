@@ -69,6 +69,7 @@ function AppContainer() {
         user_id: user.email,
         name: user.first_name,
         email: user.email,
+        "Subscriber Tier": user.subscriber_tier || "free",
       });
 
       isInitRequestInProgress.current = false;
