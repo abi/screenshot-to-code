@@ -12,7 +12,6 @@ import {
   FaMobile,
   FaUndo,
 } from "react-icons/fa";
-
 import { Switch } from "./components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +41,7 @@ import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import TipLink from "./components/core/TipLink";
 import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
 import { useAppStore } from "./store/app-store";
+import KeyBadge from "./components/core/KeyBadge";
 
 const IS_OPENAI_DOWN = false;
 
@@ -534,7 +534,7 @@ function App() {
                       onClick={() => doUpdate(updateInstruction)}
                       className="dark:text-white dark:bg-gray-700 update-btn"
                     >
-                      Update
+                      Update <KeyBadge letter="enter" />
                     </Button>
                   </div>
                   <div className="flex items-center justify-end gap-x-2 mt-2">
