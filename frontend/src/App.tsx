@@ -56,6 +56,8 @@ function App() {
   const [updateInstruction, setUpdateInstruction] = useState("");
   const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const { disableInSelectAndEditMode } = useAppStore();
 
   // Settings
@@ -403,6 +405,13 @@ function App() {
     setAppState(AppState.CODE_READY);
   }
 
+  // When coding is complete, focus on the update instruction textarea
+  useEffect(() => {
+    if (appState === AppState.CODE_READY && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [appState]);
+
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
@@ -501,8 +510,14 @@ function App() {
                 <div>
                   <div className="grid w-full gap-2">
                     <Textarea
+                      ref={textareaRef}
                       placeholder="Tell the AI what to change..."
                       onChange={(e) => setUpdateInstruction(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          doUpdate(updateInstruction);
+                        }
+                      }}
                       value={updateInstruction}
                     />
                     <div className="flex justify-between items-center gap-x-2">
