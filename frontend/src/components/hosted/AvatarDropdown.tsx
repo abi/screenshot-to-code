@@ -68,7 +68,7 @@ export default function AvatarDropdown() {
     <>
       <DropdownMenu open={isOpen} onOpenChange={open}>
         <DropdownMenuTrigger asChild>
-          <div className="flex items-end space-x-2 cursor-pointer">
+          <div className="flex items-center space-x-2 cursor-pointer">
             <span className="text-sm">Your account</span>
             <Avatar className="w-8 h-8">
               <AvatarImage src={user?.imageUrl} alt="Profile image" />
