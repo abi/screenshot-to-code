@@ -11,7 +11,6 @@ import {
 } from "../lib/models";
 import { Badge } from "./ui/badge";
 import { IS_RUNNING_ON_CLOUD } from "../config";
-import { useStore } from "../store/store";
 
 interface Props {
   codeGenerationModel: CodeGenerationModel;
@@ -24,8 +23,6 @@ function ModelSettingsSection({
   setCodeGenerationModel,
   shouldDisableUpdates = false,
 }: Props) {
-  const subscriberTier = useStore((state) => state.subscriberTier);
-
   return (
     <div className="flex flex-col gap-y-2 justify-between text-sm">
       <div className="grid grid-cols-3 items-center gap-4">
@@ -58,11 +55,6 @@ function ModelSettingsSection({
                           </Badge>
                         )}
                     </div>
-                    {IS_RUNNING_ON_CLOUD &&
-                      subscriberTier === "free" &&
-                      CODE_GENERATION_MODEL_DESCRIPTIONS[model].isPaid && (
-                        <Badge variant="default">Upgrade to Paid</Badge>
-                      )}
                   </div>
                 </SelectItem>
               ))}

@@ -13,28 +13,23 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   [key in CodeGenerationModel]: {
     name: string;
     inBeta: boolean;
-    isPaid: boolean;
   };
 } = {
-  "gpt-4o-2024-05-13": { name: "GPT-4o", inBeta: false, isPaid: false },
+  "gpt-4o-2024-05-13": { name: "GPT-4o", inBeta: false },
   "claude-3-5-sonnet-20240620": {
     name: "Claude 3.5 Sonnet",
     inBeta: false,
-    isPaid: false,
   },
   "gpt-4-turbo-2024-04-09": {
     name: "GPT-4 Turbo (deprecated)",
     inBeta: false,
-    isPaid: false,
   },
   gpt_4_vision: {
     name: "GPT-4 Vision (deprecated)",
     inBeta: false,
-    isPaid: false,
   },
   claude_3_sonnet: {
     name: "Claude 3 (deprecated)",
     inBeta: false,
-    isPaid: false,
   },
 };
