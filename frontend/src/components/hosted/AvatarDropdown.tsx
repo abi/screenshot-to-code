@@ -68,7 +68,7 @@ export default function AvatarDropdown() {
     <>
       <DropdownMenu open={isOpen} onOpenChange={open}>
         <DropdownMenuTrigger asChild>
-          <div className="flex items-center space-x-2 cursor-pointer">
+          <div className="flex items-end space-x-2 cursor-pointer">
             <span className="text-sm">Your account</span>
             <Avatar className="w-8 h-8">
               <AvatarImage src={user?.imageUrl} alt="Profile image" />
@@ -118,9 +118,19 @@ export default function AvatarDropdown() {
                   Tips for better results
                 </a>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild={true}>
                 <a onClick={() => showNewMessage("")}>Contact support</a>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild={true}>
+                <a
+                  href="https://screenshot-to-code.canny.io/feature-requests"
+                  target="_blank"
+                >
+                  Feature requests
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild={true}>
                 <StripeCustomerPortalLink label="Manage billing" />
               </DropdownMenuItem>
