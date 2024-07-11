@@ -28,7 +28,7 @@ export default function AvatarDropdown() {
 
   const subscriberTier = useStore((state) => state.subscriberTier);
   const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
-  const isFreeUser = subscriberTier === "free";
+  const isFreeUser = subscriberTier === "free" || !subscriberTier;
 
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useClerk();
