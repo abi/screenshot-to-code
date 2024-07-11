@@ -94,6 +94,19 @@ async def stream_code(websocket: WebSocket):
     except:
         await throw_error(f"Invalid model: {code_generation_model_str}")
         raise Exception(f"Invalid model: {code_generation_model_str}")
+
+    # Auto-upgrade usage of older models
+    if code_generation_model in {Llm.GPT_4_VISION, Llm.GPT_4_TURBO_2024_04_09}:
+        print(
+            f"Initial deprecated model: {code_generation_model}. Auto-updating code generation model to GPT-4O-2024-05-13"
+        )
+        code_generation_model = Llm.GPT_4O_2024_05_13
+    elif code_generation_model == Llm.CLAUDE_3_SONNET:
+        print(
+            f"Initial deprecated model: {code_generation_model}. Auto-updating code generation model to CLAUDE-3.5-SONNET-2024-06-20"
+        )
+        code_generation_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+
     exact_llm_version = None
 
     print(
