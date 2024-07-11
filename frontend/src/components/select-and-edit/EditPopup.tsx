@@ -3,7 +3,7 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { addHighlight, getAdjustedCoordinates, removeHighlight } from "./utils";
 import { useAppStore } from "../../store/app-store";
-import KeyBadge from "../core/KeyBadge";
+import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
 
 interface EditPopupProps {
   event: MouseEvent | null;
@@ -140,7 +140,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
           className="dark:bg-gray-700 dark:text-white"
           onClick={() => onUpdate(updateText)}
         >
-          Update <KeyBadge letter="enter" />
+          Update <KeyboardShortcutBadge letter="enter" />
         </Button>
       </div>
     </div>

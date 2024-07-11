@@ -1,11 +1,13 @@
 import React from "react";
 import { BsArrowReturnLeft } from "react-icons/bs";
 
-interface KeyBadgeProps {
+interface KeyboardShortcutBadgeProps {
   letter: string;
 }
 
-const KeyBadge: React.FC<KeyBadgeProps> = ({ letter }) => {
+const KeyboardShortcutBadge: React.FC<KeyboardShortcutBadgeProps> = ({
+  letter,
+}) => {
   const icon =
     letter.toLowerCase() === "enter" || letter.toLowerCase() === "return" ? (
       <BsArrowReturnLeft />
@@ -20,4 +22,4 @@ const KeyBadge: React.FC<KeyBadgeProps> = ({ letter }) => {
   );
 };
 
-export default KeyBadge;
+export default KeyboardShortcutBadge;
