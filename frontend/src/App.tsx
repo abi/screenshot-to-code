@@ -533,8 +533,8 @@ function App({ navbarComponent }: Props) {
           {showBetterModelMessage && (
             <div className="rounded-lg p-2 bg-fuchsia-200">
               <p className="text-gray-800 text-sm">
-                Now supporting GPT-4o and Claude Sonnet 3.5. Higher quality and
-                2x faster. Give it a try!
+                We no longer support this model. Instead, code generation will
+                use GPT-4o or Claude Sonnet 3.5, the 2 state-of-the-art models.
               </p>
             </div>
           )}
