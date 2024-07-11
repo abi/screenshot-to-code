@@ -118,7 +118,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
 
   return (
     <div
-      className="absolute bg-white p-4 border border-gray-300 rounded shadow-lg w-60"
+      className="absolute bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-600 rounded shadow-lg w-60"
       style={{ top: popupPosition.y, left: popupPosition.x }}
     >
       <Textarea
@@ -126,6 +126,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
         value={updateText}
         onChange={(e) => setUpdateText(e.target.value)}
         placeholder="Tell the AI what to change about this element..."
+        className="dark:bg-gray-700 dark:text-white"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -134,7 +135,12 @@ const EditPopup: React.FC<EditPopupProps> = ({
         }}
       />
       <div className="flex justify-end mt-2">
-        <Button onClick={() => onUpdate(updateText)}>Update</Button>
+        <Button
+          className="dark:bg-gray-700 dark:text-white"
+          onClick={() => onUpdate(updateText)}
+        >
+          Update
+        </Button>
       </div>
     </div>
   );
