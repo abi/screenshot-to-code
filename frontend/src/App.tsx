@@ -50,6 +50,7 @@ import FeedbackCallNote from "./components/user-feedback/FeedbackCallNote";
 import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
 import { useAppStore } from "./store/app-store";
 import GenerateFromText from "./components/generate-from-text/GenerateFromText";
+import KeyboardShortcutBadge from "./components/core/KeyboardShortcutBadge";
 
 const IS_OPENAI_DOWN = false;
 
@@ -76,6 +77,8 @@ function App({ navbarComponent }: Props) {
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
   const subscriberTier = useStore((state) => state.subscriberTier);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { disableInSelectAndEditMode } = useAppStore();
 
@@ -481,6 +484,13 @@ function App({ navbarComponent }: Props) {
     setAppState(AppState.CODE_READY);
   }
 
+  // When coding is complete, focus on the update instruction textarea
+  useEffect(() => {
+    if (appState === AppState.CODE_READY && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [appState]);
+
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
@@ -590,8 +600,14 @@ function App({ navbarComponent }: Props) {
                 <div>
                   <div className="grid w-full gap-2">
                     <Textarea
+                      ref={textareaRef}
                       placeholder="Tell the AI what to change..."
                       onChange={(e) => setUpdateInstruction(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          doUpdate(updateInstruction);
+                        }
+                      }}
                       value={updateInstruction}
                     />
                     <div className="flex justify-between items-center gap-x-2">
@@ -608,7 +624,7 @@ function App({ navbarComponent }: Props) {
                       onClick={() => doUpdate(updateInstruction)}
                       className="dark:text-white dark:bg-gray-700 update-btn plausible-event-name=Edit update-btn"
                     >
-                      Update
+                      Update <KeyboardShortcutBadge letter="enter" />
                     </Button>
                   </div>
                   <div className="flex items-center justify-end gap-x-2 mt-2">
