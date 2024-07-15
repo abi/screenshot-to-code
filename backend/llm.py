@@ -4,6 +4,7 @@ from typing import Any, Awaitable, Callable, List, cast
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
+import sentry_sdk
 from config import IS_DEBUG_ENABLED
 from debug.DebugFileWriter import DebugFileWriter
 from image_processing.utils import process_image
@@ -63,6 +64,22 @@ async def stream_openai_response(
     full_response = ""
     async for chunk in stream:  # type: ignore
         assert isinstance(chunk, ChatCompletionChunk)
+
+        # Log finish reason for OpenAI but don't halt streaming if it fails
+        try:
+            # Print finish reason if it exists
+            if (
+                chunk.choices
+                and len(chunk.choices) > 0
+                and chunk.choices[0].finish_reason
+            ):
+                finish_reason = chunk.choices[0].finish_reason
+                print("[STOP REASON] OpenAI " + finish_reason)
+                if finish_reason == "length":
+                    sentry_sdk.capture_exception(Exception("OpenAI response too long"))
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+
         if (
             chunk.choices
             and len(chunk.choices) > 0
