@@ -151,7 +151,11 @@ async def stream_claude_response(
 
     # Return final message
     response = await stream.get_final_message()
+
+    # Log stop reason
     print("[STOP REASON] " + str(response.stop_reason))
+    if response.stop_reason == "max_tokens":
+        sentry_sdk.capture_exception(Exception("Claude response too long"))
 
     # Close the Anthropic client
     await client.close()
