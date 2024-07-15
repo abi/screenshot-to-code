@@ -133,6 +133,7 @@ async def stream_claude_response(
 
     # Return final message
     response = await stream.get_final_message()
+    print("[STOP REASON] " + str(response.stop_reason))
 
     # Close the Anthropic client
     await client.close()
