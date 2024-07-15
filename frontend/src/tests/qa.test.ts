@@ -16,14 +16,16 @@ describe("e2e tests", () => {
   let browser: Browser;
   let page: Page;
 
-  const DEBUG = false;
+  const DEBUG = true;
   const IS_HEADLESS = true;
 
   const stacks = Object.values(Stack).slice(0, DEBUG ? 1 : undefined);
-  const models = Object.values(CodeGenerationModel).slice(
-    0,
-    DEBUG ? 1 : undefined
-  );
+  const models = DEBUG
+    ? [
+        CodeGenerationModel.GPT_4O_2024_05_13,
+        CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20,
+      ]
+    : Object.values(CodeGenerationModel);
 
   beforeAll(async () => {
     browser = await puppeteer.launch({ headless: IS_HEADLESS });
