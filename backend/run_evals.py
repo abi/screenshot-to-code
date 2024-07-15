@@ -13,8 +13,8 @@ from evals.config import EVALS_DIR
 from evals.core import generate_code_core
 from evals.utils import image_to_data_url
 
-STACK = "ionic_tailwind"
-MODEL = Llm.GPT_4O_2024_05_13
+STACK = "html_tailwind"
+MODEL = Llm.CLAUDE_3_5_SONNET_2024_06_20
 N = 1  # Number of outputs to generate
 
 

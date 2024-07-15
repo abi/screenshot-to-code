@@ -88,7 +88,7 @@ async def stream_claude_response(
     client = AsyncAnthropic(api_key=api_key)
 
     # Base parameters
-    max_tokens = 4096
+    max_tokens = 8192
     temperature = 0.0
 
     # Translate OpenAI messages to Claude messages
@@ -126,6 +126,7 @@ async def stream_claude_response(
         temperature=temperature,
         system=system_prompt,
         messages=claude_messages,  # type: ignore
+        extra_headers={"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"},
     ) as stream:
         async for text in stream.text_stream:
             await callback(text)
