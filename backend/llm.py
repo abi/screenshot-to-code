@@ -1,4 +1,3 @@
-import base64
 from enum import Enum
 from typing import Any, Awaitable, Callable, List, cast
 from anthropic import AsyncAnthropic
@@ -76,7 +75,10 @@ async def stream_openai_response(
                 finish_reason = chunk.choices[0].finish_reason
                 print("[STOP REASON] OpenAI " + finish_reason)
                 if finish_reason == "length":
-                    sentry_sdk.capture_exception(Exception("OpenAI response too long"))
+                    try:
+                        raise Exception("OpenAI response too long")
+                    except Exception as e:
+                        sentry_sdk.capture_exception()
         except Exception as e:
             sentry_sdk.capture_exception(e)
 
@@ -155,7 +157,10 @@ async def stream_claude_response(
     # Log stop reason
     print("[STOP REASON] " + str(response.stop_reason))
     if response.stop_reason == "max_tokens":
-        sentry_sdk.capture_exception(Exception("Claude response too long"))
+        try:
+            raise Exception("Claude response too long")
+        except Exception:
+            sentry_sdk.capture_exception()
 
     # Close the Anthropic client
     await client.close()
