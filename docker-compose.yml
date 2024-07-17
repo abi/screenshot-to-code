@@ -1,7 +1,7 @@
-version: '3.9'
-
+ 
 services:
   backend:
+
     build: 
       context: ./backend
       dockerfile: Dockerfile
@@ -17,7 +17,9 @@ services:
     ports:
       - "${BACKEND_PORT:-7001}:${BACKEND_PORT:-7001}"
 
-    command: poetry run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT:-7001}
+    command: poetry run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT:-7001} --workers 2
+
+    restart: always
   
   frontend:
     build:
@@ -25,3 +27,17 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
+
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:5173" 
+    network_mode: host
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf  # 挂载自定义的nginx配置文件
