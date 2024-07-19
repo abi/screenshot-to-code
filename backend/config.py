@@ -3,6 +3,7 @@
 # TODO: Should only be set to true when value is 'True', not any abitrary truthy value
 import os
 
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 
 # Debugging-related
