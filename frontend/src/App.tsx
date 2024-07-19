@@ -89,11 +89,6 @@ function App() {
 
   const wsRef = useRef<WebSocket>(null);
 
-  const showReactWarning =
-    selectedCodeGenerationModel ===
-      CodeGenerationModel.GPT_4_TURBO_2024_04_09 &&
-    settings.generatedCodeConfig === Stack.REACT_TAILWIND;
-
   const showBetterModelMessage =
     selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
     selectedCodeGenerationModel !==
@@ -442,13 +437,6 @@ function App() {
             }
           />
 
-          {showReactWarning && (
-            <div className="text-sm bg-yellow-200 rounded p-2">
-              Sorry - React is not currently working with GPT-4 Turbo. Please
-              use GPT-4 Vision or Claude Sonnet. We are working on a fix.
-            </div>
-          )}
-
           {showBetterModelMessage && (
             <div className="rounded-lg p-2 bg-fuchsia-200">
               <p className="text-gray-800 text-sm">
@@ -578,7 +566,7 @@ function App() {
                     </div>
                   </div>
                 )}
-                <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
+                <div className="bg-gray-400 px-4 py-2 rounded text-sm">
                   <h2 className="text-lg mb-4 border-b border-gray-800">
                     Console
                   </h2>
