@@ -615,6 +615,7 @@ function App() {
         )}
 
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
+          // Right side preview and code
           <div className="ml-4">
             <Tabs defaultValue="desktop">
               <div className="flex justify-between mr-8 mb-4">
