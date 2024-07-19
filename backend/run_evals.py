@@ -10,12 +10,12 @@ from typing import Any, Coroutine
 import asyncio
 
 from evals.config import EVALS_DIR
-from evals.core import generate_code_core
+from evals.core import generate_code_for_image
 from evals.utils import image_to_data_url
 
 STACK = "html_tailwind"
-MODEL = Llm.CLAUDE_3_5_SONNET_2024_06_20
-N = 1  # Number of outputs to generate
+# MODEL = Llm.CLAUDE_3_5_SONNET_2024_06_20
+N = 2  # Number of outputs to generate
 
 
 async def main():
@@ -29,9 +29,20 @@ async def main():
     for filename in evals:
         filepath = os.path.join(INPUT_DIR, filename)
         data_url = await image_to_data_url(filepath)
-        for _ in range(N):  # Generate N tasks for each input
-            task = generate_code_core(image_url=data_url, stack=STACK, model=MODEL)
+        for n in range(N):  # Generate N tasks for each input
+            if n == 0:
+                task = generate_code_for_image(
+                    image_url=data_url,
+                    stack=STACK,
+                    model=Llm.CLAUDE_3_5_SONNET_2024_06_20,
+                )
+            else:
+                task = generate_code_for_image(
+                    image_url=data_url, stack=STACK, model=Llm.GPT_4O_2024_05_13
+                )
             tasks.append(task)
+
+    print(f"Generating {len(tasks)} codes")
 
     results = await asyncio.gather(*tasks)
 
