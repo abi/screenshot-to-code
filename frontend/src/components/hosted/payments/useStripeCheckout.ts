@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { SAAS_BACKEND_URL, STRIPE_PUBLISHABLE_KEY } from "../../config";
-import { addEvent } from "../../lib/analytics";
+import { SAAS_BACKEND_URL, STRIPE_PUBLISHABLE_KEY } from "../../../config";
+import { addEvent } from "../../../lib/analytics";
 import { Stripe, loadStripe } from "@stripe/stripe-js";
-import { useAuthenticatedFetch } from "../hosted/useAuthenticatedFetch";
+import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
 
 interface CreateCheckoutSessionResponse {
   sessionId: string;

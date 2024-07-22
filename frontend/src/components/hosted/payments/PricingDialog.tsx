@@ -6,12 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
+} from "../../ui/dialog";
 import { FaCheckCircle } from "react-icons/fa";
-import Spinner from "../custom-ui/Spinner";
+import Spinner from "../../custom-ui/Spinner";
 import useStripeCheckout from "./useStripeCheckout";
-import { Button } from "../ui/button";
-import { useStore } from "../../store/store";
+import { Button } from "../../ui/button";
+import { useStore } from "../../../store/store";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 

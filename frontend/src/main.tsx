@@ -7,6 +7,7 @@ import EvalsPage from "./components/evals/EvalsPage.tsx";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { CLERK_PUBLISHABLE_KEY } from "./config.ts";
 import "./index.css";
+import PricingPage from "./components/hosted/PricingPage.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route path="/" element={<AppContainer />} />
           <Route path="/evals" element={<EvalsPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
         </Routes>
       </Router>
       <Toaster
