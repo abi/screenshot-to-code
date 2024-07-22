@@ -16,6 +16,21 @@
     <!-- Injected code for hosted version -->
     <%- injectHead %>
 
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=AW-16649848443"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "AW-16649848443");
+    </script>
+
     <title>Screenshot to Code</title>
 
     <!-- Open Graph Meta Tags -->
