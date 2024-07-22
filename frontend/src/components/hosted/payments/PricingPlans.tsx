@@ -4,7 +4,11 @@ import React from "react";
 import { Button } from "../../ui/button";
 import useStripeCheckout from "./useStripeCheckout";
 
-function PricingPlans() {
+interface PricingPlansProps {
+  shouldShowFAQLink?: boolean;
+}
+
+function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
   const { checkout, isLoadingCheckout } = useStripeCheckout();
   const [paymentInterval, setPaymentInterval] = React.useState<
     "monthly" | "yearly"
@@ -113,10 +117,18 @@ function PricingPlans() {
       </div>
       <p className="text-center text-xs text-gray-600 mt-1">
         1 credit = 1 code generation. Cancel subscription at any time. <br />{" "}
-        <a href="/pricing" target="_blank" className="text-blue-900 underline">
-          See FAQs if you have additional questions
-        </a>{" "}
-        or contact support.
+        {shouldShowFAQLink && (
+          <>
+            <a
+              href="/pricing"
+              target="_blank"
+              className="text-blue-900 underline"
+            >
+              See FAQs if you have additional questions
+            </a>{" "}
+            or contact support.
+          </>
+        )}
       </p>
     </>
   );
