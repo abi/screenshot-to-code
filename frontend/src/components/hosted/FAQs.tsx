@@ -8,7 +8,7 @@ function FAQs() {
     {
       question: "When do credits reset?",
       answer:
-        "Your credits reset at the beginning of each month and do not roll over. Every 1st of the month, you will receive a fresh batch of credits.",
+        "Your credits reset at the beginning of each month and do not roll over. Every month, on the 1st, you will receive a fresh batch of credits.",
     },
     {
       question: "Can I cancel my plan?",
@@ -28,9 +28,11 @@ function FAQs() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto mb-16">
-      <h2 className="text-3xl font-bold mb-8">Frequently Asked Questions</h2>
-      <div className="space-y-6">
+    <div className="max-w-5xl mx-auto mb-16">
+      <h2 className="text-3xl font-bold mb-8 text-center">
+        Frequently Asked Questions
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {faqs.map((faq, index) => (
           <div key={index} className="border-b border-gray-200 pb-6">
             <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
