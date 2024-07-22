@@ -61,7 +61,7 @@ function PricingPlans() {
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
-                All AI models
+                Full access to all supported AI models
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
@@ -101,7 +101,7 @@ function PricingPlans() {
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
-                All AI models
+                Full access to all supported AI models
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />

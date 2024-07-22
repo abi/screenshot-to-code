@@ -29,10 +29,10 @@ const PricingDialog: React.FC = () => {
           get 100 code generations for $15
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="mb-2 text-2xl text-center">
-            Save Hours of Development Time
+          <DialogTitle className="text-3xl text-center">
+            Ship Code Faster
           </DialogTitle>
         </DialogHeader>
 
