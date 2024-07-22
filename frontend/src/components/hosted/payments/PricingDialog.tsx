@@ -38,11 +38,6 @@ const PricingDialog: React.FC = () => {
 
         <PricingPlans />
 
-        <p className="text-center text-xs text-gray-600 mt-1">
-          1 credit = 1 code generation. <br />
-          Cancel subscription at any time.
-        </p>
-
         <DialogFooter></DialogFooter>
 
         {/* Logos */}

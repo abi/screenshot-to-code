@@ -61,11 +61,7 @@ function PricingPlans() {
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
-                OpenAI models
-              </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
-                Claude models
+                All AI models
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
@@ -105,11 +101,7 @@ function PricingPlans() {
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
-                OpenAI models
-              </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
-                Claude models
+                All AI models
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
@@ -119,6 +111,11 @@ function PricingPlans() {
           </div>
         </div>
       </div>
+
+      <p className="text-center text-xs text-gray-600 mt-1">
+        1 credit = 1 code generation. <br />
+        Cancel subscription at any time.
+      </p>
     </>
   );
 }

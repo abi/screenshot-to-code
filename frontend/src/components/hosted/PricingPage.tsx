@@ -9,6 +9,9 @@ const PricingPage: React.FC = () => {
 
       <PricingPlans />
 
+      {/* Spacer */}
+      <div className="text-center mt-8"></div>
+
       <Footer />
     </div>
   );
