@@ -6,7 +6,7 @@ function FAQs() {
         "Each creation, whether from a screenshot or text, consumes 1 credit. Every additional edit also consumes 1 credit. If you run out of credits, you can easily upgrade your plan to obtain more.",
     },
     {
-      question: "When do credits reset? Do unused credits roll over?",
+      question: "When do credits reset?",
       answer:
         "Your credits reset at the beginning of each month and do not roll over. Every 1st of the month, you will receive a fresh batch of credits.",
     },
