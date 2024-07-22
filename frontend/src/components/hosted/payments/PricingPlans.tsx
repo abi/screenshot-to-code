@@ -111,10 +111,12 @@ function PricingPlans() {
           </div>
         </div>
       </div>
-
       <p className="text-center text-xs text-gray-600 mt-1">
-        1 credit = 1 code generation. <br />
-        Cancel subscription at any time.
+        1 credit = 1 code generation. Cancel subscription at any time. <br />{" "}
+        <a href="/pricing" target="_blank" className="text-blue-900 underline">
+          See FAQs if you have additional questions
+        </a>{" "}
+        or contact support.
       </p>
     </>
   );
