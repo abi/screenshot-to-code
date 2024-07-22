@@ -34,6 +34,8 @@ export default function AvatarDropdown() {
   const { signOut } = useClerk();
   const authenticatedFetch = useAuthenticatedFetch();
 
+  const openPricingDialog = () => setPricingDialogOpen(true);
+
   async function open(isOpen: boolean) {
     setIsOpen(isOpen);
 
@@ -80,13 +82,13 @@ export default function AvatarDropdown() {
           {/* Free users */}
           {isFreeUser && (
             <DropdownMenuItem asChild={true}>
-              <a onClick={() => setPricingDialogOpen(true)}>Get pro</a>
+              <a onClick={openPricingDialog}>Get pro</a>
             </DropdownMenuItem>
           )}
           {/* Paying user */}
           {!isFreeUser && (
             <>
-              <DropdownMenuLabel>
+              <DropdownMenuLabel onClick={openPricingDialog}>
                 {capitalize(subscriberTier) + " Subscriber"}
               </DropdownMenuLabel>
 
@@ -100,10 +102,13 @@ export default function AvatarDropdown() {
               {/* Credits usage */}
               {!isLoadingUsage && (
                 <>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={openPricingDialog}>
                     <Progress value={(usedCredits / totalCredits) * 100} />
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-xs text-gray-700">
+                  <DropdownMenuItem
+                    className="text-xs text-gray-700"
+                    onClick={openPricingDialog}
+                  >
                     {usedCredits} out of {totalCredits} credits used for{" "}
                     {new Date().toLocaleString("default", { month: "long" })}.
                     {subscriberTier !== "pro" && (
