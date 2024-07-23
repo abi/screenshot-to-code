@@ -65,7 +65,11 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
-                Full access to all supported AI models
+                All supported AI models
+              </li>
+              <li className="flex items-center">
+                <FaCheckCircle className="text-black mr-2" />
+                Full code access
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
@@ -105,7 +109,11 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
-                Full access to all supported AI models
+                All supported AI models
+              </li>
+              <li className="flex items-center">
+                <FaCheckCircle className="text-black mr-2" />
+                Full code access
               </li>
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
@@ -124,7 +132,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
               target="_blank"
               className="text-blue-900 underline"
             >
-              See FAQs if you have additional questions
+              For more information, visit our FAQs
             </a>{" "}
             or contact support.
           </>
