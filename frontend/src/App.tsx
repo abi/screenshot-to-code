@@ -158,7 +158,10 @@ function App() {
     params: CodeGenerationParams,
     parentVersion: number | null
   ) {
+    // Reset the execution console
     setExecutionConsole([]);
+
+    // Set the app state
     setAppState(AppState.CODING);
 
     // Merge settings with params
@@ -201,7 +204,7 @@ function App() {
                 inputs: {
                   prompt: params.history
                     ? params.history[params.history.length - 1]
-                    : "",
+                    : "", // History should never be empty when performing an edit
                 },
               },
             ];
