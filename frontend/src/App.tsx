@@ -593,18 +593,6 @@ function App() {
           )}
           {
             <HistoryDisplay
-              history={appHistory}
-              currentVersion={currentVersion}
-              revertToVersion={(index) => {
-                if (
-                  index < 0 ||
-                  index >= appHistory.length ||
-                  !appHistory[index]
-                )
-                  return;
-                setCurrentVersion(index);
-                setGeneratedCode(appHistory[index].code);
-              }}
               shouldDisableReverts={appState === AppState.CODING}
             />
           }
