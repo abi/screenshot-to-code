@@ -13,6 +13,7 @@ import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
+import { downloadCode } from "./download";
 
 interface Props {
   doUpdate: (instruction: string) => void;
@@ -21,23 +22,6 @@ interface Props {
 }
 
 function Preview({ doUpdate, reset, settings }: Props) {
-  const downloadCode = (code: string) => {
-    // Create a blob from the generated code
-    const blob = new Blob([code], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-
-    // Create an anchor element and set properties for download
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "index.html"; // Set the file name for download
-    document.body.appendChild(a); // Append to the document
-    a.click(); // Programmatically click the anchor to trigger download
-
-    // Clean up by removing the anchor and revoking the Blob URL
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const { appState } = useAppStore();
   const { inputMode, generatedCode, setGeneratedCode } = useProjectStore();
 
