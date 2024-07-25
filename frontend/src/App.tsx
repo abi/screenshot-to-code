@@ -42,17 +42,24 @@ import TipLink from "./components/core/TipLink";
 import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
 import { useAppStore } from "./store/app-store";
 import KeyboardShortcutBadge from "./components/core/KeyboardShortcutBadge";
+import { useProjectStore } from "./store/project-store";
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
-  const [generatedCode, setGeneratedCode] = useState<string>("");
 
-  const [inputMode, setInputMode] = useState<"image" | "video">("image");
+  const {
+    inputMode,
+    setInputMode,
+    isImportedFromCode,
+    setIsImportedFromCode,
+    referenceImages,
+    setReferenceImages,
+    generatedCode,
+    setGeneratedCode,
+  } = useProjectStore();
 
-  const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
   const [updateInstruction, setUpdateInstruction] = useState("");
-  const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
