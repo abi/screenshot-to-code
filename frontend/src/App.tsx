@@ -1,21 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import ImageUpload from "./components/ImageUpload";
-import CodePreview from "./components/CodePreview";
-import Preview from "./components/Preview";
 import { generateCode } from "./generateCode";
-import Spinner from "./components/Spinner";
-import classNames from "classnames";
-import {
-  FaCode,
-  FaDesktop,
-  FaDownload,
-  FaMobile,
-  FaUndo,
-} from "react-icons/fa";
-import { Switch } from "./components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import SettingsDialog from "./components/SettingsDialog";
 import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
@@ -26,7 +11,6 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
-import CodeTab from "./components/CodeTab";
 import OutputSettingsSection from "./components/OutputSettingsSection";
 import { History } from "./components/history/history_types";
 import HistoryDisplay from "./components/history/HistoryDisplay";
@@ -36,17 +20,14 @@ import ImportCodeSection from "./components/ImportCodeSection";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
 import ModelSettingsSection from "./components/ModelSettingsSection";
-import { extractHtml } from "./components/preview/extractHtml";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import TipLink from "./components/core/TipLink";
-import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
 import { useAppStore } from "./store/app-store";
-import KeyboardShortcutBadge from "./components/core/KeyboardShortcutBadge";
 import { useProjectStore } from "./store/project-store";
+import Sidebar from "./components/sidebar/Sidebar";
+import Preview from "./components/preview/Preview";
 
 function App() {
-  const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
-
   const {
     // Inputs
     inputMode,
@@ -57,20 +38,22 @@ function App() {
     setReferenceImages,
 
     // Outputs
-    generatedCode,
     setGeneratedCode,
+    setExecutionConsole,
     currentVersion,
     setCurrentVersion,
     appHistory,
     setAppHistory,
   } = useProjectStore();
 
-  const [executionConsole, setExecutionConsole] = useState<string[]>([]);
-  const [updateInstruction, setUpdateInstruction] = useState("");
-
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const { disableInSelectAndEditMode } = useAppStore();
+  const {
+    disableInSelectAndEditMode,
+    setUpdateInstruction,
+    appState,
+    setAppState,
+    shouldIncludeResultImage,
+    setShouldIncludeResultImage,
+  } = useAppStore();
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -92,9 +75,6 @@ function App() {
   // Code generation model from local storage or the default value
   const selectedCodeGenerationModel =
     settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
-
-  const [shouldIncludeResultImage, setShouldIncludeResultImage] =
-    useState<boolean>(false);
 
   const wsRef = useRef<WebSocket>(null);
 
@@ -139,23 +119,6 @@ function App() {
     return png;
   };
 
-  const downloadCode = () => {
-    // Create a blob from the generated code
-    const blob = new Blob([generatedCode], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-
-    // Create an anchor element and set properties for download
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "index.html"; // Set the file name for download
-    document.body.appendChild(a); // Append to the document
-    a.click(); // Programmatically click the anchor to trigger download
-
-    // Clean up by removing the anchor and revoking the Blob URL
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const reset = () => {
     setAppState(AppState.INITIAL);
     setGeneratedCode("");
@@ -193,11 +156,6 @@ function App() {
     // make sure stop can correct the state even if the websocket is already closed
     cancelCodeGenerationAndReset();
   };
-
-  const previewCode =
-    inputMode === "video" && appState === AppState.CODING
-      ? extractHtml(generatedCode)
-      : generatedCode;
 
   const cancelCodeGenerationAndReset = () => {
     // When this is the first version, reset the entire app state
@@ -257,7 +215,7 @@ function App() {
                 inputs: {
                   prompt: params.history
                     ? params.history[params.history.length - 1]
-                    : updateInstruction,
+                    : "",
                 },
               },
             ];
@@ -407,13 +365,6 @@ function App() {
     setAppState(AppState.CODE_READY);
   }
 
-  // When coding is complete, focus on the update instruction textarea
-  useEffect(() => {
-    if (appState === AppState.CODE_READY && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [appState]);
-
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
@@ -461,135 +412,12 @@ function App() {
 
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
-            <>
-              {/* Show code preview only when coding */}
-              {appState === AppState.CODING && (
-                <div className="flex flex-col">
-                  {/* Speed disclaimer for video mode */}
-                  {inputMode === "video" && (
-                    <div
-                      className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700
-                    p-2 text-xs mb-4 mt-1"
-                    >
-                      Code generation from videos can take 3-4 minutes. We do
-                      multiple passes to get the best result. Please be patient.
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-x-1">
-                    <Spinner />
-                    {executionConsole.slice(-1)[0]}
-                  </div>
-
-                  <CodePreview code={generatedCode} />
-
-                  <div className="flex w-full">
-                    <Button
-                      onClick={cancelCodeGeneration}
-                      className="w-full dark:text-white dark:bg-gray-700"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {appState === AppState.CODE_READY && (
-                <div>
-                  <div className="grid w-full gap-2">
-                    <Textarea
-                      ref={textareaRef}
-                      placeholder="Tell the AI what to change..."
-                      onChange={(e) => setUpdateInstruction(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          doUpdate(updateInstruction);
-                        }
-                      }}
-                      value={updateInstruction}
-                    />
-                    <div className="flex justify-between items-center gap-x-2">
-                      <div className="font-500 text-xs text-slate-700 dark:text-white">
-                        Include screenshot of current version?
-                      </div>
-                      <Switch
-                        checked={shouldIncludeResultImage}
-                        onCheckedChange={setShouldIncludeResultImage}
-                        className="dark:bg-gray-700"
-                      />
-                    </div>
-                    <Button
-                      onClick={() => doUpdate(updateInstruction)}
-                      className="dark:text-white dark:bg-gray-700 update-btn"
-                    >
-                      Update <KeyboardShortcutBadge letter="enter" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-end gap-x-2 mt-2">
-                    <Button
-                      onClick={regenerate}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
-                    >
-                      🔄 Regenerate
-                    </Button>
-                    {showSelectAndEditFeature && (
-                      <SelectAndEditModeToggleButton />
-                    )}
-                  </div>
-                  <div className="flex justify-end items-center mt-2">
-                    <TipLink />
-                  </div>
-                </div>
-              )}
-
-              {/* Reference image display */}
-              <div className="flex gap-x-2 mt-2">
-                {referenceImages.length > 0 && (
-                  <div className="flex flex-col">
-                    <div
-                      className={classNames({
-                        "scanning relative": appState === AppState.CODING,
-                      })}
-                    >
-                      {inputMode === "image" && (
-                        <img
-                          className="w-[340px] border border-gray-200 rounded-md"
-                          src={referenceImages[0]}
-                          alt="Reference"
-                        />
-                      )}
-                      {inputMode === "video" && (
-                        <video
-                          muted
-                          autoPlay
-                          loop
-                          className="w-[340px] border border-gray-200 rounded-md"
-                          src={referenceImages[0]}
-                        />
-                      )}
-                    </div>
-                    <div className="text-gray-400 uppercase text-sm text-center mt-1">
-                      {inputMode === "video"
-                        ? "Original Video"
-                        : "Original Screenshot"}
-                    </div>
-                  </div>
-                )}
-                <div className="bg-gray-400 px-4 py-2 rounded text-sm">
-                  <h2 className="text-lg mb-4 border-b border-gray-800">
-                    Console
-                  </h2>
-                  {executionConsole.map((line, index) => (
-                    <div
-                      key={index}
-                      className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
-                    >
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
+            <Sidebar
+              showSelectAndEditFeature={showSelectAndEditFeature}
+              doUpdate={doUpdate}
+              regenerate={regenerate}
+              cancelCodeGeneration={cancelCodeGeneration}
+            />
           )}
           {
             <HistoryDisplay
@@ -612,68 +440,7 @@ function App() {
         )}
 
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
-          // Right side preview and code
-          <div className="ml-4">
-            <Tabs defaultValue="desktop">
-              <div className="flex justify-between mr-8 mb-4">
-                <div className="flex items-center gap-x-2">
-                  {appState === AppState.CODE_READY && (
-                    <>
-                      <Button
-                        onClick={reset}
-                        className="flex items-center ml-4 gap-x-2 dark:text-white dark:bg-gray-700"
-                      >
-                        <FaUndo />
-                        Reset
-                      </Button>
-                      <Button
-                        onClick={downloadCode}
-                        variant="secondary"
-                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
-                      >
-                        <FaDownload /> Download
-                      </Button>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center">
-                  <TabsList>
-                    <TabsTrigger value="desktop" className="flex gap-x-2">
-                      <FaDesktop /> Desktop
-                    </TabsTrigger>
-                    <TabsTrigger value="mobile" className="flex gap-x-2">
-                      <FaMobile /> Mobile
-                    </TabsTrigger>
-                    <TabsTrigger value="code" className="flex gap-x-2">
-                      <FaCode />
-                      Code
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-              </div>
-              <TabsContent value="desktop">
-                <Preview
-                  code={previewCode}
-                  device="desktop"
-                  doUpdate={doUpdate}
-                />
-              </TabsContent>
-              <TabsContent value="mobile">
-                <Preview
-                  code={previewCode}
-                  device="mobile"
-                  doUpdate={doUpdate}
-                />
-              </TabsContent>
-              <TabsContent value="code">
-                <CodeTab
-                  code={previewCode}
-                  setCode={setGeneratedCode}
-                  settings={settings}
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
+          <Preview doUpdate={doUpdate} reset={reset} settings={settings} />
         )}
       </main>
     </div>

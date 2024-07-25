@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import classNames from "classnames";
-import useThrottle from "../hooks/useThrottle";
-import EditPopup from "./select-and-edit/EditPopup";
+import useThrottle from "../../hooks/useThrottle";
+import EditPopup from "../select-and-edit/EditPopup";
 
 interface Props {
   code: string;
@@ -9,7 +9,7 @@ interface Props {
   doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
 }
 
-function Preview({ code, device, doUpdate }: Props) {
+function PreviewComponent({ code, device, doUpdate }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   // Don't update code more often than every 200ms.
@@ -53,4 +53,4 @@ function Preview({ code, device, doUpdate }: Props) {
   );
 }
 
-export default Preview;
+export default PreviewComponent;

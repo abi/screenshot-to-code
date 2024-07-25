@@ -16,6 +16,10 @@ interface ProjectStore {
   setGeneratedCode: (
     updater: string | ((currentCode: string) => string)
   ) => void;
+  executionConsole: string[];
+  setExecutionConsole: (
+    updater: string[] | ((currentConsole: string[]) => string[])
+  ) => void;
 
   // Tracks the currently shown version from app history
   // TODO: might want to move to appStore
@@ -44,6 +48,15 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       generatedCode:
         typeof updater === "function" ? updater(state.generatedCode) : updater,
     })),
+  executionConsole: [],
+  setExecutionConsole: (updater) =>
+    set((state) => ({
+      executionConsole:
+        typeof updater === "function"
+          ? updater(state.executionConsole)
+          : updater,
+    })),
+
   currentVersion: null,
   setCurrentVersion: (version) => set({ currentVersion: version }),
   appHistory: [],
