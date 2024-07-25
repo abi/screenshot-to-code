@@ -26,6 +26,7 @@ import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import Sidebar from "./components/sidebar/Sidebar";
 import Preview from "./components/preview/Preview";
+import DeprecationMessage from "./components/messages/DeprecationMessage";
 
 function App() {
   const {
@@ -397,14 +398,8 @@ function App() {
             }
           />
 
-          {showBetterModelMessage && (
-            <div className="rounded-lg p-2 bg-fuchsia-200">
-              <p className="text-gray-800 text-sm">
-                We no longer support this model. Instead, code generation will
-                use GPT-4o or Claude Sonnet 3.5, the 2 state-of-the-art models.
-              </p>
-            </div>
-          )}
+          {/* Show auto updated message when older models are choosen */}
+          {showBetterModelMessage && <DeprecationMessage />}
 
           {appState !== AppState.CODE_READY && <TipLink />}
 

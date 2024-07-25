@@ -3,7 +3,7 @@ import classNames from "classnames";
 import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
-import CodePreview from "../CodePreview";
+import CodePreview from "../preview/CodePreview";
 import Spinner from "../Spinner";
 import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
 import TipLink from "../core/TipLink";

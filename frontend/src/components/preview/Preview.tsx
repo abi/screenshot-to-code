@@ -7,7 +7,7 @@ import {
   FaCode,
 } from "react-icons/fa";
 import { AppState, Settings } from "../../types";
-import CodeTab from "../CodeTab";
+import CodeTab from "./CodeTab";
 import { Button } from "../ui/button";
 import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
