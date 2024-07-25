@@ -101,6 +101,8 @@ function App() {
     }
   }, [settings.generatedCodeConfig, setSettings]);
 
+  // Functions
+
   const reset = () => {
     setAppState(AppState.INITIAL);
     setGeneratedCode("");
@@ -133,12 +135,14 @@ function App() {
     doCreate(referenceImages, inputMode);
   };
 
+  // Used when the user cancels the code generation
   const cancelCodeGeneration = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
     // make sure stop can correct the state even if the websocket is already closed
     cancelCodeGenerationAndReset();
   };
 
+  // Used for code generation failure as well
   const cancelCodeGenerationAndReset = () => {
     // When this is the first version, reset the entire app state
     if (currentVersion === null) {
@@ -224,8 +228,11 @@ function App() {
     // Reset any existing state
     reset();
 
+    // Set the input states
     setReferenceImages(referenceImages);
     setInputMode(inputMode);
+
+    // Kick off the code generation
     if (referenceImages.length > 0) {
       doGenerateCode(
         {
@@ -322,6 +329,7 @@ function App() {
   }
 
   function importFromCode(code: string, stack: Stack) {
+    // Set input state
     setIsImportedFromCode(true);
 
     // Set up this project
@@ -337,6 +345,7 @@ function App() {
     ]);
     setCurrentVersion(0);
 
+    // Set the app state
     setAppState(AppState.CODE_READY);
   }
 
