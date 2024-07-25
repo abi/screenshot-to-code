@@ -22,8 +22,10 @@ interface ProjectStore {
   currentVersion: number | null;
   setCurrentVersion: (version: number | null) => void;
 
-  appHistory: History[];
-  setAppHistory: (history: History[]) => void;
+  appHistory: History;
+  setAppHistory: (
+    updater: History | ((currentHistory: History) => History)
+  ) => void;
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
@@ -45,5 +47,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   currentVersion: null,
   setCurrentVersion: (version) => set({ currentVersion: version }),
   appHistory: [],
-  setAppHistory: (history) => set({ appHistory: history }),
+  setAppHistory: (updater) =>
+    set((state) => ({
+      appHistory:
+        typeof updater === "function" ? updater(state.appHistory) : updater,
+    })),
 }));

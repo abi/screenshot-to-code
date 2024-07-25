@@ -48,16 +48,21 @@ function App() {
   const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
 
   const {
+    // Inputs
     inputMode,
     setInputMode,
     isImportedFromCode,
     setIsImportedFromCode,
     referenceImages,
     setReferenceImages,
+
+    // Outputs
     generatedCode,
     setGeneratedCode,
     currentVersion,
     setCurrentVersion,
+    appHistory,
+    setAppHistory,
   } = useProjectStore();
 
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
@@ -87,9 +92,6 @@ function App() {
   // Code generation model from local storage or the default value
   const selectedCodeGenerationModel =
     settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
-
-  // App history
-  const [appHistory, setAppHistory] = useState<History>([]);
 
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
