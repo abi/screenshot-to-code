@@ -21,7 +21,7 @@ interface Props {
   settings: Settings;
 }
 
-function Preview({ doUpdate, reset, settings }: Props) {
+function PreviewPane({ doUpdate, reset, settings }: Props) {
   const { appState } = useAppStore();
   const { inputMode, generatedCode, setGeneratedCode } = useProjectStore();
 
@@ -95,4 +95,4 @@ function Preview({ doUpdate, reset, settings }: Props) {
   );
 }
 
-export default Preview;
+export default PreviewPane;

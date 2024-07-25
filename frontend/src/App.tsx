@@ -9,7 +9,6 @@ import { usePersistedState } from "./hooks/usePersistedState";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import { History } from "./components/history/history_types";
-import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
 import { Stack } from "./lib/stacks";
@@ -19,7 +18,7 @@ import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import Sidebar from "./components/sidebar/Sidebar";
-import Preview from "./components/preview/Preview";
+import PreviewPane from "./components/preview/PreviewPane";
 import DeprecationMessage from "./components/messages/DeprecationMessage";
 import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
@@ -73,19 +72,17 @@ function App() {
   const wsRef = useRef<WebSocket>(null);
 
   // Code generation model from local storage or the default value
-  const selectedCodeGenerationModel =
+  const model =
     settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
 
   const showBetterModelMessage =
-    selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
-    selectedCodeGenerationModel !==
-      CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20 &&
+    model !== CodeGenerationModel.GPT_4O_2024_05_13 &&
+    model !== CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20 &&
     appState === AppState.INITIAL;
 
   const showSelectAndEditFeature =
-    (selectedCodeGenerationModel === CodeGenerationModel.GPT_4O_2024_05_13 ||
-      selectedCodeGenerationModel ===
-        CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20) &&
+    (model === CodeGenerationModel.GPT_4O_2024_05_13 ||
+      model === CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20) &&
     (settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
       settings.generatedCodeConfig === Stack.HTML_CSS);
 
@@ -360,19 +357,22 @@ function App() {
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
 
+          {/* Generation settings like stack and model */}
           <GenerationSettings
             settings={settings}
             setSettings={setSettings}
-            selectedCodeGenerationModel={selectedCodeGenerationModel}
+            selectedCodeGenerationModel={model}
           />
 
           {/* Show auto updated message when older models are choosen */}
           {showBetterModelMessage && <DeprecationMessage />}
 
+          {/* Show tip link until coding is complete */}
           {appState !== AppState.CODE_READY && <TipLink />}
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
+          {/* Rest of the sidebar when we're not in the initial state */}
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
             <Sidebar
@@ -382,11 +382,6 @@ function App() {
               cancelCodeGeneration={cancelCodeGeneration}
             />
           )}
-          {
-            <HistoryDisplay
-              shouldDisableReverts={appState === AppState.CODING}
-            />
-          }
         </div>
       </div>
 
@@ -400,7 +395,7 @@ function App() {
         )}
 
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
-          <Preview doUpdate={doUpdate} reset={reset} settings={settings} />
+          <PreviewPane doUpdate={doUpdate} reset={reset} settings={settings} />
         )}
       </main>
     </div>

@@ -11,6 +11,7 @@ import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeT
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useEffect, useRef } from "react";
+import HistoryDisplay from "../history/HistoryDisplay";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -167,6 +168,8 @@ function Sidebar({
           ))}
         </div>
       </div>
+
+      <HistoryDisplay shouldDisableReverts={appState === AppState.CODING} />
     </>
   );
 }
