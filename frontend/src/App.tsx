@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import ImageUpload from "./components/ImageUpload";
 import { generateCode } from "./generateCode";
 import SettingsDialog from "./components/settings/SettingsDialog";
 import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
@@ -7,15 +6,12 @@ import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/messages/PicoBadge";
 import { OnboardingNote } from "./components/messages/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
-import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
-import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import { History } from "./components/history/history_types";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
-import ImportCodeSection from "./components/ImportCodeSection";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
@@ -26,6 +22,8 @@ import Sidebar from "./components/sidebar/Sidebar";
 import Preview from "./components/preview/Preview";
 import DeprecationMessage from "./components/messages/DeprecationMessage";
 import { GenerationSettings } from "./components/settings/GenerationSettings";
+import StartPane from "./components/start-pane/StartPane";
+import { takeScreenshot } from "./lib/takeScreenshot";
 
 function App() {
   const {
@@ -105,19 +103,6 @@ function App() {
       }));
     }
   }, [settings.generatedCodeConfig, setSettings]);
-
-  const takeScreenshot = async (): Promise<string> => {
-    const iframeElement = document.querySelector(
-      "#preview-desktop"
-    ) as HTMLIFrameElement;
-    if (!iframeElement?.contentWindow?.document.body) {
-      return "";
-    }
-
-    const canvas = await html2canvas(iframeElement.contentWindow.document.body);
-    const png = canvas.toDataURL("image/png");
-    return png;
-  };
 
   const reset = () => {
     setAppState(AppState.INITIAL);
@@ -407,14 +392,11 @@ function App() {
 
       <main className="py-2 lg:pl-96">
         {appState === AppState.INITIAL && (
-          <div className="flex flex-col justify-center items-center gap-y-10">
-            <ImageUpload setReferenceImages={doCreate} />
-            <UrlInputSection
-              doCreate={doCreate}
-              screenshotOneApiKey={settings.screenshotOneApiKey}
-            />
-            <ImportCodeSection importFromCode={importFromCode} />
-          </div>
+          <StartPane
+            doCreate={doCreate}
+            importFromCode={importFromCode}
+            settings={settings}
+          />
         )}
 
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
