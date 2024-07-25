@@ -16,8 +16,12 @@ interface ProjectStore {
   setGeneratedCode: (
     updater: string | ((currentCode: string) => string)
   ) => void;
+
+  // Tracks the currently shown version from app history
+  // TODO: might want to move to appStore
   currentVersion: number | null;
   setCurrentVersion: (version: number | null) => void;
+
   appHistory: History[];
   setAppHistory: (history: History[]) => void;
 }

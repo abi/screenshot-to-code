@@ -56,6 +56,8 @@ function App() {
     setReferenceImages,
     generatedCode,
     setGeneratedCode,
+    currentVersion,
+    setCurrentVersion,
   } = useProjectStore();
 
   const [executionConsole, setExecutionConsole] = useState<string[]>([]);
@@ -88,8 +90,6 @@ function App() {
 
   // App history
   const [appHistory, setAppHistory] = useState<History>([]);
-  // Tracks the currently shown version from app history
-  const [currentVersion, setCurrentVersion] = useState<number | null>(null);
 
   const [shouldIncludeResultImage, setShouldIncludeResultImage] =
     useState<boolean>(false);
