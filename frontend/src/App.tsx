@@ -11,7 +11,6 @@ import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
-import OutputSettingsSection from "./components/settings/OutputSettingsSection";
 import { History } from "./components/history/history_types";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
@@ -19,7 +18,6 @@ import toast from "react-hot-toast";
 import ImportCodeSection from "./components/ImportCodeSection";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
-import ModelSettingsSection from "./components/settings/ModelSettingsSection";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
@@ -27,6 +25,7 @@ import { useProjectStore } from "./store/project-store";
 import Sidebar from "./components/sidebar/Sidebar";
 import Preview from "./components/preview/Preview";
 import DeprecationMessage from "./components/messages/DeprecationMessage";
+import { GenerationSettings } from "./components/settings/GenerationSettings";
 
 function App() {
   const {
@@ -73,11 +72,11 @@ function App() {
     "setting"
   );
 
+  const wsRef = useRef<WebSocket>(null);
+
   // Code generation model from local storage or the default value
   const selectedCodeGenerationModel =
     settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
-
-  const wsRef = useRef<WebSocket>(null);
 
   const showBetterModelMessage =
     selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
@@ -340,13 +339,6 @@ function App() {
     }));
   }
 
-  function setCodeGenerationModel(codeGenerationModel: CodeGenerationModel) {
-    setSettings((prev) => ({
-      ...prev,
-      codeGenerationModel,
-    }));
-  }
-
   function importFromCode(code: string, stack: Stack) {
     setIsImportedFromCode(true);
 
@@ -377,25 +369,16 @@ function App() {
       )}
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+          {/* Header with access to settings*/}
           <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
 
-          <OutputSettingsSection
-            stack={settings.generatedCodeConfig}
-            setStack={(config) => setStack(config)}
-            shouldDisableUpdates={
-              appState === AppState.CODING || appState === AppState.CODE_READY
-            }
-          />
-
-          <ModelSettingsSection
-            codeGenerationModel={selectedCodeGenerationModel}
-            setCodeGenerationModel={setCodeGenerationModel}
-            shouldDisableUpdates={
-              appState === AppState.CODING || appState === AppState.CODE_READY
-            }
+          <GenerationSettings
+            settings={settings}
+            setSettings={setSettings}
+            selectedCodeGenerationModel={selectedCodeGenerationModel}
           />
 
           {/* Show auto updated message when older models are choosen */}
