@@ -9,19 +9,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaCog } from "react-icons/fa";
-import { EditorTheme, Settings } from "../types";
-import { Switch } from "./ui/switch";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
-import { capitalize } from "../lib/utils";
-import { IS_RUNNING_ON_CLOUD } from "../config";
+import { EditorTheme, Settings } from "../../types";
+import { Switch } from "../ui/switch";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { capitalize } from "../../lib/utils";
+import { IS_RUNNING_ON_CLOUD } from "../../config";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "./ui/accordion";
+} from "../ui/accordion";
 
 interface Props {
   settings: Settings;

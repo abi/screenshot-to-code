@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
-import OutputSettingsSection from "./OutputSettingsSection";
+import OutputSettingsSection from "./settings/OutputSettingsSection";
 import toast from "react-hot-toast";
 import { Stack } from "../lib/stacks";
 
