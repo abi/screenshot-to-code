@@ -26,11 +26,11 @@ async def call_replicate(
 
             # Polling every 1 second until the status is succeeded or error
             num_polls = 0
-            max_polls = 120
+            max_polls = 100
             while num_polls < max_polls:
                 num_polls += 1
 
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.2)
 
                 # Check the status
                 status_check_url = f"{url}/{prediction_id}"

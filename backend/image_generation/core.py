@@ -13,11 +13,17 @@ async def process_tasks(
     base_url: str | None,
     model: Literal["dalle3", "sdxl-lightning"],
 ):
+    import time
+
+    start_time = time.time()
     if model == "dalle3":
         tasks = [generate_image_dalle(prompt, api_key, base_url) for prompt in prompts]
     else:
         tasks = [generate_image_replicate(prompt, api_key) for prompt in prompts]
     results = await asyncio.gather(*tasks, return_exceptions=True)
+    end_time = time.time()
+    generation_time = end_time - start_time
+    print(f"Image generation time: {generation_time:.2f} seconds")
 
     processed_results: List[Union[str, None]] = []
     for result in results:
