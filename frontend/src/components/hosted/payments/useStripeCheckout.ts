@@ -34,6 +34,13 @@ export default function useStripeCheckout() {
         "POST"
       );
 
+      // Track going to checkout page as a conversion
+      gtag("event", "conversion", {
+        send_to: "AW-16649848443/cFfeCP_Xw8QZEPuMooM-",
+        value: 1.0,
+        currency: "USD",
+      });
+
       // Redirect to Stripe Checkout
       const { error } = await stripe.redirectToCheckout({
         sessionId: res.sessionId,

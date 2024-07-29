@@ -35,6 +35,7 @@
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tabs": "^1.0.4",
     "@stripe/stripe-js": "^2.2.2",
+    "@types/gtag.js": "^0.0.20",
     "class-variance-authority": "^0.7.0",
     "classnames": "^2.3.2",
     "clsx": "^2.0.0",
