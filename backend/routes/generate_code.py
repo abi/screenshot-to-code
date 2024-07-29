@@ -3,7 +3,12 @@ import traceback
 from fastapi import APIRouter, WebSocket
 import openai
 from codegen.utils import extract_html_content
-from config import ANTHROPIC_API_KEY, IS_PROD, SHOULD_MOCK_AI_RESPONSE
+from config import (
+    ANTHROPIC_API_KEY,
+    IS_PROD,
+    REPLICATE_API_KEY,
+    SHOULD_MOCK_AI_RESPONSE,
+)
 from custom_types import InputMode
 from llm import (
     Llm,
@@ -15,7 +20,7 @@ from llm import (
 from openai.types.chat import ChatCompletionMessageParam
 from mock_llm import mock_completion
 from typing import Dict, List, Union, cast, get_args
-from image_generation import create_alt_url_mapping, generate_images
+from image_generation.core import create_alt_url_mapping, generate_images
 from prompts import assemble_imported_code_prompt, assemble_prompt
 from datetime import datetime
 import json
@@ -337,11 +342,19 @@ async def stream_code(websocket: WebSocket):
             await websocket.send_json(
                 {"type": "status", "value": "Generating images..."}
             )
+            image_generation_model = "sdxl-lightning" if REPLICATE_API_KEY else "dalle3"
+            print("Generating images with model: ", image_generation_model)
+
             updated_html = await generate_images(
                 completion,
-                api_key=openai_api_key,
+                api_key=(
+                    REPLICATE_API_KEY
+                    if image_generation_model == "sdxl-lightning"
+                    else openai_api_key
+                ),
                 base_url=openai_base_url,
                 image_cache=image_cache,
+                model=image_generation_model,
             )
         else:
             updated_html = completion

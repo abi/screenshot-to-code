@@ -1,12 +1,22 @@
 import asyncio
 import re
-from typing import Dict, List, Union
+from typing import Dict, List, Literal, Union
 from openai import AsyncOpenAI
 from bs4 import BeautifulSoup
 
+from image_generation.replicate import call_replicate
 
-async def process_tasks(prompts: List[str], api_key: str, base_url: str | None):
-    tasks = [generate_image(prompt, api_key, base_url) for prompt in prompts]
+
+async def process_tasks(
+    prompts: List[str],
+    api_key: str,
+    base_url: str | None,
+    model: Literal["dalle3", "sdxl-lightning"],
+):
+    if model == "dalle3":
+        tasks = [generate_image_dalle(prompt, api_key, base_url) for prompt in prompts]
+    else:
+        tasks = [generate_image_replicate(prompt, api_key) for prompt in prompts]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     processed_results: List[Union[str, None]] = []
@@ -20,7 +30,7 @@ async def process_tasks(prompts: List[str], api_key: str, base_url: str | None):
     return processed_results
 
 
-async def generate_image(
+async def generate_image_dalle(
     prompt: str, api_key: str, base_url: str | None
 ) -> Union[str, None]:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
@@ -34,6 +44,25 @@ async def generate_image(
     )
     await client.close()
     return res.data[0].url
+
+
+async def generate_image_replicate(prompt: str, api_key: str) -> str:
+
+    # We use SDXL Lightning
+    return await call_replicate(
+        "5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
+        {
+            "width": 1024,
+            "height": 1024,
+            "prompt": prompt,
+            "scheduler": "K_EULER",
+            "num_outputs": 1,
+            "guidance_scale": 0,
+            "negative_prompt": "worst quality, low quality",
+            "num_inference_steps": 4,
+        },
+        api_key,
+    )
 
 
 def extract_dimensions(url: str):
@@ -63,7 +92,11 @@ def create_alt_url_mapping(code: str) -> Dict[str, str]:
 
 
 async def generate_images(
-    code: str, api_key: str, base_url: Union[str, None], image_cache: Dict[str, str]
+    code: str,
+    api_key: str,
+    base_url: Union[str, None],
+    image_cache: Dict[str, str],
+    model: Literal["dalle3", "sdxl-lightning"] = "dalle3",
 ) -> str:
     # Find all images
     soup = BeautifulSoup(code, "html.parser")
@@ -91,7 +124,7 @@ async def generate_images(
         return code
 
     # Generate images
-    results = await process_tasks(prompts, api_key, base_url)
+    results = await process_tasks(prompts, api_key, base_url, model)
 
     # Create a dict mapping alt text to image URL
     mapped_image_urls = dict(zip(prompts, results))
