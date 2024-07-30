@@ -4,8 +4,8 @@ import { History } from "../components/history/history_types";
 // Store for app-wide state
 interface ProjectStore {
   // Inputs
-  inputMode: "image" | "video";
-  setInputMode: (mode: "image" | "video") => void;
+  inputMode: "image" | "video" | "text";
+  setInputMode: (mode: "image" | "video" | "text") => void;
   isImportedFromCode: boolean;
   setIsImportedFromCode: (imported: boolean) => void;
   referenceImages: string[];

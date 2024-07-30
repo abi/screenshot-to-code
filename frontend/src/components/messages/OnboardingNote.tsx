@@ -1,4 +1,4 @@
-import { useStore } from "../store/store";
+import { useStore } from "../../store/store";
 
 export function OnboardingNote() {
   const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);

@@ -1,4 +1,4 @@
-import PricingDialog from "./hosted/payments/PricingDialog";
+import PricingDialog from "../hosted/payments/PricingDialog";
 
 export function PicoBadge() {
   return (
