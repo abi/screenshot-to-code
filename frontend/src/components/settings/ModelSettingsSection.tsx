@@ -4,13 +4,13 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-} from "./ui/select";
+} from "../ui/select";
 import {
   CODE_GENERATION_MODEL_DESCRIPTIONS,
   CodeGenerationModel,
-} from "../lib/models";
-import { Badge } from "./ui/badge";
-import { IS_RUNNING_ON_CLOUD } from "../config";
+} from "../../lib/models";
+import { IS_RUNNING_ON_CLOUD } from "../../config";
+import { Badge } from "../ui/badge";
 
 interface Props {
   codeGenerationModel: CodeGenerationModel;

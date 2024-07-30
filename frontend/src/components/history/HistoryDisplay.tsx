@@ -1,4 +1,3 @@
-import { History } from "./history_types";
 import toast from "react-hot-toast";
 import classNames from "classnames";
 
@@ -11,21 +10,26 @@ import {
 } from "../ui/collapsible";
 import { Button } from "../ui/button";
 import { CaretSortIcon } from "@radix-ui/react-icons";
+import { useProjectStore } from "../../store/project-store";
 
 interface Props {
-  history: History;
-  currentVersion: number | null;
-  revertToVersion: (version: number) => void;
   shouldDisableReverts: boolean;
 }
 
-export default function HistoryDisplay({
-  history,
-  currentVersion,
-  revertToVersion,
-  shouldDisableReverts,
-}: Props) {
+export default function HistoryDisplay({ shouldDisableReverts }: Props) {
+  const {
+    appHistory: history,
+    currentVersion,
+    setCurrentVersion,
+    setGeneratedCode,
+  } = useProjectStore();
   const renderedHistory = renderHistory(history, currentVersion);
+
+  const revertToVersion = (index: number) => {
+    if (index < 0 || index >= history.length || !history[index]) return;
+    setCurrentVersion(index);
+    setGeneratedCode(history[index].code);
+  };
 
   return renderedHistory.length === 0 ? null : (
     <div className="flex flex-col h-screen">

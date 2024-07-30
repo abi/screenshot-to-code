@@ -1,7 +1,7 @@
 import { FaCopy } from "react-icons/fa";
 import CodeMirror from "./CodeMirror";
-import { Button } from "./ui/button";
-import { Settings } from "../types";
+import { Button } from "../ui/button";
+import { Settings } from "../../types";
 import copy from "copy-to-clipboard";
 import { useCallback } from "react";
 import toast from "react-hot-toast";

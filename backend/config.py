@@ -6,6 +6,9 @@ import os
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 
+# Image generation (optional)
+REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)
+
 # Debugging-related
 
 SHOULD_MOCK_AI_RESPONSE = bool(os.environ.get("MOCK", False))

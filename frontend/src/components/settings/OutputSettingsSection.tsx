@@ -5,10 +5,10 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-} from "./ui/select";
-import { addEvent } from "../lib/analytics";
-import { Badge } from "./ui/badge";
-import { Stack, STACK_DESCRIPTIONS } from "../lib/stacks";
+} from "../ui/select";
+import { Badge } from "../ui/badge";
+import { Stack, STACK_DESCRIPTIONS } from "../../lib/stacks";
+import { addEvent } from "../../lib/analytics";
 
 function generateDisplayComponent(stack: Stack) {
   const stackComponents = STACK_DESCRIPTIONS[stack].components;

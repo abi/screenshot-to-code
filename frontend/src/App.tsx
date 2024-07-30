@@ -1,56 +1,37 @@
 import { useEffect, useRef, useState } from "react";
-import ImageUpload from "./components/ImageUpload";
-import CodePreview from "./components/CodePreview";
-import Preview from "./components/Preview";
 import { generateCode } from "./generateCode";
-import Spinner from "./components/custom-ui/Spinner";
-import classNames from "classnames";
-import {
-  FaCode,
-  FaDesktop,
-  FaDownload,
-  FaMobile,
-  FaUndo,
-} from "react-icons/fa";
-import { Switch } from "./components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
-import SettingsDialog from "./components/SettingsDialog";
-import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
 import {
   IS_FREE_TRIAL_ENABLED,
   IS_RUNNING_ON_CLOUD,
   SHOULD_SHOW_FEEDBACK_CALL_NOTE,
 } from "./config";
-import { PicoBadge } from "./components/PicoBadge";
-import { OnboardingNote } from "./components/OnboardingNote";
+import SettingsDialog from "./components/settings/SettingsDialog";
+import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
+import { PicoBadge } from "./components/messages/PicoBadge";
+import { OnboardingNote } from "./components/messages/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
-import { UrlInputSection } from "./components/UrlInputSection";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
-import html2canvas from "html2canvas";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
-import CodeTab from "./components/CodeTab";
-import OutputSettingsSection from "./components/OutputSettingsSection";
 import { addEvent } from "./lib/analytics";
 import { History } from "./components/history/history_types";
-import HistoryDisplay from "./components/history/HistoryDisplay";
 import { extractHistoryTree } from "./components/history/utils";
 import toast from "react-hot-toast";
-import ImportCodeSection from "./components/ImportCodeSection";
 import { useAuth } from "@clerk/clerk-react";
 import { useStore } from "./store/store";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
-import ModelSettingsSection from "./components/ModelSettingsSection";
-import { extractHtml } from "./components/preview/extractHtml";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
-import TipLink from "./components/core/TipLink";
+import TipLink from "./components/messages/TipLink";
 import FeedbackCallNote from "./components/user-feedback/FeedbackCallNote";
-import SelectAndEditModeToggleButton from "./components/select-and-edit/SelectAndEditModeToggleButton";
 import { useAppStore } from "./store/app-store";
 import GenerateFromText from "./components/generate-from-text/GenerateFromText";
-import KeyboardShortcutBadge from "./components/core/KeyboardShortcutBadge";
+import { useProjectStore } from "./store/project-store";
+import PreviewPane from "./components/preview/PreviewPane";
+import DeprecationMessage from "./components/messages/DeprecationMessage";
+import { GenerationSettings } from "./components/settings/GenerationSettings";
+import StartPane from "./components/start-pane/StartPane";
+import { takeScreenshot } from "./lib/takeScreenshot";
+import Sidebar from "./components/sidebar/Sidebar";
 
 const IS_OPENAI_DOWN = false;
 
@@ -59,28 +40,39 @@ interface Props {
 }
 
 function App({ navbarComponent }: Props) {
-  const [appState, setAppState] = useState<AppState>(AppState.INITIAL);
-  const [generatedCode, setGeneratedCode] = useState<string>("");
-
-  const [inputMode, setInputMode] = useState<"image" | "video" | "text">(
-    "image"
-  );
-
   const [initialPrompt, setInitialPrompt] = useState<string>("");
-
-  const [referenceImages, setReferenceImages] = useState<string[]>([]);
-  const [executionConsole, setExecutionConsole] = useState<string[]>([]);
-  const [updateInstruction, setUpdateInstruction] = useState("");
-  const [isImportedFromCode, setIsImportedFromCode] = useState<boolean>(false);
 
   // Relevant for hosted version only
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
   const subscriberTier = useStore((state) => state.subscriberTier);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const {
+    // Inputs
+    inputMode,
+    setInputMode,
+    isImportedFromCode,
+    setIsImportedFromCode,
+    referenceImages,
+    setReferenceImages,
 
-  const { disableInSelectAndEditMode } = useAppStore();
+    // Outputs
+    setGeneratedCode,
+    setExecutionConsole,
+    currentVersion,
+    setCurrentVersion,
+    appHistory,
+    setAppHistory,
+  } = useProjectStore();
+
+  const {
+    disableInSelectAndEditMode,
+    setUpdateInstruction,
+    appState,
+    setAppState,
+    shouldIncludeResultImage,
+    setShouldIncludeResultImage,
+  } = useAppStore();
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -99,38 +91,23 @@ function App({ navbarComponent }: Props) {
     "setting"
   );
 
-  // Code generation model from local storage or the default value
-  const selectedCodeGenerationModel =
-    settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
-
-  // App history
-  const [appHistory, setAppHistory] = useState<History>([]);
-  // Tracks the currently shown version from app history
-  const [currentVersion, setCurrentVersion] = useState<number | null>(null);
-
-  const [shouldIncludeResultImage, setShouldIncludeResultImage] =
-    useState<boolean>(false);
-
   const wsRef = useRef<WebSocket>(null);
 
-  const showReactWarning =
-    selectedCodeGenerationModel ===
-      CodeGenerationModel.GPT_4_TURBO_2024_04_09 &&
-    settings.generatedCodeConfig === Stack.REACT_TAILWIND;
+  // Code generation model from local storage or the default value
+  const model =
+    settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
 
   const showBetterModelMessage =
-    selectedCodeGenerationModel !== CodeGenerationModel.GPT_4O_2024_05_13 &&
-    selectedCodeGenerationModel !==
-      CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20 &&
+    model !== CodeGenerationModel.GPT_4O_2024_05_13 &&
+    model !== CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20 &&
     appState === AppState.INITIAL;
 
   const showFeedbackCallNote =
     subscriberTier !== "free" && SHOULD_SHOW_FEEDBACK_CALL_NOTE;
 
   const showSelectAndEditFeature =
-    (selectedCodeGenerationModel === CodeGenerationModel.GPT_4O_2024_05_13 ||
-      selectedCodeGenerationModel ===
-        CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20) &&
+    (model === CodeGenerationModel.GPT_4O_2024_05_13 ||
+      model === CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20) &&
     (settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
       settings.generatedCodeConfig === Stack.HTML_CSS);
 
@@ -149,38 +126,7 @@ function App({ navbarComponent }: Props) {
     }
   }, [settings.generatedCodeConfig, setSettings]);
 
-  const takeScreenshot = async (): Promise<string> => {
-    const iframeElement = document.querySelector(
-      "#preview-desktop"
-    ) as HTMLIFrameElement;
-    if (!iframeElement?.contentWindow?.document.body) {
-      return "";
-    }
-
-    const canvas = await html2canvas(iframeElement.contentWindow.document.body);
-    const png = canvas.toDataURL("image/png");
-    return png;
-  };
-
-  const downloadCode = () => {
-    addEvent("Download");
-
-    // Create a blob from the generated code
-    const blob = new Blob([generatedCode], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-
-    // Create an anchor element and set properties for download
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "index.html"; // Set the file name for download
-    document.body.appendChild(a); // Append to the document
-    a.click(); // Programmatically click the anchor to trigger download
-
-    // Clean up by removing the anchor and revoking the Blob URL
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
+  // Functions
   const reset = () => {
     setAppState(AppState.INITIAL);
     setGeneratedCode("");
@@ -224,6 +170,7 @@ function App({ navbarComponent }: Props) {
     }
   };
 
+  // Used when the user cancels the code generation
   const cancelCodeGeneration = () => {
     addEvent("Cancel");
 
@@ -232,11 +179,7 @@ function App({ navbarComponent }: Props) {
     cancelCodeGenerationAndReset();
   };
 
-  const previewCode =
-    inputMode === "video" && appState === AppState.CODING
-      ? extractHtml(generatedCode)
-      : generatedCode;
-
+  // Used for code generation failure as well
   const cancelCodeGenerationAndReset = () => {
     // When this is the first version, reset the entire app state
     if (currentVersion === null) {
@@ -252,7 +195,10 @@ function App({ navbarComponent }: Props) {
     params: CodeGenerationParams,
     parentVersion: number | null
   ) {
+    // Reset the execution console
     setExecutionConsole([]);
+
+    // Set the app state
     setAppState(AppState.CODING);
 
     // Merge settings with params
@@ -312,7 +258,7 @@ function App({ navbarComponent }: Props) {
                 inputs: {
                   prompt: params.history
                     ? params.history[params.history.length - 1]
-                    : updateInstruction,
+                    : "", // History should never be empty when performing an edit
                 },
               },
             ];
@@ -342,8 +288,11 @@ function App({ navbarComponent }: Props) {
     // Reset any existing state
     reset();
 
+    // Set the input states
     setReferenceImages(referenceImages);
     setInputMode(inputMode);
+
+    // Kick off the code generation
     if (referenceImages.length > 0) {
       addEvent("Create");
       await doGenerateCode(
@@ -458,14 +407,8 @@ function App({ navbarComponent }: Props) {
     }));
   }
 
-  function setCodeGenerationModel(codeGenerationModel: CodeGenerationModel) {
-    setSettings((prev) => ({
-      ...prev,
-      codeGenerationModel,
-    }));
-  }
-
   function importFromCode(code: string, stack: Stack) {
+    // Set input state
     setIsImportedFromCode(true);
 
     // Set up this project
@@ -481,15 +424,9 @@ function App({ navbarComponent }: Props) {
     ]);
     setCurrentVersion(0);
 
+    // Set the app state
     setAppState(AppState.CODE_READY);
   }
-
-  // When coding is complete, focus on the update instruction textarea
-  useEffect(() => {
-    if (appState === AppState.CODE_READY && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [appState]);
 
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
@@ -502,43 +439,23 @@ function App({ navbarComponent }: Props) {
       )}
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+          {/* Header with access to settings */}
           <div className="flex items-center justify-between mt-10 mb-2">
             <h1 className="text-2xl ">Screenshot to Code</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
 
-          <OutputSettingsSection
-            stack={settings.generatedCodeConfig}
-            setStack={(config) => setStack(config)}
-            shouldDisableUpdates={
-              appState === AppState.CODING || appState === AppState.CODE_READY
-            }
+          {/* Generation settings like stack and model */}
+          <GenerationSettings
+            settings={settings}
+            setSettings={setSettings}
+            selectedCodeGenerationModel={model}
           />
 
-          <ModelSettingsSection
-            codeGenerationModel={selectedCodeGenerationModel}
-            setCodeGenerationModel={setCodeGenerationModel}
-            shouldDisableUpdates={
-              appState === AppState.CODING || appState === AppState.CODE_READY
-            }
-          />
+          {/* Show auto updated message when older models are choosen */}
+          {showBetterModelMessage && <DeprecationMessage />}
 
-          {showReactWarning && (
-            <div className="text-sm bg-yellow-200 rounded p-2">
-              Sorry - React is not currently working with GPT-4 Turbo. Please
-              use GPT-4 Vision or Claude Sonnet. We are working on a fix.
-            </div>
-          )}
-
-          {showBetterModelMessage && (
-            <div className="rounded-lg p-2 bg-fuchsia-200">
-              <p className="text-gray-800 text-sm">
-                We no longer support this model. Instead, code generation will
-                use GPT-4o or Claude Sonnet 3.5, the 2 state-of-the-art models.
-              </p>
-            </div>
-          )}
-
+          {/* Show tip link until coding is complete */}
           {appState !== AppState.CODE_READY && <TipLink />}
 
           {IS_RUNNING_ON_CLOUD &&
@@ -561,157 +478,18 @@ function App({ navbarComponent }: Props) {
             <GenerateFromText doCreateFromText={doCreateFromText} />
           )}
 
+          {/* {showFeedbackCallNote && <FeedbackCallNote />} */}
+
+          {/* Rest of the sidebar when we're not in the initial state */}
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
-            <>
-              {/* Show code preview only when coding */}
-              {appState === AppState.CODING && (
-                <div className="flex flex-col">
-                  {/* Speed disclaimer for video mode */}
-                  {inputMode === "video" && (
-                    <div
-                      className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700
-                    p-2 text-xs mb-4 mt-1"
-                    >
-                      Code generation from videos can take 3-4 minutes. We do
-                      multiple passes to get the best result. Please be patient.
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-x-1">
-                    <Spinner />
-                    {executionConsole.slice(-1)[0]}
-                  </div>
-
-                  <CodePreview code={generatedCode} />
-
-                  <div className="flex w-full">
-                    <Button
-                      onClick={cancelCodeGeneration}
-                      className="w-full dark:text-white dark:bg-gray-700"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {appState === AppState.CODE_READY && (
-                <div>
-                  <div className="grid w-full gap-2">
-                    <Textarea
-                      ref={textareaRef}
-                      placeholder="Tell the AI what to change..."
-                      onChange={(e) => setUpdateInstruction(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          doUpdate(updateInstruction);
-                        }
-                      }}
-                      value={updateInstruction}
-                    />
-                    <div className="flex justify-between items-center gap-x-2">
-                      <div className="font-500 text-xs text-slate-700 dark:text-white">
-                        Include screenshot of current version?
-                      </div>
-                      <Switch
-                        checked={shouldIncludeResultImage}
-                        onCheckedChange={setShouldIncludeResultImage}
-                        className="dark:bg-gray-700"
-                      />
-                    </div>
-                    <Button
-                      onClick={() => doUpdate(updateInstruction)}
-                      className="dark:text-white dark:bg-gray-700 update-btn plausible-event-name=Edit update-btn"
-                    >
-                      Update <KeyboardShortcutBadge letter="enter" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-end gap-x-2 mt-2">
-                    <Button
-                      onClick={regenerate}
-                      className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
-                    >
-                      🔄 Regenerate
-                    </Button>
-                    {showSelectAndEditFeature && (
-                      <SelectAndEditModeToggleButton />
-                    )}
-                  </div>
-                  <div className="flex justify-end items-center mt-2">
-                    <TipLink />
-                  </div>
-                </div>
-              )}
-
-              {showFeedbackCallNote && <FeedbackCallNote />}
-
-              {/* Reference image display */}
-              <div className="flex gap-x-2 mt-2">
-                {referenceImages.length > 0 && (
-                  <div className="flex flex-col">
-                    <div
-                      className={classNames({
-                        "scanning relative": appState === AppState.CODING,
-                      })}
-                    >
-                      {inputMode === "image" && (
-                        <img
-                          className="w-[340px] border border-gray-200 rounded-md"
-                          src={referenceImages[0]}
-                          alt="Reference"
-                        />
-                      )}
-                      {inputMode === "video" && (
-                        <video
-                          muted
-                          autoPlay
-                          loop
-                          className="w-[340px] border border-gray-200 rounded-md"
-                          src={referenceImages[0]}
-                        />
-                      )}
-                    </div>
-                    <div className="text-gray-400 uppercase text-sm text-center mt-1">
-                      {inputMode === "video"
-                        ? "Original Video"
-                        : "Original Screenshot"}
-                    </div>
-                  </div>
-                )}
-                <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
-                  <h2 className="text-lg mb-4 border-b border-gray-800">
-                    Console
-                  </h2>
-                  {executionConsole.map((line, index) => (
-                    <div
-                      key={index}
-                      className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
-                    >
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-          {
-            <HistoryDisplay
-              history={appHistory}
-              currentVersion={currentVersion}
-              revertToVersion={(index) => {
-                if (
-                  index < 0 ||
-                  index >= appHistory.length ||
-                  !appHistory[index]
-                )
-                  return;
-                setCurrentVersion(index);
-                setGeneratedCode(appHistory[index].code);
-              }}
-              shouldDisableReverts={appState === AppState.CODING}
+            <Sidebar
+              showSelectAndEditFeature={showSelectAndEditFeature}
+              doUpdate={doUpdate}
+              regenerate={regenerate}
+              cancelCodeGeneration={cancelCodeGeneration}
             />
-          }
+          )}
         </div>
       </div>
 
@@ -719,78 +497,15 @@ function App({ navbarComponent }: Props) {
         {!!navbarComponent && navbarComponent}
 
         {appState === AppState.INITIAL && (
-          <div className="flex flex-col justify-center items-center gap-y-10">
-            <ImageUpload setReferenceImages={doCreate} />
-            <UrlInputSection
-              doCreate={doCreate}
-              screenshotOneApiKey={settings.screenshotOneApiKey}
-            />
-            <ImportCodeSection importFromCode={importFromCode} />
-          </div>
+          <StartPane
+            doCreate={doCreate}
+            importFromCode={importFromCode}
+            settings={settings}
+          />
         )}
 
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
-          <div className="ml-4">
-            <Tabs defaultValue="desktop">
-              <div className="flex justify-between mr-8 mb-4">
-                <div className="flex items-center gap-x-2">
-                  {appState === AppState.CODE_READY && (
-                    <>
-                      <Button
-                        onClick={reset}
-                        className="flex items-center ml-4 gap-x-2 dark:text-white dark:bg-gray-700"
-                      >
-                        <FaUndo />
-                        Reset
-                      </Button>
-                      <Button
-                        onClick={downloadCode}
-                        variant="secondary"
-                        className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
-                      >
-                        <FaDownload /> Download
-                      </Button>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center">
-                  <TabsList>
-                    <TabsTrigger value="desktop" className="flex gap-x-2">
-                      <FaDesktop /> Desktop
-                    </TabsTrigger>
-                    <TabsTrigger value="mobile" className="flex gap-x-2">
-                      <FaMobile /> Mobile
-                    </TabsTrigger>
-                    <TabsTrigger value="code" className="flex gap-x-2">
-                      <FaCode />
-                      Code
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-              </div>
-              <TabsContent value="desktop">
-                <Preview
-                  code={previewCode}
-                  device="desktop"
-                  doUpdate={doUpdate}
-                />
-              </TabsContent>
-              <TabsContent value="mobile">
-                <Preview
-                  code={previewCode}
-                  device="mobile"
-                  doUpdate={doUpdate}
-                />
-              </TabsContent>
-              <TabsContent value="code">
-                <CodeTab
-                  code={previewCode}
-                  setCode={setGeneratedCode}
-                  settings={settings}
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
+          <PreviewPane doUpdate={doUpdate} reset={reset} settings={settings} />
         )}
       </main>
     </div>
