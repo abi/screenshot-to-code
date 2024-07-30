@@ -24,7 +24,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<AppContainer />} />
           <Route path="/evals" element={<EvalsPage />} />
           <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+          <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
         </Routes>
       </Router>
       <Toaster
