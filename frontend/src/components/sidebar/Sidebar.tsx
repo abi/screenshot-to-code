@@ -167,14 +167,21 @@ function Sidebar({
             </div>
           </div>
         )}
-        <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
+        <div className="bg-gray-400 px-4 py-2 rounded text-sm">
           <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
-          {executionConsole.map((line, index) => (
-            <div
-              key={index}
-              className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
-            >
-              {line}
+          {Object.entries(executionConsoles).map(([index, lines]) => (
+            <div key={index}>
+              {lines.map((line, lineIndex) => (
+                <div
+                  key={`${index}-${lineIndex}`}
+                  className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
+                >
+                  <span className="font-bold mr-2">{`${index}:${
+                    lineIndex + 1
+                  }`}</span>
+                  {line}
+                </div>
+              ))}
             </div>
           ))}
         </div>
