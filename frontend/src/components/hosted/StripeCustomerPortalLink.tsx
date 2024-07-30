@@ -4,7 +4,7 @@ import { addEvent } from "../../lib/analytics";
 import { SAAS_BACKEND_URL } from "../../config";
 import { PortalSessionResponse } from "./types";
 import { forwardRef, useState } from "react";
-import Spinner from "../custom-ui/Spinner";
+import Spinner from "../core/Spinner";
 
 interface Props {
   label: string;

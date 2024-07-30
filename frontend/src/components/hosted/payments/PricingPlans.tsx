@@ -1,5 +1,5 @@
 import { FaCheckCircle } from "react-icons/fa";
-import Spinner from "../../custom-ui/Spinner";
+import Spinner from "../../core/Spinner";
 import React from "react";
 import { Button } from "../../ui/button";
 import useStripeCheckout from "./useStripeCheckout";
