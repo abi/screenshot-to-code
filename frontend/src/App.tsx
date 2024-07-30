@@ -189,8 +189,11 @@ function App() {
       },
       // On set code
       (code, variant) => {
+        if (variant === currentVariantIndex) {
+          setGeneratedCode(code);
+        }
+
         setVariant(code, variant);
-        setGeneratedCode(code);
 
         // TODO: How to deal with variants?
         if (params.generationType === "create") {
