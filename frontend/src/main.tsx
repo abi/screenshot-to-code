@@ -9,6 +9,7 @@ import { CLERK_PUBLISHABLE_KEY } from "./config.ts";
 import "./index.css";
 import PricingPage from "./components/hosted/PricingPage.tsx";
 import CheckoutSuccessPage from "./components/hosted/CheckoutSuccessPage.tsx";
+import FaqsPage from "./components/hosted/FaqsPage.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -24,6 +25,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<AppContainer />} />
           <Route path="/evals" element={<EvalsPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/faqs" element={<FaqsPage />} />
           <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
         </Routes>
       </Router>
