@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useEffect, useRef } from "react";
 import HistoryDisplay from "../history/HistoryDisplay";
+import Variants from "../variants/Variants";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -35,8 +36,16 @@ function Sidebar({
     shouldIncludeResultImage,
     setShouldIncludeResultImage,
   } = useAppStore();
-  const { inputMode, generatedCode, referenceImages, executionConsole } =
-    useProjectStore();
+
+  const {
+    inputMode,
+    generatedCode,
+    referenceImages,
+    executionConsoles,
+    currentVariantIndex,
+  } = useProjectStore();
+
+  const executionConsole = executionConsoles[currentVariantIndex] || [];
 
   // When coding is complete, focus on the update instruction textarea
   useEffect(() => {
@@ -47,6 +56,8 @@ function Sidebar({
 
   return (
     <>
+      <Variants />
+
       {/* Show code preview only when coding */}
       {appState === AppState.CODING && (
         <div className="flex flex-col">

@@ -16,10 +16,17 @@ interface ProjectStore {
   setGeneratedCode: (
     updater: string | ((currentCode: string) => string)
   ) => void;
-  executionConsole: string[];
-  setExecutionConsole: (
-    updater: string[] | ((currentConsole: string[]) => string[])
-  ) => void;
+
+  variants: string[];
+  currentVariantIndex: number;
+  setCurrentVariantIndex: (index: number) => void;
+  setVariant: (code: string, index: number) => void;
+  appendToVariant: (newTokens: string, index: number) => void;
+  resetVariants: () => void;
+
+  executionConsoles: { [key: number]: string[] };
+  appendExecutionConsole: (variantIndex: number, line: string) => void;
+  resetExecutionConsoles: () => void;
 
   // Tracks the currently shown version from app history
   // TODO: might want to move to appStore
@@ -48,14 +55,41 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       generatedCode:
         typeof updater === "function" ? updater(state.generatedCode) : updater,
     })),
-  executionConsole: [],
-  setExecutionConsole: (updater) =>
+
+  variants: [],
+  currentVariantIndex: 0,
+
+  setCurrentVariantIndex: (index) => set({ currentVariantIndex: index }),
+  setVariant: (code: string, index: number) =>
+    set((state) => {
+      const newVariants = [...state.variants];
+      while (newVariants.length <= index) {
+        newVariants.push("");
+      }
+      newVariants[index] = code;
+      return { variants: newVariants };
+    }),
+  appendToVariant: (newTokens: string, index: number) =>
+    set((state) => {
+      const newVariants = [...state.variants];
+      newVariants[index] += newTokens;
+      return { variants: newVariants };
+    }),
+  resetVariants: () => set({ variants: [], currentVariantIndex: 0 }),
+
+  executionConsoles: {},
+
+  appendExecutionConsole: (variantIndex: number, line: string) =>
     set((state) => ({
-      executionConsole:
-        typeof updater === "function"
-          ? updater(state.executionConsole)
-          : updater,
+      executionConsoles: {
+        ...state.executionConsoles,
+        [variantIndex]: [
+          ...(state.executionConsoles[variantIndex] || []),
+          line,
+        ],
+      },
     })),
+  resetExecutionConsoles: () => set({ executionConsoles: {} }),
 
   currentVersion: null,
   setCurrentVersion: (version) => set({ currentVersion: version }),

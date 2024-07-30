@@ -36,7 +36,12 @@ function App() {
 
     // Outputs
     setGeneratedCode,
-    setExecutionConsole,
+    currentVariantIndex,
+    setVariant,
+    appendToVariant,
+    resetVariants,
+    appendExecutionConsole,
+    resetExecutionConsoles,
     currentVersion,
     setCurrentVersion,
     appHistory,
@@ -106,10 +111,14 @@ function App() {
   const reset = () => {
     setAppState(AppState.INITIAL);
     setGeneratedCode("");
+    resetVariants();
+    resetExecutionConsoles();
+
+    // Inputs
     setReferenceImages([]);
-    setExecutionConsole([]);
     setUpdateInstruction("");
     setIsImportedFromCode(false);
+
     setAppHistory([]);
     setCurrentVersion(null);
     setShouldIncludeResultImage(false);
@@ -159,7 +168,7 @@ function App() {
     parentVersion: number | null
   ) {
     // Reset the execution console
-    setExecutionConsole([]);
+    resetExecutionConsoles();
 
     // Set the app state
     setAppState(AppState.CODING);
@@ -171,10 +180,19 @@ function App() {
       wsRef,
       updatedParams,
       // On change
-      (token) => setGeneratedCode((prev) => prev + token),
+      (token, variant) => {
+        if (variant === currentVariantIndex) {
+          setGeneratedCode((prev) => prev + token);
+        }
+
+        appendToVariant(token, variant);
+      },
       // On set code
-      (code) => {
+      (code, variant) => {
+        setVariant(code, variant);
         setGeneratedCode(code);
+
+        // TODO: How to deal with variants?
         if (params.generationType === "create") {
           setAppHistory([
             {
@@ -214,7 +232,7 @@ function App() {
         }
       },
       // On status update
-      (line) => setExecutionConsole((prev) => [...prev, line]),
+      (line, variant) => appendExecutionConsole(variant, line),
       // On cancel
       () => {
         cancelCodeGenerationAndReset();
@@ -314,6 +332,7 @@ function App() {
     }
 
     setGeneratedCode("");
+    resetVariants();
     setUpdateInstruction("");
   }
 
