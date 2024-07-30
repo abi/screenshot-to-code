@@ -2,7 +2,7 @@ import { useUser } from "@clerk/clerk-react";
 import posthog from "posthog-js";
 import App from "../../App";
 import { useEffect, useRef } from "react";
-import FullPageSpinner from "../custom-ui/FullPageSpinner";
+import FullPageSpinner from "../core/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
 import AvatarDropdown from "./AvatarDropdown";

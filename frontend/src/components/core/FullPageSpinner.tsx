@@ -1,4 +1,4 @@
-import Spinner from "./Spinner";
+import Spinner from "../custom-ui/Spinner";
 
 function FullPageSpinner() {
   return (
