@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
-import {
-  IS_FREE_TRIAL_ENABLED,
-  IS_RUNNING_ON_CLOUD,
-  SHOULD_SHOW_FEEDBACK_CALL_NOTE,
-} from "./config";
+import { IS_FREE_TRIAL_ENABLED, IS_RUNNING_ON_CLOUD } from "./config";
 import SettingsDialog from "./components/settings/SettingsDialog";
 import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
 import { PicoBadge } from "./components/messages/PicoBadge";
@@ -22,7 +18,6 @@ import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import TipLink from "./components/messages/TipLink";
-import FeedbackCallNote from "./components/user-feedback/FeedbackCallNote";
 import { useAppStore } from "./store/app-store";
 import GenerateFromText from "./components/generate-from-text/GenerateFromText";
 import { useProjectStore } from "./store/project-store";
@@ -32,8 +27,6 @@ import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import { takeScreenshot } from "./lib/takeScreenshot";
 import Sidebar from "./components/sidebar/Sidebar";
-
-const IS_OPENAI_DOWN = false;
 
 interface Props {
   navbarComponent?: JSX.Element;
@@ -101,9 +94,6 @@ function App({ navbarComponent }: Props) {
     model !== CodeGenerationModel.GPT_4O_2024_05_13 &&
     model !== CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20 &&
     appState === AppState.INITIAL;
-
-  const showFeedbackCallNote =
-    subscriberTier !== "free" && SHOULD_SHOW_FEEDBACK_CALL_NOTE;
 
   const showSelectAndEditFeature =
     (model === CodeGenerationModel.GPT_4O_2024_05_13 ||
@@ -463,22 +453,9 @@ function App({ navbarComponent }: Props) {
             !IS_FREE_TRIAL_ENABLED &&
             subscriberTier === "free" && <OnboardingNote />}
 
-          {IS_OPENAI_DOWN && (
-            <div className="bg-black text-white dark:bg-white dark:text-black p-3 rounded">
-              OpenAI API is currently down. Try back in 30 minutes or later. We
-              apologize for the inconvenience.
-            </div>
-          )}
-
-          {showFeedbackCallNote && appState === AppState.INITIAL && (
-            <FeedbackCallNote />
-          )}
-
           {appState === AppState.INITIAL && (
             <GenerateFromText doCreateFromText={doCreateFromText} />
           )}
-
-          {/* {showFeedbackCallNote && <FeedbackCallNote />} */}
 
           {/* Rest of the sidebar when we're not in the initial state */}
           {(appState === AppState.CODING ||
