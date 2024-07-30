@@ -3,6 +3,7 @@ import re
 from typing import Dict, List, Literal, Union
 from openai import AsyncOpenAI
 from bs4 import BeautifulSoup
+import sentry_sdk
 
 from image_generation.replicate import call_replicate
 
@@ -29,6 +30,10 @@ async def process_tasks(
     for result in results:
         if isinstance(result, Exception):
             print(f"An exception occurred: {result}")
+            try:
+                raise result
+            except Exception:
+                sentry_sdk.capture_exception()
             processed_results.append(None)
         else:
             processed_results.append(result)
