@@ -36,9 +36,7 @@ export default function useStripeCheckout() {
 
       // Track going to checkout page as a conversion
       gtag("event", "conversion", {
-        send_to: "AW-16649848443/cFfeCP_Xw8QZEPuMooM-",
-        value: 1.0,
-        currency: "USD",
+        send_to: "AW-16649848443/AKZpCJbP2cYZEPuMooM-",
       });
 
       // Redirect to Stripe Checkout
