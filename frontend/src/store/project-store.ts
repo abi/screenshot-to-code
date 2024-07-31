@@ -72,6 +72,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   appendToVariant: (newTokens: string, index: number) =>
     set((state) => {
       const newVariants = [...state.variants];
+      while (newVariants.length <= index) {
+        newVariants.push("");
+      }
       newVariants[index] += newTokens;
       return { variants: newVariants };
     }),
