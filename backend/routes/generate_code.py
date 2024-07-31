@@ -107,13 +107,11 @@ async def stream_code(websocket: WebSocket):
 
     print("Received params")
 
-    # Read the code config settings (stack) from the request. Fall back to default if not provided.
-    generated_code_config = ""
-    if "generatedCodeConfig" in params and params["generatedCodeConfig"]:
-        generated_code_config = params["generatedCodeConfig"]
+    # Read the code config settings (stack) from the request.
+    generated_code_config = params.get("generatedCodeConfig", "")
     if not generated_code_config in get_args(Stack):
         await throw_error(f"Invalid generated code config: {generated_code_config}")
-        return
+        raise Exception(f"Invalid generated code config: {generated_code_config}")
     # Cast the variable to the Stack type
     valid_stack = cast(Stack, generated_code_config)
 
