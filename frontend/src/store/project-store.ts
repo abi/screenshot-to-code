@@ -56,8 +56,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         typeof updater === "function" ? updater(state.generatedCode) : updater,
     })),
 
-  variants: [],
   currentVariantIndex: 0,
+  variants: [],
+  executionConsoles: {},
 
   setCurrentVariantIndex: (index) => set({ currentVariantIndex: index }),
   setVariant: (code: string, index: number) =>
@@ -79,8 +80,6 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       return { variants: newVariants };
     }),
   resetVariants: () => set({ variants: [], currentVariantIndex: 0 }),
-
-  executionConsoles: {},
 
   appendExecutionConsole: (variantIndex: number, line: string) =>
     set((state) => ({
