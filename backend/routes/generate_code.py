@@ -199,14 +199,9 @@ async def stream_code(websocket: WebSocket):
             params, valid_stack, code_generation_model, validated_input_mode
         )
     except:
-        # TODO(*): This should use variantIndex
-        await websocket.send_json(
-            {
-                "type": "error",
-                "value": "Error assembling prompt. Contact support at support@picoapps.xyz",
-            }
+        await throw_error(
+            "Error assembling prompt. Contact support at support@picoapps.xyz"
         )
-        await websocket.close()
         raise
 
     pprint_prompt(prompt_messages)  # type: ignore
