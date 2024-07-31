@@ -1,10 +1,15 @@
 import os
 import asyncio
-import traceback
 from fastapi import APIRouter, WebSocket
 import openai
 from codegen.utils import extract_html_content
-from config import ANTHROPIC_API_KEY, IS_PROD, OPENAI_API_KEY, SHOULD_MOCK_AI_RESPONSE
+from config import (
+    ANTHROPIC_API_KEY,
+    IS_PROD,
+    OPENAI_API_KEY,
+    REPLICATE_API_KEY,
+    SHOULD_MOCK_AI_RESPONSE,
+)
 from custom_types import InputMode
 from llm import (
     Llm,
@@ -17,7 +22,7 @@ from llm import (
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
 from typing import Any, Coroutine, Dict, List, Literal, Union, cast, get_args
-from image_generation import generate_images
+from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
 from prompts.types import Stack
@@ -51,18 +56,30 @@ async def perform_image_generation(
     openai_base_url: str | None,
     image_cache: dict[str, str],
 ):
+    replicate_api_key = REPLICATE_API_KEY
     if not should_generate_images:
         return completion
 
-    if not openai_api_key:
-        print("No OpenAI API key found. Skipping image generation.")
-        return completion
+    if replicate_api_key:
+        image_generation_model = "sdxl-lightning"
+        api_key = replicate_api_key
+    else:
+        if not openai_api_key:
+            print(
+                "No OpenAI API key and Replicate key found. Skipping image generation."
+            )
+            return completion
+        image_generation_model = "dalle3"
+        api_key = openai_api_key
+
+    print("Generating images with model: ", image_generation_model)
 
     return await generate_images(
         completion,
-        api_key=openai_api_key,
+        api_key=api_key,
         base_url=openai_base_url,
         image_cache=image_cache,
+        model=image_generation_model,
     )
 
 

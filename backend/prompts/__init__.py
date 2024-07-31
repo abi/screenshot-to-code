@@ -2,7 +2,7 @@ from typing import Union
 
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 from custom_types import InputMode
-from image_generation import create_alt_url_mapping
+from image_generation.core import create_alt_url_mapping
 from llm import Llm
 
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
