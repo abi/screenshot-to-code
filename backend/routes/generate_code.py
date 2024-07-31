@@ -97,6 +97,12 @@ async def stream_code(websocket: WebSocket):
         value: str,
         variantIndex: int,
     ):
+        # Print for debugging on the backend
+        if type == "error":
+            print(f"Error (variant {variantIndex}): {value}")
+        elif type == "status":
+            print(f"Status (variant {variantIndex}): {value}")
+
         await websocket.send_json(
             {"type": type, "value": value, "variantIndex": variantIndex}
         )
@@ -180,8 +186,6 @@ async def stream_code(websocket: WebSocket):
 
     # Get the image generation flag from the request. Fall back to True if not provided.
     should_generate_images = bool(params.get("isImageGenerationEnabled", True))
-
-    print("generating code...")
 
     # TODO(*): Print with send_message instead of print statements
     await send_message("status", "Generating code...", 0)
