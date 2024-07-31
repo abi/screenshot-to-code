@@ -187,9 +187,7 @@ async def stream_code(websocket: WebSocket):
     await send_message("status", "Generating code...", 0)
     await send_message("status", "Generating code...", 1)
 
-    # TODO(*): Move down
-    async def process_chunk(content: str, variantIndex: int):
-        await send_message("chunk", content, variantIndex)
+    ### Prompt creation
 
     # Image cache for updates so that we don't have to regenerate images
     image_cache: Dict[str, str] = {}
@@ -205,6 +203,11 @@ async def stream_code(websocket: WebSocket):
         raise
 
     pprint_prompt(prompt_messages)  # type: ignore
+
+    ### Code generation
+
+    async def process_chunk(content: str, variantIndex: int):
+        await send_message("chunk", content, variantIndex)
 
     if SHOULD_MOCK_AI_RESPONSE:
         completions = [
