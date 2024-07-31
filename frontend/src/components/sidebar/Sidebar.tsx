@@ -167,7 +167,7 @@ function Sidebar({
             </div>
           </div>
         )}
-        <div className="bg-gray-400 px-4 py-2 rounded text-sm">
+        <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
           <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
           {Object.entries(executionConsoles).map(([index, lines]) => (
             <div key={index}>
