@@ -170,8 +170,8 @@ async def stream_code(websocket: WebSocket):
     openai_base_url: Union[str, None] = None
     # Disable user-specified OpenAI Base URL in prod
     if not os.environ.get("IS_PROD"):
-        if "openAiBaseURL" in params and params["openAiBaseURL"]:
-            openai_base_url = params["openAiBaseURL"]
+        openai_base_url = params.get("openAiBaseURL")
+        if openai_base_url:
             print("Using OpenAI Base URL from client-side settings dialog")
         else:
             openai_base_url = os.environ.get("OPENAI_BASE_URL")
