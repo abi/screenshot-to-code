@@ -27,7 +27,7 @@ async def process_tasks(
 
     processed_results: List[Union[str, None]] = []
     for result in results:
-        if isinstance(result, Exception):
+        if isinstance(result, BaseException):
             print(f"An exception occurred: {result}")
             processed_results.append(None)
         else:
