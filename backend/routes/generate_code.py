@@ -85,6 +85,8 @@ async def stream_code(websocket: WebSocket):
 
     print("Incoming websocket connection...")
 
+
+    ## Communication protocol setup
     async def throw_error(
         message: str,
     ):
@@ -107,6 +109,8 @@ async def stream_code(websocket: WebSocket):
             {"type": type, "value": value, "variantIndex": variantIndex}
         )
 
+    ## Parameter validation
+    
     # TODO: Are the values always strings?
     params: Dict[str, str] = await websocket.receive_json()
     print("Received params")
