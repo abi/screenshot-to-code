@@ -27,8 +27,7 @@ from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
 from prompts.types import Stack
-
-# from utils import pprint_prompt
+from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 
@@ -240,7 +239,7 @@ async def stream_code(websocket: WebSocket):
 
     try:
         prompt_messages, image_cache = await create_prompt(
-            params, valid_stack, code_generation_model, validated_input_mode
+            params, valid_stack, validated_input_mode
         )
     except:
         await throw_error(
@@ -248,7 +247,7 @@ async def stream_code(websocket: WebSocket):
         )
         raise
 
-    # pprint_prompt(prompt_messages)  # type: ignore
+    pprint_prompt(prompt_messages)  # type: ignore
 
     ### Code generation
 

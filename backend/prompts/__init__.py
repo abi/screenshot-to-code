@@ -1,10 +1,8 @@
 from typing import Union
-
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
+
 from custom_types import InputMode
 from image_generation.core import create_alt_url_mapping
-from llm import Llm
-
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
 from prompts.types import Stack
@@ -21,7 +19,7 @@ Generate code for a SVG that looks exactly like this.
 
 
 async def create_prompt(
-    params: dict[str, str], stack: Stack, model: Llm, input_mode: InputMode
+    params: dict[str, str], stack: Stack, input_mode: InputMode
 ) -> tuple[list[ChatCompletionMessageParam], dict[str, str]]:
 
     image_cache: dict[str, str] = {}
@@ -29,9 +27,7 @@ async def create_prompt(
     # If this generation started off with imported code, we need to assemble the prompt differently
     if params.get("isImportedFromCode"):
         original_imported_code = params["history"][0]
-        prompt_messages = assemble_imported_code_prompt(
-            original_imported_code, stack, model
-        )
+        prompt_messages = assemble_imported_code_prompt(original_imported_code, stack)
         for index, text in enumerate(params["history"][1:]):
             if index % 2 == 0:
                 message: ChatCompletionMessageParam = {
@@ -79,7 +75,7 @@ async def create_prompt(
 
 
 def assemble_imported_code_prompt(
-    code: str, stack: Stack, model: Llm
+    code: str, stack: Stack
 ) -> list[ChatCompletionMessageParam]:
     system_content = IMPORTED_CODE_SYSTEM_PROMPTS[stack]
 
@@ -89,24 +85,12 @@ def assemble_imported_code_prompt(
         else "Here is the code of the SVG: " + code
     )
 
-    if model == Llm.CLAUDE_3_5_SONNET_2024_06_20:
-        return [
-            {
-                "role": "system",
-                "content": system_content + "\n " + user_content,
-            }
-        ]
-    else:
-        return [
-            {
-                "role": "system",
-                "content": system_content,
-            },
-            {
-                "role": "user",
-                "content": user_content,
-            },
-        ]
+    return [
+        {
+            "role": "system",
+            "content": system_content + "\n " + user_content,
+        }
+    ]
     # TODO: Use result_image_data_url
 
 
