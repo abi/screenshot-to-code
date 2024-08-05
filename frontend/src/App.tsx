@@ -110,19 +110,20 @@ function App() {
 
   const reset = () => {
     setAppState(AppState.INITIAL);
+    setShouldIncludeResultImage(false);
+    setUpdateInstruction("");
+    disableInSelectAndEditMode();
     setGeneratedCode("");
     resetVariants();
     resetExecutionConsoles();
 
     // Inputs
+    setInputMode("image");
     setReferenceImages([]);
-    setUpdateInstruction("");
     setIsImportedFromCode(false);
 
     setAppHistory([]);
     setCurrentVersion(null);
-    setShouldIncludeResultImage(false);
-    disableInSelectAndEditMode();
   };
 
   const regenerate = () => {
