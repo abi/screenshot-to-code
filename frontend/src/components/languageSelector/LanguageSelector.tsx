@@ -3,38 +3,41 @@ import i18n from '../../i18n';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import './LanguageSelector.css';
 
-type Languages = 'en' | 'zh';
+type Languages = 'en' | 'zh' | 'ja' | 'ko' | 'de' | 'ru' | 'fr';
 
 const LanguageSelector: React.FC = () => {
-  const getBrowserLanguage = () => {
-    const browserLang = navigator.language.split('-')[0];
-    return (['en', 'zh'].includes(browserLang) ? browserLang : 'en') as Languages;
-  };
-
   const [selectedLang, setSelectedLang] = useState<Languages>(i18n.language as Languages);
 
   useEffect(() => {
-    const defaultLang = getBrowserLanguage();
-    if (defaultLang !== i18n.language) {
-      i18n.changeLanguage(defaultLang);
-      setSelectedLang(defaultLang);
-    }
+    const handleLanguageChanged = (lang: string) => {
+      setSelectedLang(lang as Languages);
+    };
+
+    i18n.on('languageChanged', handleLanguageChanged);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
   }, []);
 
   const handleLanguageChange = (value: string) => {
     const nextLang = value as Languages;
     i18n.changeLanguage(nextLang);
-    setSelectedLang(nextLang);
   };
 
   return (
     <Select onValueChange={handleLanguageChange} value={selectedLang}>
-      <SelectTrigger className="w-[100px]">
+      <SelectTrigger className="w-[120px]">
         <SelectValue placeholder="Language" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="en">English</SelectItem>
-        <SelectItem value="zh">中文</SelectItem>
+        <SelectItem value="zh">简体中文</SelectItem>
+        <SelectItem value="ja">日本語</SelectItem>
+        <SelectItem value="ko">한국어</SelectItem>
+        <SelectItem value="de">Deutsch</SelectItem>
+        <SelectItem value="ru">Русский</SelectItem>
+        <SelectItem value="fr">Français</SelectItem>
       </SelectContent>
     </Select>
   );
