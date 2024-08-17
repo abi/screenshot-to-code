@@ -23,8 +23,11 @@ import DeprecationMessage from "./components/messages/DeprecationMessage";
 import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import { takeScreenshot } from "./lib/takeScreenshot";
+import { useTranslation } from 'react-i18next'; // 导入 useTranslation hook
 
 function App() {
+  const { t } = useTranslation(); // 初始化 useTranslation hook
+
   const {
     // Inputs
     inputMode,
@@ -118,16 +121,14 @@ function App() {
 
   const regenerate = () => {
     if (currentVersion === null) {
-      toast.error(
-        "No current version set. Please open a Github issue as this shouldn't happen."
-      );
+      toast.error(t('app.errors.noCurrentVersion'));
       return;
     }
 
     // Retrieve the previous command
     const previousCommand = appHistory[currentVersion];
     if (previousCommand.type !== "ai_create") {
-      toast.error("Only the first version can be regenerated.");
+      toast.error(t('app.errors.regenerateFirstVersion'));
       return;
     }
 
@@ -189,9 +190,7 @@ function App() {
           setAppHistory((prev) => {
             // Validate parent version
             if (parentVersion === null) {
-              toast.error(
-                "No parent version set. Contact support or open a Github issue."
-              );
+              toast.error(t('app.errors.noCurrentVersion'));
               return prev;
             }
 
@@ -254,14 +253,12 @@ function App() {
     selectedElement?: HTMLElement
   ) {
     if (updateInstruction.trim() === "") {
-      toast.error("Please include some instructions for AI on what to update.");
+      toast.error(t('app.errors.emptyInstruction'));
       return;
     }
 
     if (currentVersion === null) {
-      toast.error(
-        "No current version set. Contact support or open a Github issue."
-      );
+      toast.error(t('app.errors.noCurrentVersion'));
       return;
     }
 
@@ -269,9 +266,7 @@ function App() {
     try {
       historyTree = extractHistoryTree(appHistory, currentVersion);
     } catch {
-      toast.error(
-        "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
-      );
+      toast.error(t('app.errors.invalidHistory'));
       return;
     }
 
@@ -365,7 +360,7 @@ function App() {
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
           {/* Header with access to settings */}
           <div className="flex items-center justify-between mt-10 mb-2">
-            <h1 className="text-2xl ">Screenshot to Code</h1>
+            <h1 className="text-2xl ">{t('app.title')}</h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
 

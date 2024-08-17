@@ -22,6 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import LanguageSelector from "../languageSelector/LanguageSelector";
 
 interface Props {
   settings: Settings;
@@ -131,7 +132,10 @@ function SettingsDialog({ settings, setSettings }: Props) {
               }
             />
           </div>
-
+          <div className="flex items-center justify-between">
+          <Label htmlFor="language-select">Language</Label>
+          <LanguageSelector />
+        </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
               <AccordionTrigger>Screenshot by URL Config</AccordionTrigger>

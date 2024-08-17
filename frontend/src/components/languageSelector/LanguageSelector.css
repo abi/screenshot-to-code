@@ -1,0 +1,20 @@
+.language-selector-container {
+  display: inline-block;
+}
+
+.language-selector {
+  color: white;
+  background-color: #333;
+  padding: 8px 32px 8px 12px;
+  font-size: 14px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.language-selector:hover, .language-selector:focus {
+  background-color: #444;
+  border-color: #555;
+}

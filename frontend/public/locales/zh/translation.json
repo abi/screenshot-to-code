@@ -1,0 +1,10 @@
+{
+  "app": {
+    "title": "截图转代码",
+    "errors": {
+      "emptyInstruction": "请为AI提供一些关于更新内容的指示。",
+      "noCurrentVersion": "未设置当前版本。请联系支持或在Github上开issue。",
+      "invalidHistory": "版本历史无效。这不应该发生。请联系支持或在Github上开issue。"
+    }
+  }
+}
