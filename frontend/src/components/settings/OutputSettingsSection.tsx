@@ -8,6 +8,7 @@ import {
 } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { Stack, STACK_DESCRIPTIONS } from "../../lib/stacks";
+import { useTranslation } from 'react-i18next';
 
 function generateDisplayComponent(stack: Stack) {
   const stackComponents = STACK_DESCRIPTIONS[stack].components;
@@ -34,13 +35,14 @@ interface Props {
 function OutputSettingsSection({
   stack,
   setStack,
-  label = "Generating:",
+  label = "setting.generating",
   shouldDisableUpdates = false,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-y-2 justify-between text-sm">
       <div className="grid grid-cols-3 items-center gap-4">
-        <span>{label}</span>
+        <span>{t(label)}</span>
         <Select
           value={stack}
           onValueChange={(value: string) => setStack(value as Stack)}
@@ -57,7 +59,7 @@ function OutputSettingsSection({
                     {generateDisplayComponent(stack)}
                     {STACK_DESCRIPTIONS[stack].inBeta && (
                       <Badge className="ml-2" variant="secondary">
-                        Beta
+                        {t('setting.beta')}
                       </Badge>
                     )}
                   </div>

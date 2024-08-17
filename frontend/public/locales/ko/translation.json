@@ -1,0 +1,145 @@
+{
+    "app": {
+      "title": "스크린샷에서 코드로",
+      "errors": {
+        "emptyInstruction": "AI에게 업데이트할 내용에 대한 지시사항을 포함해 주세요.",
+        "noCurrentVersion": "현재 버전이 설정되지 않았습니다. 지원팀에 문의하거나 Github 이슈를 열어주세요.",
+        "invalidHistory": "버전 기록이 유효하지 않습니다. 이런 일은 일어나지 않아야 합니다. 지원팀에 문의하거나 Github 이슈를 열어주세요."
+      }
+    },
+    "history": {
+      "versions": "버전",
+      "toggle": "토글",
+      "fullPrompt": "전체 프롬프트",
+      "create": "생성",
+      "edit": "편집",
+      "importedFromCode": "코드에서 가져옴"
+    },
+    "messages": {
+      "deprecationMessage": "우리는 더 이상 이 모델을 지원하지 않습니다. 대신, 코드 생성은 GPT-4o 또는 Claude Sonnet 3.5, 최첨단 모델 2개를 사용할 것입니다.",
+      "onboardingNote": {
+        "intro": "Screenshot to Code를 사용하려면,",
+        "buyCredits": "크레딧을 구매하거나 (100회 생성에 $36)",
+        "orUseKey": "또는 GPT4 비전 액세스가 있는 자신의 OpenAI API 키를 사용하세요.",
+        "followInstructions": "키를 얻으려면 이 지침을 따르세요.",
+        "pasteKey": "그리고 설정 대화상자(위의 기어 아이콘)에 붙여넣으세요. 키는 브라우저에만 저장됩니다. 우리 서버에는 절대 저장되지 않습니다."
+      },
+      "picoBadge": {
+        "featureRequests": "기능 요청?",
+        "openSourceProject": "Pico의 오픈 소스 프로젝트"
+      },
+      "tipLink": {
+        "text": "더 나은 결과를 위한 팁"
+      }
+    },
+    "preview": {
+      "codeTab": {
+        "copyCode": "코드 복사",
+        "openIn": "열기",
+        "codeCopied": "클립보드에 복사됨"
+      },
+      "pane": {
+        "reset": "초기화",
+        "download": "다운로드",
+        "desktop": "데스크톱",
+        "mobile": "모바일",
+        "code": "코드"
+      }
+    },
+    "recording": {
+      "start": "화면 녹화",
+      "inProgress": "녹화 중...",
+      "finish": "녹화 종료",
+      "captured": "화면 녹화가 캡처되었습니다.",
+      "reRecord": "다시 녹화",
+      "generate": "생성",
+      "errorStarting": "화면 녹화를 시작할 수 없습니다",
+      "noDataError": "화면 녹화가 존재하지 않습니다. 다시 시도해 주세요."
+    },
+    "sidebar": {
+      "videoGenerationWarning": "비디오에서 코드 생성은 3-4분이 걸릴 수 있습니다. 최상의 결과를 얻기 위해 여러 번의 패스를 수행합니다. 기다려 주세요.",
+      "cancel": "취소",
+      "updateInstructionPlaceholder": "AI에게 변경할 내용을 알려주세요...",
+      "includeScreenshot": "현재 버전의 스크린샷을 포함하시겠습니까?",
+      "update": "업데이트",
+      "regenerate": "재생성",
+      "referenceImageAlt": "참조",
+      "originalVideo": "원본 비디오",
+      "originalScreenshot": "원본 스크린샷",
+      "console": "콘솔"
+    },
+    "selectAndEdit": {
+      "editPopup": {
+        "placeholder": "AI에게 이 요소에 대해 변경할 내용을 알려주세요...",
+        "update": "업데이트"
+      },
+      "selectAndEdit": {
+        "exitMode": "선택 모드 종료",
+        "enterMode": "선택 및 업데이트"
+      }
+    },
+    "setting": {
+      "title": "설정",
+      "dallePlaceholder": "DALL-E 플레이스홀더 이미지 생성",
+      "dallePlaceholderDescription": "켜면 더 재미있지만 돈을 절약하고 싶다면 끄세요.",
+      "openAIApiKey": "OpenAI API 키",
+      "apiKeyDescription": "브라우저에만 저장됩니다. 서버에는 절대 저장되지 않습니다. .env 설정을 덮어씁니다.",
+      "openAIApiKeyPlaceholder": "OpenAI API 키",
+      "openAIBaseURL": "OpenAI 기본 URL (선택사항)",
+      "openAIBaseURLDescription": "기본값을 사용하지 않으려면 프록시 URL로 대체하세요.",
+      "openAIBaseURLPlaceholder": "OpenAI 기본 URL",
+      "anthropicApiKey": "Anthropic API 키",
+      "anthropicApiKeyPlaceholder": "Anthropic API 키",
+      "language": "언어",
+      "screenshotConfig": "URL로 스크린샷 설정",
+      "screenshotDescription": "직접 스크린샷을 찍는 대신 URL을 직접 사용하려면 ScreenshotOne API 키를 추가하세요.",
+      "getFreeScreenshots": "월 100장의 무료 스크린샷을 받으세요.",
+      "screenshotApiKeyPlaceholder": "ScreenshotOne API 키",
+      "themeSettings": "테마 설정",
+      "appTheme": "앱 테마",
+      "toggleDarkMode": "다크 모드 전환",
+      "codeEditorTheme": "코드 에디터 테마 - 업데이트하려면 페이지 새로고침 필요",
+      "save": "저장",
+      "aiModel": "AI 모델:",
+      "beta": "베타",
+      "generating": "생성 중:"
+    },
+    "imageUpload": {
+      "dragDropPrompt": "스크린샷을 여기에 드래그 앤 드롭하거나,\n클릭하여 업로드하세요",
+      "new": "새로운!",
+      "uploadPrompt": "화면 녹화 (.mp4, .mov)를 업로드하거나 화면을 녹화하여 전체 앱을 복제하세요 (실험적).",
+      "learnMore": "자세히 알아보기.",
+      "errorReading": "파일 읽기 오류: "
+    },
+    "importCode": {
+      "buttonText": "코드에서 가져오기",
+      "dialogTitle": "HTML 코드를 붙여넣으세요",
+      "dialogDescription": "가져오려는 코드가 유효한 HTML인지 확인하세요.",
+      "textareaPlaceholder": "여기에 HTML 코드를 붙여넣으세요...",
+      "stackLabel": "스택:",
+      "importButton": "가져오기",
+      "errorEmptyCode": "코드를 붙여넣어 주세요",
+      "errorNoStack": "스택을 선택해 주세요"
+    },
+    "termsOfService": {
+      "title": "시작하려면 이메일을 입력하세요",
+      "emailPlaceholder": "이메일",
+      "consentText": "이메일을 제공함으로써, 가끔의 제품 업데이트 수신에 동의하며,",
+      "termsLink": "서비스 약관",
+      "localRunText": "로컬에서 직접 실행하고 싶으신가요? 이 프로젝트는 오픈 소스입니다.",
+      "githubLink": "Github에서 코드를 다운로드하고 시작하세요.",
+      "emailError": "이메일을 입력해 주세요",
+      "agreeButton": "동의 및 계속",
+      "usageText": "이 조직들의 디자이너와 엔지니어들이 Screenshot to Code를 사용하여 더 빠르게 인터페이스를 구축합니다."
+    },
+    "urlInput": {
+      "errorNoApiKey": "설정 대화상자에 ScreenshotOne API 키를 추가해 주세요. 이는 선택사항입니다 - 이미지를 직접 드래그/드롭하여 업로드할 수도 있습니다.",
+      "errorNoUrl": "URL을 입력해 주세요",
+      "errorCapture": "스크린샷 캡처 실패",
+      "errorCaptureDetails": "스크린샷 캡처에 실패했습니다. 자세한 내용은 콘솔과 백엔드 로그를 확인하세요.",
+      "orScreenshot": "또는 URL의 스크린샷 찍기...",
+      "enterUrl": "URL 입력",
+      "capturing": "캡처 중...",
+      "capture": "캡처"
+    }
+  }

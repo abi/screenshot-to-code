@@ -7,6 +7,7 @@ import { URLS } from "../urls";
 import { Badge } from "./ui/badge";
 import ScreenRecorder from "./recording/ScreenRecorder";
 import { ScreenRecorderState } from "../types";
+import { useTranslation } from 'react-i18next';
 
 const baseStyle = {
   flex: 1,
@@ -62,6 +63,7 @@ interface Props {
 }
 
 function ImageUpload({ setReferenceImages }: Props) {
+  const { t } = useTranslation();
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   // TODO: Switch to Zustand
   const [screenRecorderState, setScreenRecorderState] =
@@ -109,7 +111,7 @@ function ImageUpload({ setReferenceImages }: Props) {
           });
       },
       onDropRejected: (rejectedFiles) => {
-        toast.error(rejectedFiles[0].errors[0].message);
+        toast.error(t('imageUpload.errorReading') + rejectedFiles[0].errors[0].message);
       },
     });
 
@@ -168,21 +170,19 @@ function ImageUpload({ setReferenceImages }: Props) {
         <div {...getRootProps({ style: style as any })}>
           <input {...getInputProps()} className="file-input" />
           <p className="text-slate-700 text-lg">
-            Drag & drop a screenshot here, <br />
-            or click to upload
+            {t('imageUpload.dragDropPrompt')}
           </p>
         </div>
       )}
       {screenRecorderState === ScreenRecorderState.INITIAL && (
         <div className="text-center text-sm text-slate-800 mt-4">
-          <Badge>New!</Badge> Upload a screen recording (.mp4, .mov) or record
-          your screen to clone a whole app (experimental).{" "}
+         <Badge>{t('imageUpload.new')}</Badge> {t('imageUpload.uploadPrompt')}{" "}{" "}
           <a
             className="underline"
             href={URLS["intro-to-video"]}
             target="_blank"
           >
-            Learn more.
+            {t('imageUpload.learnMore')}
           </a>
         </div>
       )}

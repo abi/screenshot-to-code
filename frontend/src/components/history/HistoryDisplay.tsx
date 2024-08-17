@@ -11,6 +11,7 @@ import {
 import { Button } from "../ui/button";
 import { CaretSortIcon } from "@radix-ui/react-icons";
 import { useProjectStore } from "../../store/project-store";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   shouldDisableReverts: boolean;
@@ -24,6 +25,7 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
     setGeneratedCode,
   } = useProjectStore();
   const renderedHistory = renderHistory(history, currentVersion);
+  const { t } = useTranslation();
 
   const revertToVersion = (index: number) => {
     if (index < 0 || index >= history.length || !history[index]) return;
@@ -33,7 +35,7 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
 
   return renderedHistory.length === 0 ? null : (
     <div className="flex flex-col h-screen">
-      <h1 className="font-bold mb-2">Versions</h1>
+      <h1 className="font-bold mb-2">{t('history.versions')}</h1>
       <ul className="space-y-0 flex flex-col-reverse">
         {renderedHistory.map((item, index) => (
           <li key={index}>
@@ -59,7 +61,7 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                   }
                 >
                   <div className="flex gap-x-1 truncate">
-                    <h2 className="text-sm truncate">{item.summary}</h2>
+                    <h2 className="text-sm truncate">{t(item.summary)}</h2>
                     {item.parentVersion !== null && (
                       <h2 className="text-sm">
                         (parent: {item.parentVersion})
@@ -71,14 +73,14 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-6">
                     <CaretSortIcon className="h-4 w-4" />
-                    <span className="sr-only">Toggle</span>
+                    <span className="sr-only">{t('historytoggle')}</span>
                   </Button>
                 </CollapsibleTrigger>
               </div>
               <CollapsibleContent className="w-full bg-slate-300 p-2">
-                <div>Full prompt: {item.summary}</div>
+                <div>{t('history.fullPrompt')}: {t(item.summary)}</div>
                 <div className="flex justify-end">
-                  <Badge>{item.type}</Badge>
+                  <Badge>{t(item.type)}</Badge>
                 </div>
               </CollapsibleContent>
             </Collapsible>

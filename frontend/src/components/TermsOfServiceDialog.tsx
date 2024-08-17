@@ -10,6 +10,7 @@ import {
 import { Input } from "./ui/input";
 import toast from "react-hot-toast";
 import { PICO_BACKEND_FORM_SECRET } from "../config";
+import { useTranslation } from 'react-i18next';
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
@@ -17,6 +18,7 @@ const TermsOfServiceDialog: React.FC<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }> = ({ open, onOpenChange }) => {
+  const { t } = useTranslation();
   const [email, setEmail] = React.useState("");
 
   const onSubscribe = async () => {
@@ -34,13 +36,13 @@ const TermsOfServiceDialog: React.FC<{
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="mb-2 text-xl">
-            Enter your email to get started
+          {t('termsOfService.title')}
           </AlertDialogTitle>
         </AlertDialogHeader>
 
         <div className="mb-2">
           <Input
-            placeholder="Email"
+            placeholder={t('termsOfService.emailPlaceholder')}
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -49,27 +51,26 @@ const TermsOfServiceDialog: React.FC<{
         </div>
         <div className="flex flex-col space-y-3 text-sm">
           <p>
-            By providing your email, you consent to receiving occasional product
-            updates, and you accept the{" "}
+          {t('termsOfService.consentText')}{" "}
             <a
               href="https://a.picoapps.xyz/camera-write"
               target="_blank"
               className="underline"
             >
-              terms of service
+             {t('termsOfService.termsLink')}
             </a>
             .{" "}
           </p>
 
           <p>
             {" "}
-            Prefer to run it yourself locally? This project is open source.{" "}
+            {t('termsOfService.localRunText')}{" "}
             <a
               href="https://github.com/abi/screenshot-to-code"
               target="_blank"
               className="underline"
             >
-              Download the code and get started on Github.
+              {t('termsOfService.githubLink')}
             </a>
           </p>
         </div>
@@ -79,13 +80,13 @@ const TermsOfServiceDialog: React.FC<{
             onClick={(e) => {
               if (!email.trim() || !email.trim().includes("@")) {
                 e.preventDefault();
-                toast.error("Please enter your email");
+                toast.error(t('termsOfService.emailError'));
               } else {
                 onSubscribe();
               }
             }}
           >
-            Agree & Continue
+            {t('termsOfService.agreeButton')}
           </AlertDialogAction>
         </AlertDialogFooter>
 
@@ -107,8 +108,7 @@ const TermsOfServiceDialog: React.FC<{
             ))}
           </div>
           <div className="text-gray-500 text-xs mt-4 text-center">
-            Designers and engineers from these organizations use Screenshot to
-            Code to build interfaces faster.
+          {t('termsOfService.usageText')}
           </div>
         </div>
       </AlertDialogContent>

@@ -1,0 +1,145 @@
+{
+    "app": {
+      "title": "Screenshot zu Code",
+      "errors": {
+        "emptyInstruction": "Bitte geben Sie Anweisungen für die KI zur Aktualisierung an.",
+        "noCurrentVersion": "Keine aktuelle Version festgelegt. Kontaktieren Sie den Support oder öffnen Sie ein GitHub-Issue.",
+        "invalidHistory": "Ungültige Versionsverlauf. Dies sollte nicht passieren. Bitte kontaktieren Sie den Support oder öffnen Sie ein GitHub-Issue."
+      }
+    },
+    "history": {
+      "versions": "Versionen",
+      "toggle": "Umschalten",
+      "fullPrompt": "Vollständige Eingabeaufforderung",
+      "create": "Erstellen",
+      "edit": "Bearbeiten",
+      "importedFromCode": "Aus Code importiert"
+    },
+    "messages": {
+      "deprecationMessage": "Wir unterstützen dieses Modell nicht mehr. Stattdessen wird die Codegenerierung GPT-4o oder Claude Sonnet 3.5 verwenden, die zwei modernsten Modelle.",
+      "onboardingNote": {
+        "intro": "Um Screenshot zu Code zu nutzen,",
+        "buyCredits": "kaufen Sie Credits (100 Generierungen für $36)",
+        "orUseKey": "oder verwenden Sie Ihren eigenen OpenAI API-Schlüssel mit GPT4-Vision-Zugang.",
+        "followInstructions": "Folgen Sie diesen Anweisungen, um einen Schlüssel zu erhalten.",
+        "pasteKey": "und fügen Sie ihn in den Einstellungen-Dialog ein (Zahnrad-Symbol oben). Ihr Schlüssel wird nur in Ihrem Browser gespeichert. Niemals auf unseren Servern."
+      },
+      "picoBadge": {
+        "featureRequests": "Feature-Wünsche?",
+        "openSourceProject": "ein Open-Source-Projekt von Pico"
+      },
+      "tipLink": {
+        "text": "Tipps für bessere Ergebnisse"
+      }
+    },
+    "preview": {
+      "codeTab": {
+        "copyCode": "Code kopieren",
+        "openIn": "Öffnen in",
+        "codeCopied": "In die Zwischenablage kopiert"
+      },
+      "pane": {
+        "reset": "Zurücksetzen",
+        "download": "Herunterladen",
+        "desktop": "Desktop",
+        "mobile": "Mobil",
+        "code": "Code"
+      }
+    },
+    "recording": {
+      "start": "Bildschirm aufnehmen",
+      "inProgress": "Aufnahme läuft...",
+      "finish": "Aufnahme beenden",
+      "captured": "Bildschirmaufnahme erfasst.",
+      "reRecord": "Erneut aufnehmen",
+      "generate": "Generieren",
+      "errorStarting": "Bildschirmaufnahme konnte nicht gestartet werden",
+      "noDataError": "Bildschirmaufnahme existiert nicht. Bitte versuchen Sie es erneut."
+    },
+    "sidebar": {
+      "videoGenerationWarning": "Die Codegenerierung aus Videos kann 3-4 Minuten dauern. Wir machen mehrere Durchläufe, um das beste Ergebnis zu erzielen. Bitte haben Sie Geduld.",
+      "cancel": "Abbrechen",
+      "updateInstructionPlaceholder": "Sagen Sie der KI, was geändert werden soll...",
+      "includeScreenshot": "Screenshot der aktuellen Version einschließen?",
+      "update": "Aktualisieren",
+      "regenerate": "Neu generieren",
+      "referenceImageAlt": "Referenz",
+      "originalVideo": "Originalvideo",
+      "originalScreenshot": "Original-Screenshot",
+      "console": "Konsole"
+    },
+    "selectAndEdit": {
+      "editPopup": {
+        "placeholder": "Sagen Sie der KI, was an diesem Element geändert werden soll...",
+        "update": "Aktualisieren"
+      },
+      "selectAndEdit": {
+        "exitMode": "Auswahlmodus beenden",
+        "enterMode": "Auswählen und aktualisieren"
+      }
+    },
+    "setting": {
+      "title": "Einstellungen",
+      "dallePlaceholder": "DALL-E Platzhalter-Bildgenerierung",
+      "dallePlaceholderDescription": "Mehr Spaß damit, aber wenn Sie Geld sparen möchten, schalten Sie es aus.",
+      "openAIApiKey": "OpenAI API-Schlüssel",
+      "apiKeyDescription": "Nur in Ihrem Browser gespeichert. Niemals auf Servern gespeichert. Überschreibt Ihre .env-Konfiguration.",
+      "openAIApiKeyPlaceholder": "OpenAI API-Schlüssel",
+      "openAIBaseURL": "OpenAI Basis-URL (optional)",
+      "openAIBaseURLDescription": "Ersetzen Sie durch eine Proxy-URL, wenn Sie die Standardeinstellung nicht verwenden möchten.",
+      "openAIBaseURLPlaceholder": "OpenAI Basis-URL",
+      "anthropicApiKey": "Anthropic API-Schlüssel",
+      "anthropicApiKeyPlaceholder": "Anthropic API-Schlüssel",
+      "language": "Sprache",
+      "screenshotConfig": "Screenshot-Konfiguration per URL",
+      "screenshotDescription": "Wenn Sie URLs direkt verwenden möchten, anstatt selbst Screenshots zu machen, fügen Sie einen ScreenshotOne API-Schlüssel hinzu.",
+      "getFreeScreenshots": "Erhalten Sie 100 Screenshots/Monat kostenlos.",
+      "screenshotApiKeyPlaceholder": "ScreenshotOne API-Schlüssel",
+      "themeSettings": "Theme-Einstellungen",
+      "appTheme": "App-Theme",
+      "toggleDarkMode": "Dunkelmodus umschalten",
+      "codeEditorTheme": "Code-Editor-Theme - erfordert Seitenaktualisierung zur Aktualisierung",
+      "save": "Speichern",
+      "aiModel": "KI-Modell:",
+      "beta": "Beta",
+      "generating": "Generierung:"
+    },
+    "imageUpload": {
+      "dragDropPrompt": "Screenshot hier per Drag & Drop ablegen, \n oder klicken Sie zum Hochladen",
+      "new": "Neu!",
+      "uploadPrompt": "Laden Sie eine Bildschirmaufnahme (.mp4, .mov) hoch oder nehmen Sie Ihren Bildschirm auf, um eine ganze App zu klonen (experimentell).",
+      "learnMore": "Erfahren Sie mehr.",
+      "errorReading": "Fehler beim Lesen der Dateien: "
+    },
+    "importCode": {
+      "buttonText": "Aus Code importieren",
+      "dialogTitle": "Fügen Sie Ihren HTML-Code ein",
+      "dialogDescription": "Stellen Sie sicher, dass der zu importierende Code gültiges HTML ist.",
+      "textareaPlaceholder": "Fügen Sie Ihren HTML-Code hier ein...",
+      "stackLabel": "Stack:",
+      "importButton": "Importieren",
+      "errorEmptyCode": "Bitte fügen Sie Code ein",
+      "errorNoStack": "Bitte wählen Sie Ihren Stack aus"
+    },
+    "termsOfService": {
+      "title": "Geben Sie Ihre E-Mail-Adresse ein, um zu beginnen",
+      "emailPlaceholder": "E-Mail",
+      "consentText": "Durch die Angabe Ihrer E-Mail-Adresse stimmen Sie dem Erhalt gelegentlicher Produkt-Updates zu und akzeptieren die",
+      "termsLink": "Nutzungsbedingungen",
+      "localRunText": "Möchten Sie es lieber lokal ausführen? Dieses Projekt ist Open Source.",
+      "githubLink": "Laden Sie den Code herunter und beginnen Sie auf Github.",
+      "emailError": "Bitte geben Sie Ihre E-Mail-Adresse ein",
+      "agreeButton": "Zustimmen & Fortfahren",
+      "usageText": "Designer und Ingenieure dieser Organisationen verwenden Screenshot zu Code, um Schnittstellen schneller zu erstellen."
+    },
+    "urlInput": {
+      "errorNoApiKey": "Bitte fügen Sie einen ScreenshotOne API-Schlüssel in den Einstellungen-Dialog hinzu. Dies ist optional - Sie können auch Bilder direkt per Drag & Drop hochladen.",
+      "errorNoUrl": "Bitte geben Sie eine URL ein",
+      "errorCapture": "Screenshot konnte nicht erfasst werden",
+      "errorCaptureDetails": "Screenshot konnte nicht erfasst werden. Schauen Sie in die Konsole und Ihre Backend-Logs für weitere Details.",
+      "orScreenshot": "Oder Screenshot einer URL...",
+      "enterUrl": "URL eingeben",
+      "capturing": "Erfassung läuft...",
+      "capture": "Erfassen"
+    }
+  }

@@ -1,10 +1,11 @@
 import { GiClick } from "react-icons/gi";
 import { useAppStore } from "../../store/app-store";
 import { Button } from "../ui/button";
+import { useTranslation } from 'react-i18next';
 
 function SelectAndEditModeToggleButton() {
   const { inSelectAndEditMode, toggleInSelectAndEditMode } = useAppStore();
-
+  const { t } = useTranslation();
   return (
     <Button
       onClick={toggleInSelectAndEditMode}
@@ -13,7 +14,9 @@ function SelectAndEditModeToggleButton() {
     >
       <GiClick className="text-lg" />
       <span>
-        {inSelectAndEditMode ? "Exit selection mode" : "Select and update"}
+        {inSelectAndEditMode 
+          ? t('selectAndEdit.selectAndEdit.exitMode') 
+          : t('selectAndEdit.selectAndEdit.enterMode')}
       </span>
     </Button>
   );

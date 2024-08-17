@@ -39,11 +39,11 @@ export function extractHistoryTree(
 function displayHistoryItemType(itemType: HistoryItemType) {
   switch (itemType) {
     case "ai_create":
-      return "Create";
+      return "history.create";
     case "ai_edit":
-      return "Edit";
+      return "history.edit";
     case "code_create":
-      return "Imported from code";
+      return "history.importedFromCode";
     default: {
       const exhaustiveCheck: never = itemType;
       throw new Error(`Unhandled case: ${exhaustiveCheck}`);
@@ -55,11 +55,11 @@ function summarizeHistoryItem(item: HistoryItem) {
   const itemType = item.type;
   switch (itemType) {
     case "ai_create":
-      return "Create";
+      return "history.create";
     case "ai_edit":
       return item.inputs.prompt;
     case "code_create":
-      return "Imported from code";
+      return "history.importedFromCode";
     default: {
       const exhaustiveCheck: never = itemType;
       throw new Error(`Unhandled case: ${exhaustiveCheck}`);

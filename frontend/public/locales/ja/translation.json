@@ -1,0 +1,145 @@
+{
+    "app": {
+      "title": "スクリーンショットからコードへ",
+      "errors": {
+        "emptyInstruction": "AIに更新内容を指示してください。",
+        "noCurrentVersion": "現在のバージョンが設定されていません。サポートに連絡するかGithubでイシューを開いてください。",
+        "invalidHistory": "バージョン履歴が無効です。これは起こるべきではありません。サポートに連絡するかGithubでイシューを開いてください。"
+      }
+    },
+    "history": {
+      "versions": "バージョン",
+      "toggle": "切り替え",
+      "fullPrompt": "完全なプロンプト",
+      "create": "作成",
+      "edit": "編集",
+      "importedFromCode": "コードからインポート"
+    },
+    "messages": {
+      "deprecationMessage": "このモデルはもうサポートしていません。代わりに、コード生成にはGPT-4oまたはClaude Sonnet 3.5という最先端の2つのモデルを使用します。",
+      "onboardingNote": {
+        "intro": "Screenshot to Codeを使用するには、",
+        "buyCredits": "クレジットを購入するか（100回の生成で36ドル）",
+        "orUseKey": "またはGPT4ビジョンアクセス付きの自分のOpenAI APIキーを使用してください。",
+        "followInstructions": "キーを取得するにはこれらの指示に従ってください。",
+        "pasteKey": "そして設定ダイアログ（上部の歯車アイコン）にペーストしてください。キーはブラウザにのみ保存され、サーバーには決して保存されません。"
+      },
+      "picoBadge": {
+        "featureRequests": "機能リクエスト？",
+        "openSourceProject": "Picoによるオープンソースプロジェクト"
+      },
+      "tipLink": {
+        "text": "より良い結果を得るためのヒント"
+      }
+    },
+    "preview": {
+      "codeTab": {
+        "copyCode": "コードをコピー",
+        "openIn": "で開く",
+        "codeCopied": "クリップボードにコピーしました"
+      },
+      "pane": {
+        "reset": "リセット",
+        "download": "ダウンロード",
+        "desktop": "デスクトップ",
+        "mobile": "モバイル",
+        "code": "コード"
+      }
+    },
+    "recording": {
+      "start": "画面録画",
+      "inProgress": "録画中...",
+      "finish": "録画終了",
+      "captured": "画面録画が完了しました。",
+      "reRecord": "再録画",
+      "generate": "生成",
+      "errorStarting": "画面録画を開始できませんでした",
+      "noDataError": "画面録画が存在しません。もう一度お試しください。"
+    },
+    "sidebar": {
+      "videoGenerationWarning": "ビデオからのコード生成には3〜4分かかる場合があります。最良の結果を得るために複数回のパスを行います。お待ちください。",
+      "cancel": "キャンセル",
+      "updateInstructionPlaceholder": "AIに変更内容を指示してください...",
+      "includeScreenshot": "現在のバージョンのスクリーンショットを含めますか？",
+      "update": "更新",
+      "regenerate": "再生成",
+      "referenceImageAlt": "参照",
+      "originalVideo": "元のビデオ",
+      "originalScreenshot": "元のスクリーンショット",
+      "console": "コンソール"
+    },
+    "selectAndEdit": {
+      "editPopup": {
+        "placeholder": "この要素について変更したい内容をAIに指示してください...",
+        "update": "更新"
+      },
+      "selectAndEdit": {
+        "exitMode": "選択モードを終了",
+        "enterMode": "選択して更新"
+      }
+    },
+    "setting": {
+      "title": "設定",
+      "dallePlaceholder": "DALL-Eプレースホルダー画像生成",
+      "dallePlaceholderDescription": "オンにすると楽しいですが、お金を節約したい場合はオフにしてください。",
+      "openAIApiKey": "OpenAI APIキー",
+      "apiKeyDescription": "ブラウザにのみ保存されます。サーバーには決して保存されません。.env設定よりも優先されます。",
+      "openAIApiKeyPlaceholder": "OpenAI APIキー",
+      "openAIBaseURL": "OpenAIベースURL（オプション）",
+      "openAIBaseURLDescription": "デフォルトを使用したくない場合は、プロキシURLに置き換えてください。",
+      "openAIBaseURLPlaceholder": "OpenAIベースURL",
+      "anthropicApiKey": "Anthropic APIキー",
+      "anthropicApiKeyPlaceholder": "Anthropic APIキー",
+      "language": "言語",
+      "screenshotConfig": "URLによるスクリーンショット設定",
+      "screenshotDescription": "スクリーンショットを自分で撮る代わりにURLを直接使用したい場合は、ScreenshotOne APIキーを追加してください。",
+      "getFreeScreenshots": "月100枚のスクリーンショットを無料で取得。",
+      "screenshotApiKeyPlaceholder": "ScreenshotOne APIキー",
+      "themeSettings": "テーマ設定",
+      "appTheme": "アプリテーマ",
+      "toggleDarkMode": "ダークモード切り替え",
+      "codeEditorTheme": "コードエディターテーマ - 更新にはページの再読み込みが必要です",
+      "save": "保存",
+      "aiModel": "AIモデル：",
+      "beta": "ベータ",
+      "generating": "生成中："
+    },
+    "imageUpload": {
+      "dragDropPrompt": "スクリーンショットをここにドラッグ＆ドロップするか、\nクリックしてアップロードしてください",
+      "new": "新機能！",
+      "uploadPrompt": "画面録画（.mp4、.mov）をアップロードするか、画面を録画してアプリ全体をクローンします（実験的）。",
+      "learnMore": "詳細はこちら。",
+      "errorReading": "ファイルの読み込みエラー： "
+    },
+    "importCode": {
+      "buttonText": "コードからインポート",
+      "dialogTitle": "HTMLコードを貼り付けてください",
+      "dialogDescription": "インポートするコードが有効なHTMLであることを確認してください。",
+      "textareaPlaceholder": "ここにHTMLコードを貼り付けてください...",
+      "stackLabel": "スタック：",
+      "importButton": "インポート",
+      "errorEmptyCode": "コードを貼り付けてください",
+      "errorNoStack": "スタックを選択してください"
+    },
+    "termsOfService": {
+      "title": "開始するにはメールアドレスを入力してください",
+      "emailPlaceholder": "メールアドレス",
+      "consentText": "メールアドレスを提供することで、製品更新の不定期な受信に同意し、",
+      "termsLink": "利用規約",
+      "localRunText": "ローカルで実行することを希望しますか？このプロジェクトはオープンソースです。",
+      "githubLink": "Githubでコードをダウンロードして始めましょう。",
+      "emailError": "メールアドレスを入力してください",
+      "agreeButton": "同意して続行",
+      "usageText": "これらの組織のデザイナーとエンジニアは、インターフェースをより速く構築するためにScreenshot to Codeを使用しています。"
+    },
+    "urlInput": {
+      "errorNoApiKey": "設定ダイアログでScreenshotOne APIキーを追加してください。これはオプションです - 画像を直接ドラッグ＆ドロップしてアップロードすることもできます。",
+      "errorNoUrl": "URLを入力してください",
+      "errorCapture": "スクリーンショットの取得に失敗しました",
+      "errorCaptureDetails": "スクリーンショットの取得に失敗しました。詳細については、コンソールとバックエンドログを確認してください。",
+      "orScreenshot": "またはURLのスクリーンショットを撮影...",
+      "enterUrl": "URLを入力",
+      "capturing": "取得中...",
+      "capture": "取得"
+    }
+  }

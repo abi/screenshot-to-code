@@ -10,6 +10,7 @@ import {
   CodeGenerationModel,
 } from "../../lib/models";
 import { Badge } from "../ui/badge";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   codeGenerationModel: CodeGenerationModel;
@@ -22,10 +23,11 @@ function ModelSettingsSection({
   setCodeGenerationModel,
   shouldDisableUpdates = false,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-y-2 justify-between text-sm">
       <div className="grid grid-cols-3 items-center gap-4">
-        <span>AI Model:</span>
+        <span>{t('setting.aiModel')}</span>
         <Select
           value={codeGenerationModel}
           onValueChange={(value: string) =>
@@ -48,7 +50,7 @@ function ModelSettingsSection({
                     </span>
                     {CODE_GENERATION_MODEL_DESCRIPTIONS[model].inBeta && (
                       <Badge className="ml-2" variant="secondary">
-                        Beta
+                        {t('setting.beta')}
                       </Badge>
                     )}
                   </div>

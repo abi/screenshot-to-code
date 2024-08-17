@@ -4,6 +4,7 @@ import { ScreenRecorderState } from "../../types";
 import { blobToBase64DataUrl } from "./utils";
 import fixWebmDuration from "webm-duration-fix";
 import toast from "react-hot-toast";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   screenRecorderState: ScreenRecorderState;
@@ -19,6 +20,7 @@ function ScreenRecorder({
   setScreenRecorderState,
   generateCode,
 }: Props) {
+  const { t } = useTranslation();
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
@@ -66,7 +68,7 @@ function ScreenRecorder({
       mediaRecorder.start();
       setScreenRecorderState(ScreenRecorderState.RECORDING);
     } catch (error) {
-      toast.error("Could not start screen recording");
+      toast.error(t('recording.errorStarting'));
       throw error;
     }
   };
@@ -90,7 +92,7 @@ function ScreenRecorder({
     if (screenRecordingDataUrl) {
       generateCode([screenRecordingDataUrl], "video");
     } else {
-      toast.error("Screen recording does not exist. Please try again.");
+      toast.error(t('recording.noDataError'));
       throw new Error("No screen recording data url");
     }
   };
@@ -98,23 +100,23 @@ function ScreenRecorder({
   return (
     <div className="flex items-center justify-center my-3">
       {screenRecorderState === ScreenRecorderState.INITIAL && (
-        <Button onClick={startScreenRecording}>Record Screen</Button>
+        <Button onClick={startScreenRecording}>{t('recording.start')}</Button>
       )}
 
       {screenRecorderState === ScreenRecorderState.RECORDING && (
         <div className="flex items-center flex-col gap-y-4">
           <div className="flex items-center mr-2 text-xl gap-x-1">
             <span className="block h-10 w-10 bg-red-600 rounded-full mr-1 animate-pulse"></span>
-            <span>Recording...</span>
+            <span>{t('recording.inProgress')}</span>
           </div>
-          <Button onClick={stopScreenRecording}>Finish Recording</Button>
+          <Button onClick={stopScreenRecording}>{t('recording.finish')}</Button>
         </div>
       )}
 
       {screenRecorderState === ScreenRecorderState.FINISHED && (
         <div className="flex items-center flex-col gap-y-4">
           <div className="flex items-center mr-2 text-xl gap-x-1">
-            <span>Screen Recording Captured.</span>
+            <span>{t('recording.captured')}</span>
           </div>
           {screenRecordingDataUrl && (
             <video
@@ -132,9 +134,9 @@ function ScreenRecorder({
                 setScreenRecorderState(ScreenRecorderState.INITIAL)
               }
             >
-              Re-record
+              {t('recording.reRecord')}
             </Button>
-            <Button onClick={kickoffGeneration}>Generate</Button>
+            <Button onClick={kickoffGeneration}>{t('recording.generate')}</Button>
           </div>
         </div>
       )}
