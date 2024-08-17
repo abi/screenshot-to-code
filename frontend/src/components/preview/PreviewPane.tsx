@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import {
   FaUndo,
@@ -22,6 +23,7 @@ interface Props {
 }
 
 function PreviewPane({ doUpdate, reset, settings }: Props) {
+  const { t } = useTranslation();
   const { appState } = useAppStore();
   const { inputMode, generatedCode, setGeneratedCode } = useProjectStore();
 
@@ -42,14 +44,14 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                   className="flex items-center ml-4 gap-x-2 dark:text-white dark:bg-gray-700"
                 >
                   <FaUndo />
-                  Reset
+                  {t('preview.pane.reset')}
                 </Button>
                 <Button
                   onClick={() => downloadCode(generatedCode)}
                   variant="secondary"
                   className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
                 >
-                  <FaDownload /> Download
+                  <FaDownload /> {t('preview.pane.download')}
                 </Button>
               </>
             )}
@@ -57,14 +59,14 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
           <div className="flex items-center">
             <TabsList>
               <TabsTrigger value="desktop" className="flex gap-x-2">
-                <FaDesktop /> Desktop
+                <FaDesktop /> {t('preview.pane.desktop')}
               </TabsTrigger>
               <TabsTrigger value="mobile" className="flex gap-x-2">
-                <FaMobile /> Mobile
+                <FaMobile /> {t('preview.pane.mobile')}
               </TabsTrigger>
               <TabsTrigger value="code" className="flex gap-x-2">
                 <FaCode />
-                Code
+                {t('preview.pane.code')}
               </TabsTrigger>
             </TabsList>
           </div>

@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { addHighlight, getAdjustedCoordinates, removeHighlight } from "./utils";
 import { useAppStore } from "../../store/app-store";
 import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
+import { useTranslation } from 'react-i18next';
 
 interface EditPopupProps {
   event: MouseEvent | null;
@@ -16,6 +17,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
   iframeRef,
   doUpdate,
 }) => {
+  const { t } = useTranslation();
   // App state
   const { inSelectAndEditMode } = useAppStore();
 
@@ -126,7 +128,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
         ref={textareaRef}
         value={updateText}
         onChange={(e) => setUpdateText(e.target.value)}
-        placeholder="Tell the AI what to change about this element..."
+        placeholder={t('selectAndEdit.editPopup.placeholder')}
         className="dark:bg-gray-700 dark:text-white"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -140,7 +142,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
           className="dark:bg-gray-700 dark:text-white"
           onClick={() => onUpdate(updateText)}
         >
-          Update <KeyboardShortcutBadge letter="enter" />
+          {t('selectAndEdit.editPopup.update')}  <KeyboardShortcutBadge letter="enter" />
         </Button>
       </div>
     </div>

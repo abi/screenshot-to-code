@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useEffect, useRef } from "react";
 import HistoryDisplay from "../history/HistoryDisplay";
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -26,6 +27,7 @@ function Sidebar({
   regenerate,
   cancelCodeGeneration,
 }: SidebarProps) {
+  const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -52,12 +54,8 @@ function Sidebar({
         <div className="flex flex-col">
           {/* Speed disclaimer for video mode */}
           {inputMode === "video" && (
-            <div
-              className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700
-            p-2 text-xs mb-4 mt-1"
-            >
-              Code generation from videos can take 3-4 minutes. We do multiple
-              passes to get the best result. Please be patient.
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-xs mb-4 mt-1">
+              {t('sidebar.videoGenerationWarning')}
             </div>
           )}
 
@@ -73,7 +71,7 @@ function Sidebar({
               onClick={cancelCodeGeneration}
               className="w-full dark:text-white dark:bg-gray-700"
             >
-              Cancel
+              {t('sidebar.cancel')}
             </Button>
           </div>
         </div>
@@ -84,7 +82,7 @@ function Sidebar({
           <div className="grid w-full gap-2">
             <Textarea
               ref={textareaRef}
-              placeholder="Tell the AI what to change..."
+              placeholder={t('sidebar.updateInstructionPlaceholder')}
               onChange={(e) => setUpdateInstruction(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -95,7 +93,7 @@ function Sidebar({
             />
             <div className="flex justify-between items-center gap-x-2">
               <div className="font-500 text-xs text-slate-700 dark:text-white">
-                Include screenshot of current version?
+                {t('sidebar.includeScreenshot')}
               </div>
               <Switch
                 checked={shouldIncludeResultImage}
@@ -107,7 +105,7 @@ function Sidebar({
               onClick={() => doUpdate(updateInstruction)}
               className="dark:text-white dark:bg-gray-700 update-btn"
             >
-              Update <KeyboardShortcutBadge letter="enter" />
+              {t('sidebar.update')} <KeyboardShortcutBadge letter="enter" />
             </Button>
           </div>
           <div className="flex items-center justify-end gap-x-2 mt-2">
@@ -115,7 +113,7 @@ function Sidebar({
               onClick={regenerate}
               className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
             >
-              🔄 Regenerate
+              🔄 {t('sidebar.regenerate')}
             </Button>
             {showSelectAndEditFeature && <SelectAndEditModeToggleButton />}
           </div>
@@ -138,7 +136,7 @@ function Sidebar({
                 <img
                   className="w-[340px] border border-gray-200 rounded-md"
                   src={referenceImages[0]}
-                  alt="Reference"
+                  alt={t('sidebar.referenceImageAlt')}
                 />
               )}
               {inputMode === "video" && (
@@ -152,12 +150,12 @@ function Sidebar({
               )}
             </div>
             <div className="text-gray-400 uppercase text-sm text-center mt-1">
-              {inputMode === "video" ? "Original Video" : "Original Screenshot"}
+              {inputMode === "video" ? t('sidebar.originalVideo') : t('sidebar.originalScreenshot')}
             </div>
           </div>
         )}
         <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
-          <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
+          <h2 className="text-lg mb-4 border-b border-gray-800">{t('sidebar.console')}</h2>
           {executionConsole.map((line, index) => (
             <div
               key={index}

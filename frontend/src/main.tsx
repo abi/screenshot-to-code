@@ -5,6 +5,7 @@ import "./index.css";
 import { Toaster } from "react-hot-toast";
 import EvalsPage from "./components/evals/EvalsPage.tsx";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import './i18n';
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

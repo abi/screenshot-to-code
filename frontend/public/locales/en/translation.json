@@ -1,0 +1,145 @@
+{
+  "app": {
+    "title": "Screenshot to Code",
+    "errors": {
+      "emptyInstruction": "Please include some instructions for AI on what to update.",
+      "noCurrentVersion": "No current version set. Contact support or open a Github issue.",
+      "invalidHistory": "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
+    }
+  },
+  "history": {
+    "versions": "Versions",
+    "toggle": "Toggle",
+    "fullPrompt": "Full prompt",
+    "create": "Create",
+    "edit": "Edit",
+    "importedFromCode": "Imported from code"
+  },
+  "messages": {
+    "deprecationMessage": "We no longer support this model. Instead, code generation will use GPT-4o or Claude Sonnet 3.5, the 2 state-of-the-art models.",
+    "onboardingNote": {
+      "intro": "To use Screenshot to Code,",
+      "buyCredits": "buy some credits (100 generations for $36)",
+      "orUseKey": "or use your own OpenAI API key with GPT4 vision access.",
+      "followInstructions": "Follow these instructions to get yourself a key.",
+      "pasteKey": "and paste it in the Settings dialog (gear icon above). Your key is only stored in your browser. Never stored on our servers."
+    },
+    "picoBadge": {
+      "featureRequests": "feature requests?",
+      "openSourceProject": "an open source project by Pico"
+    },
+    "tipLink": {
+      "text": "Tips for better results"
+    }
+  },
+  "preview": {
+    "codeTab": {
+      "copyCode": "Copy Code",
+      "openIn": "Open in",
+      "codeCopied": "Copied to clipboard"
+    },
+    "pane": {
+      "reset": "Reset",
+      "download": "Download",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "code": "Code"
+    }
+  },
+  "recording": {
+    "start": "Record Screen",
+    "inProgress": "Recording...",
+    "finish": "Finish Recording",
+    "captured": "Screen Recording Captured.",
+    "reRecord": "Re-record",
+    "generate": "Generate",
+    "errorStarting": "Could not start screen recording",
+    "noDataError": "Screen recording does not exist. Please try again."
+  },
+  "sidebar": {
+    "videoGenerationWarning": "Code generation from videos can take 3-4 minutes. We do multiple passes to get the best result. Please be patient.",
+    "cancel": "Cancel",
+    "updateInstructionPlaceholder": "Tell the AI what to change...",
+    "includeScreenshot": "Include screenshot of current version?",
+    "update": "Update",
+    "regenerate": "Regenerate",
+    "referenceImageAlt": "Reference",
+    "originalVideo": "Original Video",
+    "originalScreenshot": "Original Screenshot",
+    "console": "Console"
+  },
+  "selectAndEdit": {
+    "editPopup": {
+      "placeholder": "Tell the AI what to change about this element...",
+      "update": "Update"
+    },
+    "selectAndEdit": {
+      "exitMode": "Exit selection mode",
+      "enterMode": "Select and update"
+    }
+  },
+  "setting": {
+    "title": "Settings",
+    "dallePlaceholder": "DALL-E Placeholder Image Generation",
+    "dallePlaceholderDescription": "More fun with it but if you want to save money, turn it off.",
+    "openAIApiKey": "OpenAI API key",
+    "apiKeyDescription": "Only stored in your browser. Never stored on servers. Overrides your .env config.",
+    "openAIApiKeyPlaceholder": "OpenAI API key",
+    "openAIBaseURL": "OpenAI Base URL (optional)",
+    "openAIBaseURLDescription": "Replace with a proxy URL if you don't want to use the default.",
+    "openAIBaseURLPlaceholder": "OpenAI Base URL",
+    "anthropicApiKey": "Anthropic API key",
+    "anthropicApiKeyPlaceholder": "Anthropic API key",
+    "language": "Language",
+    "screenshotConfig": "Screenshot by URL Config",
+    "screenshotDescription": "If you want to use URLs directly instead of taking the screenshot yourself, add a ScreenshotOne API key.",
+    "getFreeScreenshots": "Get 100 screenshots/mo for free.",
+    "screenshotApiKeyPlaceholder": "ScreenshotOne API key",
+    "themeSettings": "Theme Settings",
+    "appTheme": "App Theme",
+    "toggleDarkMode": "Toggle dark mode",
+    "codeEditorTheme": "Code Editor Theme - requires page refresh to update",
+    "save": "Save",
+    "aiModel": "AI Model:",
+    "beta": "Beta",
+    "generating": "Generating:"
+  },
+  "imageUpload": {
+    "dragDropPrompt": "Drag & drop a screenshot here, \n or click to upload",
+    "new": "New!",
+    "uploadPrompt": "Upload a screen recording (.mp4, .mov) or record your screen to clone a whole app (experimental).",
+    "learnMore": "Learn more.",
+    "errorReading": "Error reading files: "
+  },
+  "importCode": {
+    "buttonText": "Import from Code",
+    "dialogTitle": "Paste in your HTML code",
+    "dialogDescription": "Make sure that the code you're importing is valid HTML.",
+    "textareaPlaceholder": "Paste your HTML code here...",
+    "stackLabel": "Stack:",
+    "importButton": "Import",
+    "errorEmptyCode": "Please paste in some code",
+    "errorNoStack": "Please select your stack"
+  },
+  "termsOfService": {
+    "title": "Enter your email to get started",
+    "emailPlaceholder": "Email",
+    "consentText": "By providing your email, you consent to receiving occasional product updates, and you accept the",
+    "termsLink": "terms of service",
+    "localRunText": "Prefer to run it yourself locally? This project is open source.",
+    "githubLink": "Download the code and get started on Github.",
+    "emailError": "Please enter your email",
+    "agreeButton": "Agree & Continue",
+    "usageText": "Designers and engineers from these organizations use Screenshot to Code to build interfaces faster."
+  },
+  "urlInput": {
+    "errorNoApiKey": "Please add a ScreenshotOne API key in the Settings dialog. This is optional - you can also drag/drop and upload images directly.",
+    "errorNoUrl": "Please enter a URL",
+    "errorCapture": "Failed to capture screenshot",
+    "errorCaptureDetails": "Failed to capture screenshot. Look at the console and your backend logs for more details.",
+    "orScreenshot": "Or screenshot a URL...",
+    "enterUrl": "Enter URL",
+    "capturing": "Capturing...",
+    "capture": "Capture"
+  }
+}

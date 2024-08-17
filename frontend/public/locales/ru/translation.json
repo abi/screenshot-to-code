@@ -1,0 +1,145 @@
+{
+    "app": {
+      "title": "Скриншот в код",
+      "errors": {
+        "emptyInstruction": "Пожалуйста, включите инструкции для ИИ о том, что обновить.",
+        "noCurrentVersion": "Текущая версия не установлена. Свяжитесь с поддержкой или откройте проблему на Github.",
+        "invalidHistory": "История версий недействительна. Этого не должно происходить. Пожалуйста, свяжитесь с поддержкой или откройте проблему на Github."
+      }
+    },
+    "history": {
+      "versions": "Версии",
+      "toggle": "Переключить",
+      "fullPrompt": "Полный запрос",
+      "create": "Создать",
+      "edit": "Редактировать",
+      "importedFromCode": "Импортировано из кода"
+    },
+    "messages": {
+      "deprecationMessage": "Мы больше не поддерживаем эту модель. Вместо этого генерация кода будет использовать GPT-4o или Claude Sonnet 3.5, две самые современные модели.",
+      "onboardingNote": {
+        "intro": "Чтобы использовать Screenshot to Code,",
+        "buyCredits": "купите кредиты (100 генераций за $36)",
+        "orUseKey": "или используйте свой собственный ключ API OpenAI с доступом к GPT4 vision.",
+        "followInstructions": "Следуйте этим инструкциям, чтобы получить ключ.",
+        "pasteKey": "и вставьте его в диалог настроек (значок шестеренки вверху). Ваш ключ хранится только в вашем браузере. Никогда не хранится на наших серверах."
+      },
+      "picoBadge": {
+        "featureRequests": "запросы функций?",
+        "openSourceProject": "проект с открытым исходным кодом от Pico"
+      },
+      "tipLink": {
+        "text": "Советы для лучших результатов"
+      }
+    },
+    "preview": {
+      "codeTab": {
+        "copyCode": "Копировать код",
+        "openIn": "Открыть в",
+        "codeCopied": "Скопировано в буфер обмена"
+      },
+      "pane": {
+        "reset": "Сбросить",
+        "download": "Скачать",
+        "desktop": "Десктоп",
+        "mobile": "Мобильный",
+        "code": "Код"
+      }
+    },
+    "recording": {
+      "start": "Записать экран",
+      "inProgress": "Запись...",
+      "finish": "Завершить запись",
+      "captured": "Запись экрана захвачена.",
+      "reRecord": "Перезаписать",
+      "generate": "Сгенерировать",
+      "errorStarting": "Не удалось начать запись экрана",
+      "noDataError": "Запись экрана не существует. Пожалуйста, попробуйте еще раз."
+    },
+    "sidebar": {
+      "videoGenerationWarning": "Генерация кода из видео может занять 3-4 минуты. Мы делаем несколько проходов для получения наилучшего результата. Пожалуйста, будьте терпеливы.",
+      "cancel": "Отмена",
+      "updateInstructionPlaceholder": "Скажите ИИ, что изменить...",
+      "includeScreenshot": "Включить скриншот текущей версии?",
+      "update": "Обновить",
+      "regenerate": "Перегенерировать",
+      "referenceImageAlt": "Ссылка",
+      "originalVideo": "Оригинальное видео",
+      "originalScreenshot": "Оригинальный скриншот",
+      "console": "Консоль"
+    },
+    "selectAndEdit": {
+      "editPopup": {
+        "placeholder": "Скажите ИИ, что изменить в этом элементе...",
+        "update": "Обновить"
+      },
+      "selectAndEdit": {
+        "exitMode": "Выйти из режима выбора",
+        "enterMode": "Выбрать и обновить"
+      }
+    },
+    "setting": {
+      "title": "Настройки",
+      "dallePlaceholder": "Генерация заполнителей изображений DALL-E",
+      "dallePlaceholderDescription": "С ней веселее, но если хотите сэкономить деньги, выключите.",
+      "openAIApiKey": "Ключ API OpenAI",
+      "apiKeyDescription": "Хранится только в вашем браузере. Никогда не хранится на серверах. Переопределяет вашу конфигурацию .env.",
+      "openAIApiKeyPlaceholder": "Ключ API OpenAI",
+      "openAIBaseURL": "Базовый URL OpenAI (необязательно)",
+      "openAIBaseURLDescription": "Замените прокси-URL, если не хотите использовать по умолчанию.",
+      "openAIBaseURLPlaceholder": "Базовый URL OpenAI",
+      "anthropicApiKey": "Ключ API Anthropic",
+      "anthropicApiKeyPlaceholder": "Ключ API Anthropic",
+      "language": "Язык",
+      "screenshotConfig": "Конфигурация скриншота по URL",
+      "screenshotDescription": "Если вы хотите использовать URL напрямую вместо самостоятельного создания скриншотов, добавьте ключ API ScreenshotOne.",
+      "getFreeScreenshots": "Получите 100 скриншотов/мес бесплатно.",
+      "screenshotApiKeyPlaceholder": "Ключ API ScreenshotOne",
+      "themeSettings": "Настройки темы",
+      "appTheme": "Тема приложения",
+      "toggleDarkMode": "Переключить темный режим",
+      "codeEditorTheme": "Тема редактора кода - требуется обновление страницы для обновления",
+      "save": "Сохранить",
+      "aiModel": "Модель ИИ:",
+      "beta": "Бета",
+      "generating": "Генерация:"
+    },
+    "imageUpload": {
+      "dragDropPrompt": "Перетащите скриншот сюда, \n или нажмите для загрузки",
+      "new": "Новое!",
+      "uploadPrompt": "Загрузите запись экрана (.mp4, .mov) или запишите свой экран, чтобы клонировать целое приложение (экспериментально).",
+      "learnMore": "Узнать больше.",
+      "errorReading": "Ошибка чтения файлов: "
+    },
+    "importCode": {
+      "buttonText": "Импорт из кода",
+      "dialogTitle": "Вставьте ваш HTML-код",
+      "dialogDescription": "Убедитесь, что импортируемый код является валидным HTML.",
+      "textareaPlaceholder": "Вставьте ваш HTML-код здесь...",
+      "stackLabel": "Стек:",
+      "importButton": "Импорт",
+      "errorEmptyCode": "Пожалуйста, вставьте код",
+      "errorNoStack": "Пожалуйста, выберите ваш стек"
+    },
+    "termsOfService": {
+      "title": "Введите свой email, чтобы начать",
+      "emailPlaceholder": "Email",
+      "consentText": "Предоставляя свой email, вы соглашаетесь получать периодические обновления продукта и принимаете",
+      "termsLink": "условия использования",
+      "localRunText": "Предпочитаете запускать локально? Этот проект с открытым исходным кодом.",
+      "githubLink": "Скачайте код и начните на Github.",
+      "emailError": "Пожалуйста, введите ваш email",
+      "agreeButton": "Согласиться и продолжить",
+      "usageText": "Дизайнеры и инженеры из этих организаций используют Screenshot to Code для более быстрого создания интерфейсов."
+    },
+    "urlInput": {
+      "errorNoApiKey": "Пожалуйста, добавьте ключ API ScreenshotOne в диалог настроек. Это необязательно - вы также можете напрямую перетаскивать и загружать изображения.",
+      "errorNoUrl": "Пожалуйста, введите URL",
+      "errorCapture": "Не удалось захватить скриншот",
+      "errorCaptureDetails": "Не удалось захватить скриншот. Проверьте консоль и журналы бэкенда для получения дополнительной информации.",
+      "orScreenshot": "Или скриншот URL...",
+      "enterUrl": "Введите URL",
+      "capturing": "Захват...",
+      "capture": "Захватить"
+    }
+  }

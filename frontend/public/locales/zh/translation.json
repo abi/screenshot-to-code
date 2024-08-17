@@ -1,0 +1,145 @@
+{
+  "app": {
+    "title": "截图转代码",
+    "errors": {
+      "emptyInstruction": "请为AI提供一些关于更新内容的指示。",
+      "noCurrentVersion": "未设置当前版本。请联系支持或在Github上开issue。",
+      "invalidHistory": "版本历史无效。这不应该发生。请联系支持或在Github上开issue。"
+    }
+  },
+  "history": {
+    "versions": "版本",
+    "toggle": "切换",
+    "fullPrompt": "完整提示",
+    "create": "创建",
+    "edit": "编辑",
+    "importedFromCode": "从代码导入"
+  },
+  "messages": {
+    "deprecationMessage": "我们不再支持此模型。相反，代码生成将使用 GPT-4o 或 Claude Sonnet 3.5，这两个是最先进的模型。",
+    "onboardingNote": {
+      "intro": "要使用截图转代码功能，",
+      "buyCredits": "购买一些积分（36美元100次生成）",
+      "orUseKey": "或使用您自己的OpenAI API密钥（需要GPT4 vision访问权限）。",
+      "followInstructions": "按照这些说明获取密钥。",
+      "pasteKey": "然后将其粘贴到设置对话框中（上方的齿轮图标）。您的密钥仅存储在您的浏览器中，绝不会存储在我们的服务器上。"
+    },
+    "picoBadge": {
+      "featureRequests": "功能请求？",
+      "openSourceProject": "Pico 的开源项目"
+    },
+    "tipLink": {
+      "text": "获取更好结果的提示"
+    }
+  },
+  "preview": {
+    "codeTab": {
+      "copyCode": "复制代码",
+      "openIn": "在以下打开",
+      "codeCopied": "已复制到剪贴板"
+    },
+    "pane": {
+      "reset": "重置",
+      "download": "下载",
+      "desktop": "桌面",
+      "mobile": "移动",
+      "code": "代码"
+    }
+  },
+  "recording": {
+    "start": "录制屏幕",
+    "inProgress": "录制中...",
+    "finish": "结束录制",
+    "captured": "屏幕录制已完成。",
+    "reRecord": "重新录制",
+    "generate": "生成",
+    "errorStarting": "无法开始屏幕录制",
+    "noDataError": "屏幕录制不存在。请重试。"
+  },
+  "sidebar": {
+    "videoGenerationWarning": "从视频生成代码可能需要3-4分钟。我们会进行多次处理以获得最佳结果。请耐心等待。",
+    "cancel": "取消",
+    "updateInstructionPlaceholder": "告诉AI要改变什么...",
+    "includeScreenshot": "包含当前版本的截图？",
+    "update": "更新",
+    "regenerate": "重新生成",
+    "referenceImageAlt": "参考图",
+    "originalVideo": "原始视频",
+    "originalScreenshot": "原始截图",
+    "console": "控制台"
+  },
+  "selectAndEdit": {
+    "editPopup": {
+      "placeholder": "告诉 AI 要如何改变这个元素...",
+      "update": "更新"
+    },
+    "selectAndEdit": {
+      "exitMode": "退出选择模式",
+      "enterMode": "选择并更新"
+    }
+  },
+  "setting": {
+    "title": "设置",
+    "dallePlaceholder": "DALL-E 占位图像生成",
+    "dallePlaceholderDescription": "使用它会更有趣，但如果您想节省成本，可以关闭它。",
+    "openAIApiKey": "OpenAI API 密钥",
+    "apiKeyDescription": "仅存储在您的浏览器中。绝不存储在服务器上。覆盖您的 .env 配置。",
+    "openAIApiKeyPlaceholder": "OpenAI API 密钥",
+    "openAIBaseURL": "OpenAI 基础 URL（可选）",
+    "openAIBaseURLDescription": "如果您不想使用默认值，请替换为代理 URL。",
+    "openAIBaseURLPlaceholder": "OpenAI 基础 URL",
+    "anthropicApiKey": "Anthropic API 密钥",
+    "anthropicApiKeyPlaceholder": "Anthropic API 密钥",
+    "language": "语言",
+    "screenshotConfig": "URL 截图配置",
+    "screenshotDescription": "如果您想直接使用 URL 而不是自己截图，请添加 ScreenshotOne API 密钥。",
+    "getFreeScreenshots": "每月免费获取 100 张截图。",
+    "screenshotApiKeyPlaceholder": "ScreenshotOne API 密钥",
+    "themeSettings": "主题设置",
+    "appTheme": "应用主题",
+    "toggleDarkMode": "切换深色模式",
+    "codeEditorTheme": "代码编辑器主题 - 需要刷新页面才能更新",
+    "save": "保存",
+    "aiModel": "AI 模型：",
+    "beta": "测试版",
+    "generating": "生成:"
+  },
+  "imageUpload": {
+    "dragDropPrompt": "将截图拖放到此处，\n 或点击上传",
+    "new": "新功能！",
+    "uploadPrompt": "上传屏幕录像（.mp4，.mov）或录制您的屏幕以克隆整个应用（实验性功能）。",
+    "learnMore": "了解更多。",
+    "errorReading": "读取文件时出错："
+  },
+  "importCode": {
+    "buttonText": "从代码导入",
+    "dialogTitle": "粘贴您的HTML代码",
+    "dialogDescription": "请确保您导入的代码是有效的HTML。",
+    "textareaPlaceholder": "在此粘贴您的HTML代码...",
+    "stackLabel": "技术栈：",
+    "importButton": "导入",
+    "errorEmptyCode": "请粘贴一些代码",
+    "errorNoStack": "请选择您的技术栈"
+  },
+  "termsOfService": {
+    "title": "请输入您的电子邮箱以开始使用",
+    "emailPlaceholder": "电子邮箱",
+    "consentText": "提供您的电子邮箱即表示您同意接收偶尔的产品更新，并且您接受",
+    "termsLink": "服务条款",
+    "localRunText": "想在本地运行？这个项目是开源的。",
+    "githubLink": "在 Github 上下载代码并开始使用。",
+    "emailError": "请输入您的电子邮箱",
+    "agreeButton": "同意并继续",
+    "usageText": "这些组织的设计师和工程师使用 Screenshot to Code 来更快地构建界面。"
+  },
+  "urlInput": {
+    "errorNoApiKey": "请在设置对话框中添加 ScreenshotOne API 密钥。这是可选的 - 您也可以直接拖放和上传图片。",
+    "errorNoUrl": "请输入 URL",
+    "errorCapture": "截图失败",
+    "errorCaptureDetails": "截图失败。请查看控制台和后端日志以获取更多详细信息。",
+    "orScreenshot": "或者截取 URL 的屏幕截图...",
+    "enterUrl": "输入 URL",
+    "capturing": "正在截图...",
+    "capture": "截图"
+  }
+}

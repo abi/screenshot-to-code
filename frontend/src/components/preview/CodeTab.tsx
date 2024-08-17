@@ -5,6 +5,7 @@ import { Settings } from "../../types";
 import copy from "copy-to-clipboard";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   code: string;
@@ -13,10 +14,11 @@ interface Props {
 }
 
 function CodeTab({ code, setCode, settings }: Props) {
+  const { t } = useTranslation();
   const copyCode = useCallback(() => {
     copy(code);
-    toast.success("Copied to clipboard");
-  }, [code]);
+    toast.success(t('preview.codeTab.codeCopied'));
+  }, [code, t]);
 
   const doOpenInCodepenio = useCallback(async () => {
     // TODO: Update CSS and JS external links depending on the framework being used
@@ -57,17 +59,17 @@ function CodeTab({ code, setCode, settings }: Props) {
     <div className="relative">
       <div className="flex justify-start items-center px-4 mb-2">
         <span
-          title="Copy Code"
+          title={t('preview.copyCode')}
           className="bg-black text-white flex items-center justify-center hover:text-black hover:bg-gray-100 cursor-pointer rounded-lg text-sm p-2.5"
           onClick={copyCode}
         >
-          Copy Code <FaCopy className="ml-2" />
+         {t('preview.codeTab.copyCode')} <FaCopy className="ml-2" />
         </span>
         <Button
           onClick={doOpenInCodepenio}
           className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
         >
-          Open in{" "}
+          {t('preview.codeTab.openIn')}{" "}
           <img
             src="https://assets.codepen.io/t-1/codepen-logo.svg"
             alt="codepen.io"

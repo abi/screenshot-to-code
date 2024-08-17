@@ -22,6 +22,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import LanguageSelector from "../languageSelector/LanguageSelector";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   settings: Settings;
@@ -29,6 +31,7 @@ interface Props {
 }
 
 function SettingsDialog({ settings, setSettings }: Props) {
+  const { t } = useTranslation();
   const handleThemeChange = (theme: EditorTheme) => {
     setSettings((s) => ({
       ...s,
@@ -43,14 +46,14 @@ function SettingsDialog({ settings, setSettings }: Props) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="mb-4">Settings</DialogTitle>
+          <DialogTitle className="mb-4">{t('setting.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="flex items-center space-x-2">
           <Label htmlFor="image-generation">
-            <div>DALL-E Placeholder Image Generation</div>
+            <div>{t('setting.dallePlaceholder')}</div>
             <div className="font-light mt-2 text-xs">
-              More fun with it but if you want to save money, turn it off.
+              {t('setting.dallePlaceholderDescription')}
             </div>
           </Label>
           <Switch
@@ -67,16 +70,15 @@ function SettingsDialog({ settings, setSettings }: Props) {
         <div className="flex flex-col space-y-6">
           <div>
             <Label htmlFor="openai-api-key">
-              <div>OpenAI API key</div>
+              <div>{t('setting.openAIApiKey')}</div>
               <div className="font-light mt-1 mb-2 text-xs leading-relaxed">
-                Only stored in your browser. Never stored on servers. Overrides
-                your .env config.
+                {t('setting.apiKeyDescription')}
               </div>
             </Label>
 
             <Input
               id="openai-api-key"
-              placeholder="OpenAI API key"
+              placeholder={t('setting.openAIApiKeyPlaceholder')}
               value={settings.openAiApiKey || ""}
               onChange={(e) =>
                 setSettings((s) => ({
@@ -90,15 +92,15 @@ function SettingsDialog({ settings, setSettings }: Props) {
           {!IS_RUNNING_ON_CLOUD && (
             <div>
               <Label htmlFor="openai-api-key">
-                <div>OpenAI Base URL (optional)</div>
+                <div>{t('setting.openAIBaseURL')}</div>
                 <div className="font-light mt-2 leading-relaxed">
-                  Replace with a proxy URL if you don't want to use the default.
+                  {t('setting.openAIBaseURLDescription')}
                 </div>
               </Label>
 
               <Input
                 id="openai-base-url"
-                placeholder="OpenAI Base URL"
+                placeholder={t('setting.openAIBaseURLPlaceholder')}
                 value={settings.openAiBaseURL || ""}
                 onChange={(e) =>
                   setSettings((s) => ({
@@ -112,16 +114,15 @@ function SettingsDialog({ settings, setSettings }: Props) {
 
           <div>
             <Label htmlFor="anthropic-api-key">
-              <div>Anthropic API key</div>
+              <div>{t('setting.anthropicApiKey')}</div>
               <div className="font-light mt-1 text-xs leading-relaxed">
-                Only stored in your browser. Never stored on servers. Overrides
-                your .env config.
+                {t('setting.apiKeyDescription')}
               </div>
             </Label>
 
             <Input
               id="anthropic-api-key"
-              placeholder="Anthropic API key"
+              placeholder={t('setting.anthropicApiKeyPlaceholder')}
               value={settings.anthropicApiKey || ""}
               onChange={(e) =>
                 setSettings((s) => ({
@@ -131,21 +132,23 @@ function SettingsDialog({ settings, setSettings }: Props) {
               }
             />
           </div>
-
+          <div className="flex items-center justify-between">
+            <Label htmlFor="language-select">{t('setting.language')}</Label>
+            <LanguageSelector />
+          </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
-              <AccordionTrigger>Screenshot by URL Config</AccordionTrigger>
+              <AccordionTrigger>{t('setting.screenshotConfig')}</AccordionTrigger>
               <AccordionContent>
                 <Label htmlFor="screenshot-one-api-key">
                   <div className="leading-normal font-normal text-xs">
-                    If you want to use URLs directly instead of taking the
-                    screenshot yourself, add a ScreenshotOne API key.{" "}
+                    {t('setting.screenshotDescription')}{" "}
                     <a
                       href="https://screenshotone.com?via=screenshot-to-code"
                       className="underline"
                       target="_blank"
                     >
-                      Get 100 screenshots/mo for free.
+                      {t('setting.getFreeScreenshots')}
                     </a>
                   </div>
                 </Label>
@@ -153,7 +156,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
                 <Input
                   id="screenshot-one-api-key"
                   className="mt-2"
-                  placeholder="ScreenshotOne API key"
+                  placeholder={t('setting.screenshotApiKeyPlaceholder')}
                   value={settings.screenshotOneApiKey || ""}
                   onChange={(e) =>
                     setSettings((s) => ({
@@ -168,11 +171,11 @@ function SettingsDialog({ settings, setSettings }: Props) {
 
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
-              <AccordionTrigger>Theme Settings</AccordionTrigger>
+              <AccordionTrigger>{t('setting.themeSettings')}</AccordionTrigger>
               <AccordionContent className="space-y-4 flex flex-col">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="app-theme">
-                    <div>App Theme</div>
+                    <div>{t('setting.appTheme')}</div>
                   </Label>
                   <div>
                     <button
@@ -180,25 +183,25 @@ function SettingsDialog({ settings, setSettings }: Props) {
                       onClick={() => {
                         document
                           .querySelector("div.mt-2")
-                          ?.classList.toggle("dark"); // enable dark mode for sidebar
+                          ?.classList.toggle("dark");
                         document.body.classList.toggle("dark");
                         document
                           .querySelector('div[role="presentation"]')
-                          ?.classList.toggle("dark"); // enable dark mode for upload container
+                          ?.classList.toggle("dark");
                       }}
                     >
-                      Toggle dark mode
+                      {t('setting.toggleDarkMode')}
                     </button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="editor-theme">
                     <div>
-                      Code Editor Theme - requires page refresh to update
+                      {t('setting.codeEditorTheme')}
                     </div>
                   </Label>
                   <div>
-                    <Select // Use the custom Select component here
+                    <Select
                       name="editor-theme"
                       value={settings.editorTheme}
                       onValueChange={(value) =>
@@ -221,7 +224,7 @@ function SettingsDialog({ settings, setSettings }: Props) {
         </div>
 
         <DialogFooter>
-          <DialogClose>Save</DialogClose>
+          <DialogClose>{t('setting.save')}</DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

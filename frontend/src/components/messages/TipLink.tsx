@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next';
 import { URLS } from "../../urls";
 
 function TipLink() {
+  const { t } = useTranslation();
   return (
     <a
       className="text-xs underline text-gray-500 text-right"
@@ -8,7 +10,7 @@ function TipLink() {
       target="_blank"
       rel="noopener"
     >
-      Tips for better results
+      {t('messages.tipLink.text')}
     </a>
   );
 }
