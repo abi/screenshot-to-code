@@ -13,7 +13,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^4.29.0",
+    "@clerk/clerk-react": "5.4.2",
     "@codemirror/lang-html": "^6.4.6",
     "@intercom/messenger-js-sdk": "^0.0.11",
     "@radix-ui/react-accordion": "^1.1.2",

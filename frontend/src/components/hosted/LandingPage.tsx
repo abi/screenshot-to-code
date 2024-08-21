@@ -33,11 +33,17 @@ function LandingPage() {
       >
         <DialogContent className="flex justify-center">
           <SignUp
-            redirectUrl="/"
+            fallbackRedirectUrl="/"
             appearance={{
               elements: {
-                card: {
+                // formButtonPrimary: "bg-slate-500 hover:bg-slate-400 text-sm",
+                cardBox: {
                   boxShadow: "none",
+                  borderRadius: "0",
+                  border: "none",
+                  backgroundColor: "transparent",
+                },
+                card: {
                   borderRadius: "0",
                   border: "none",
                   backgroundColor: "transparent",
@@ -46,6 +52,7 @@ function LandingPage() {
                   display: "flex",
                   flexDirection: "column",
                   textAlign: "center",
+                  background: "transparent",
                 },
                 footerAction: {
                   marginBottom: "5px",
