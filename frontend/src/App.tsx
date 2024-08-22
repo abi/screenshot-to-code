@@ -126,19 +126,20 @@ function App() {
   };
 
   const regenerate = () => {
-    // TODO: post to Sentry
     if (head === null) {
       toast.error(
-        "No current version set. Please open a Github issue as this shouldn't happen."
+        "No current version set. Please contact support via chat or Github."
       );
-      return;
+      throw new Error("Regenerate called with no head");
     }
+
     // Retrieve the previous command
     const currentCommit = commits[head];
     if (currentCommit.type !== "ai_create") {
       toast.error("Only the first version can be regenerated.");
       return;
     }
+
     // Re-run the create
     doCreate(referenceImages, inputMode);
   };
@@ -147,7 +148,7 @@ function App() {
   const cancelCodeGeneration = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
     // make sure stop can correct the state even if the websocket is already closed
-    // TODO: Look into this
+    // TODO*: Look into this
     // cancelCodeGenerationAndReset();
   };
 
@@ -165,7 +166,7 @@ function App() {
       if (parentCommitHash) {
         setHead(parentCommitHash);
       } else {
-        // TODO: Hit Sentry
+        throw new Error("Parent commit not found");
       }
 
       setAppState(AppState.CODE_READY);
@@ -205,6 +206,7 @@ function App() {
             },
           };
 
+    // Create a new commit and set it as the head
     const commit = createCommit(commitInputObject);
     addCommit(commit);
     setHead(commit.hash);
@@ -262,22 +264,21 @@ function App() {
       return;
     }
 
-    // if (currentVersion === null) {
-    //   toast.error(
-    //     "No current version set. Contact support or open a Github issue."
-    //   );
-    //   return;
-    // }
+    if (head === null) {
+      toast.error(
+        "No current version set. Contact support or open a Github issue."
+      );
+      throw new Error("Update called with no head");
+    }
 
     let historyTree;
     try {
-      // TODO: Fix head being null
-      historyTree = extractHistory(head || "", commits);
+      historyTree = extractHistory(head, commits);
     } catch {
       toast.error(
         "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
       );
-      return;
+      throw new Error("Invalid version history");
     }
 
     let modifiedUpdateInstruction = updateInstruction;
@@ -291,28 +292,18 @@ function App() {
     }
 
     const updatedHistory = [...historyTree, modifiedUpdateInstruction];
+    const resultImage = shouldIncludeResultImage
+      ? await takeScreenshot()
+      : undefined;
 
-    console.log(updatedHistory);
-
-    if (shouldIncludeResultImage) {
-      const resultImage = await takeScreenshot();
-      doGenerateCode({
-        generationType: "update",
-        inputMode,
-        image: referenceImages[0],
-        resultImage: resultImage,
-        history: updatedHistory,
-        isImportedFromCode,
-      });
-    } else {
-      doGenerateCode({
-        generationType: "update",
-        inputMode,
-        image: referenceImages[0],
-        history: updatedHistory,
-        isImportedFromCode,
-      });
-    }
+    doGenerateCode({
+      generationType: "update",
+      inputMode,
+      image: referenceImages[0],
+      resultImage,
+      history: updatedHistory,
+      isImportedFromCode,
+    });
 
     setUpdateInstruction("");
   }
@@ -338,7 +329,7 @@ function App() {
     // Set up this project
     setStack(stack);
 
-    // Set up the import commit
+    // Create a new commit and set it as the head
     const commit = createCommit({
       type: "code_create",
       parentHash: null,
