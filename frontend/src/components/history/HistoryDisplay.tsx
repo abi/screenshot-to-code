@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import classNames from "classnames";
 
 import { Badge } from "../ui/badge";
-import { summarizeHistoryItem } from "./utils";
+import { renderHistory } from "./utils";
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,45 +19,20 @@ interface Props {
 export default function HistoryDisplay({ shouldDisableReverts }: Props) {
   const { commits, head, setHead } = useProjectStore();
 
-  // TODO*: Clean this up more
-
   // Put all commits into an array and sort by created date (oldest first)
   const flatHistory = Object.values(commits).sort(
     (a, b) =>
       new Date(a.date_created).getTime() - new Date(b.date_created).getTime()
   );
 
-  const setParentVersion = (
-    parentHash: string | null,
-    currentHash: string | null
-  ) => {
-    if (!parentHash) return null;
-    const parentIndex = flatHistory.findIndex(
-      (item) => item.hash === parentHash
-    );
-    const currentIndex = flatHistory.findIndex(
-      (item) => item.hash === currentHash
-    );
+  // Annotate history items with a summary, parent version, etc.
+  const renderedHistory = renderHistory(flatHistory);
 
-    // Only set parent version if the parent is not the previous commit
-    // and if it's not the first commit
-    return parentIndex !== -1 && parentIndex != currentIndex - 1
-      ? parentIndex + 1
-      : null;
-  };
-
-  // Annotate history items with a summary and parent version
-  const annotatedHistory = flatHistory.map((item) => ({
-    ...item,
-    summary: summarizeHistoryItem(item),
-    parentVersion: setParentVersion(item.parentHash, item.hash),
-  }));
-
-  return annotatedHistory.length === 0 ? null : (
+  return renderedHistory.length === 0 ? null : (
     <div className="flex flex-col h-screen">
       <h1 className="font-bold mb-2">Versions</h1>
       <ul className="space-y-0 flex flex-col-reverse">
-        {annotatedHistory.map((item, index) => (
+        {renderedHistory.map((item, index) => (
           <li key={index}>
             <Collapsible>
               <div
