@@ -8,8 +8,7 @@ import { OnboardingNote } from "./components/messages/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
-import { History } from "./components/history/history_types";
-import { extractHistoryTree } from "./components/history/utils";
+import { extractHistory } from "./components/history/utils";
 import toast from "react-hot-toast";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
@@ -23,6 +22,7 @@ import DeprecationMessage from "./components/messages/DeprecationMessage";
 import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import { takeScreenshot } from "./lib/takeScreenshot";
+import { Commit, createCommit } from "./components/history/history_types";
 
 function App() {
   const {
@@ -34,18 +34,18 @@ function App() {
     referenceImages,
     setReferenceImages,
 
+    head,
+    commits,
+    addCommit,
+    removeCommit,
+    setHead,
+    appendCommitCode,
+    setCommitCode,
+    resetCommits,
+
     // Outputs
-    setGeneratedCode,
-    currentVariantIndex,
-    setVariant,
-    appendToVariant,
-    resetVariants,
     appendExecutionConsole,
     resetExecutionConsoles,
-    currentVersion,
-    setCurrentVersion,
-    appHistory,
-    setAppHistory,
   } = useProjectStore();
 
   const {
@@ -113,34 +113,30 @@ function App() {
     setShouldIncludeResultImage(false);
     setUpdateInstruction("");
     disableInSelectAndEditMode();
-    setGeneratedCode("");
-    resetVariants();
     resetExecutionConsoles();
+
+    resetCommits();
 
     // Inputs
     setInputMode("image");
     setReferenceImages([]);
     setIsImportedFromCode(false);
-
-    setAppHistory([]);
-    setCurrentVersion(null);
   };
 
   const regenerate = () => {
-    if (currentVersion === null) {
+    // TODO: post to Sentry
+    if (head === null) {
       toast.error(
         "No current version set. Please open a Github issue as this shouldn't happen."
       );
       return;
     }
-
     // Retrieve the previous command
-    const previousCommand = appHistory[currentVersion];
-    if (previousCommand.type !== "ai_create") {
+    const currentCommit = commits[head];
+    if (currentCommit.type !== "ai_create") {
       toast.error("Only the first version can be regenerated.");
       return;
     }
-
     // Re-run the create
     doCreate(referenceImages, inputMode);
   };
@@ -149,25 +145,32 @@ function App() {
   const cancelCodeGeneration = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
     // make sure stop can correct the state even if the websocket is already closed
-    cancelCodeGenerationAndReset();
+    // TODO: Look into this
+    // cancelCodeGenerationAndReset();
   };
 
   // Used for code generation failure as well
-  const cancelCodeGenerationAndReset = () => {
-    // When this is the first version, reset the entire app state
-    if (currentVersion === null) {
+  const cancelCodeGenerationAndReset = (commit: Commit) => {
+    // When the current commit is the first version, reset the entire app state
+    if (commit.type === "ai_create") {
       reset();
     } else {
-      // Otherwise, revert to the last version
-      setGeneratedCode(appHistory[currentVersion].code);
+      // Otherwise, remove current commit from commits
+      removeCommit(commit.hash);
+
+      // Revert to parent commit
+      const parentCommitHash = commit.parentHash;
+      if (parentCommitHash) {
+        setHead(parentCommitHash);
+      } else {
+        // TODO: Hit Sentry
+      }
+
       setAppState(AppState.CODE_READY);
     }
   };
 
-  function doGenerateCode(
-    params: CodeGenerationParams,
-    parentVersion: number | null
-  ) {
+  function doGenerateCode(params: CodeGenerationParams) {
     // Reset the execution console
     resetExecutionConsoles();
 
@@ -177,69 +180,51 @@ function App() {
     // Merge settings with params
     const updatedParams = { ...params, ...settings };
 
+    const baseCommitObject = {
+      date_created: new Date(),
+      variants: [{ code: "" }, { code: "" }],
+      selectedVariantIndex: 0,
+    };
+
+    const commitInputObject =
+      params.generationType === "create"
+        ? {
+            ...baseCommitObject,
+            type: "ai_create" as const,
+            parentHash: null,
+            inputs: { image_url: referenceImages[0] },
+          }
+        : {
+            ...baseCommitObject,
+            type: "ai_edit" as const,
+            parentHash: head,
+            inputs: {
+              prompt: params.history
+                ? params.history[params.history.length - 1]
+                : "",
+            },
+          };
+
+    const commit = createCommit(commitInputObject);
+    addCommit(commit);
+    setHead(commit.hash);
+
     generateCode(
       wsRef,
       updatedParams,
       // On change
       (token, variant) => {
-        if (variant === currentVariantIndex) {
-          setGeneratedCode((prev) => prev + token);
-        }
-
-        appendToVariant(token, variant);
+        appendCommitCode(commit.hash, variant, token);
       },
       // On set code
       (code, variant) => {
-        if (variant === currentVariantIndex) {
-          setGeneratedCode(code);
-        }
-
-        setVariant(code, variant);
-
-        // TODO: How to deal with variants?
-        if (params.generationType === "create") {
-          setAppHistory([
-            {
-              type: "ai_create",
-              parentIndex: null,
-              code,
-              inputs: { image_url: referenceImages[0] },
-            },
-          ]);
-          setCurrentVersion(0);
-        } else {
-          setAppHistory((prev) => {
-            // Validate parent version
-            if (parentVersion === null) {
-              toast.error(
-                "No parent version set. Contact support or open a Github issue."
-              );
-              return prev;
-            }
-
-            const newHistory: History = [
-              ...prev,
-              {
-                type: "ai_edit",
-                parentIndex: parentVersion,
-                code,
-                inputs: {
-                  prompt: params.history
-                    ? params.history[params.history.length - 1]
-                    : "", // History should never be empty when performing an edit
-                },
-              },
-            ];
-            setCurrentVersion(newHistory.length - 1);
-            return newHistory;
-          });
-        }
+        setCommitCode(commit.hash, variant, code);
       },
       // On status update
       (line, variant) => appendExecutionConsole(variant, line),
       // On cancel
       () => {
-        cancelCodeGenerationAndReset();
+        cancelCodeGenerationAndReset(commit);
       },
       // On complete
       () => {
@@ -259,14 +244,11 @@ function App() {
 
     // Kick off the code generation
     if (referenceImages.length > 0) {
-      doGenerateCode(
-        {
-          generationType: "create",
-          image: referenceImages[0],
-          inputMode,
-        },
-        currentVersion
-      );
+      doGenerateCode({
+        generationType: "create",
+        image: referenceImages[0],
+        inputMode,
+      });
     }
   }
 
@@ -280,16 +262,17 @@ function App() {
       return;
     }
 
-    if (currentVersion === null) {
-      toast.error(
-        "No current version set. Contact support or open a Github issue."
-      );
-      return;
-    }
+    // if (currentVersion === null) {
+    //   toast.error(
+    //     "No current version set. Contact support or open a Github issue."
+    //   );
+    //   return;
+    // }
 
     let historyTree;
     try {
-      historyTree = extractHistoryTree(appHistory, currentVersion);
+      // TODO: Fix head being null
+      historyTree = extractHistory(head || "", commits);
     } catch {
       toast.error(
         "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
@@ -309,34 +292,28 @@ function App() {
 
     const updatedHistory = [...historyTree, modifiedUpdateInstruction];
 
+    console.log(updatedHistory);
+
     if (shouldIncludeResultImage) {
       const resultImage = await takeScreenshot();
-      doGenerateCode(
-        {
-          generationType: "update",
-          inputMode,
-          image: referenceImages[0],
-          resultImage: resultImage,
-          history: updatedHistory,
-          isImportedFromCode,
-        },
-        currentVersion
-      );
+      doGenerateCode({
+        generationType: "update",
+        inputMode,
+        image: referenceImages[0],
+        resultImage: resultImage,
+        history: updatedHistory,
+        isImportedFromCode,
+      });
     } else {
-      doGenerateCode(
-        {
-          generationType: "update",
-          inputMode,
-          image: referenceImages[0],
-          history: updatedHistory,
-          isImportedFromCode,
-        },
-        currentVersion
-      );
+      doGenerateCode({
+        generationType: "update",
+        inputMode,
+        image: referenceImages[0],
+        history: updatedHistory,
+        isImportedFromCode,
+      });
     }
 
-    setGeneratedCode("");
-    resetVariants();
     setUpdateInstruction("");
   }
 
@@ -358,18 +335,27 @@ function App() {
     // Set input state
     setIsImportedFromCode(true);
 
+    console.log(code);
+
     // Set up this project
-    setGeneratedCode(code);
+    // TODO*
+    // setGeneratedCode(code);
     setStack(stack);
-    setAppHistory([
-      {
-        type: "code_create",
-        parentIndex: null,
-        code,
-        inputs: { code },
-      },
-    ]);
-    setCurrentVersion(0);
+    // setAppHistory([
+    //   {
+    //     type: "code_create",
+    //     parentIndex: null,
+    //     code,
+    //     inputs: { code },
+    //   },
+    // ]);
+    // setVariant(0, {
+    //   type: "code_create",
+    //   parentIndex: null,
+    //   code,
+    // });
+    // setCurrentVariantIndex(0);
+    // setCurrentVersion(0);
 
     // Set the app state
     setAppState(AppState.CODE_READY);

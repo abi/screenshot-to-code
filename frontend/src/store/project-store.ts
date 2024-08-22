@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { History } from "../components/history/history_types";
+import { Commit, CommitHash } from "../components/history/history_types";
 
 // Store for app-wide state
 interface ProjectStore {
@@ -11,32 +11,26 @@ interface ProjectStore {
   referenceImages: string[];
   setReferenceImages: (images: string[]) => void;
 
-  // Outputs and other state
-  generatedCode: string;
-  setGeneratedCode: (
-    updater: string | ((currentCode: string) => string)
-  ) => void;
+  // Outputs
+  commits: Record<string, Commit>;
+  head: CommitHash | null;
 
-  variants: string[];
-  currentVariantIndex: number;
-  setCurrentVariantIndex: (index: number) => void;
-  setVariant: (code: string, index: number) => void;
-  appendToVariant: (newTokens: string, index: number) => void;
-  resetVariants: () => void;
+  addCommit: (commit: Commit) => void;
+  removeCommit: (hash: CommitHash) => void;
+
+  setHead: (hash: CommitHash) => void;
+  appendCommitCode: (
+    hash: CommitHash,
+    numVariant: number,
+    code: string
+  ) => void;
+  setCommitCode: (hash: CommitHash, numVariant: number, code: string) => void;
+  updateSelectedVariantIndex: (hash: CommitHash, index: number) => void;
+  resetCommits: () => void;
 
   executionConsoles: { [key: number]: string[] };
   appendExecutionConsole: (variantIndex: number, line: string) => void;
   resetExecutionConsoles: () => void;
-
-  // Tracks the currently shown version from app history
-  // TODO: might want to move to appStore
-  currentVersion: number | null;
-  setCurrentVersion: (version: number | null) => void;
-
-  appHistory: History;
-  setAppHistory: (
-    updater: History | ((currentHistory: History) => History)
-  ) => void;
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
@@ -48,39 +42,64 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   referenceImages: [],
   setReferenceImages: (images) => set({ referenceImages: images }),
 
-  // Outputs and other state
-  generatedCode: "",
-  setGeneratedCode: (updater) =>
+  // Outputs
+  commits: {},
+  head: null,
+
+  addCommit: (commit: Commit) => {
     set((state) => ({
-      generatedCode:
-        typeof updater === "function" ? updater(state.generatedCode) : updater,
+      commits: { ...state.commits, [commit.hash]: commit },
+    }));
+  },
+  removeCommit: (hash: CommitHash) => {
+    set((state) => {
+      const newCommits = { ...state.commits };
+      delete newCommits[hash];
+      return { commits: newCommits };
+    });
+  },
+
+  setHead: (hash: CommitHash) => set({ head: hash }),
+  appendCommitCode: (hash: CommitHash, numVariant: number, code: string) =>
+    set((state) => ({
+      commits: {
+        ...state.commits,
+        [hash]: {
+          ...state.commits[hash],
+          variants: state.commits[hash].variants.map((variant, index) =>
+            index === numVariant
+              ? { ...variant, code: variant.code + code }
+              : variant
+          ),
+        },
+      },
     })),
+  setCommitCode: (hash: CommitHash, numVariant: number, code: string) =>
+    set((state) => ({
+      commits: {
+        ...state.commits,
+        [hash]: {
+          ...state.commits[hash],
+          variants: state.commits[hash].variants.map((variant, index) =>
+            index === numVariant ? { ...variant, code } : variant
+          ),
+        },
+      },
+    })),
+  updateSelectedVariantIndex: (hash: CommitHash, index: number) =>
+    set((state) => ({
+      commits: {
+        ...state.commits,
+        [hash]: {
+          ...state.commits[hash],
+          selectedVariantIndex: index,
+        },
+      },
+    })),
+  resetCommits: () => set({ commits: {}, head: null }),
+  // TODO: Reset heads
 
-  currentVariantIndex: 0,
-  variants: [],
   executionConsoles: {},
-
-  setCurrentVariantIndex: (index) => set({ currentVariantIndex: index }),
-  setVariant: (code: string, index: number) =>
-    set((state) => {
-      const newVariants = [...state.variants];
-      while (newVariants.length <= index) {
-        newVariants.push("");
-      }
-      newVariants[index] = code;
-      return { variants: newVariants };
-    }),
-  appendToVariant: (newTokens: string, index: number) =>
-    set((state) => {
-      const newVariants = [...state.variants];
-      while (newVariants.length <= index) {
-        newVariants.push("");
-      }
-      newVariants[index] += newTokens;
-      return { variants: newVariants };
-    }),
-  resetVariants: () => set({ variants: [], currentVariantIndex: 0 }),
-
   appendExecutionConsole: (variantIndex: number, line: string) =>
     set((state) => ({
       executionConsoles: {
@@ -92,13 +111,4 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       },
     })),
   resetExecutionConsoles: () => set({ executionConsoles: {} }),
-
-  currentVersion: null,
-  setCurrentVersion: (version) => set({ currentVersion: version }),
-  appHistory: [],
-  setAppHistory: (updater) =>
-    set((state) => ({
-      appHistory:
-        typeof updater === "function" ? updater(state.appHistory) : updater,
-    })),
 }));

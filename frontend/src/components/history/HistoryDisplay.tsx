@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import classNames from "classnames";
 
 import { Badge } from "../ui/badge";
-import { renderHistory } from "./utils";
+import { summarizeHistoryItem } from "./utils";
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,25 +17,58 @@ interface Props {
 }
 
 export default function HistoryDisplay({ shouldDisableReverts }: Props) {
-  const {
-    appHistory: history,
-    currentVersion,
-    setCurrentVersion,
-    setGeneratedCode,
-  } = useProjectStore();
-  const renderedHistory = renderHistory(history, currentVersion);
+  const { commits, head, setHead } = useProjectStore();
 
-  const revertToVersion = (index: number) => {
-    if (index < 0 || index >= history.length || !history[index]) return;
-    setCurrentVersion(index);
-    setGeneratedCode(history[index].code);
+  // TODO: Clean this up
+
+  const newHistory = Object.values(commits).flatMap((commit) => {
+    if (commit.type === "ai_create" || commit.type === "ai_edit") {
+      return {
+        type: commit.type,
+        hash: commit.hash,
+        summary: summarizeHistoryItem(commit),
+        parentHash: commit.parentHash,
+        code: commit.variants[commit.selectedVariantIndex].code,
+        inputs: commit.inputs,
+        date_created: commit.date_created,
+      };
+    }
+    return [];
+  });
+
+  // Sort by date created
+  newHistory.sort(
+    (a, b) =>
+      new Date(a.date_created).getTime() - new Date(b.date_created).getTime()
+  );
+
+  const setParentVersion = (
+    parentHash: string | null,
+    currentHash: string | null
+  ) => {
+    if (!parentHash) return null;
+    const parentIndex = newHistory.findIndex(
+      (item) => item.hash === parentHash
+    );
+    const currentIndex = newHistory.findIndex(
+      (item) => item.hash === currentHash
+    );
+    return parentIndex !== -1 && parentIndex != currentIndex - 1
+      ? parentIndex + 1
+      : null;
   };
 
-  return renderedHistory.length === 0 ? null : (
+  // Update newHistory to include the parent version
+  const updatedHistory = newHistory.map((item) => ({
+    ...item,
+    parentVersion: setParentVersion(item.parentHash, item.hash),
+  }));
+
+  return updatedHistory.length === 0 ? null : (
     <div className="flex flex-col h-screen">
       <h1 className="font-bold mb-2">Versions</h1>
       <ul className="space-y-0 flex flex-col-reverse">
-        {renderedHistory.map((item, index) => (
+        {updatedHistory.map((item, index) => (
           <li key={index}>
             <Collapsible>
               <div
@@ -43,8 +76,8 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                   "flex items-center justify-between space-x-2 w-full pr-2",
                   "border-b cursor-pointer",
                   {
-                    " hover:bg-black hover:text-white": !item.isActive,
-                    "bg-slate-500 text-white": item.isActive,
+                    " hover:bg-black hover:text-white": item.hash === head,
+                    "bg-slate-500 text-white": item.hash === head,
                   }
                 )}
               >
@@ -55,14 +88,14 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                       ? toast.error(
                           "Please wait for code generation to complete before viewing an older version."
                         )
-                      : revertToVersion(index)
+                      : setHead(item.hash)
                   }
                 >
                   <div className="flex gap-x-1 truncate">
                     <h2 className="text-sm truncate">{item.summary}</h2>
                     {item.parentVersion !== null && (
                       <h2 className="text-sm">
-                        (parent: {item.parentVersion})
+                        (parent: v{item.parentVersion})
                       </h2>
                     )}
                   </div>

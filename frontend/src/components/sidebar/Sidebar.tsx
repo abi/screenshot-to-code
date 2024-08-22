@@ -37,15 +37,16 @@ function Sidebar({
     setShouldIncludeResultImage,
   } = useAppStore();
 
-  const {
-    inputMode,
-    generatedCode,
-    referenceImages,
-    executionConsoles,
-    currentVariantIndex,
-  } = useProjectStore();
+  const { inputMode, referenceImages, executionConsoles, head, commits } =
+    useProjectStore();
 
-  const executionConsole = executionConsoles[currentVariantIndex] || [];
+  const viewedCode =
+    head && commits[head]
+      ? commits[head].variants[commits[head].selectedVariantIndex].code
+      : "";
+
+  const executionConsole =
+    (head && executionConsoles[commits[head].selectedVariantIndex]) || [];
 
   // When coding is complete, focus on the update instruction textarea
   useEffect(() => {
@@ -77,7 +78,7 @@ function Sidebar({
             {executionConsole.slice(-1)[0]}
           </div>
 
-          <CodePreview code={generatedCode} />
+          <CodePreview code={viewedCode} />
 
           <div className="flex w-full">
             <Button
