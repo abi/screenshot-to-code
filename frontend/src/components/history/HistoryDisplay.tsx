@@ -22,7 +22,11 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
   // TODO: Clean this up
 
   const newHistory = Object.values(commits).flatMap((commit) => {
-    if (commit.type === "ai_create" || commit.type === "ai_edit") {
+    if (
+      commit.type === "ai_create" ||
+      commit.type === "ai_edit" ||
+      commit.type === "code_create"
+    ) {
       return {
         type: commit.type,
         hash: commit.hash,

@@ -17,8 +17,12 @@ export type BaseCommit = {
 import { nanoid } from "nanoid";
 
 // TODO: Move to a different file
+// TODO: Fix the type to be better
 export function createCommit(
-  commit: Omit<AiCreateCommit, "hash"> | Omit<AiEditCommit, "hash">
+  commit:
+    | Omit<AiCreateCommit, "hash">
+    | Omit<AiEditCommit, "hash">
+    | Omit<CodeCreateCommit, "hash">
 ): Commit {
   const hash = nanoid();
   return { ...commit, hash };
@@ -38,7 +42,12 @@ export type AiEditCommit = BaseCommit & {
   };
 };
 
-export type Commit = AiCreateCommit | AiEditCommit;
+export type CodeCreateCommit = BaseCommit & {
+  type: "code_create";
+  inputs: null;
+};
+
+export type Commit = AiCreateCommit | AiEditCommit | CodeCreateCommit;
 
 export type RenderedHistoryItem = {
   type: string;

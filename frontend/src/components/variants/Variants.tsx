@@ -3,13 +3,17 @@ import { useProjectStore } from "../../store/project-store";
 function Variants() {
   const { head, commits, updateSelectedVariantIndex } = useProjectStore();
 
-  // TODO: Is HEAD null right? And check variants.length === 0 ||
+  // TODO*: Is HEAD null right? And check variants.length === 0 ||
   if (head === null) {
     return null;
   }
 
-  const variants = commits[head || ""].variants;
-  const selectedVariantIndex = commits[head || ""].selectedVariantIndex;
+  const variants = commits[head].variants;
+  const selectedVariantIndex = commits[head].selectedVariantIndex;
+
+  if (variants.length <= 1) {
+    return <div className="mt-2"></div>;
+  }
 
   return (
     <div className="mt-4 mb-4">

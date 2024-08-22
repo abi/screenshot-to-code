@@ -337,27 +337,20 @@ function App() {
     // Set input state
     setIsImportedFromCode(true);
 
-    console.log(code);
-
     // Set up this project
-    // TODO*
-    // setGeneratedCode(code);
     setStack(stack);
-    // setAppHistory([
-    //   {
-    //     type: "code_create",
-    //     parentIndex: null,
-    //     code,
-    //     inputs: { code },
-    //   },
-    // ]);
-    // setVariant(0, {
-    //   type: "code_create",
-    //   parentIndex: null,
-    //   code,
-    // });
-    // setCurrentVariantIndex(0);
-    // setCurrentVersion(0);
+
+    // Set up the import commit
+    const commit = createCommit({
+      type: "code_create",
+      parentHash: null,
+      date_created: new Date(),
+      variants: [{ code }],
+      selectedVariantIndex: 0,
+      inputs: null,
+    });
+    addCommit(commit);
+    setHead(commit.hash);
 
     // Set the app state
     setAppState(AppState.CODE_READY);

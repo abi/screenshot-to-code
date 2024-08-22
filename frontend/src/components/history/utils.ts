@@ -8,23 +8,20 @@ export function extractHistory(
 
   let currentCommitHash: CommitHash | null = hash;
   while (currentCommitHash !== null) {
-    const commit: Commit = commits[currentCommitHash];
+    const commit: Commit | null = commits[currentCommitHash];
 
     if (commit) {
-      if (commit.type === "ai_create") {
-        // Don't include the image for ai_create
-        flatHistory.unshift(commit.variants[commit.selectedVariantIndex].code);
-      } else if (commit.type === "ai_edit") {
-        flatHistory.unshift(commit.variants[commit.selectedVariantIndex].code);
+      flatHistory.unshift(commit.variants[commit.selectedVariantIndex].code);
+
+      // For edits, add the prompt to the history
+      if (commit.type === "ai_edit") {
         flatHistory.unshift(commit.inputs.prompt);
       }
-      // } else if (item.type === "code_create") {
-      //   flatHistory.unshift(item.code);
-      // }
 
       // Move to the parent of the current item
       currentCommitHash = commit.parentHash;
     } else {
+      // TODO*: Send to Sentry
       throw new Error("Malformed history: missing parent index");
     }
   }
@@ -39,6 +36,8 @@ export function summarizeHistoryItem(commit: Commit) {
       return "Create";
     case "ai_edit":
       return commit.inputs.prompt;
+    case "code_create":
+      return "Imported from code";
     default: {
       const exhaustiveCheck: never = commitType;
       throw new Error(`Unhandled case: ${exhaustiveCheck}`);
