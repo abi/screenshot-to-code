@@ -22,7 +22,8 @@ import DeprecationMessage from "./components/messages/DeprecationMessage";
 import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import { takeScreenshot } from "./lib/takeScreenshot";
-import { Commit, createCommit } from "./components/history/history_types";
+import { Commit } from "./components/commits/types";
+import { createCommit } from "./components/commits/utils";
 
 function App() {
   const {

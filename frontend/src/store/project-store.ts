@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Commit, CommitHash } from "../components/history/history_types";
+import { Commit, CommitHash } from "../components/commits/types";
 
 // Store for app-wide state
 interface ProjectStore {

@@ -1,4 +1,4 @@
-import { Commit, CommitHash, CommitType } from "./history_types";
+import { Commit, CommitHash, CommitType } from "../commits/types";
 
 export function extractHistory(
   hash: CommitHash,

@@ -1,5 +1,3 @@
-export type CommitType = "ai_create" | "ai_edit" | "code_create";
-
 export type CommitHash = string;
 
 export type Variant = {
@@ -14,19 +12,7 @@ export type BaseCommit = {
   selectedVariantIndex: number;
 };
 
-import { nanoid } from "nanoid";
-
-// TODO: Move to a different file
-// TODO: Fix the type to be better
-export function createCommit(
-  commit:
-    | Omit<AiCreateCommit, "hash">
-    | Omit<AiEditCommit, "hash">
-    | Omit<CodeCreateCommit, "hash">
-): Commit {
-  const hash = nanoid();
-  return { ...commit, hash };
-}
+export type CommitType = "ai_create" | "ai_edit" | "code_create";
 
 export type AiCreateCommit = BaseCommit & {
   type: "ai_create";
@@ -48,10 +34,3 @@ export type CodeCreateCommit = BaseCommit & {
 };
 
 export type Commit = AiCreateCommit | AiEditCommit | CodeCreateCommit;
-
-export type RenderedHistoryItem = {
-  type: string;
-  summary: string;
-  parentVersion: string | null;
-  isActive: boolean;
-};
