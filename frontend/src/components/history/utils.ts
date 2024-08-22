@@ -21,7 +21,6 @@ export function extractHistory(
       // Move to the parent of the current item
       currentCommitHash = commit.parentHash;
     } else {
-      // TODO*: Send to Sentry
       throw new Error("Malformed history: missing parent index");
     }
   }
