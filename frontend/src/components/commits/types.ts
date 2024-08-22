@@ -7,7 +7,7 @@ export type Variant = {
 export type BaseCommit = {
   hash: CommitHash;
   parentHash: CommitHash | null;
-  date_created: Date;
+  dateCreated: Date;
   variants: Variant[];
   selectedVariantIndex: number;
 };

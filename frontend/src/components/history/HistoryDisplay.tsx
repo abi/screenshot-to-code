@@ -22,7 +22,7 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
   // Put all commits into an array and sort by created date (oldest first)
   const flatHistory = Object.values(commits).sort(
     (a, b) =>
-      new Date(a.date_created).getTime() - new Date(b.date_created).getTime()
+      new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
   );
 
   // Annotate history items with a summary, parent version, etc.

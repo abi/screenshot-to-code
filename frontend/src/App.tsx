@@ -184,9 +184,7 @@ function App() {
     const updatedParams = { ...params, ...settings };
 
     const baseCommitObject = {
-      date_created: new Date(),
       variants: [{ code: "" }, { code: "" }],
-      selectedVariantIndex: 0,
     };
 
     const commitInputObject =
@@ -345,9 +343,7 @@ function App() {
     const commit = createCommit({
       type: "code_create",
       parentHash: null,
-      date_created: new Date(),
       variants: [{ code }],
-      selectedVariantIndex: 0,
       inputs: null,
     });
     addCommit(commit);
