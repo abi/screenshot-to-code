@@ -109,7 +109,6 @@ function App() {
   }, [settings.generatedCodeConfig, setSettings]);
 
   // Functions
-
   const reset = () => {
     setAppState(AppState.INITIAL);
     setShouldIncludeResultImage(false);
