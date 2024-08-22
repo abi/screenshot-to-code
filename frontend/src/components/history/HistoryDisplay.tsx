@@ -19,29 +19,10 @@ interface Props {
 export default function HistoryDisplay({ shouldDisableReverts }: Props) {
   const { commits, head, setHead } = useProjectStore();
 
-  // TODO: Clean this up
+  // TODO*: Clean this up more
 
-  const newHistory = Object.values(commits).flatMap((commit) => {
-    if (
-      commit.type === "ai_create" ||
-      commit.type === "ai_edit" ||
-      commit.type === "code_create"
-    ) {
-      return {
-        type: commit.type,
-        hash: commit.hash,
-        summary: summarizeHistoryItem(commit),
-        parentHash: commit.parentHash,
-        code: commit.variants[commit.selectedVariantIndex].code,
-        inputs: commit.inputs,
-        date_created: commit.date_created,
-      };
-    }
-    return [];
-  });
-
-  // Sort by date created
-  newHistory.sort(
+  // Put all commits into an array and sort by created date (oldest first)
+  const flatHistory = Object.values(commits).sort(
     (a, b) =>
       new Date(a.date_created).getTime() - new Date(b.date_created).getTime()
   );
@@ -51,28 +32,32 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
     currentHash: string | null
   ) => {
     if (!parentHash) return null;
-    const parentIndex = newHistory.findIndex(
+    const parentIndex = flatHistory.findIndex(
       (item) => item.hash === parentHash
     );
-    const currentIndex = newHistory.findIndex(
+    const currentIndex = flatHistory.findIndex(
       (item) => item.hash === currentHash
     );
+
+    // Only set parent version if the parent is not the previous commit
+    // and if it's not the first commit
     return parentIndex !== -1 && parentIndex != currentIndex - 1
       ? parentIndex + 1
       : null;
   };
 
-  // Update newHistory to include the parent version
-  const updatedHistory = newHistory.map((item) => ({
+  // Annotate history items with a summary and parent version
+  const annotatedHistory = flatHistory.map((item) => ({
     ...item,
+    summary: summarizeHistoryItem(item),
     parentVersion: setParentVersion(item.parentHash, item.hash),
   }));
 
-  return updatedHistory.length === 0 ? null : (
+  return annotatedHistory.length === 0 ? null : (
     <div className="flex flex-col h-screen">
       <h1 className="font-bold mb-2">Versions</h1>
       <ul className="space-y-0 flex flex-col-reverse">
-        {updatedHistory.map((item, index) => (
+        {annotatedHistory.map((item, index) => (
           <li key={index}>
             <Collapsible>
               <div
