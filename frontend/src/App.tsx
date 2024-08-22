@@ -42,6 +42,7 @@ function App() {
     appendCommitCode,
     setCommitCode,
     resetCommits,
+    resetHead,
 
     // Outputs
     appendExecutionConsole,
@@ -116,6 +117,7 @@ function App() {
     resetExecutionConsoles();
 
     resetCommits();
+    resetHead();
 
     // Inputs
     setInputMode("image");

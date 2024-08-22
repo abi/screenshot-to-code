@@ -17,8 +17,8 @@ interface ProjectStore {
 
   addCommit: (commit: Commit) => void;
   removeCommit: (hash: CommitHash) => void;
+  resetCommits: () => void;
 
-  setHead: (hash: CommitHash) => void;
   appendCommitCode: (
     hash: CommitHash,
     numVariant: number,
@@ -26,7 +26,9 @@ interface ProjectStore {
   ) => void;
   setCommitCode: (hash: CommitHash, numVariant: number, code: string) => void;
   updateSelectedVariantIndex: (hash: CommitHash, index: number) => void;
-  resetCommits: () => void;
+
+  setHead: (hash: CommitHash) => void;
+  resetHead: () => void;
 
   executionConsoles: { [key: number]: string[] };
   appendExecutionConsole: (variantIndex: number, line: string) => void;
@@ -58,8 +60,8 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       return { commits: newCommits };
     });
   },
+  resetCommits: () => set({ commits: {} }),
 
-  setHead: (hash: CommitHash) => set({ head: hash }),
   appendCommitCode: (hash: CommitHash, numVariant: number, code: string) =>
     set((state) => ({
       commits: {
@@ -96,8 +98,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         },
       },
     })),
-  resetCommits: () => set({ commits: {}, head: null }),
-  // TODO: Reset heads
+
+  setHead: (hash: CommitHash) => set({ head: hash }),
+  resetHead: () => set({ head: null }),
 
   executionConsoles: {},
   appendExecutionConsole: (variantIndex: number, line: string) =>
