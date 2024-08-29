@@ -8,6 +8,7 @@ export type BaseCommit = {
   hash: CommitHash;
   parentHash: CommitHash | null;
   dateCreated: Date;
+  isCommitted: boolean;
   variants: Variant[];
   selectedVariantIndex: number;
 };

@@ -8,10 +8,12 @@ function Variants() {
     return null;
   }
 
-  const variants = commits[head].variants;
-  const selectedVariantIndex = commits[head].selectedVariantIndex;
+  const commit = commits[head];
+  const variants = commit.variants;
+  const selectedVariantIndex = commit.selectedVariantIndex;
 
-  if (variants.length <= 1) {
+  // If there is only one variant or the commit is already committed, don't show the variants
+  if (variants.length <= 1 || commit.isCommitted) {
     return <div className="mt-2"></div>;
   }
 

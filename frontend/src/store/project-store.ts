@@ -49,8 +49,17 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   head: null,
 
   addCommit: (commit: Commit) => {
+    // When adding a new commit, make sure all existing commits are marked as committed
     set((state) => ({
-      commits: { ...state.commits, [commit.hash]: commit },
+      commits: {
+        ...Object.fromEntries(
+          Object.entries(state.commits).map(([hash, existingCommit]) => [
+            hash,
+            { ...existingCommit, isCommitted: true },
+          ])
+        ),
+        [commit.hash]: commit,
+      },
     }));
   },
   removeCommit: (hash: CommitHash) => {
@@ -63,41 +72,64 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   resetCommits: () => set({ commits: {} }),
 
   appendCommitCode: (hash: CommitHash, numVariant: number, code: string) =>
-    set((state) => ({
-      commits: {
-        ...state.commits,
-        [hash]: {
-          ...state.commits[hash],
-          variants: state.commits[hash].variants.map((variant, index) =>
-            index === numVariant
-              ? { ...variant, code: variant.code + code }
-              : variant
-          ),
+    set((state) => {
+      const commit = state.commits[hash];
+      // Don't update if the commit is already committed
+      if (commit.isCommitted) {
+        throw new Error("Attempted to append code to a committed commit");
+      }
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: {
+            ...commit,
+            variants: commit.variants.map((variant, index) =>
+              index === numVariant
+                ? { ...variant, code: variant.code + code }
+                : variant
+            ),
+          },
         },
-      },
-    })),
+      };
+    }),
   setCommitCode: (hash: CommitHash, numVariant: number, code: string) =>
-    set((state) => ({
-      commits: {
-        ...state.commits,
-        [hash]: {
-          ...state.commits[hash],
-          variants: state.commits[hash].variants.map((variant, index) =>
-            index === numVariant ? { ...variant, code } : variant
-          ),
+    set((state) => {
+      const commit = state.commits[hash];
+      // Don't update if the commit is already committed
+      if (commit.isCommitted) {
+        throw new Error("Attempted to set code of a committed commit");
+      }
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: {
+            ...commit,
+            variants: commit.variants.map((variant, index) =>
+              index === numVariant ? { ...variant, code } : variant
+            ),
+          },
         },
-      },
-    })),
+      };
+    }),
   updateSelectedVariantIndex: (hash: CommitHash, index: number) =>
-    set((state) => ({
-      commits: {
-        ...state.commits,
-        [hash]: {
-          ...state.commits[hash],
-          selectedVariantIndex: index,
+    set((state) => {
+      const commit = state.commits[hash];
+      // Don't update if the commit is already committed
+      if (commit.isCommitted) {
+        throw new Error(
+          "Attempted to update selected variant index of a committed commit"
+        );
+      }
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: {
+            ...commit,
+            selectedVariantIndex: index,
+          },
         },
-      },
-    })),
+      };
+    }),
 
   setHead: (hash: CommitHash) => set({ head: hash }),
   resetHead: () => set({ head: null }),

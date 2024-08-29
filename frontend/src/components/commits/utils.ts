@@ -8,10 +8,25 @@ import {
 
 export function createCommit(
   commit:
-    | Omit<AiCreateCommit, "hash" | "dateCreated" | "selectedVariantIndex">
-    | Omit<AiEditCommit, "hash" | "dateCreated" | "selectedVariantIndex">
-    | Omit<CodeCreateCommit, "hash" | "dateCreated" | "selectedVariantIndex">
+    | Omit<
+        AiCreateCommit,
+        "hash" | "dateCreated" | "selectedVariantIndex" | "isCommitted"
+      >
+    | Omit<
+        AiEditCommit,
+        "hash" | "dateCreated" | "selectedVariantIndex" | "isCommitted"
+      >
+    | Omit<
+        CodeCreateCommit,
+        "hash" | "dateCreated" | "selectedVariantIndex" | "isCommitted"
+      >
 ): Commit {
   const hash = nanoid();
-  return { ...commit, hash, dateCreated: new Date(), selectedVariantIndex: 0 };
+  return {
+    ...commit,
+    hash,
+    isCommitted: false,
+    dateCreated: new Date(),
+    selectedVariantIndex: 0,
+  };
 }
