@@ -3,7 +3,7 @@ import { useProjectStore } from "../../store/project-store";
 function Variants() {
   const { head, commits, updateSelectedVariantIndex } = useProjectStore();
 
-  // TODO*: Is HEAD null right? And check variants.length === 0 ||
+  // If there is no head, don't show the variants
   if (head === null) {
     return null;
   }
