@@ -16,7 +16,6 @@ from custom_types import InputMode
 from llm import (
     Llm,
     convert_frontend_str_to_llm,
-    is_openai_model,
     stream_claude_response,
     stream_claude_response_native,
     stream_openai_response,

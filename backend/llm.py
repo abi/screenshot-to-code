@@ -22,14 +22,6 @@ class Llm(Enum):
     CLAUDE_3_5_SONNET_2024_06_20 = "claude-3-5-sonnet-20240620"
 
 
-def is_openai_model(model: Llm) -> bool:
-    return model in {
-        Llm.GPT_4_VISION,
-        Llm.GPT_4_TURBO_2024_04_09,
-        Llm.GPT_4O_2024_05_13,
-    }
-
-
 # Will throw errors if you send a garbage string
 def convert_frontend_str_to_llm(frontend_str: str) -> Llm:
     if frontend_str == "gpt_4_vision":
