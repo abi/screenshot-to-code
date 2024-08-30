@@ -147,9 +147,6 @@ function App() {
   // Used when the user cancels the code generation
   const cancelCodeGeneration = () => {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
-    // make sure stop can correct the state even if the websocket is already closed
-    // TODO*: Look into this
-    // cancelCodeGenerationAndReset();
   };
 
   // Used for code generation failure as well
