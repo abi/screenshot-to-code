@@ -1,4 +1,3 @@
-import base64
 import copy
 from enum import Enum
 from typing import Any, Awaitable, Callable, List, cast
