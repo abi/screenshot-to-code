@@ -33,10 +33,6 @@ We also just added experimental support for taking a video/screen recording of a
 
 [Follow me on Twitter for updates](https://twitter.com/_abi_).
 
-## Sponsors
-
-<a href="https://konghq.com/products/kong-konnect?utm_medium=referral&utm_source=github&utm_campaign=platform&utm_content=screenshot-to-code" target="_blank" title="Kong - powering the API world"><img src="https://picoapps.xyz/s2c-sponsors/Kong-GitHub-240x100.png"></a>
-
 ## 🚀 Hosted Version
 
 [Try it live on the hosted version (paid)](https://screenshottocode.com).
