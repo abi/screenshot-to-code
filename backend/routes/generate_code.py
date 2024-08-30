@@ -221,13 +221,6 @@ async def stream_code(websocket: WebSocket):
         f"Generating {stack} code in {input_mode} mode using {code_generation_model}..."
     )
 
-    # TODO(*): Do I still need this?
-    if not openai_api_key and is_openai_model(code_generation_model):
-        await throw_error(
-            "No OpenAI API key found. Please add your API key in the settings dialog or add it to backend/.env file. If you add it to .env, make sure to restart the backend server."
-        )
-        return
-
     for i in range(NUM_VARIANTS):
         await send_message("status", "Generating code...", i)
 
@@ -285,7 +278,7 @@ async def stream_code(websocket: WebSocket):
                     variant_models = ["anthropic", "anthropic"]
                 else:
                     await throw_error(
-                        "No OpenAI or Anthropic API key found. Please add the environment variable OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
+                        "No OpenAI or Anthropic API key found. Please add the environment variable OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. If you add it to .env, make sure to restart the backend server."
                     )
                     raise Exception("No OpenAI or Anthropic key")
 
