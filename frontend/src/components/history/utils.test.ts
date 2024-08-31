@@ -1,231 +1,242 @@
-// import { extractHistoryTree, renderHistory } from "./utils";
-// import type { History } from "./history_types";
+import { extractHistory, renderHistory } from "./utils";
+import { Commit, CommitHash } from "../commits/types";
 
-// const basicLinearHistory: History = [
-//   {
-//     type: "ai_create",
-//     parentIndex: null,
-//     code: "<html>1. create</html>",
-//     inputs: {
-//       image_url: "",
-//     },
-//   },
-//   {
-//     type: "ai_edit",
-//     parentIndex: 0,
-//     code: "<html>2. edit with better icons</html>",
-//     inputs: {
-//       prompt: "use better icons",
-//     },
-//   },
-//   {
-//     type: "ai_edit",
-//     parentIndex: 1,
-//     code: "<html>3. edit with better icons and red text</html>",
-//     inputs: {
-//       prompt: "make text red",
-//     },
-//   },
-// ];
+const basicLinearHistory: Record<CommitHash, Commit> = {
+  "0": {
+    hash: "0",
+    dateCreated: new Date(),
+    isCommitted: false,
+    type: "ai_create",
+    parentHash: null,
+    variants: [{ code: "<html>1. create</html>" }],
+    selectedVariantIndex: 0,
+    inputs: {
+      image_url: "",
+    },
+  },
+  "1": {
+    hash: "1",
+    dateCreated: new Date(),
+    isCommitted: false,
+    type: "ai_edit",
+    parentHash: "0",
+    variants: [{ code: "<html>2. edit with better icons</html>" }],
+    selectedVariantIndex: 0,
+    inputs: {
+      prompt: "use better icons",
+    },
+  },
+  "2": {
+    hash: "2",
+    dateCreated: new Date(),
+    isCommitted: false,
+    type: "ai_edit",
+    parentHash: "1",
+    variants: [{ code: "<html>3. edit with better icons and red text</html>" }],
+    selectedVariantIndex: 0,
+    inputs: {
+      prompt: "make text red",
+    },
+  },
+};
 
-// const basicLinearHistoryWithCode: History = [
-//   {
-//     type: "code_create",
-//     parentIndex: null,
-//     code: "<html>1. create</html>",
-//     inputs: {
-//       code: "<html>1. create</html>",
-//     },
-//   },
-//   ...basicLinearHistory.slice(1),
-// ];
+const basicLinearHistoryWithCode: Record<CommitHash, Commit> = {
+  "0": {
+    hash: "0",
+    dateCreated: new Date(),
+    isCommitted: false,
+    type: "code_create",
+    parentHash: null,
+    variants: [{ code: "<html>1. create</html>" }],
+    selectedVariantIndex: 0,
+    inputs: null,
+  },
+  ...Object.fromEntries(Object.entries(basicLinearHistory).slice(1)),
+};
 
-// const basicBranchingHistory: History = [
-//   ...basicLinearHistory,
-//   {
-//     type: "ai_edit",
-//     parentIndex: 1,
-//     code: "<html>4. edit with better icons and green text</html>",
-//     inputs: {
-//       prompt: "make text green",
-//     },
-//   },
-// ];
+const basicBranchingHistory: Record<CommitHash, Commit> = {
+  ...basicLinearHistory,
+  "3": {
+    hash: "3",
+    dateCreated: new Date(),
+    isCommitted: false,
+    type: "ai_edit",
+    parentHash: "1",
+    variants: [
+      { code: "<html>4. edit with better icons and green text</html>" },
+    ],
+    selectedVariantIndex: 0,
+    inputs: {
+      prompt: "make text green",
+    },
+  },
+};
 
-// const longerBranchingHistory: History = [
-//   ...basicBranchingHistory,
-//   {
-//     type: "ai_edit",
-//     parentIndex: 3,
-//     code: "<html>5. edit with better icons and green, bold text</html>",
-//     inputs: {
-//       prompt: "make text bold",
-//     },
-//   },
-// ];
+const longerBranchingHistory: Record<CommitHash, Commit> = {
+  ...basicBranchingHistory,
+  "4": {
+    hash: "4",
+    dateCreated: new Date(),
+    isCommitted: false,
+    type: "ai_edit",
+    parentHash: "3",
+    variants: [
+      { code: "<html>5. edit with better icons and green, bold text</html>" },
+    ],
+    selectedVariantIndex: 0,
+    inputs: {
+      prompt: "make text bold",
+    },
+  },
+};
 
-// const basicBadHistory: History = [
-//   {
-//     type: "ai_create",
-//     parentIndex: null,
-//     code: "<html>1. create</html>",
-//     inputs: {
-//       image_url: "",
-//     },
-//   },
-//   {
-//     type: "ai_edit",
-//     parentIndex: 2, // <- Bad parent index
-//     code: "<html>2. edit with better icons</html>",
-//     inputs: {
-//       prompt: "use better icons",
-//     },
-//   },
-// ];
+const basicBadHistory: Record<CommitHash, Commit> = {
+  "0": {
+    hash: "0",
+    dateCreated: new Date(),
+    isCommitted: false,
+    type: "ai_create",
+    parentHash: null,
+    variants: [{ code: "<html>1. create</html>" }],
+    selectedVariantIndex: 0,
+    inputs: {
+      image_url: "",
+    },
+  },
+  "1": {
+    hash: "1",
+    dateCreated: new Date(),
+    isCommitted: false,
+    type: "ai_edit",
+    parentHash: "2", // <- Bad parent hash
+    variants: [{ code: "<html>2. edit with better icons</html>" }],
+    selectedVariantIndex: 0,
+    inputs: {
+      prompt: "use better icons",
+    },
+  },
+};
 
-// describe("History Utils", () => {
-//   test("should correctly extract the history tree", () => {
-//     expect(extractHistoryTree(basicLinearHistory, 2)).toEqual([
-//       "<html>1. create</html>",
-//       "use better icons",
-//       "<html>2. edit with better icons</html>",
-//       "make text red",
-//       "<html>3. edit with better icons and red text</html>",
-//     ]);
+describe("History Utils", () => {
+  test("should correctly extract the history tree", () => {
+    expect(extractHistory("2", basicLinearHistory)).toEqual([
+      "<html>1. create</html>",
+      "use better icons",
+      "<html>2. edit with better icons</html>",
+      "make text red",
+      "<html>3. edit with better icons and red text</html>",
+    ]);
 
-//     expect(extractHistoryTree(basicLinearHistory, 0)).toEqual([
-//       "<html>1. create</html>",
-//     ]);
+    expect(extractHistory("0", basicLinearHistory)).toEqual([
+      "<html>1. create</html>",
+    ]);
 
-//     // Test branching
-//     expect(extractHistoryTree(basicBranchingHistory, 3)).toEqual([
-//       "<html>1. create</html>",
-//       "use better icons",
-//       "<html>2. edit with better icons</html>",
-//       "make text green",
-//       "<html>4. edit with better icons and green text</html>",
-//     ]);
+    // Test branching
+    expect(extractHistory("3", basicBranchingHistory)).toEqual([
+      "<html>1. create</html>",
+      "use better icons",
+      "<html>2. edit with better icons</html>",
+      "make text green",
+      "<html>4. edit with better icons and green text</html>",
+    ]);
 
-//     expect(extractHistoryTree(longerBranchingHistory, 4)).toEqual([
-//       "<html>1. create</html>",
-//       "use better icons",
-//       "<html>2. edit with better icons</html>",
-//       "make text green",
-//       "<html>4. edit with better icons and green text</html>",
-//       "make text bold",
-//       "<html>5. edit with better icons and green, bold text</html>",
-//     ]);
+    expect(extractHistory("4", longerBranchingHistory)).toEqual([
+      "<html>1. create</html>",
+      "use better icons",
+      "<html>2. edit with better icons</html>",
+      "make text green",
+      "<html>4. edit with better icons and green text</html>",
+      "make text bold",
+      "<html>5. edit with better icons and green, bold text</html>",
+    ]);
 
-//     expect(extractHistoryTree(longerBranchingHistory, 2)).toEqual([
-//       "<html>1. create</html>",
-//       "use better icons",
-//       "<html>2. edit with better icons</html>",
-//       "make text red",
-//       "<html>3. edit with better icons and red text</html>",
-//     ]);
+    expect(extractHistory("2", longerBranchingHistory)).toEqual([
+      "<html>1. create</html>",
+      "use better icons",
+      "<html>2. edit with better icons</html>",
+      "make text red",
+      "<html>3. edit with better icons and red text</html>",
+    ]);
 
-//     // Errors
+    // Errors
 
-//     // Bad index
-//     expect(() => extractHistoryTree(basicLinearHistory, 100)).toThrow();
-//     expect(() => extractHistoryTree(basicLinearHistory, -2)).toThrow();
+    // Bad hash
+    expect(() => extractHistory("100", basicLinearHistory)).toThrow();
 
-//     // Bad tree
-//     expect(() => extractHistoryTree(basicBadHistory, 1)).toThrow();
-//   });
+    // Bad tree
+    expect(() => extractHistory("1", basicBadHistory)).toThrow();
+  });
 
-//   test("should correctly render the history tree", () => {
-//     expect(renderHistory(basicLinearHistory, 2)).toEqual([
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "Create",
-//         type: "Create",
-//       },
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "use better icons",
-//         type: "Edit",
-//       },
-//       {
-//         isActive: true,
-//         parentVersion: null,
-//         summary: "make text red",
-//         type: "Edit",
-//       },
-//     ]);
+  test("should correctly render the history tree", () => {
+    expect(renderHistory(Object.values(basicLinearHistory))).toEqual([
+      {
+        ...basicLinearHistory["0"],
+        type: "Create",
+        summary: "Create",
+        parentVersion: null,
+      },
+      {
+        ...basicLinearHistory["1"],
+        type: "Edit",
+        summary: "use better icons",
+        parentVersion: null,
+      },
+      {
+        ...basicLinearHistory["2"],
+        type: "Edit",
+        summary: "make text red",
+        parentVersion: null,
+      },
+    ]);
 
-//     // Current version is the first version
-//     expect(renderHistory(basicLinearHistory, 0)).toEqual([
-//       {
-//         isActive: true,
-//         parentVersion: null,
-//         summary: "Create",
-//         type: "Create",
-//       },
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "use better icons",
-//         type: "Edit",
-//       },
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "make text red",
-//         type: "Edit",
-//       },
-//     ]);
+    // Render a history with code
+    expect(renderHistory(Object.values(basicLinearHistoryWithCode))).toEqual([
+      {
+        ...basicLinearHistoryWithCode["0"],
+        type: "Imported from code",
+        summary: "Imported from code",
+        parentVersion: null,
+      },
+      {
+        ...basicLinearHistoryWithCode["1"],
+        type: "Edit",
+        summary: "use better icons",
+        parentVersion: null,
+      },
+      {
+        ...basicLinearHistoryWithCode["2"],
+        type: "Edit",
+        summary: "make text red",
+        parentVersion: null,
+      },
+    ]);
 
-//     // Render a history with code
-//     expect(renderHistory(basicLinearHistoryWithCode, 0)).toEqual([
-//       {
-//         isActive: true,
-//         parentVersion: null,
-//         summary: "Imported from code",
-//         type: "Imported from code",
-//       },
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "use better icons",
-//         type: "Edit",
-//       },
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "make text red",
-//         type: "Edit",
-//       },
-//     ]);
-
-//     // Render a non-linear history
-//     expect(renderHistory(basicBranchingHistory, 3)).toEqual([
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "Create",
-//         type: "Create",
-//       },
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "use better icons",
-//         type: "Edit",
-//       },
-//       {
-//         isActive: false,
-//         parentVersion: null,
-//         summary: "make text red",
-//         type: "Edit",
-//       },
-//       {
-//         isActive: true,
-//         parentVersion: "v2",
-//         summary: "make text green",
-//         type: "Edit",
-//       },
-//     ]);
-//   });
-// });
+    // Render a non-linear history
+    expect(renderHistory(Object.values(basicBranchingHistory))).toEqual([
+      {
+        ...basicBranchingHistory["0"],
+        type: "Create",
+        summary: "Create",
+        parentVersion: null,
+      },
+      {
+        ...basicBranchingHistory["1"],
+        type: "Edit",
+        summary: "use better icons",
+        parentVersion: null,
+      },
+      {
+        ...basicBranchingHistory["2"],
+        type: "Edit",
+        summary: "make text red",
+        parentVersion: null,
+      },
+      {
+        ...basicBranchingHistory["3"],
+        type: "Edit",
+        summary: "make text green",
+        parentVersion: 2,
+      },
+    ]);
+  });
+});
