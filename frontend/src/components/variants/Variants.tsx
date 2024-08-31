@@ -1,7 +1,8 @@
 import { useProjectStore } from "../../store/project-store";
 
 function Variants() {
-  const { head, commits, updateSelectedVariantIndex } = useProjectStore();
+  const { inputMode, head, commits, updateSelectedVariantIndex } =
+    useProjectStore();
 
   // If there is no head, don't show the variants
   if (head === null) {
@@ -13,7 +14,7 @@ function Variants() {
   const selectedVariantIndex = commit.selectedVariantIndex;
 
   // If there is only one variant or the commit is already committed, don't show the variants
-  if (variants.length <= 1 || commit.isCommitted) {
+  if (variants.length <= 1 || commit.isCommitted || inputMode === "video") {
     return <div className="mt-2"></div>;
   }
 

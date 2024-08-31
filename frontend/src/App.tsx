@@ -212,15 +212,15 @@ function App() {
       wsRef,
       updatedParams,
       // On change
-      (token, variant) => {
-        appendCommitCode(commit.hash, variant, token);
+      (token, variantIndex) => {
+        appendCommitCode(commit.hash, variantIndex, token);
       },
       // On set code
-      (code, variant) => {
-        setCommitCode(commit.hash, variant, code);
+      (code, variantIndex) => {
+        setCommitCode(commit.hash, variantIndex, code);
       },
       // On status update
-      (line, variant) => appendExecutionConsole(variant, line),
+      (line, variantIndex) => appendExecutionConsole(variantIndex, line),
       // On cancel
       () => {
         cancelCodeGenerationAndReset(commit);
