@@ -349,9 +349,6 @@ async def stream_code(websocket: WebSocket):
             )
             return await throw_error(error_message)
 
-    # if validated_input_mode == "video":
-    #     completion = extract_tag_content("html", completions[0])
-
     ## Post-processing
 
     # Strip the completion of everything except the HTML content
