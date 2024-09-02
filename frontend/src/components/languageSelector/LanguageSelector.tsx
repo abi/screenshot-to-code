@@ -4,13 +4,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import './LanguageSelector.css';
 
 type Languages = 'en' | 'zh' | 'ja' | 'ko' | 'de' | 'ru' | 'fr';
+const normalizeLanguage = (language: string): Languages => {
+  return language.split('-')[0] as Languages;
+};
 
 const LanguageSelector: React.FC = () => {
-  const [selectedLang, setSelectedLang] = useState<Languages>(i18n.language as Languages);
+  const [selectedLang, setSelectedLang] = useState<Languages>(normalizeLanguage(i18n.language));
 
   useEffect(() => {
     const handleLanguageChanged = (lang: string) => {
-      setSelectedLang(lang as Languages);
+      setSelectedLang(normalizeLanguage(lang));
     };
 
     i18n.on('languageChanged', handleLanguageChanged);
@@ -21,7 +24,7 @@ const LanguageSelector: React.FC = () => {
   }, []);
 
   const handleLanguageChange = (value: string) => {
-    const nextLang = value as Languages;
+    const nextLang = normalizeLanguage(value);
     i18n.changeLanguage(nextLang);
   };
 
