@@ -27,7 +27,8 @@ from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
 from prompts.types import Stack
-from utils import pprint_prompt
+
+# from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 
@@ -236,7 +237,7 @@ async def stream_code(websocket: WebSocket):
         )
         raise
 
-    pprint_prompt(prompt_messages)  # type: ignore
+    # pprint_prompt(prompt_messages)  # type: ignore
 
     ### Code generation
 
