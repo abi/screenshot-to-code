@@ -1,4 +1,4 @@
-import base64
+import copy
 from enum import Enum
 from typing import Any, Awaitable, Callable, List, cast
 from anthropic import AsyncAnthropic
@@ -92,8 +92,12 @@ async def stream_claude_response(
     temperature = 0.0
 
     # Translate OpenAI messages to Claude messages
-    system_prompt = cast(str, messages[0].get("content"))
-    claude_messages = [dict(message) for message in messages[1:]]
+
+    # Deep copy messages to avoid modifying the original list
+    cloned_messages = copy.deepcopy(messages)
+
+    system_prompt = cast(str, cloned_messages[0].get("content"))
+    claude_messages = [dict(message) for message in cloned_messages[1:]]
     for message in claude_messages:
         if not isinstance(message["content"], list):
             continue

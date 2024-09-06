@@ -23,12 +23,17 @@ interface Props {
 
 function PreviewPane({ doUpdate, reset, settings }: Props) {
   const { appState } = useAppStore();
-  const { inputMode, generatedCode, setGeneratedCode } = useProjectStore();
+  const { inputMode, head, commits } = useProjectStore();
+
+  const currentCommit = head && commits[head] ? commits[head] : "";
+  const currentCode = currentCommit
+    ? currentCommit.variants[currentCommit.selectedVariantIndex].code
+    : "";
 
   const previewCode =
     inputMode === "video" && appState === AppState.CODING
-      ? extractHtml(generatedCode)
-      : generatedCode;
+      ? extractHtml(currentCode)
+      : currentCode;
 
   return (
     <div className="ml-4">
@@ -45,7 +50,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                   Reset
                 </Button>
                 <Button
-                  onClick={() => downloadCode(generatedCode)}
+                  onClick={() => downloadCode(previewCode)}
                   variant="secondary"
                   className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
                 >
@@ -84,11 +89,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
           />
         </TabsContent>
         <TabsContent value="code">
-          <CodeTab
-            code={previewCode}
-            setCode={setGeneratedCode}
-            settings={settings}
-          />
+          <CodeTab code={previewCode} setCode={() => {}} settings={settings} />
         </TabsContent>
       </Tabs>
     </div>

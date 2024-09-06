@@ -8,7 +8,7 @@ STREAM_CHUNK_SIZE = 20
 
 
 async def mock_completion(
-    process_chunk: Callable[[str], Awaitable[None]], input_mode: InputMode
+    process_chunk: Callable[[str, int], Awaitable[None]], input_mode: InputMode
 ) -> str:
     code_to_return = (
         TALLY_FORM_VIDEO_PROMPT_MOCK
@@ -17,7 +17,7 @@ async def mock_completion(
     )
 
     for i in range(0, len(code_to_return), STREAM_CHUNK_SIZE):
-        await process_chunk(code_to_return[i : i + STREAM_CHUNK_SIZE])
+        await process_chunk(code_to_return[i : i + STREAM_CHUNK_SIZE], 0)
         await asyncio.sleep(0.01)
 
     if input_mode == "video":
