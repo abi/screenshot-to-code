@@ -14,8 +14,8 @@ from utils import pprint_prompt
 # Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
     GPT_4_VISION = "gpt-4-vision-preview"
-    GPT_4_TURBO_2024_04_09 = "gpt-4-turbo-2024-04-09"
-    GPT_4O_2024_05_13 = "gpt-4o-2024-05-13"
+    GPT_4_TURBO_2024_04_09 = "gpt-4-turbo-preview"
+    GPT_4O_2024_05_13 = "gpt-4o"
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
     CLAUDE_3_OPUS = "claude-3-opus-20240229"
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
@@ -33,11 +33,11 @@ def convert_frontend_str_to_llm(frontend_str: str) -> Llm:
 
 
 async def stream_openai_response(
-    messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    base_url: str | None,
-    callback: Callable[[str], Awaitable[None]],
-    model: Llm,
+        messages: List[ChatCompletionMessageParam],
+        api_key: str,
+        base_url: str | None,
+        callback: Callable[[str], Awaitable[None]],
+        model: Llm,
 ) -> str:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
@@ -52,21 +52,20 @@ async def stream_openai_response(
 
     # Add 'max_tokens' only if the model is a GPT4 vision or Turbo model
     if (
-        model == Llm.GPT_4_VISION
-        or model == Llm.GPT_4_TURBO_2024_04_09
-        or model == Llm.GPT_4O_2024_05_13
+            model == Llm.GPT_4_VISION
+            or model == Llm.GPT_4_TURBO_2024_04_09
+            or model == Llm.GPT_4O_2024_05_13
     ):
         params["max_tokens"] = 4096
-
     stream = await client.chat.completions.create(**params)  # type: ignore
     full_response = ""
     async for chunk in stream:  # type: ignore
         assert isinstance(chunk, ChatCompletionChunk)
         if (
-            chunk.choices
-            and len(chunk.choices) > 0
-            and chunk.choices[0].delta
-            and chunk.choices[0].delta.content
+                chunk.choices
+                and len(chunk.choices) > 0
+                and chunk.choices[0].delta
+                and chunk.choices[0].delta.content
         ):
             content = chunk.choices[0].delta.content or ""
             full_response += content
@@ -79,12 +78,11 @@ async def stream_openai_response(
 
 # TODO: Have a seperate function that translates OpenAI messages to Claude messages
 async def stream_claude_response(
-    messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    model: Llm,
+        messages: List[ChatCompletionMessageParam],
+        api_key: str,
+        callback: Callable[[str], Awaitable[None]],
+        model: Llm,
 ) -> str:
-
     client = AsyncAnthropic(api_key=api_key)
 
     # Base parameters
@@ -121,12 +119,12 @@ async def stream_claude_response(
 
     # Stream Claude response
     async with client.messages.stream(
-        model=model.value,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        system=system_prompt,
-        messages=claude_messages,  # type: ignore
-        extra_headers={"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"},
+            model=model.value,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            system=system_prompt,
+            messages=claude_messages,  # type: ignore
+            extra_headers={"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"},
     ) as stream:
         async for text in stream.text_stream:
             await callback(text)
@@ -141,14 +139,13 @@ async def stream_claude_response(
 
 
 async def stream_claude_response_native(
-    system_prompt: str,
-    messages: list[Any],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    include_thinking: bool = False,
-    model: Llm = Llm.CLAUDE_3_OPUS,
+        system_prompt: str,
+        messages: list[Any],
+        api_key: str,
+        callback: Callable[[str], Awaitable[None]],
+        include_thinking: bool = False,
+        model: Llm = Llm.CLAUDE_3_OPUS,
 ) -> str:
-
     client = AsyncAnthropic(api_key=api_key)
 
     # Base model parameters
@@ -179,11 +176,11 @@ async def stream_claude_response_native(
         pprint_prompt(messages_to_send)
 
         async with client.messages.stream(
-            model=model.value,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            system=system_prompt,
-            messages=messages_to_send,  # type: ignore
+                model=model.value,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                system=system_prompt,
+                messages=messages_to_send,  # type: ignore
         ) as stream:
             async for text in stream.text_stream:
                 print(text, end="", flush=True)

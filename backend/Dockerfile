@@ -1,9 +1,9 @@
-FROM python:3.12.3-slim-bullseye
+FROM python:3.10-slim
 
 ENV POETRY_VERSION 1.4.1
 
 # Install system dependencies
-RUN pip install "poetry==$POETRY_VERSION"
+RUN pip install "poetry==$POETRY_VERSION" --index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 # Set work directory
 WORKDIR /app
@@ -15,7 +15,9 @@ COPY poetry.lock pyproject.toml /app/
 RUN poetry config virtualenvs.create false
 
 # Install dependencies
-RUN poetry install
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt --index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 # Copy the current directory contents into the container at /app
 COPY ./ /app/
