@@ -11,12 +11,18 @@ const ERROR_MESSAGE =
 
 const CANCEL_MESSAGE = "Code generation cancelled";
 
+type WebSocketResponse = {
+  type: "chunk" | "status" | "setCode" | "error";
+  value: string;
+  variantIndex: number;
+};
+
 export function generateCode(
   wsRef: React.MutableRefObject<WebSocket | null>,
   params: FullGenerationSettings,
-  onChange: (chunk: string) => void,
-  onSetCode: (code: string) => void,
-  onStatusUpdate: (status: string) => void,
+  onChange: (chunk: string, variantIndex: number) => void,
+  onSetCode: (code: string, variantIndex: number) => void,
+  onStatusUpdate: (status: string, variantIndex: number) => void,
   onCancel: () => void,
   onComplete: () => void
 ) {
@@ -31,13 +37,13 @@ export function generateCode(
   });
 
   ws.addEventListener("message", async (event: MessageEvent) => {
-    const response = JSON.parse(event.data);
+    const response = JSON.parse(event.data) as WebSocketResponse;
     if (response.type === "chunk") {
-      onChange(response.value);
+      onChange(response.value, response.variantIndex);
     } else if (response.type === "status") {
-      onStatusUpdate(response.value);
+      onStatusUpdate(response.value, response.variantIndex);
     } else if (response.type === "setCode") {
-      onSetCode(response.value);
+      onSetCode(response.value, response.variantIndex);
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
       toast.error(response.value);

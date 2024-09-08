@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useEffect, useRef } from "react";
 import HistoryDisplay from "../history/HistoryDisplay";
+import Variants from "../variants/Variants";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -35,8 +36,17 @@ function Sidebar({
     shouldIncludeResultImage,
     setShouldIncludeResultImage,
   } = useAppStore();
-  const { inputMode, generatedCode, referenceImages, executionConsole } =
+
+  const { inputMode, referenceImages, executionConsoles, head, commits } =
     useProjectStore();
+
+  const viewedCode =
+    head && commits[head]
+      ? commits[head].variants[commits[head].selectedVariantIndex].code
+      : "";
+
+  const executionConsole =
+    (head && executionConsoles[commits[head].selectedVariantIndex]) || [];
 
   // When coding is complete, focus on the update instruction textarea
   useEffect(() => {
@@ -47,6 +57,8 @@ function Sidebar({
 
   return (
     <>
+      <Variants />
+
       {/* Show code preview only when coding */}
       {appState === AppState.CODING && (
         <div className="flex flex-col">
@@ -66,7 +78,7 @@ function Sidebar({
             {executionConsole.slice(-1)[0]}
           </div>
 
-          <CodePreview code={generatedCode} />
+          <CodePreview code={viewedCode} />
 
           <div className="flex w-full">
             <Button
@@ -158,12 +170,19 @@ function Sidebar({
         )}
         <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
           <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
-          {executionConsole.map((line, index) => (
-            <div
-              key={index}
-              className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
-            >
-              {line}
+          {Object.entries(executionConsoles).map(([index, lines]) => (
+            <div key={index}>
+              {lines.map((line, lineIndex) => (
+                <div
+                  key={`${index}-${lineIndex}`}
+                  className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
+                >
+                  <span className="font-bold mr-2">{`${index}:${
+                    lineIndex + 1
+                  }`}</span>
+                  {line}
+                </div>
+              ))}
             </div>
           ))}
         </div>

@@ -9,8 +9,7 @@ import { usePersistedState } from "./hooks/usePersistedState";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import { addEvent } from "./lib/analytics";
-import { History } from "./components/history/history_types";
-import { extractHistoryTree } from "./components/history/utils";
+import { extractHistory } from "./components/history/utils";
 import toast from "react-hot-toast";
 import { useAuth } from "@clerk/clerk-react";
 import { useStore } from "./store/store";
@@ -27,6 +26,8 @@ import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import { takeScreenshot } from "./lib/takeScreenshot";
 import Sidebar from "./components/sidebar/Sidebar";
+import { Commit } from "./components/commits/types";
+import { createCommit } from "./components/commits/utils";
 
 interface Props {
   navbarComponent?: JSX.Element;
@@ -49,13 +50,19 @@ function App({ navbarComponent }: Props) {
     referenceImages,
     setReferenceImages,
 
+    head,
+    commits,
+    addCommit,
+    removeCommit,
+    setHead,
+    appendCommitCode,
+    setCommitCode,
+    resetCommits,
+    resetHead,
+
     // Outputs
-    setGeneratedCode,
-    setExecutionConsole,
-    currentVersion,
-    setCurrentVersion,
-    appHistory,
-    setAppHistory,
+    appendExecutionConsole,
+    resetExecutionConsoles,
   } = useProjectStore();
 
   const {
@@ -119,32 +126,31 @@ function App({ navbarComponent }: Props) {
   // Functions
   const reset = () => {
     setAppState(AppState.INITIAL);
-    setGeneratedCode("");
-    setReferenceImages([]);
-    setInitialPrompt("");
-    setExecutionConsole([]);
-    setUpdateInstruction("");
-    setIsImportedFromCode(false);
-    setAppHistory([]);
-    setCurrentVersion(null);
     setShouldIncludeResultImage(false);
+    setUpdateInstruction("");
     disableInSelectAndEditMode();
+    resetExecutionConsoles();
+
+    resetCommits();
+    resetHead();
+
+    // Inputs
+    setInputMode("image");
+    setReferenceImages([]);
+    setIsImportedFromCode(false);
   };
 
   const regenerate = () => {
-    if (currentVersion === null) {
-      // This would be a error that I log to Sentry
-      addEvent("RegenerateCurrentVersionNull");
+    if (head === null) {
       toast.error(
-        "No current version set. Please open a Github issue as this shouldn't happen."
+        "No current version set. Please contact support via chat or Github."
       );
-      return;
+      throw new Error("Regenerate called with no head");
     }
 
     // Retrieve the previous command
-    const previousCommand = appHistory[currentVersion];
-    if (previousCommand.type !== "ai_create") {
-      addEvent("RegenerateNotFirstVersion");
+    const currentCommit = commits[head];
+    if (currentCommit.type !== "ai_create") {
       toast.error("Only the first version can be regenerated.");
       return;
     }
@@ -165,28 +171,32 @@ function App({ navbarComponent }: Props) {
     addEvent("Cancel");
 
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
-    // make sure stop can correct the state even if the websocket is already closed
-    cancelCodeGenerationAndReset();
   };
 
   // Used for code generation failure as well
-  const cancelCodeGenerationAndReset = () => {
-    // When this is the first version, reset the entire app state
-    if (currentVersion === null) {
+  const cancelCodeGenerationAndReset = (commit: Commit) => {
+    // When the current commit is the first version, reset the entire app state
+    if (commit.type === "ai_create") {
       reset();
     } else {
-      // Otherwise, revert to the last version
-      setGeneratedCode(appHistory[currentVersion].code);
+      // Otherwise, remove current commit from commits
+      removeCommit(commit.hash);
+
+      // Revert to parent commit
+      const parentCommitHash = commit.parentHash;
+      if (parentCommitHash) {
+        setHead(parentCommitHash);
+      } else {
+        throw new Error("Parent commit not found");
+      }
+
       setAppState(AppState.CODE_READY);
     }
   };
 
-  async function doGenerateCode(
-    params: CodeGenerationParams,
-    parentVersion: number | null
-  ) {
+  async function doGenerateCode(params: CodeGenerationParams) {
     // Reset the execution console
-    setExecutionConsole([]);
+    resetExecutionConsoles();
 
     // Set the app state
     setAppState(AppState.CODING);
@@ -199,69 +209,50 @@ function App({ navbarComponent }: Props) {
       authToken: authToken || undefined,
     };
 
+    const baseCommitObject = {
+      variants: [{ code: "" }, { code: "" }],
+    };
+
+    const commitInputObject =
+      params.generationType === "create"
+        ? {
+            ...baseCommitObject,
+            type: "ai_create" as const,
+            parentHash: null,
+            inputs: { image_url: referenceImages[0] },
+          }
+        : {
+            ...baseCommitObject,
+            type: "ai_edit" as const,
+            parentHash: head,
+            inputs: {
+              prompt: params.history
+                ? params.history[params.history.length - 1]
+                : "",
+            },
+          };
+
+    // Create a new commit and set it as the head
+    const commit = createCommit(commitInputObject);
+    addCommit(commit);
+    setHead(commit.hash);
+
     generateCode(
       wsRef,
       updatedParams,
       // On change
-      (token) => setGeneratedCode((prev) => prev + token),
+      (token, variantIndex) => {
+        appendCommitCode(commit.hash, variantIndex, token);
+      },
       // On set code
-      (code) => {
-        setGeneratedCode(code);
-        if (params.generationType === "create") {
-          if (inputMode === "image" || inputMode === "video") {
-            setAppHistory([
-              {
-                type: "ai_create",
-                parentIndex: null,
-                code,
-                inputs: { image_url: referenceImages[0] },
-              },
-            ]);
-          } else {
-            setAppHistory([
-              {
-                type: "ai_create",
-                parentIndex: null,
-                code,
-                inputs: { text: params.image },
-              },
-            ]);
-          }
-          setCurrentVersion(0);
-        } else {
-          setAppHistory((prev) => {
-            // Validate parent version
-            if (parentVersion === null) {
-              toast.error(
-                "No parent version set. Contact support or open a Github issue."
-              );
-              addEvent("ParentVersionNull");
-              return prev;
-            }
-
-            const newHistory: History = [
-              ...prev,
-              {
-                type: "ai_edit",
-                parentIndex: parentVersion,
-                code,
-                inputs: {
-                  prompt: params.history
-                    ? params.history[params.history.length - 1]
-                    : "", // History should never be empty when performing an edit
-                },
-              },
-            ];
-            setCurrentVersion(newHistory.length - 1);
-            return newHistory;
-          });
-        }
+      (code, variantIndex) => {
+        setCommitCode(commit.hash, variantIndex, code);
       },
       // On status update
-      (line) => setExecutionConsole((prev) => [...prev, line]),
+      (line, variantIndex) => appendExecutionConsole(variantIndex, line),
       // On cancel
       () => {
-        cancelCodeGenerationAndReset();
+        cancelCodeGenerationAndReset(commit);
       },
       // On complete
       () => {
@@ -285,14 +276,11 @@ function App({ navbarComponent }: Props) {
     // Kick off the code generation
     if (referenceImages.length > 0) {
       addEvent("Create");
-      await doGenerateCode(
-        {
-          generationType: "create",
-          image: referenceImages[0],
-          inputMode,
-        },
-        currentVersion
-      );
+      doGenerateCode({
+        generationType: "create",
+        image: referenceImages[0],
+        inputMode,
+      });
     }
   }
 
@@ -302,14 +290,11 @@ function App({ navbarComponent }: Props) {
 
     setInputMode("text");
     setInitialPrompt(text);
-    doGenerateCode(
-      {
-        generationType: "create",
-        inputMode: "text",
-        image: text,
-      },
-      currentVersion
-    );
+    doGenerateCode({
+      generationType: "create",
+      inputMode: "text",
+      image: text,
+    });
   }
 
   // Subsequent updates
@@ -322,23 +307,22 @@ function App({ navbarComponent }: Props) {
       return;
     }
 
-    if (currentVersion === null) {
+    if (head === null) {
       toast.error(
         "No current version set. Contact support or open a Github issue."
       );
-      addEvent("CurrentVersionNull");
-      return;
+      throw new Error("Update called with no head");
     }
 
     let historyTree;
     try {
-      historyTree = extractHistoryTree(appHistory, currentVersion);
+      historyTree = extractHistory(head, commits);
     } catch {
       addEvent("HistoryTreeFailed");
       toast.error(
         "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
       );
-      return;
+      throw new Error("Invalid version history");
     }
 
     let modifiedUpdateInstruction = updateInstruction;
@@ -352,34 +336,19 @@ function App({ navbarComponent }: Props) {
     }
 
     const updatedHistory = [...historyTree, modifiedUpdateInstruction];
+    const resultImage = shouldIncludeResultImage
+      ? await takeScreenshot()
+      : undefined;
 
-    if (shouldIncludeResultImage) {
-      const resultImage = await takeScreenshot();
-      await doGenerateCode(
-        {
-          generationType: "update",
-          inputMode,
-          image: referenceImages[0],
-          resultImage: resultImage,
-          history: updatedHistory,
-          isImportedFromCode,
-        },
-        currentVersion
-      );
-    } else {
-      await doGenerateCode(
-        {
-          generationType: "update",
-          inputMode,
-          image: inputMode === "text" ? initialPrompt : referenceImages[0],
-          history: updatedHistory,
-          isImportedFromCode,
-        },
-        currentVersion
-      );
-    }
+    doGenerateCode({
+      generationType: "update",
+      inputMode,
+      image: referenceImages[0],
+      resultImage,
+      history: updatedHistory,
+      isImportedFromCode,
+    });
 
-    setGeneratedCode("");
     setUpdateInstruction("");
   }
 
@@ -402,17 +371,17 @@ function App({ navbarComponent }: Props) {
     setIsImportedFromCode(true);
 
     // Set up this project
-    setGeneratedCode(code);
     setStack(stack);
-    setAppHistory([
-      {
-        type: "code_create",
-        parentIndex: null,
-        code,
-        inputs: { code },
-      },
-    ]);
-    setCurrentVersion(0);
+
+    // Create a new commit and set it as the head
+    const commit = createCommit({
+      type: "code_create",
+      parentHash: null,
+      variants: [{ code }],
+      inputs: null,
+    });
+    addCommit(commit);
+    setHead(commit.hash);
 
     // Set the app state
     setAppState(AppState.CODE_READY);

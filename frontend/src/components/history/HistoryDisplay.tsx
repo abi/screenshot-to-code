@@ -17,19 +17,16 @@ interface Props {
 }
 
 export default function HistoryDisplay({ shouldDisableReverts }: Props) {
-  const {
-    appHistory: history,
-    currentVersion,
-    setCurrentVersion,
-    setGeneratedCode,
-  } = useProjectStore();
-  const renderedHistory = renderHistory(history, currentVersion);
+  const { commits, head, setHead } = useProjectStore();
 
-  const revertToVersion = (index: number) => {
-    if (index < 0 || index >= history.length || !history[index]) return;
-    setCurrentVersion(index);
-    setGeneratedCode(history[index].code);
-  };
+  // Put all commits into an array and sort by created date (oldest first)
+  const flatHistory = Object.values(commits).sort(
+    (a, b) =>
+      new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
+  );
+
+  // Annotate history items with a summary, parent version, etc.
+  const renderedHistory = renderHistory(flatHistory);
 
   return renderedHistory.length === 0 ? null : (
     <div className="flex flex-col h-screen">
@@ -43,8 +40,8 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                   "flex items-center justify-between space-x-2 w-full pr-2",
                   "border-b cursor-pointer",
                   {
-                    " hover:bg-black hover:text-white": !item.isActive,
-                    "bg-slate-500 text-white": item.isActive,
+                    " hover:bg-black hover:text-white": item.hash === head,
+                    "bg-slate-500 text-white": item.hash === head,
                   }
                 )}
               >
@@ -55,14 +52,14 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                       ? toast.error(
                           "Please wait for code generation to complete before viewing an older version."
                         )
-                      : revertToVersion(index)
+                      : setHead(item.hash)
                   }
                 >
                   <div className="flex gap-x-1 truncate">
                     <h2 className="text-sm truncate">{item.summary}</h2>
                     {item.parentVersion !== null && (
                       <h2 className="text-sm">
-                        (parent: {item.parentVersion})
+                        (parent: v{item.parentVersion})
                       </h2>
                     )}
                   </div>

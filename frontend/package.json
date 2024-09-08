@@ -43,6 +43,7 @@
     "copy-to-clipboard": "^3.3.3",
     "html2canvas": "^1.4.1",
     "posthog-js": "^1.128.1",
+    "nanoid": "^5.0.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",

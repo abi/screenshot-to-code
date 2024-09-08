@@ -391,63 +391,81 @@ def test_prompts():
 
 
 def test_imported_code_prompts():
-    tailwind_prompt = assemble_imported_code_prompt(
-        "code", "html_tailwind", Llm.GPT_4O_2024_05_13
-    )
+    code = "Sample code"
+
+    tailwind_prompt = assemble_imported_code_prompt(code, "html_tailwind")
     expected_tailwind_prompt = [
-        {"role": "system", "content": IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT},
-        {"role": "user", "content": "Here is the code of the app: code"},
+        {
+            "role": "system",
+            "content": IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT
+            + "\n Here is the code of the app: "
+            + code,
+        }
     ]
     assert tailwind_prompt == expected_tailwind_prompt
 
-    html_css_prompt = assemble_imported_code_prompt(
-        "code", "html_css", Llm.GPT_4O_2024_05_13
-    )
+    html_css_prompt = assemble_imported_code_prompt(code, "html_css")
     expected_html_css_prompt = [
-        {"role": "system", "content": IMPORTED_CODE_HTML_CSS_SYSTEM_PROMPT},
-        {"role": "user", "content": "Here is the code of the app: code"},
+        {
+            "role": "system",
+            "content": IMPORTED_CODE_HTML_CSS_SYSTEM_PROMPT
+            + "\n Here is the code of the app: "
+            + code,
+        }
     ]
     assert html_css_prompt == expected_html_css_prompt
 
-    react_tailwind_prompt = assemble_imported_code_prompt(
-        "code", "react_tailwind", Llm.GPT_4O_2024_05_13
-    )
+    react_tailwind_prompt = assemble_imported_code_prompt(code, "react_tailwind")
     expected_react_tailwind_prompt = [
-        {"role": "system", "content": IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT},
-        {"role": "user", "content": "Here is the code of the app: code"},
+        {
+            "role": "system",
+            "content": IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT
+            + "\n Here is the code of the app: "
+            + code,
+        }
     ]
     assert react_tailwind_prompt == expected_react_tailwind_prompt
 
-    bootstrap_prompt = assemble_imported_code_prompt(
-        "code", "bootstrap", Llm.GPT_4O_2024_05_13
-    )
+    bootstrap_prompt = assemble_imported_code_prompt(code, "bootstrap")
     expected_bootstrap_prompt = [
-        {"role": "system", "content": IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT},
-        {"role": "user", "content": "Here is the code of the app: code"},
+        {
+            "role": "system",
+            "content": IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT
+            + "\n Here is the code of the app: "
+            + code,
+        }
     ]
     assert bootstrap_prompt == expected_bootstrap_prompt
 
-    ionic_tailwind = assemble_imported_code_prompt(
-        "code", "ionic_tailwind", Llm.GPT_4O_2024_05_13
-    )
+    ionic_tailwind = assemble_imported_code_prompt(code, "ionic_tailwind")
     expected_ionic_tailwind = [
-        {"role": "system", "content": IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT},
-        {"role": "user", "content": "Here is the code of the app: code"},
+        {
+            "role": "system",
+            "content": IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT
+            + "\n Here is the code of the app: "
+            + code,
+        }
     ]
     assert ionic_tailwind == expected_ionic_tailwind
 
-    vue_tailwind = assemble_imported_code_prompt(
-        "code", "vue_tailwind", Llm.GPT_4O_2024_05_13
-    )
+    vue_tailwind = assemble_imported_code_prompt(code, "vue_tailwind")
     expected_vue_tailwind = [
-        {"role": "system", "content": IMPORTED_CODE_VUE_TAILWIND_PROMPT},
-        {"role": "user", "content": "Here is the code of the app: code"},
+        {
+            "role": "system",
+            "content": IMPORTED_CODE_VUE_TAILWIND_PROMPT
+            + "\n Here is the code of the app: "
+            + code,
+        }
     ]
     assert vue_tailwind == expected_vue_tailwind
 
-    svg = assemble_imported_code_prompt("code", "svg", Llm.GPT_4O_2024_05_13)
+    svg = assemble_imported_code_prompt(code, "svg")
     expected_svg = [
-        {"role": "system", "content": IMPORTED_CODE_SVG_SYSTEM_PROMPT},
-        {"role": "user", "content": "Here is the code of the SVG: code"},
+        {
+            "role": "system",
+            "content": IMPORTED_CODE_SVG_SYSTEM_PROMPT
+            + "\n Here is the code of the SVG: "
+            + code,
+        }
     ]
     assert svg == expected_svg
