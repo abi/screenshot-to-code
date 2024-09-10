@@ -343,7 +343,7 @@ function App({ navbarComponent }: Props) {
     doGenerateCode({
       generationType: "update",
       inputMode,
-      image: referenceImages[0],
+      image: inputMode === "text" ? initialPrompt : referenceImages[0],
       resultImage,
       history: updatedHistory,
       isImportedFromCode,

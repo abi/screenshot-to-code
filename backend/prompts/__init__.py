@@ -43,12 +43,17 @@ async def create_prompt(
             prompt_messages.append(message)
     else:
         # Assemble the prompt for non-imported code
-        if params.get("resultImage"):
-            prompt_messages = assemble_prompt(
-                params["image"], stack, params["resultImage"]
-            )
+        if input_mode == "image":
+            if params.get("resultImage"):
+                prompt_messages = assemble_prompt(
+                    params["image"], stack, params["resultImage"]
+                )
+            else:
+                prompt_messages = assemble_prompt(params["image"], stack)
+        elif input_mode == "text":
+            prompt_messages = assemble_text_prompt(params["image"], stack)
         else:
-            prompt_messages = assemble_prompt(params["image"], stack)
+            raise Exception("Invalid input mode")
 
         if params["generationType"] == "update":
             # Transform the history tree into message format
