@@ -25,6 +25,8 @@ IS_PROD = os.environ.get("IS_PROD", False)
 
 # Hosted version only
 
+PLATFORM_OPENAI_API_KEY = os.environ.get("PLATFORM_OPENAI_API_KEY", "")
+PLATFORM_ANTHROPIC_API_KEY = os.environ.get("PLATFORM_ANTHROPIC_API_KEY", "")
 PLATFORM_SCREENSHOTONE_API_KEY = os.environ.get("PLATFORM_SCREENSHOTONE_API_KEY", "")
 
 BACKEND_SAAS_URL = os.environ.get("BACKEND_SAAS_URL", "")
