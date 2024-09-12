@@ -20,9 +20,9 @@ class PaymentMethod(Enum):
 
 async def send_to_saas_backend(
     prompt_messages: List[ChatCompletionMessageParam],
-    completion: str,
+    completions: list[str],
+    llm_versions: list[Llm],
     payment_method: PaymentMethod,
-    llm_version: Llm,
     stack: Stack,
     is_imported_from_code: bool,
     includes_result_image: bool,
@@ -36,9 +36,9 @@ async def send_to_saas_backend(
             data = json.dumps(
                 {
                     "prompt": json.dumps(prompt_messages),
-                    "completion": completion,
+                    "completions": completions,
                     "payment_method": payment_method.value,
-                    "llm_version": llm_version.value,
+                    "llm_versions": [llm_version.value for llm_version in llm_versions],
                     "stack": stack,
                     "is_imported_from_code": is_imported_from_code,
                     "includes_result_image": includes_result_image,
@@ -52,5 +52,6 @@ async def send_to_saas_backend(
             }
 
             response = await client.post(url, content=data, headers=headers)
+            response.raise_for_status()
             response_data = response.json()
             return response_data
