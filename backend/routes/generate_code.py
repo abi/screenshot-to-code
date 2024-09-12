@@ -188,8 +188,9 @@ async def extract_params(
                 "auth_token": auth_token,
             },
         )
-        sentry_sdk.capture_message("No payment method found")
-        raise Exception("No payment method found")
+
+        if res.status != "not_subscriber":
+            raise Exception("No payment method found")
 
     # Base URL for OpenAI API
     openai_base_url: str | None = None
