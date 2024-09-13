@@ -405,11 +405,7 @@ function App({ navbarComponent }: Props) {
           </div>
 
           {/* Generation settings like stack and model */}
-          <GenerationSettings
-            settings={settings}
-            setSettings={setSettings}
-            selectedCodeGenerationModel={model}
-          />
+          <GenerationSettings settings={settings} setSettings={setSettings} />
 
           {/* Show auto updated message when older models are choosen */}
           {showBetterModelMessage && <DeprecationMessage />}
