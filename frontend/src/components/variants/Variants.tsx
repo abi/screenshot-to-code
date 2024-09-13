@@ -24,7 +24,8 @@ function Variants() {
         {variants.map((_, index) => (
           <div
             key={index}
-            className={`p-2 border rounded-md cursor-pointer ${
+            className={`p-2 border rounded-md cursor-pointer
+            plausible-event-name=VariantClick ${
               index === selectedVariantIndex
                 ? "bg-blue-100 dark:bg-blue-900"
                 : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
