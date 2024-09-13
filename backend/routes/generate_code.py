@@ -1,9 +1,7 @@
 import asyncio
 from dataclasses import dataclass
-import os
 from fastapi import APIRouter, WebSocket
 import openai
-import sentry_sdk
 from codegen.utils import extract_html_content
 from config import (
     IS_PROD,
@@ -177,16 +175,6 @@ async def extract_params(
     if payment_method is PaymentMethod.UNKNOWN:
         await throw_error(
             "Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
-        )
-        import sentry_sdk
-
-        sentry_sdk.set_context(
-            "subscription_check",
-            {
-                "status": res.status,
-                "payment_method": payment_method,
-                "auth_token": auth_token,
-            },
         )
 
         if res.status != "not_subscriber":
