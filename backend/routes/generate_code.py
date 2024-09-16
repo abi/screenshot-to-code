@@ -271,7 +271,7 @@ async def stream_code(websocket: WebSocket):
                 # we decide which models to run
                 variant_models = []
                 if openai_api_key and anthropic_api_key:
-                    variant_models = ["openai", "anthropic"]
+                    variant_models = ["anthropic", "openai"]
                 elif openai_api_key:
                     variant_models = ["openai", "openai"]
                 elif anthropic_api_key:
