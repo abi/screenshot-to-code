@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from fastapi import APIRouter, WebSocket
 import openai
+import sentry_sdk
 from codegen.utils import extract_html_content
 from config import (
     IS_PROD,
@@ -163,19 +164,20 @@ async def extract_params(
             await throw_error("Unknown error occurred. Contact support.")
             raise Exception("Unknown error occurred when checking subscription credits")
 
-    # Use the user's OpenAI API key from the settings dialog if they are not a subscriber
-    if not openai_api_key:
-        openai_api_key = get_from_settings_dialog_or_env(params, "openAiApiKey", None)
-        if openai_api_key:
-            payment_method = PaymentMethod.OPENAI_API_KEY
-            print("Using OpenAI API key from user's settings dialog")
-
     print("Payment method: ", payment_method)
 
     if payment_method is PaymentMethod.UNKNOWN:
-        await throw_error(
-            "Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
-        )
+        openai_api_key = get_from_settings_dialog_or_env(params, "openAiApiKey", None)
+
+        if not openai_api_key:
+            await throw_error(
+                "Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
+            )
+        else:
+            sentry_sdk.capture_exception(Exception("OpenAI key is no longer supported"))
+            await throw_error(
+                "Using your own OpenAI key is no longer supported due to the costs of running this website. Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
+            )
 
         if res.status != "not_subscriber":
             raise Exception("No payment method found")
