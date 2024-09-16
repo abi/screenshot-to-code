@@ -256,6 +256,7 @@ function App({ navbarComponent }: Props) {
       },
       // On complete
       () => {
+        addEvent("CreateSuccessful");
         setAppState(AppState.CODE_READY);
       }
     );
@@ -340,6 +341,7 @@ function App({ navbarComponent }: Props) {
       ? await takeScreenshot()
       : undefined;
 
+    addEvent("Edit");
     doGenerateCode({
       generationType: "update",
       inputMode,
