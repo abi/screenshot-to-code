@@ -46,46 +46,51 @@ function SettingsDialog({ settings, setSettings }: Props) {
           <DialogTitle className="mb-4">Settings</DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="image-generation">
-            <div>DALL-E Placeholder Image Generation</div>
-            <div className="font-light mt-2 text-xs">
-              More fun with it but if you want to save money, turn it off.
-            </div>
-          </Label>
-          <Switch
-            id="image-generation"
-            checked={settings.isImageGenerationEnabled}
-            onCheckedChange={() =>
-              setSettings((s) => ({
-                ...s,
-                isImageGenerationEnabled: !s.isImageGenerationEnabled,
-              }))
-            }
-          />
-        </div>
-        <div className="flex flex-col space-y-6">
-          <div>
-            <Label htmlFor="openai-api-key">
-              <div>OpenAI API key</div>
-              <div className="font-light mt-1 mb-2 text-xs leading-relaxed">
-                Only stored in your browser. Never stored on servers. Overrides
-                your .env config.
+        {!IS_RUNNING_ON_CLOUD && (
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="image-generation">
+              <div>DALL-E Placeholder Image Generation</div>
+              <div className="font-light mt-2 text-xs">
+                More fun with it but if you want to save money, turn it off.
               </div>
             </Label>
-
-            <Input
-              id="openai-api-key"
-              placeholder="OpenAI API key"
-              value={settings.openAiApiKey || ""}
-              onChange={(e) =>
+            <Switch
+              id="image-generation"
+              checked={settings.isImageGenerationEnabled}
+              onCheckedChange={() =>
                 setSettings((s) => ({
                   ...s,
-                  openAiApiKey: e.target.value,
+                  isImageGenerationEnabled: !s.isImageGenerationEnabled,
                 }))
               }
             />
           </div>
+        )}
+
+        <div className="flex flex-col space-y-6">
+          {!IS_RUNNING_ON_CLOUD && (
+            <div>
+              <Label htmlFor="openai-api-key">
+                <div>OpenAI API key</div>
+                <div className="font-light mt-1 mb-2 text-xs leading-relaxed">
+                  Only stored in your browser. Never stored on servers.
+                  Overrides your .env config.
+                </div>
+              </Label>
+
+              <Input
+                id="openai-api-key"
+                placeholder="OpenAI API key"
+                value={settings.openAiApiKey || ""}
+                onChange={(e) =>
+                  setSettings((s) => ({
+                    ...s,
+                    openAiApiKey: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          )}
 
           {!IS_RUNNING_ON_CLOUD && (
             <div>
@@ -110,61 +115,65 @@ function SettingsDialog({ settings, setSettings }: Props) {
             </div>
           )}
 
-          <div>
-            <Label htmlFor="anthropic-api-key">
-              <div>Anthropic API key</div>
-              <div className="font-light mt-1 text-xs leading-relaxed">
-                Only stored in your browser. Never stored on servers. Overrides
-                your .env config.
-              </div>
-            </Label>
+          {!IS_RUNNING_ON_CLOUD && (
+            <div>
+              <Label htmlFor="anthropic-api-key">
+                <div>Anthropic API key</div>
+                <div className="font-light mt-1 text-xs leading-relaxed">
+                  Only stored in your browser. Never stored on servers.
+                  Overrides your .env config.
+                </div>
+              </Label>
 
-            <Input
-              id="anthropic-api-key"
-              placeholder="Anthropic API key"
-              value={settings.anthropicApiKey || ""}
-              onChange={(e) =>
-                setSettings((s) => ({
-                  ...s,
-                  anthropicApiKey: e.target.value,
-                }))
-              }
-            />
-          </div>
+              <Input
+                id="anthropic-api-key"
+                placeholder="Anthropic API key"
+                value={settings.anthropicApiKey || ""}
+                onChange={(e) =>
+                  setSettings((s) => ({
+                    ...s,
+                    anthropicApiKey: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          )}
 
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Screenshot by URL Config</AccordionTrigger>
-              <AccordionContent>
-                <Label htmlFor="screenshot-one-api-key">
-                  <div className="leading-normal font-normal text-xs">
-                    If you want to use URLs directly instead of taking the
-                    screenshot yourself, add a ScreenshotOne API key.{" "}
-                    <a
-                      href="https://screenshotone.com?via=screenshot-to-code"
-                      className="underline"
-                      target="_blank"
-                    >
-                      Get 100 screenshots/mo for free.
-                    </a>
-                  </div>
-                </Label>
+          {!IS_RUNNING_ON_CLOUD && (
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger>Screenshot by URL Config</AccordionTrigger>
+                <AccordionContent>
+                  <Label htmlFor="screenshot-one-api-key">
+                    <div className="leading-normal font-normal text-xs">
+                      If you want to use URLs directly instead of taking the
+                      screenshot yourself, add a ScreenshotOne API key.{" "}
+                      <a
+                        href="https://screenshotone.com?via=screenshot-to-code"
+                        className="underline"
+                        target="_blank"
+                      >
+                        Get 100 screenshots/mo for free.
+                      </a>
+                    </div>
+                  </Label>
 
-                <Input
-                  id="screenshot-one-api-key"
-                  className="mt-2"
-                  placeholder="ScreenshotOne API key"
-                  value={settings.screenshotOneApiKey || ""}
-                  onChange={(e) =>
-                    setSettings((s) => ({
-                      ...s,
-                      screenshotOneApiKey: e.target.value,
-                    }))
-                  }
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+                  <Input
+                    id="screenshot-one-api-key"
+                    className="mt-2"
+                    placeholder="ScreenshotOne API key"
+                    value={settings.screenshotOneApiKey || ""}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        screenshotOneApiKey: e.target.value,
+                      }))
+                    }
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
 
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
