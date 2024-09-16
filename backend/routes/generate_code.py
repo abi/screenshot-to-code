@@ -328,8 +328,8 @@ async def stream_code(websocket: WebSocket):
                 variant_models = []
                 if openai_api_key and anthropic_api_key:
                     variant_models = [
-                        Llm.GPT_4O_2024_05_13,
                         Llm.CLAUDE_3_5_SONNET_2024_06_20,
+                        Llm.GPT_4O_2024_05_13,
                     ]
                 elif openai_api_key:
                     variant_models = [
