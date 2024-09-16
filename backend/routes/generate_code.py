@@ -193,7 +193,9 @@ async def extract_params(
         print("Using official OpenAI URL")
 
     # Get the image generation flag from the request. Fall back to True if not provided.
-    should_generate_images = bool(params.get("isImageGenerationEnabled", True))
+    should_generate_images = (
+        bool(params.get("isImageGenerationEnabled", True)) if not IS_PROD else True
+    )
 
     return ExtractedParams(
         stack=validated_stack,
