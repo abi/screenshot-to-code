@@ -396,7 +396,9 @@ async def stream_code(websocket: WebSocket):
                         completions[index] = ""
                         print("Generation failed for variant", index)
                         try:
-                            raise Exception("One of the generations failed")
+                            raise Exception(
+                                "One of the generations failed"
+                            ) from completion
                         except:
                             sentry_sdk.capture_exception()
 
