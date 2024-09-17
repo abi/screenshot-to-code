@@ -54,18 +54,14 @@ async def generate_image_dalle(
 
 async def generate_image_replicate(prompt: str, api_key: str) -> str:
 
-    # We use SDXL Lightning
+    # We use Flux Schnell
     return await call_replicate(
-        "5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f",
         {
-            "width": 1024,
-            "height": 1024,
             "prompt": prompt,
-            "scheduler": "K_EULER",
             "num_outputs": 1,
-            "guidance_scale": 0,
-            "negative_prompt": "worst quality, low quality",
-            "num_inference_steps": 4,
+            "aspect_ratio": "1:1",
+            "output_format": "png",
+            "output_quality": 100,
         },
         api_key,
     )
