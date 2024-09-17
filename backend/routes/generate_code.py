@@ -463,6 +463,7 @@ async def stream_code(websocket: WebSocket):
             )
         except Exception as e:
             print("Error sending to SaaS backend", e)
+            sentry_sdk.capture_exception(e)
 
     ## Image Generation
     for index, _ in enumerate(completions):
