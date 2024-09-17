@@ -51,7 +51,7 @@ async def send_to_saas_backend(
                 "Authorization": f"Bearer {auth_token}",  # Add the auth token to the headers
             }
 
-            response = await client.post(url, content=data, headers=headers)
+            response = await client.post(url, content=data, headers=headers, timeout=10)
             response.raise_for_status()
             response_data = response.json()
             return response_data
