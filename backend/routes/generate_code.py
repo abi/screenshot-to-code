@@ -165,6 +165,8 @@ async def extract_params(
             await throw_error("Unknown error occurred. Contact support.")
             raise Exception("Unknown error occurred when checking subscription credits")
 
+    user_id = res.user_id
+    
     print("Payment method: ", payment_method)
 
     if payment_method is PaymentMethod.UNKNOWN:
@@ -199,7 +201,7 @@ async def extract_params(
     )
 
     return ExtractedParams(
-        user_id="fake_user_id",
+        user_id=user_id,
         stack=validated_stack,
         input_mode=validated_input_mode,
         code_generation_model=code_generation_model,

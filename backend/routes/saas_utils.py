@@ -5,6 +5,7 @@ from config import BACKEND_SAAS_URL
 
 
 class SubscriptionCreditsResponse(BaseModel):
+    user_id: str
     status: str
 
 
