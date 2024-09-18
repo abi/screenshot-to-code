@@ -22,11 +22,11 @@ from llm import (
     stream_openai_response,
 )
 from mock_llm import mock_completion
-from typing import Dict, List, cast, get_args
+from typing import Dict, cast, get_args
 from image_generation.core import generate_images
 from routes.logging_utils import PaymentMethod, send_to_saas_backend
 from routes.saas_utils import does_user_have_subscription_credits
-from typing import Any, Callable, Coroutine, Dict, List, Literal, cast, get_args
+from typing import Any, Callable, Coroutine, Dict, Literal, cast, get_args
 from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
@@ -91,6 +91,7 @@ async def perform_image_generation(
 
 @dataclass
 class ExtractedParams:
+    user_id: str
     stack: Stack
     input_mode: InputMode
     code_generation_model: Llm
@@ -198,6 +199,7 @@ async def extract_params(
     )
 
     return ExtractedParams(
+        user_id="fake_user_id",
         stack=validated_stack,
         input_mode=validated_input_mode,
         code_generation_model=code_generation_model,
@@ -259,6 +261,7 @@ async def stream_code(websocket: WebSocket):
     print("Received params")
 
     extracted_params = await extract_params(params, throw_error)
+    user_id = extracted_params.user_id
     stack = extracted_params.stack
     input_mode = extracted_params.input_mode
     code_generation_model = extracted_params.code_generation_model
@@ -451,6 +454,7 @@ async def stream_code(websocket: WebSocket):
         # Catch any errors from sending to SaaS backend and continue
         try:
             await send_to_saas_backend(
+                user_id,
                 prompt_messages,
                 completions,
                 payment_method=payment_method,
@@ -459,7 +463,6 @@ async def stream_code(websocket: WebSocket):
                 is_imported_from_code=bool(params.get("isImportedFromCode", False)),
                 includes_result_image=bool(params.get("resultImage", False)),
                 input_mode=input_mode,
-                auth_token=params["authToken"],
             )
         except Exception as e:
             print("Error sending to SaaS backend", e)

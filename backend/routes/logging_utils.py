@@ -4,7 +4,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from typing import List
 import json
 
-from config import BACKEND_SAAS_URL, IS_PROD
+from config import BACKEND_SAAS_API_SECRET, BACKEND_SAAS_URL, IS_PROD
 from custom_types import InputMode
 from llm import Llm
 from prompts.types import Stack
@@ -19,6 +19,7 @@ class PaymentMethod(Enum):
 
 
 async def send_to_saas_backend(
+    user_id: str,
     prompt_messages: List[ChatCompletionMessageParam],
     completions: list[str],
     llm_versions: list[Llm],
@@ -27,7 +28,6 @@ async def send_to_saas_backend(
     is_imported_from_code: bool,
     includes_result_image: bool,
     input_mode: InputMode,
-    auth_token: str | None = None,
 ):
     if IS_PROD:
         async with httpx.AsyncClient() as client:
@@ -35,6 +35,7 @@ async def send_to_saas_backend(
 
             data = json.dumps(
                 {
+                    "user_id": user_id,
                     "prompt": json.dumps(prompt_messages),
                     "completions": completions,
                     "payment_method": payment_method.value,
@@ -48,7 +49,7 @@ async def send_to_saas_backend(
 
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {auth_token}",  # Add the auth token to the headers
+                "Authorization": f"Bearer {BACKEND_SAAS_API_SECRET}",  # Add the auth token to the headers
             }
 
             response = await client.post(url, content=data, headers=headers, timeout=10)
