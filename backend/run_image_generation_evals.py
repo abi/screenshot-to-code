@@ -41,7 +41,7 @@ OUTPUT_DIR: str = "generated_images"
 
 async def generate_and_save_images(
     prompts: List[str],
-    model: Literal["dalle3", "sdxl-lightning"],
+    model: Literal["dalle3", "flux"],
     api_key: Optional[str],
 ) -> None:
     # Ensure the output directory exists
@@ -64,7 +64,7 @@ async def generate_and_save_images(
                     image_data: bytes = await response.read()
 
                 # Save the image with a filename based on the input eval
-                prefix = "replicate_" if model == "sdxl-lightning" else "dalle3_"
+                prefix = "replicate_" if model == "flux" else "dalle3_"
                 filename: str = (
                     f"{prefix}{prompts[i][:50].replace(' ', '_').replace(':', '')}.png"
                 )
@@ -78,7 +78,7 @@ async def generate_and_save_images(
 
 async def main() -> None:
     # await generate_and_save_images(EVALS, "dalle3", OPENAI_API_KEY)
-    await generate_and_save_images(EVALS, "sdxl-lightning", REPLICATE_API_TOKEN)
+    await generate_and_save_images(EVALS, "flux", REPLICATE_API_TOKEN)
 
 
 if __name__ == "__main__":

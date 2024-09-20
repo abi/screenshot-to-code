@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+import traceback
 from fastapi import APIRouter, WebSocket
 import openai
 import sentry_sdk
@@ -67,7 +68,7 @@ async def perform_image_generation(
         return completion
 
     if replicate_api_key:
-        image_generation_model = "sdxl-lightning"
+        image_generation_model = "flux"
         api_key = replicate_api_key
     else:
         if not openai_api_key:
@@ -397,6 +398,12 @@ async def stream_code(websocket: WebSocket):
                 )
                 if all_generations_failed:
                     await throw_error("Error generating code. Please contact support.")
+
+                    # Print the all the underlying exceptions for debugging
+                    for completion in completions:
+                        traceback.print_exception(
+                            type(completion), completion, completion.__traceback__
+                        )
                     raise Exception("All generations failed")
 
                 # If some completions failed, replace them with empty strings

@@ -12,7 +12,7 @@ async def process_tasks(
     prompts: List[str],
     api_key: str,
     base_url: str | None,
-    model: Literal["dalle3", "sdxl-lightning"],
+    model: Literal["dalle3", "flux"],
 ):
     import time
 
@@ -103,7 +103,7 @@ async def generate_images(
     api_key: str,
     base_url: Union[str, None],
     image_cache: Dict[str, str],
-    model: Literal["dalle3", "sdxl-lightning"] = "dalle3",
+    model: Literal["dalle3", "flux"] = "dalle3",
 ) -> str:
     # Find all images
     soup = BeautifulSoup(code, "html.parser")
