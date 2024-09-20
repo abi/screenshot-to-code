@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+import traceback
 from fastapi import APIRouter, WebSocket
 import openai
 from codegen.utils import extract_html_content
@@ -321,6 +322,12 @@ async def stream_code(websocket: WebSocket):
                 )
                 if all_generations_failed:
                     await throw_error("Error generating code. Please contact support.")
+
+                    # Print the all the underlying exceptions for debugging
+                    for completion in completions:
+                        traceback.print_exception(
+                            type(completion), completion, completion.__traceback__
+                        )
                     raise Exception("All generations failed")
 
                 # If some completions failed, replace them with empty strings
