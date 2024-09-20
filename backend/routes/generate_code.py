@@ -273,6 +273,10 @@ async def stream_code(websocket: WebSocket):
     should_generate_images = extracted_params.should_generate_images
     payment_method = extracted_params.payment_method
 
+    # If the payment method is unknown, we shouldn't proceed
+    if payment_method is PaymentMethod.UNKNOWN:
+        return
+
     # Auto-upgrade usage of older models
     code_generation_model = auto_upgrade_model(code_generation_model)
 
