@@ -64,7 +64,7 @@ async def perform_image_generation(
         return completion
 
     if replicate_api_key:
-        image_generation_model = "sdxl-lightning"
+        image_generation_model = "flux"
         api_key = replicate_api_key
     else:
         if not openai_api_key:
