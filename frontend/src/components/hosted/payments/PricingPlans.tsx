@@ -27,7 +27,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
           variant={paymentInterval === "yearly" ? "default" : "secondary"}
           onClick={() => setPaymentInterval("yearly")}
         >
-          Yearly (2 months free)
+          Yearly (60% discount!)
         </Button>
       </div>
       <div className="flex justify-center items-center">
@@ -37,7 +37,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             <p className="text-gray-500">Great to start</p>
             <div className="my-4">
               <span className="text-4xl font-bold">
-                {paymentInterval === "monthly" ? "$15" : "$150"}
+                {paymentInterval === "monthly" ? "$15" : "$60"}
               </span>
               <span className="text-gray-500">
                 {paymentInterval === "monthly" ? "/ month" : "/ year"}
@@ -51,7 +51,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
                 checkout(
                   paymentInterval === "monthly"
                     ? "hobby_monthly"
-                    : "hobby_yearly"
+                    : "hobby_yearly_discounted"
                 )
               }
             >
@@ -83,7 +83,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             <p className="text-gray-500">Higher limits</p>
             <div className="my-4">
               <span className="text-4xl font-bold">
-                {paymentInterval === "monthly" ? "$40" : "$400"}
+                {paymentInterval === "monthly" ? "$40" : "$160"}
               </span>
               <span className="text-gray-500">
                 {paymentInterval === "monthly" ? "/ month" : "/ year"}
@@ -95,7 +95,9 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
                   flex justify-center items-center gap-x-2"
               onClick={() =>
                 checkout(
-                  paymentInterval === "monthly" ? "pro_monthly" : "pro_yearly"
+                  paymentInterval === "monthly"
+                    ? "pro_monthly"
+                    : "pro_yearly_discounted"
                 )
               }
             >
