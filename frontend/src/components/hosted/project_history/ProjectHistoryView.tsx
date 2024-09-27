@@ -11,6 +11,14 @@ import {
 } from "../../ui/collapsible";
 import React from "react";
 import Spinner from "../../core/Spinner";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationLink,
+} from "../../ui/pagination";
 
 interface Generation {
   date_created: string;
@@ -60,7 +68,13 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         const res: ProjectHistoryResponse = await authenticatedFetch(
           `${SAAS_BACKEND_URL}/generations/view?page=${currentPage}`
         );
-        setGenerations(res.generations);
+
+        // Ensure each generation has a stack, defaulting to HTML_TAILWIND if not present
+        const processedGenerations = res.generations.map((generation) => ({
+          ...generation,
+          stack: generation.stack || Stack.HTML_TAILWIND,
+        }));
+        setGenerations(processedGenerations);
         setTotalPages(res.total_pages);
         setTotalCount(res.total_count);
       } catch (error) {
@@ -89,23 +103,46 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
     <Collapsible>
       <CollapsibleTrigger>Project History</CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="flex justify-between items-center mb-4">
-          <Button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1 || isLoading}
-          >
-            Previous
-          </Button>
-          <span>
-            Page {currentPage} of {totalPages} (Total generations: {totalCount})
-          </span>
-          <Button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || isLoading}
-          >
-            Next
-          </Button>
+        <div className="text-sm text-gray-500 mb-2">
+          Total Generations: {totalCount}
         </div>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink
+                onClick={() => handlePageChange(1)}
+                isActive={currentPage === 1}
+              >
+                1
+              </PaginationLink>
+            </PaginationItem>
+            {currentPage > 1 && currentPage < totalPages && (
+              <PaginationItem>
+                <PaginationLink isActive>{currentPage}</PaginationLink>
+              </PaginationItem>
+            )}
+            {totalPages > 1 && (
+              <PaginationItem>
+                <PaginationLink
+                  onClick={() => handlePageChange(totalPages)}
+                  isActive={currentPage === totalPages}
+                >
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
             <Spinner />
