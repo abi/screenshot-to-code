@@ -320,6 +320,9 @@ function App() {
   }
 
   function importFromCode(code: string, stack: Stack) {
+    // Reset any existing state
+    reset();
+
     // Set input state
     setIsImportedFromCode(true);
 
