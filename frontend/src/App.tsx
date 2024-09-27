@@ -28,6 +28,7 @@ import { takeScreenshot } from "./lib/takeScreenshot";
 import Sidebar from "./components/sidebar/Sidebar";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
+import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
 
 interface Props {
   navbarComponent?: JSX.Element;
@@ -423,6 +424,8 @@ function App({ navbarComponent }: Props) {
           {appState === AppState.INITIAL && (
             <GenerateFromText doCreateFromText={doCreateFromText} />
           )}
+
+          <ProjectHistoryView importFromCode={importFromCode} />
 
           {/* Rest of the sidebar when we're not in the initial state */}
           {(appState === AppState.CODING ||
