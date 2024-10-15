@@ -50,13 +50,63 @@ function generateDisplayComponent(stack: Stack) {
   );
 }
 
+interface PaginationSectionProps {
+  currentPage: number;
+  totalPages: number;
+  handlePageChange: (page: number) => void;
+}
+
+function PaginationSection({
+  currentPage,
+  totalPages,
+  handlePageChange,
+}: PaginationSectionProps) {
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            onClick={() => handlePageChange(currentPage - 1)}
+          />
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+        {currentPage > 1 && currentPage < totalPages && (
+          <PaginationItem>
+            <PaginationLink isActive>{currentPage}</PaginationLink>
+          </PaginationItem>
+        )}
+        {totalPages > 1 && (
+          <PaginationItem>
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        )}
+        <PaginationItem>
+          <PaginationNext onClick={() => handlePageChange(currentPage + 1)} />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+
 function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const authenticatedFetch = useAuthenticatedFetch();
+  const [isLoading, setIsLoading] = useState(false);
   const [generations, setGenerations] = useState<Generation[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
 
   const isProjectsHistoryDialogOpen = useStore(
     (state) => state.isProjectsHistoryDialogOpen
@@ -100,7 +150,9 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   };
 
   const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
   return (
@@ -112,43 +164,13 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         <div className="text-sm text-gray-500 mb-2">
           Total Generations: {totalCount}
         </div>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => handlePageChange(currentPage - 1)}
-              />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink
-                onClick={() => handlePageChange(1)}
-                isActive={currentPage === 1}
-              >
-                1
-              </PaginationLink>
-            </PaginationItem>
-            {currentPage > 1 && currentPage < totalPages && (
-              <PaginationItem>
-                <PaginationLink isActive>{currentPage}</PaginationLink>
-              </PaginationItem>
-            )}
-            {totalPages > 1 && (
-              <PaginationItem>
-                <PaginationLink
-                  onClick={() => handlePageChange(totalPages)}
-                  isActive={currentPage === totalPages}
-                >
-                  {totalPages}
-                </PaginationLink>
-              </PaginationItem>
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => handlePageChange(currentPage + 1)}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+
+        <PaginationSection
+          currentPage={currentPage}
+          totalPages={totalPages}
+          handlePageChange={handlePageChange}
+        />
+
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
             <Spinner />
@@ -180,6 +202,12 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
             ))}
           </ul>
         )}
+
+        <PaginationSection
+          currentPage={currentPage}
+          totalPages={totalPages}
+          handlePageChange={handlePageChange}
+        />
       </DialogContent>
     </Dialog>
   );
