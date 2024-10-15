@@ -147,6 +147,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
 
   const handleLoadGeneration = (completion: string, stack: Stack) => {
     importFromCode(completion, stack);
+    setProjectsHistoryDialogOpen(false);
   };
 
   const handlePageChange = (newPage: number) => {
