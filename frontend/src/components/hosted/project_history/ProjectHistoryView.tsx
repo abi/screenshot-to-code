@@ -3,8 +3,7 @@ import { formatRelative } from "date-fns";
 import { SAAS_BACKEND_URL } from "../../../config";
 import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
 import { Button } from "../../ui/button";
-import { STACK_DESCRIPTIONS, Stack } from "../../../lib/stacks";
-import React from "react";
+import { Stack } from "../../../lib/stacks";
 import Spinner from "../../core/Spinner";
 import {
   Pagination,
@@ -17,6 +16,7 @@ import {
 import { useStore } from "../../../store/store";
 import { Dialog, DialogContent } from "../../ui/dialog";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
+import StackLabel from "../../core/StackLabel";
 
 interface Generation {
   date_created: string;
@@ -34,21 +34,6 @@ interface ProjectHistoryResponse {
 
 interface ProjectHistoryViewProps {
   importFromCode: (code: string, stack: Stack) => void;
-}
-
-function generateDisplayComponent(stack: Stack) {
-  const stackComponents = STACK_DESCRIPTIONS[stack].components;
-
-  return (
-    <div>
-      {stackComponents.map((component, index) => (
-        <React.Fragment key={index}>
-          <span className="font-semibold">{component}</span>
-          {index < stackComponents.length - 1 && " + "}
-        </React.Fragment>
-      ))}
-    </div>
-  );
 }
 
 interface PaginationSectionProps {
@@ -182,7 +167,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
               <Card key={index} className="mb-4 pb-2 border-b-4">
                 <CardHeader className="text-sm">
                   <p>Created {formatDate(gen.date_created)}</p>
-                  {generateDisplayComponent(gen.stack)}
+                  <StackLabel stack={gen.stack} />
                 </CardHeader>
                 <CardContent>
                   <iframe
