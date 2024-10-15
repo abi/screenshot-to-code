@@ -16,6 +16,7 @@ import {
 } from "../../ui/pagination";
 import { useStore } from "../../../store/store";
 import { Dialog, DialogContent } from "../../ui/dialog";
+import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 
 interface Generation {
   date_created: string;
@@ -162,9 +163,8 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
       onOpenChange={(isOpen: boolean) => setProjectsHistoryDialogOpen(isOpen)}
     >
       <DialogContent className="max-h-[90%] overflow-y-auto">
-        <div className="text-sm text-gray-500 mb-2">
-          Total Generations: {totalCount}
-        </div>
+        <h2 className="text-xl font-semibold">Project History</h2>
+        <div className="text-sm mb-2">Total Generations: {totalCount}</div>
 
         <PaginationSection
           currentPage={currentPage}
@@ -179,27 +179,31 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         ) : (
           <ul>
             {generations.map((gen, index) => (
-              <li key={index} className="mb-4">
-                <div className="flex justify-between items-center mb-2">
+              <Card key={index} className="mb-4 pb-2 border-b-4">
+                <CardHeader className="text-sm">
                   <p>Created {formatDate(gen.date_created)}</p>
                   {generateDisplayComponent(gen.stack)}
-                </div>
-                <iframe
-                  srcDoc={gen.completion}
-                  title={`Generation ${index}`}
-                  width="100%"
-                  height="300"
-                  sandbox="allow-scripts"
-                  className="mb-2"
-                />
-                <Button
-                  onClick={() =>
-                    handleLoadGeneration(gen.completion, gen.stack)
-                  }
-                >
-                  Load in Editor
-                </Button>
-              </li>
+                </CardHeader>
+                <CardContent>
+                  <iframe
+                    srcDoc={gen.completion}
+                    title={`Generation ${index}`}
+                    width="100%"
+                    height="300"
+                    sandbox="allow-scripts"
+                    className="mb-2 border"
+                  />
+                </CardContent>
+                <CardFooter className="text-sm">
+                  <Button
+                    onClick={() =>
+                      handleLoadGeneration(gen.completion, gen.stack)
+                    }
+                  >
+                    Load in Editor
+                  </Button>
+                </CardFooter>
+              </Card>
             ))}
           </ul>
         )}
