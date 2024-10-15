@@ -18,6 +18,7 @@ import { Dialog, DialogContent } from "../../ui/dialog";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import StackLabel from "../../core/StackLabel";
 
+//  Types for server responses
 interface Generation {
   date_created: string;
   completion: string;
@@ -32,9 +33,10 @@ interface ProjectHistoryResponse {
   total_pages: number;
 }
 
-interface ProjectHistoryViewProps {
-  importFromCode: (code: string, stack: Stack) => void;
-}
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return formatRelative(date.toLocaleString(), new Date());
+};
 
 interface PaginationSectionProps {
   currentPage: number;
@@ -86,13 +88,12 @@ function PaginationSection({
   );
 }
 
+interface ProjectHistoryViewProps {
+  importFromCode: (code: string, stack: Stack) => void;
+}
+
 function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const authenticatedFetch = useAuthenticatedFetch();
-  const [isLoading, setIsLoading] = useState(false);
-  const [generations, setGenerations] = useState<Generation[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   const isProjectsHistoryDialogOpen = useStore(
     (state) => state.isProjectsHistoryDialogOpen
@@ -100,6 +101,14 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const setProjectsHistoryDialogOpen = useStore(
     (state) => state.setProjectsHistoryDialogOpen
   );
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [generations, setGenerations] = useState<Generation[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const loadData = async () => {
@@ -126,17 +135,12 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
     loadData();
   }, [currentPage]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return formatRelative(date.toLocaleString(), new Date());
-  };
-
-  const handleLoadGeneration = (completion: string, stack: Stack) => {
+  const onLoadGeneration = (completion: string, stack: Stack) => {
     importFromCode(completion, stack);
     setProjectsHistoryDialogOpen(false);
   };
 
-  const handlePageChange = (newPage: number) => {
+  const onPageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
@@ -154,7 +158,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         <PaginationSection
           currentPage={currentPage}
           totalPages={totalPages}
-          handlePageChange={handlePageChange}
+          handlePageChange={onPageChange}
         />
 
         {isLoading ? (
@@ -181,9 +185,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                 </CardContent>
                 <CardFooter className="text-sm">
                   <Button
-                    onClick={() =>
-                      handleLoadGeneration(gen.completion, gen.stack)
-                    }
+                    onClick={() => onLoadGeneration(gen.completion, gen.stack)}
                   >
                     Load in Editor
                   </Button>
@@ -196,7 +198,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         <PaginationSection
           currentPage={currentPage}
           totalPages={totalPages}
-          handlePageChange={handlePageChange}
+          handlePageChange={onPageChange}
         />
       </DialogContent>
     </Dialog>

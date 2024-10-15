@@ -402,6 +402,10 @@ function App({ navbarComponent }: Props) {
           onOpenChange={handleTermDialogOpenChange}
         />
       )}
+
+      {/* Dialog to show all the user's projects */}
+      <ProjectHistoryView importFromCode={importFromCode} />
+
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
           {/* Header with access to settings */}
@@ -427,8 +431,6 @@ function App({ navbarComponent }: Props) {
           {appState === AppState.INITIAL && (
             <GenerateFromText doCreateFromText={doCreateFromText} />
           )}
-
-          <ProjectHistoryView importFromCode={importFromCode} />
 
           {/* Rest of the sidebar when we're not in the initial state */}
           {(appState === AppState.CODING ||
