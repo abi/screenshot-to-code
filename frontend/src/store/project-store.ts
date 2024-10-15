@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { Commit, CommitHash } from "../components/commits/types";
 
-// Store for app-wide state
+// Store for project-specific state
 interface ProjectStore {
   // Inputs
   inputMode: "image" | "video" | "text";

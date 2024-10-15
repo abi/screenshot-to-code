@@ -10,7 +10,7 @@ import { Badge } from "../ui/badge";
 import { Stack, STACK_DESCRIPTIONS } from "../../lib/stacks";
 import { addEvent } from "../../lib/analytics";
 
-function generateDisplayComponent(stack: Stack) {
+export function generateDisplayComponent(stack: Stack) {
   const stackComponents = STACK_DESCRIPTIONS[stack].components;
 
   return (

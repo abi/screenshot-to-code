@@ -4,11 +4,6 @@ import { SAAS_BACKEND_URL } from "../../../config";
 import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
 import { Button } from "../../ui/button";
 import { STACK_DESCRIPTIONS, Stack } from "../../../lib/stacks";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../../ui/collapsible";
 import React from "react";
 import Spinner from "../../core/Spinner";
 import {
@@ -19,6 +14,8 @@ import {
   PaginationNext,
   PaginationLink,
 } from "../../ui/pagination";
+import { useStore } from "../../../store/store";
+import { Dialog, DialogContent } from "../../ui/dialog";
 
 interface Generation {
   date_created: string;
@@ -61,6 +58,13 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
+  const isProjectsHistoryDialogOpen = useStore(
+    (state) => state.isProjectsHistoryDialogOpen
+  );
+  const setProjectsHistoryDialogOpen = useStore(
+    (state) => state.setProjectsHistoryDialogOpen
+  );
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -100,9 +104,11 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   };
 
   return (
-    <Collapsible>
-      <CollapsibleTrigger>Project History</CollapsibleTrigger>
-      <CollapsibleContent>
+    <Dialog
+      open={isProjectsHistoryDialogOpen}
+      onOpenChange={(isOpen: boolean) => setProjectsHistoryDialogOpen(isOpen)}
+    >
+      <DialogContent className="max-h-[90%] overflow-y-auto">
         <div className="text-sm text-gray-500 mb-2">
           Total Generations: {totalCount}
         </div>
@@ -174,8 +180,8 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
             ))}
           </ul>
         )}
-      </CollapsibleContent>
-    </Collapsible>
+      </DialogContent>
+    </Dialog>
   );
 }
 
