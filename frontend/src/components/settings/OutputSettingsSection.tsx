@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Select,
   SelectContent,
@@ -8,21 +7,7 @@ import {
 } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { Stack, STACK_DESCRIPTIONS } from "../../lib/stacks";
-
-function generateDisplayComponent(stack: Stack) {
-  const stackComponents = STACK_DESCRIPTIONS[stack].components;
-
-  return (
-    <div>
-      {stackComponents.map((component, index) => (
-        <React.Fragment key={index}>
-          <span className="font-semibold">{component}</span>
-          {index < stackComponents.length - 1 && " + "}
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
+import StackLabel from "../core/StackLabel";
 
 interface Props {
   stack: Stack | undefined;
@@ -47,14 +32,14 @@ function OutputSettingsSection({
           disabled={shouldDisableUpdates}
         >
           <SelectTrigger className="col-span-2" id="output-settings-js">
-            {stack ? generateDisplayComponent(stack) : "Select a stack"}
+            {stack ? <StackLabel stack={stack} /> : "Select a stack"}
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               {Object.values(Stack).map((stack) => (
                 <SelectItem key={stack} value={stack}>
                   <div className="flex items-center">
-                    {generateDisplayComponent(stack)}
+                    <StackLabel stack={stack} />
                     {STACK_DESCRIPTIONS[stack].inBeta && (
                       <Badge className="ml-2" variant="secondary">
                         Beta
