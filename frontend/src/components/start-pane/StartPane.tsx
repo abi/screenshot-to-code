@@ -4,6 +4,8 @@ import { UrlInputSection } from "../UrlInputSection";
 import ImportCodeSection from "../ImportCodeSection";
 import { Settings } from "../../types";
 import { Stack } from "../../lib/stacks";
+import { Button } from "../ui/button";
+import { useStore } from "../../store/store";
 
 interface Props {
   doCreate: (images: string[], inputMode: "image" | "video") => void;
@@ -12,6 +14,10 @@ interface Props {
 }
 
 const StartPane: React.FC<Props> = ({ doCreate, importFromCode, settings }) => {
+  const setProjectsHistoryDialogOpen = useStore(
+    (state) => state.setProjectsHistoryDialogOpen
+  );
+
   return (
     <div className="flex flex-col justify-center items-center gap-y-10">
       <ImageUpload setReferenceImages={doCreate} />
@@ -19,7 +25,15 @@ const StartPane: React.FC<Props> = ({ doCreate, importFromCode, settings }) => {
         doCreate={doCreate}
         screenshotOneApiKey={settings.screenshotOneApiKey}
       />
-      <ImportCodeSection importFromCode={importFromCode} />
+      <div className="flex justify-between gap-x-2">
+        <ImportCodeSection importFromCode={importFromCode} />
+        <Button
+          variant="secondary"
+          onClick={() => setProjectsHistoryDialogOpen(true)}
+        >
+          Import from Your History
+        </Button>
+      </div>
     </div>
   );
 };

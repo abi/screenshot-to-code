@@ -29,6 +29,7 @@ import Sidebar from "./components/sidebar/Sidebar";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
+import { Button } from "./components/ui/button";
 
 interface Props {
   navbarComponent?: JSX.Element;
@@ -41,6 +42,9 @@ function App({ navbarComponent }: Props) {
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
   const subscriberTier = useStore((state) => state.subscriberTier);
+  const setProjectsHistoryDialogOpen = useStore(
+    (state) => state.setProjectsHistoryDialogOpen
+  );
 
   const {
     // Inputs
@@ -430,6 +434,17 @@ function App({ navbarComponent }: Props) {
 
           {appState === AppState.INITIAL && (
             <GenerateFromText doCreateFromText={doCreateFromText} />
+          )}
+
+          {appState === AppState.INITIAL && (
+            <div className="flex justify-center">
+              <Button
+                variant="secondary"
+                onClick={() => setProjectsHistoryDialogOpen(true)}
+              >
+                Your History
+              </Button>
+            </div>
           )}
 
           {/* Rest of the sidebar when we're not in the initial state */}

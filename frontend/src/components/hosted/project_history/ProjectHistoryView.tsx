@@ -169,7 +169,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
       onOpenChange={(isOpen: boolean) => setProjectsHistoryDialogOpen(isOpen)}
     >
       <DialogContent className="max-h-[90%] overflow-y-auto">
-        <h2 className="text-xl font-semibold">Project History</h2>
+        <h2 className="text-xl font-semibold">Your History</h2>
         <div className="text-sm mb-2">Total Generations: {totalCount}</div>
 
         <PaginationSection
