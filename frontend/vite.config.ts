@@ -10,9 +10,9 @@ export default ({ mode }) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
   return defineConfig({
     base: "",
-    build: {
-      sourcemap: true,
-    },
+    // build: {
+    //   sourcemap: true,
+    // },
     plugins: [
       react(),
       checker({ typescript: true }),
