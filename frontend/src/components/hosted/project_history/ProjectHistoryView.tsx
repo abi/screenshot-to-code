@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { formatRelative } from "date-fns";
+import * as Sentry from "@sentry/react";
 import { SAAS_BACKEND_URL } from "../../../config";
 import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
 import { Button } from "../../ui/button";
@@ -39,7 +40,7 @@ const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return formatRelative(date.toLocaleString(), new Date());
   } catch (error) {
-    // TODO: Send error to Sentry
+    Sentry.captureException(error);
     console.error("Failed to format date:", error);
     return "unknown";
   }
@@ -138,7 +139,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         setTotalPages(res.total_pages);
         setTotalCount(res.total_count);
       } catch (error) {
-        // TODO: Send error to Sentry
+        Sentry.captureException(error);
         console.error("Failed to load project history:", error);
       } finally {
         setIsLoading(false);
