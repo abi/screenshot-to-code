@@ -35,6 +35,7 @@
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tabs": "^1.0.4",
     "@sentry/react": "^8.34.0",
+    "@sentry/vite-plugin": "^2.22.5",
     "@stripe/stripe-js": "^2.2.2",
     "@types/gtag.js": "^0.0.20",
     "class-variance-authority": "^0.7.0",

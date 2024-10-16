@@ -28,3 +28,6 @@ dist-ssr
 
 # Test files
 src/tests/results/
+
+# Sentry Config File
+.env.sentry-build-plugin
