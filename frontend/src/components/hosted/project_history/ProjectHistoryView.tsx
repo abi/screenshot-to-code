@@ -34,8 +34,14 @@ interface ProjectHistoryResponse {
 }
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return formatRelative(date.toLocaleString(), new Date());
+  try {
+    const date = new Date(dateString);
+    return formatRelative(date.toLocaleString(), new Date());
+  } catch (error) {
+    // TODO: Send error to Sentry
+    console.error("Failed to format date:", error);
+    return "unknown";
+  }
 };
 
 interface PaginationSectionProps {
@@ -122,11 +128,13 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         const processedGenerations = res.generations.map((generation) => ({
           ...generation,
           stack: generation.stack || Stack.HTML_TAILWIND,
+          date_created: formatDate(generation.date_created),
         }));
         setGenerations(processedGenerations);
         setTotalPages(res.total_pages);
         setTotalCount(res.total_count);
       } catch (error) {
+        // TODO: Send error to Sentry
         console.error("Failed to load project history:", error);
       } finally {
         setIsLoading(false);
@@ -167,15 +175,15 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
           </div>
         ) : (
           <ul>
-            {generations.map((gen, index) => (
+            {generations.map((generation, index) => (
               <Card key={index} className="mb-4 pb-2 border-b-4">
                 <CardHeader className="text-sm">
-                  <p>Created {formatDate(gen.date_created)}</p>
-                  <StackLabel stack={gen.stack} />
+                  <p>Created {generation.date_created}</p>
+                  <StackLabel stack={generation.stack} />
                 </CardHeader>
                 <CardContent>
                   <iframe
-                    srcDoc={gen.completion}
+                    srcDoc={generation.completion}
                     title={`Generation ${index}`}
                     width="100%"
                     height="300"
@@ -185,7 +193,9 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                 </CardContent>
                 <CardFooter className="text-sm">
                   <Button
-                    onClick={() => onLoadGeneration(gen.completion, gen.stack)}
+                    onClick={() =>
+                      onLoadGeneration(generation.completion, generation.stack)
+                    }
                   >
                     Load in Editor
                   </Button>
