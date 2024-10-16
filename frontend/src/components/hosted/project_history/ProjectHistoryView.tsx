@@ -159,6 +159,10 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
     }
   };
 
+  const download = () => {
+    throw new Error("Download");
+  };
+
   return (
     <Dialog
       open={isProjectsHistoryDialogOpen}
@@ -204,6 +208,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                   >
                     Load in Editor
                   </Button>
+                  <Button onClick={download}>Download</Button>
                 </CardFooter>
               </Card>
             ))}
