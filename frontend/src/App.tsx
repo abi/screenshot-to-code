@@ -28,7 +28,7 @@ import { takeScreenshot } from "./lib/takeScreenshot";
 import Sidebar from "./components/sidebar/Sidebar";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
-import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
+// import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
 
 interface Props {
   navbarComponent?: JSX.Element;
@@ -404,7 +404,7 @@ function App({ navbarComponent }: Props) {
       )}
 
       {/* Dialog to show all the user's projects */}
-      <ProjectHistoryView importFromCode={importFromCode} />
+      {/* <ProjectHistoryView importFromCode={importFromCode} /> */}
 
       <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
         <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
