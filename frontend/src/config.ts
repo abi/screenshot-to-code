@@ -10,22 +10,23 @@ export const HTTP_BACKEND_URL =
 
 // Hosted version only
 
-export const PICO_BACKEND_FORM_SECRET =
-  import.meta.env.VITE_PICO_BACKEND_FORM_SECRET || null;
-
-export const CLERK_PUBLISHABLE_KEY =
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || null;
-
-export const STRIPE_PUBLISHABLE_KEY =
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || null;
-
-export const SAAS_BACKEND_URL = import.meta.env.VITE_SAAS_BACKEND_URL || null;
-
-export const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || null;
-
 // Feature flags
 export const SHOULD_SHOW_FEEDBACK_CALL_NOTE = false;
 export const IS_FREE_TRIAL_ENABLED = false;
+
+// SaaS Backend
+export const SAAS_BACKEND_URL = import.meta.env.VITE_SAAS_BACKEND_URL || null;
+
+// Clerk
+export const CLERK_PUBLISHABLE_KEY =
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || null;
+
+// Stripe
+export const STRIPE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || null;
+
+// Sentry
+export const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || null;
 
 // PostHog
 export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || null;
