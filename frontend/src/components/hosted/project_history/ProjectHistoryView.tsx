@@ -17,6 +17,7 @@ import { useStore } from "../../../store/store";
 import { Dialog, DialogContent } from "../../ui/dialog";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import StackLabel from "../../core/StackLabel";
+import { addEvent } from "../../../lib/analytics";
 
 //  Types for server responses
 interface Generation {
@@ -121,6 +122,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
 
     const loadData = async () => {
       setIsLoading(true);
+      addEvent("ViewProjectHistory");
       try {
         const res: ProjectHistoryResponse = await authenticatedFetch(
           `${SAAS_BACKEND_URL}/generations/view?page=${currentPage}`
