@@ -21,6 +21,8 @@ export const STRIPE_PUBLISHABLE_KEY =
 
 export const SAAS_BACKEND_URL = import.meta.env.VITE_SAAS_BACKEND_URL || null;
 
+export const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || null;
+
 // Feature flags
 export const SHOULD_SHOW_FEEDBACK_CALL_NOTE = false;
 export const IS_FREE_TRIAL_ENABLED = false;
