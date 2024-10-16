@@ -117,6 +117,8 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
+    if (!isProjectsHistoryDialogOpen) return;
+
     const loadData = async () => {
       setIsLoading(true);
       try {
@@ -141,7 +143,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
       }
     };
     loadData();
-  }, [currentPage]);
+  }, [currentPage, isProjectsHistoryDialogOpen]);
 
   const onLoadGeneration = (completion: string, stack: Stack) => {
     importFromCode(completion, stack);
