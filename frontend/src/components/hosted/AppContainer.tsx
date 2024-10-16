@@ -1,5 +1,6 @@
 import { useUser } from "@clerk/clerk-react";
 import posthog from "posthog-js";
+import * as Sentry from "@sentry/react";
 import App from "../../App";
 import { useEffect, useRef } from "react";
 import FullPageSpinner from "../core/FullPageSpinner";
@@ -71,6 +72,9 @@ function AppContainer() {
         email: user.email,
         "Subscriber Tier": user.subscriber_tier || "free",
       });
+
+      // Identify user to Sentry
+      Sentry.setUser({ email: user.email });
 
       isInitRequestInProgress.current = false;
     };
