@@ -4,11 +4,11 @@ from typing import Any, Awaitable, Callable, List, cast
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
-from config import IS_DEBUG_ENABLED
-from debug.DebugFileWriter import DebugFileWriter
-from image_processing.utils import process_image
 
-from utils import pprint_prompt
+from screenshot_to_code.config import IS_DEBUG_ENABLED
+from screenshot_to_code.debug.DebugFileWriter import DebugFileWriter
+from screenshot_to_code.image_processing.utils import process_image
+from screenshot_to_code.utils import pprint_prompt
 
 
 # Actual model versions that are passed to the LLMs and stored in our logs

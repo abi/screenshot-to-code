@@ -12,11 +12,14 @@ import subprocess
 import os
 import asyncio
 from datetime import datetime
-from prompts.claude_prompts import VIDEO_PROMPT
-from utils import pprint_prompt
-from config import ANTHROPIC_API_KEY
-from video.utils import extract_tag_content, assemble_claude_prompt_video
-from llm import (
+from screenshot_to_code.prompts.claude_prompts import VIDEO_PROMPT
+from screenshot_to_code.utils import pprint_prompt
+from screenshot_to_code.config import ANTHROPIC_API_KEY
+from screenshot_to_code.video.utils import (
+    extract_tag_content,
+    assemble_claude_prompt_video,
+)
+from screenshot_to_code.llm import (
     Llm,
     stream_claude_response_native,
 )

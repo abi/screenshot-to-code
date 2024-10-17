@@ -2,7 +2,7 @@ import os
 import logging
 import uuid
 
-from config import DEBUG_DIR, IS_DEBUG_ENABLED
+from screenshot_to_code.config import DEBUG_DIR, IS_DEBUG_ENABLED
 
 
 class DebugFileWriter:

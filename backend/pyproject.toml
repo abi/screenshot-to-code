@@ -1,30 +1,27 @@
-[tool.poetry]
-name = "backend"
+[project]
+name = "screenshot-to-code"
 version = "0.1.0"
-description = ""
-authors = ["Abi Raja <abimanyuraja@gmail.com>"]
-license = "MIT"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi~=0.95.0",
+    "uvicorn~=0.25.0",
+    "websockets~=12.0",
+    "openai~=1.2.4",
+    "python-dotenv~=1.0.0",
+    "beautifulsoup4~=4.12.2",
+    "httpx~=0.25.1",
+    "pre-commit~=3.6.2",
+    "anthropic~=0.18.0",
+    "moviepy~=1.0.3",
+    "pillow~=10.3.0",
+    "types-pillow~=10.2.0.20240520",
+    "aiohttp~=3.9.5",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-fastapi = "^0.95.0"
-uvicorn = "^0.25.0"
-websockets = "^12.0"
-openai = "^1.2.4"
-python-dotenv = "^1.0.0"
-beautifulsoup4 = "^4.12.2"
-httpx = "^0.25.1"
-pre-commit = "^3.6.2"
-anthropic = "^0.18.0"
-moviepy = "^1.0.3"
-pillow = "^10.3.0"
-types-pillow = "^10.2.0.20240520"
-aiohttp = "^3.9.5"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.3"
-pyright = "^1.1.352"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[project.optional-dependencies]
+dev = [
+    "pytest~=7.4.3",
+    "pyright~=1.1.352",
+]

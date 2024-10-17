@@ -1,12 +1,12 @@
 from typing import Union
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
-from custom_types import InputMode
-from image_generation.core import create_alt_url_mapping
-from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
-from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
-from prompts.types import Stack
-from video.utils import assemble_claude_prompt_video
+from screenshot_to_code.custom_types import InputMode
+from screenshot_to_code.image_generation.core import create_alt_url_mapping
+from screenshot_to_code.prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
+from screenshot_to_code.prompts.screenshot_system_prompts import SYSTEM_PROMPTS
+from screenshot_to_code.prompts.types import Stack
+from screenshot_to_code.video.utils import assemble_claude_prompt_video
 
 
 USER_PROMPT = """

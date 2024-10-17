@@ -1,12 +1,15 @@
+import os
 # Load environment variables first
 from dotenv import load_dotenv
 
 load_dotenv()
 
+print("api key:", os.environ["OPENAI_API_KEY"])
+print("base url:", os.environ.get("OPENAI_BASE_URL", "DEFAULT"))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import screenshot, generate_code, home, evals
+from screenshot_to_code.routes import screenshot, generate_code, home, evals
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 

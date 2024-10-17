@@ -3,8 +3,7 @@ from dataclasses import dataclass
 import traceback
 from fastapi import APIRouter, WebSocket
 import openai
-from codegen.utils import extract_html_content
-from config import (
+from screenshot_to_code.config import (
     ANTHROPIC_API_KEY,
     IS_PROD,
     NUM_VARIANTS,
@@ -13,24 +12,26 @@ from config import (
     REPLICATE_API_KEY,
     SHOULD_MOCK_AI_RESPONSE,
 )
-from custom_types import InputMode
-from llm import (
+from screenshot_to_code.custom_types import InputMode
+from screenshot_to_code.llm import (
     Llm,
     convert_frontend_str_to_llm,
     stream_claude_response,
     stream_claude_response_native,
     stream_openai_response,
 )
-from fs_logging.core import write_logs
-from mock_llm import mock_completion
+from screenshot_to_code.fs_logging.core import write_logs
+from screenshot_to_code.mock_llm import mock_completion
 from typing import Any, Callable, Coroutine, Dict, List, Literal, cast, get_args
-from image_generation.core import generate_images
-from prompts import create_prompt
-from prompts.claude_prompts import VIDEO_PROMPT
-from prompts.types import Stack
 
-# from utils import pprint_prompt
-from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
+from screenshot_to_code.image_generation.core import generate_images
+from screenshot_to_code.prompts import create_prompt
+from screenshot_to_code.prompts.claude_prompts import VIDEO_PROMPT
+from screenshot_to_code.prompts.types import Stack
+from screenshot_to_code.codegen.utils import extract_html_content
+
+# from backend.utils import pprint_prompt
+from screenshot_to_code.ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 
 router = APIRouter()

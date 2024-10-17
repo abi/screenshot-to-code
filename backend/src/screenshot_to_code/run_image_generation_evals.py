@@ -3,7 +3,7 @@ import os
 from typing import List, Optional, Literal
 from dotenv import load_dotenv
 import aiohttp
-from image_generation.core import process_tasks
+from screenshot_to_code.image_generation.core import process_tasks
 
 EVALS = [
     "Romantic Background",

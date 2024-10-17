@@ -1,5 +1,5 @@
 import unittest
-from llm import convert_frontend_str_to_llm, Llm
+from screenshot_to_code.llm import convert_frontend_str_to_llm, Llm
 
 
 class TestConvertFrontendStrToLlm(unittest.TestCase):

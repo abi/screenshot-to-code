@@ -1,5 +1,5 @@
-from llm import Llm
-from prompts import assemble_imported_code_prompt, assemble_prompt
+from screenshot_to_code.llm import Llm
+from screenshot_to_code.prompts import assemble_imported_code_prompt, assemble_prompt
 
 TAILWIND_SYSTEM_PROMPT = """
 You are an expert Tailwind developer

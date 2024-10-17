@@ -158,3 +158,6 @@ evals_data
 
 # Temporary video evals (Remove before merge)
 video_evals
+
+# uv python version file
+.python-version

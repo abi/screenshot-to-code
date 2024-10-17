@@ -1,8 +1,8 @@
 import os
 from fastapi import APIRouter
 from pydantic import BaseModel
-from evals.utils import image_to_data_url
-from evals.config import EVALS_DIR
+from screenshot_to_code.evals.utils import image_to_data_url
+from screenshot_to_code.evals.config import EVALS_DIR
 
 
 router = APIRouter()
@@ -18,7 +18,7 @@ class Eval(BaseModel):
 
 @router.get("/evals")
 async def get_evals():
-    # Get all evals from EVALS_DIR
+    # Get all evals from backend.evals_DIR
     input_dir = EVALS_DIR + "/inputs"
     output_dir = EVALS_DIR + "/outputs"
 

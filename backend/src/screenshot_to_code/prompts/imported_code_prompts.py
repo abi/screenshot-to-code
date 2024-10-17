@@ -1,4 +1,4 @@
-from prompts.types import SystemPrompts
+from screenshot_to_code.prompts.types import SystemPrompts
 
 
 IMPORTED_CODE_TAILWIND_SYSTEM_PROMPT = """

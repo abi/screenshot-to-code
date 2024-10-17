@@ -4,7 +4,7 @@ from typing import Dict, List, Literal, Union
 from openai import AsyncOpenAI
 from bs4 import BeautifulSoup
 
-from image_generation.replicate import call_replicate
+from screenshot_to_code.image_generation.replicate import call_replicate
 
 
 async def process_tasks(

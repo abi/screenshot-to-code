@@ -1,7 +1,7 @@
 # Load environment variables first
 from dotenv import load_dotenv
 
-from llm import Llm
+from screenshot_to_code.llm import Llm
 
 load_dotenv()
 
@@ -9,9 +9,9 @@ import os
 from typing import Any, Coroutine
 import asyncio
 
-from evals.config import EVALS_DIR
-from evals.core import generate_code_for_image
-from evals.utils import image_to_data_url
+from screenshot_to_code.evals.config import EVALS_DIR
+from screenshot_to_code.evals.core import generate_code_for_image
+from screenshot_to_code.evals.utils import image_to_data_url
 
 STACK = "html_tailwind"
 # MODEL = Llm.CLAUDE_3_5_SONNET_2024_06_20

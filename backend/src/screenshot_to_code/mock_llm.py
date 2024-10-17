@@ -1,7 +1,7 @@
 import asyncio
 from typing import Awaitable, Callable
 
-from custom_types import InputMode
+from screenshot_to_code.custom_types import InputMode
 
 
 STREAM_CHUNK_SIZE = 20

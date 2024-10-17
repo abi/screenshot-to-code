@@ -46,17 +46,16 @@ Keys needed:
 - [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md)
 - Anthropic key (optional) - only if you want to use Claude Sonnet, or for experimental video support.
 
-Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
+Run the backend (I use Uv for package management - `pip install uv` if you don't have it):
 
 ```bash
 cd backend
-echo "OPENAI_API_KEY=sk-your-key" > .env
-poetry install
-poetry shell
-poetry run uvicorn main:app --reload --port 7001
+echo "OPENAI_API_KEY=sk-your-key" > src/screenshot_to_code/.env
+uv pip install .
+uv run uvicorn screenshot_to_code:app --reload --port 7001
 ```
 
-If you want to use Anthropic, add `ANTHROPIC_API_KEY` to `backend/.env`. You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
+If you want to use Anthropic, add `ANTHROPIC_API_KEY` to `backend/src/screenshot_to_code/.env`. You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
 
 Run the frontend:
 
@@ -73,7 +72,7 @@ If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL
 For debugging purposes, if you don't want to waste GPT4-Vision credits, you can run the backend in mock mode (which streams a pre-recorded response):
 
 ```bash
-MOCK=true poetry run uvicorn main:app --reload --port 7001
+MOCK=true uv run uvicorn screenshot_to_code:app --reload --port 7001
 ```
 
 ## Docker

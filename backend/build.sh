@@ -2,10 +2,10 @@
 # exit on error
 set -o errexit
 
-echo "Installing the latest version of poetry..."
+echo "Installing the latest version of uv..."
 pip install --upgrade pip
-pip install poetry==1.4.1
+pip install uv
 
-rm poetry.lock
-poetry lock
-python -m poetry install
+rm uv.lock
+uv lock
+uv pip install .

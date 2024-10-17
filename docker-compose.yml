@@ -17,7 +17,7 @@ services:
     ports:
       - "${BACKEND_PORT:-7001}:${BACKEND_PORT:-7001}"
 
-    command: poetry run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT:-7001}
+    command: poetry run uvicorn screenshot_to_code:app --host 0.0.0.0 --port ${BACKEND_PORT:-7001}
   
   frontend:
     build:
