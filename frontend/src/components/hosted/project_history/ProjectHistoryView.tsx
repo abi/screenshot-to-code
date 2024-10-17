@@ -164,7 +164,8 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
     try {
       throw new Error("Download " + a);
     } catch (e) {
-      Sentry.captureException(e, { extra: { a: a } });
+      Sentry.setContext("Local variables", { a });
+      Sentry.captureException(e);
     }
   };
 
