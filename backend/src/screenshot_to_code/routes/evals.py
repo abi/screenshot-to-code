@@ -18,7 +18,7 @@ class Eval(BaseModel):
 
 @router.get("/evals")
 async def get_evals():
-    # Get all evals from backend.evals_DIR
+    # Get all evals from evals_DIR
     input_dir = EVALS_DIR + "/inputs"
     output_dir = EVALS_DIR + "/outputs"
 

@@ -25,10 +25,10 @@ async def assemble_claude_prompt_video(video_data_url: str) -> list[Any]:
         save_images_to_tmp(images)
 
     # Validate number of images
-    print(f"Number of frames extracted from backend.video: {len(images)}")
+    print(f"Number of frames extracted from video: {len(images)}")
     if len(images) > 20:
         print(f"Too many screenshots: {len(images)}")
-        raise ValueError("Too many screenshots extracted from backend.video")
+        raise ValueError("Too many screenshots extracted from video")
 
     # Convert images to the message format for Claude
     content_messages: list[dict[str, Union[dict[str, str], str]]] = []

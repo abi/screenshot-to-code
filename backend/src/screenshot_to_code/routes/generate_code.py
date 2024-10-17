@@ -30,7 +30,7 @@ from screenshot_to_code.prompts.claude_prompts import VIDEO_PROMPT
 from screenshot_to_code.prompts.types import Stack
 from screenshot_to_code.codegen.utils import extract_html_content
 
-# from backend.utils import pprint_prompt
+# from screenshot_to_code.utils import pprint_prompt
 from screenshot_to_code.ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 
