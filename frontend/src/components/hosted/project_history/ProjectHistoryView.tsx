@@ -38,6 +38,7 @@ interface ProjectHistoryResponse {
 const formatDate = (dateString: string) => {
   try {
     const date = new Date(dateString);
+    Sentry.setContext("Local Variables", { date });
     return formatRelative(date.toLocaleString(), new Date());
   } catch (error) {
     Sentry.captureException(error);
@@ -136,6 +137,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
           date_created: formatDate(generation.date_created),
         }));
         setGenerations(processedGenerations);
+        Sentry.setContext("Local Variables", { processedGenerations });
         setTotalPages(res.total_pages);
         setTotalCount(res.total_count);
       } catch (error) {
