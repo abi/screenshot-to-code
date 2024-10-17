@@ -160,7 +160,8 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   };
 
   const download = () => {
-    throw new Error("Download");
+    const a = Math.random();
+    throw new Error("Download " + a);
   };
 
   return (
