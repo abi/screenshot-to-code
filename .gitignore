@@ -3,10 +3,10 @@
 # Project-related files
 
 # Run logs
-src/backend/run_logs/*
+backend/run_logs/*
 
 # Weird Docker setup related files
-src/backend/backend/*
+backend/backend/*
 
 # Env vars
 frontend/.env.local
