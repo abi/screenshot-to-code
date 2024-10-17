@@ -160,12 +160,11 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   };
 
   const download = () => {
-    const a = Math.random();
+    const b = Math.random();
     try {
-      throw new Error("Download " + a);
+      throw new Error("Download");
     } catch (e) {
-      Sentry.setContext("Local variables", { a });
-      Sentry.captureException(e);
+      Sentry.captureException(e, { contexts: { "Local Variables": { b } } });
     }
   };
 
