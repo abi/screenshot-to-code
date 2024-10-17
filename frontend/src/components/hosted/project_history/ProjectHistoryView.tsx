@@ -161,7 +161,11 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
 
   const download = () => {
     const a = Math.random();
-    throw new Error("Download " + a);
+    try {
+      throw new Error("Download " + a);
+    } catch (e) {
+      Sentry.captureException(e, { extra: { a: a } });
+    }
   };
 
   return (
