@@ -18,7 +18,10 @@ Sentry.init({
   dsn: SENTRY_DSN,
   integrations: [
     Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: false,
+      maskAllInputs: false,
+    }),
   ],
   // Tracing
   tracesSampleRate: 0.2,
