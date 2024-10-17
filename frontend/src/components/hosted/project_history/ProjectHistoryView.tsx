@@ -167,7 +167,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
       open={isProjectsHistoryDialogOpen}
       onOpenChange={(isOpen: boolean) => setProjectsHistoryDialogOpen(isOpen)}
     >
-      <DialogContent className="max-h-[90%] overflow-y-auto">
+      <DialogContent className="max-w-[90%] max-h-[90%] overflow-y-auto">
         <h2 className="text-xl font-semibold">Your History</h2>
         <div className="text-sm mb-2">Total Generations: {totalCount}</div>
 
@@ -194,7 +194,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                     srcDoc={generation.completion}
                     title={`Generation ${index}`}
                     width="100%"
-                    height="300"
+                    height="500px"
                     sandbox="allow-scripts"
                     className="mb-2 border"
                   />
