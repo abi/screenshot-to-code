@@ -161,15 +161,6 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
     }
   };
 
-  const download = () => {
-    const b = Math.random();
-    try {
-      throw new Error("Download");
-    } catch (e) {
-      Sentry.captureException(e, { contexts: { "Local Variables": { b } } });
-    }
-  };
-
   return (
     <Dialog
       open={isProjectsHistoryDialogOpen}
@@ -215,7 +206,6 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                   >
                     Load in Editor
                   </Button>
-                  <Button onClick={download}>Download</Button>
                 </CardFooter>
               </Card>
             ))}
