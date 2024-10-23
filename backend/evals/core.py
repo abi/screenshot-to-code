@@ -17,7 +17,11 @@ async def generate_code_core(
     async def process_chunk(_: str):
         pass
 
-    if model == Llm.CLAUDE_3_SONNET or model == Llm.CLAUDE_3_5_SONNET_2024_06_20:
+    if (
+        model == Llm.CLAUDE_3_SONNET
+        or model == Llm.CLAUDE_3_5_SONNET_2024_06_20
+        or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
+    ):
         if not ANTHROPIC_API_KEY:
             raise Exception("Anthropic API key not found")
 

@@ -309,7 +309,7 @@ async def stream_code(websocket: WebSocket):
                                 prompt_messages,
                                 api_key=anthropic_api_key,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model=Llm.CLAUDE_3_5_SONNET_2024_06_20,
+                                model=Llm.CLAUDE_3_5_SONNET_2024_10_22,
                             )
                         )
 

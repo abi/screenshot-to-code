@@ -14,8 +14,8 @@ from evals.core import generate_code_for_image
 from evals.utils import image_to_data_url
 
 STACK = "html_tailwind"
-# MODEL = Llm.CLAUDE_3_5_SONNET_2024_06_20
-N = 2  # Number of outputs to generate
+MODEL = Llm.CLAUDE_3_5_SONNET_2024_10_22
+N = 1  # Number of outputs to generate
 
 
 async def main():
@@ -34,7 +34,7 @@ async def main():
                 task = generate_code_for_image(
                     image_url=data_url,
                     stack=STACK,
-                    model=Llm.CLAUDE_3_5_SONNET_2024_06_20,
+                    model=MODEL,
                 )
             else:
                 task = generate_code_for_image(
