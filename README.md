@@ -18,7 +18,7 @@ Supported AI models:
 
 - Claude Sonnet 3.5 - Best model!
 - GPT-4O - also recommended!
-- DALL-E 3 for image generation
+- DALL-E 3 or Flux Schnell (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
 
