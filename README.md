@@ -18,9 +18,6 @@ Supported AI models:
 
 - Claude Sonnet 3.5 - Best model!
 - GPT-4O - also recommended!
-- GPT-4 Turbo (Apr 2024)
-- GPT-4 Vision (Nov 2023)
-- Claude 3 Sonnet
 - DALL-E 3 for image generation
 
 See the [Examples](#-examples) section below for more demos.
@@ -53,12 +50,12 @@ Run the backend (I use Poetry for package management - `pip install poetry` if y
 ```bash
 cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
+echo "ANTHROPIC_API_KEY=your-key" > .env
 poetry install
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
-
-If you want to use Anthropic, add `ANTHROPIC_API_KEY` to `backend/.env`. You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
+You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
 
 Run the frontend:
 
