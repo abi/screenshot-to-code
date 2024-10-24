@@ -43,8 +43,10 @@ The app has a React/Vite frontend and a FastAPI backend.
 
 Keys needed:
 
-- [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md)
-- Anthropic key (optional) - only if you want to use Claude Sonnet, or for experimental video support.
+- [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md) or Anthropic key (optional)
+- Both are recommended so you can compare results from both Claude and GPT4o
+
+If you'd like to run the app with Ollama open source models (not recommended due to poor quality results), [follow this comment](https://github.com/abi/screenshot-to-code/issues/354#issuecomment-2435479853).
 
 Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
 
