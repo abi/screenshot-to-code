@@ -1,6 +1,6 @@
 # screenshot-to-code
 
-A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. **Now supporting Claude Sonnet 3.5 and GPT-4O!**
+A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. **Now supporting Claude Sonnet 3.5 and GPT-4o!**
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
@@ -17,11 +17,8 @@ Supported stacks:
 Supported AI models:
 
 - Claude Sonnet 3.5 - Best model!
-- GPT-4O - also recommended!
-- GPT-4 Turbo (Apr 2024)
-- GPT-4 Vision (Nov 2023)
-- Claude 3 Sonnet
-- DALL-E 3 for image generation
+- GPT-4o - also recommended!
+- DALL-E 3 or Flux Schnell (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
 
@@ -43,20 +40,22 @@ The app has a React/Vite frontend and a FastAPI backend.
 
 Keys needed:
 
-- [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md)
-- Anthropic key (optional) - only if you want to use Claude Sonnet, or for experimental video support.
+- [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md) or Anthropic key (optional)
+- Both are recommended so you can compare results from both Claude and GPT4o
+
+If you'd like to run the app with Ollama open source models (not recommended due to poor quality results), [follow this comment](https://github.com/abi/screenshot-to-code/issues/354#issuecomment-2435479853).
 
 Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
 
 ```bash
 cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
+echo "ANTHROPIC_API_KEY=your-key" > .env
 poetry install
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
-
-If you want to use Anthropic, add `ANTHROPIC_API_KEY` to `backend/.env`. You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
+You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
 
 Run the frontend:
 
