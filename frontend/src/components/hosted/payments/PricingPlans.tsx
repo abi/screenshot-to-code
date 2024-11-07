@@ -1,6 +1,6 @@
 import { FaCheckCircle } from "react-icons/fa";
 import Spinner from "../../core/Spinner";
-import React from "react";
+import * as React from "react";
 import { Button } from "../../ui/button";
 import useStripeCheckout from "./useStripeCheckout";
 
@@ -31,7 +31,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
         </Button>
       </div>
       <div className="flex justify-center items-center">
-        <div className="grid grid-cols-2 gap-8 p-2">
+        <div className="grid grid-cols-3 gap-8 p-2">
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="font-semibold">Hobby</h2>
             <p className="text-gray-500">Great to start</p>
@@ -120,6 +120,38 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
               <li className="flex items-center">
                 <FaCheckCircle className="text-black mr-2" />
                 Chat support
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="font-semibold">Enterprise</h2>
+            <p className="text-gray-500">For medium to large companies</p>
+            <div className="my-4">
+              <span className="text-gray-500">Starting at $8000 annually</span>
+            </div>
+
+            <a
+              href="https://cal.com/abi-raja-wy2pfh/30min"
+              target="_blank"
+              className="bg-black text-white rounded py-2 px-4 w-full text-sm 
+                flex justify-center items-center gap-x-2 no-underline"
+            >
+              Contact Us
+            </a>
+
+            <ul className="mt-4 space-y-2">
+              <li className="flex items-center">
+                <FaCheckCircle className="text-black mr-2" />
+                Unlimited credits
+              </li>
+              <li className="flex items-center">
+                <FaCheckCircle className="text-black mr-2" />
+                Unlimited users
+              </li>
+              <li className="flex items-center">
+                <FaCheckCircle className="text-black mr-2" />
+                Custom integrations
               </li>
             </ul>
           </div>
