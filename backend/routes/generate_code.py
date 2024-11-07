@@ -218,9 +218,7 @@ async def stream_code(websocket: WebSocket):
     # Auto-upgrade usage of older models
     code_generation_model = auto_upgrade_model(code_generation_model)
 
-    print(
-        f"Generating {stack} code in {input_mode} mode using {code_generation_model}..."
-    )
+    print(f"Generating {stack} code in {input_mode} mode")
 
     for i in range(NUM_VARIANTS):
         await send_message("status", "Generating code...", i)
@@ -309,7 +307,7 @@ async def stream_code(websocket: WebSocket):
                                 prompt_messages,
                                 api_key=anthropic_api_key,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model=Llm.CLAUDE_3_5_SONNET_2024_10_22,
+                                model=Llm.CLAUDE_3_5_SONNET_2024_06_20,
                             )
                         )
 
