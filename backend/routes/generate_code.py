@@ -102,9 +102,11 @@ async def extract_params(
 ) -> ExtractedParams:
     # Read the code config settings (stack) from the request.
     generated_code_config = params.get("generatedCodeConfig", "")
+    print(f"Received generated code config: {generated_code_config}")
+    print(f"Valid generated code configs: {get_args(Stack)}")
     if generated_code_config not in get_args(Stack):
-        await throw_error(f"Invalid generated code config: {generated_code_config}")
-        raise ValueError(f"Invalid generated code config: {generated_code_config}")
+        await throw_error(f"Invalid generated code config: {generated_code_config}, {get_args(Stack)}")
+        raise ValueError(f"Invalid generated code config: {generated_code_config},  {get_args(Stack)}")
     validated_stack = cast(Stack, generated_code_config)
 
     # Validate the input mode
