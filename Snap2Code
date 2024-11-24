@@ -1,0 +1,74 @@
+import html2canvas from 'html2canvas';
+
+// Define the interface for the element attributes
+interface ScreenshotElement {
+  tag: string;
+  styles: Record<string, string>;
+  content: string;
+}
+
+// Function to take a screenshot of an HTML element and generate code
+async function screenshotToCode(elementId: string): Promise<string> {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    throw new Error("Element not found");
+  }
+
+  // Capture the screenshot as a canvas
+  const canvas = await html2canvas(element);
+  const dataUrl = canvas.toDataURL();
+
+  // Convert the visual element into HTML code
+  const screenshotElements: ScreenshotElement[] = extractElementDetails(element);
+
+  let generatedCode = `
+  <div id="${elementId}" style="background-image: url(${dataUrl});">
+  `;
+  screenshotElements.forEach(({ tag, styles, content }) => {
+    const styleString = Object.entries(styles)
+      .map(([key, value]) => `${key}:${value}`)
+      .join('; ');
+    generatedCode += `<${tag} style="${styleString}">${content}</${tag}>`;
+  });
+  generatedCode += '</div>';
+
+  return generatedCode;
+}
+
+// Function to extract element details (basic example for div, p, and h tags)
+function extractElementDetails(element: HTMLElement): ScreenshotElement[] {
+  const elements: ScreenshotElement[] = [];
+  const childNodes = Array.from(element.childNodes);
+
+  childNodes.forEach((childNode) => {
+    if (childNode instanceof HTMLElement) {
+      const styles = window.getComputedStyle(childNode);
+      const styleObj: Record<string, string> = {};
+      for (let i = 0; i < styles.length; i++) {
+        const property = styles[i];
+        styleObj[property] = styles.getPropertyValue(property);
+      }
+
+      elements.push({
+        tag: childNode.tagName.toLowerCase(),
+        styles: styleObj,
+        content: childNode.innerHTML.trim() || childNode.textContent || '',
+      });
+    }
+  });
+
+  return elements;
+}
+
+// Example usage:
+async function generateCodeFromScreenshot() {
+  try {
+    const code = await screenshotToCode('target-element');
+    console.log('Generated Code:', code);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+// Call the function with a sample element ID
+generateCodeFromScreenshot();
