@@ -51,7 +51,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
                 checkout(
                   paymentInterval === "monthly"
                     ? "hobby_monthly"
-                    : "hobby_yearly_discounted"
+                    : "hobby_yearly_90"
                 )
               }
             >
@@ -97,7 +97,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
                 checkout(
                   paymentInterval === "monthly"
                     ? "pro_monthly"
-                    : "pro_yearly_discounted"
+                    : "pro_yearly_240"
                 )
               }
             >
