@@ -27,7 +27,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
           variant={paymentInterval === "yearly" ? "default" : "secondary"}
           onClick={() => setPaymentInterval("yearly")}
         >
-          Yearly (60% discount!)
+          Yearly (50% discount!)
         </Button>
       </div>
       <div className="flex justify-center items-center">
@@ -37,7 +37,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             <p className="text-gray-500 dark:text-gray-400">Great to start</p>
             <div className="my-4">
               <span className="text-4xl font-bold dark:text-white">
-                {paymentInterval === "monthly" ? "$15" : "$60"}
+                {paymentInterval === "monthly" ? "$15" : "$90"}
               </span>
               <span className="text-gray-500 dark:text-gray-400">
                 {paymentInterval === "monthly" ? "/ month" : "/ year"}
@@ -83,7 +83,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             <p className="text-gray-500 dark:text-gray-400">Higher limits</p>
             <div className="my-4">
               <span className="text-4xl font-bold dark:text-white">
-                {paymentInterval === "monthly" ? "$40" : "$160"}
+                {paymentInterval === "monthly" ? "$40" : "$240"}
               </span>
               <span className="text-gray-500 dark:text-gray-400">
                 {paymentInterval === "monthly" ? "/ month" : "/ year"}
