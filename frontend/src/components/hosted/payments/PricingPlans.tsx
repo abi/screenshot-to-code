@@ -32,20 +32,20 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
       </div>
       <div className="flex justify-center items-center">
         <div className="grid grid-cols-3 gap-8 p-2">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="font-semibold">Hobby</h2>
-            <p className="text-gray-500">Great to start</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="font-semibold dark:text-white">Hobby</h2>
+            <p className="text-gray-500 dark:text-gray-400">Great to start</p>
             <div className="my-4">
-              <span className="text-4xl font-bold">
+              <span className="text-4xl font-bold dark:text-white">
                 {paymentInterval === "monthly" ? "$15" : "$60"}
               </span>
-              <span className="text-gray-500">
+              <span className="text-gray-500 dark:text-gray-400">
                 {paymentInterval === "monthly" ? "/ month" : "/ year"}
               </span>
             </div>
 
             <button
-              className="bg-black text-white rounded py-2 px-4 w-full text-sm
+              className="bg-black text-white dark:bg-white dark:text-black rounded py-2 px-4 w-full text-sm
                 flex justify-center items-center gap-x-2"
               onClick={() =>
                 checkout(
@@ -59,39 +59,39 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             </button>
 
             <ul className="mt-4 space-y-2">
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 100 credits / mo
               </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 All supported AI models
               </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 Full code access
               </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 Chat support
               </li>
             </ul>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="font-semibold">Pro</h2>
-            <p className="text-gray-500">Higher limits</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="font-semibold dark:text-white">Pro</h2>
+            <p className="text-gray-500 dark:text-gray-400">Higher limits</p>
             <div className="my-4">
-              <span className="text-4xl font-bold">
+              <span className="text-4xl font-bold dark:text-white">
                 {paymentInterval === "monthly" ? "$40" : "$160"}
               </span>
-              <span className="text-gray-500">
+              <span className="text-gray-500 dark:text-gray-400">
                 {paymentInterval === "monthly" ? "/ month" : "/ year"}
               </span>
             </div>
 
             <button
-              className="bg-black text-white rounded py-2 px-4 w-full text-sm 
+              className="bg-black text-white dark:bg-white dark:text-black rounded py-2 px-4 w-full text-sm 
                   flex justify-center items-center gap-x-2"
               onClick={() =>
                 checkout(
@@ -105,66 +105,70 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             </button>
 
             <ul className="mt-4 space-y-2">
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 300 credits / mo
               </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 All supported AI models
               </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 Full code access
               </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 Chat support
               </li>
             </ul>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="font-semibold">Enterprise</h2>
-            <p className="text-gray-500">For medium to large companies</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="font-semibold dark:text-white">Enterprise</h2>
+            <p className="text-gray-500 dark:text-gray-400">
+              For medium to large companies
+            </p>
             <div className="my-4">
-              <span className="text-gray-500">Starting at $8000 annually</span>
+              <span className="text-gray-500 dark:text-gray-400">
+                Starting at $8000 annually
+              </span>
             </div>
 
             <a
               href="https://cal.com/abi-raja-wy2pfh/30min"
               target="_blank"
-              className="bg-black text-white rounded py-2 px-4 w-full text-sm 
+              className="bg-black text-white dark:bg-white dark:text-black rounded py-2 px-4 w-full text-sm 
                 flex justify-center items-center gap-x-2 no-underline"
             >
               Contact Us
             </a>
 
             <ul className="mt-4 space-y-2">
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 Unlimited credits
               </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 Unlimited users
               </li>
-              <li className="flex items-center">
-                <FaCheckCircle className="text-black mr-2" />
+              <li className="flex items-center dark:text-white">
+                <FaCheckCircle className="text-black dark:text-white mr-2" />
                 Custom integrations
               </li>
             </ul>
           </div>
         </div>
       </div>
-      <p className="text-center text-xs text-gray-600 mt-1">
+      <p className="text-center text-xs text-gray-600 dark:text-gray-400 mt-1">
         1 credit = 1 code generation. Cancel subscription at any time. <br />{" "}
         {shouldShowFAQLink && (
           <>
             <a
               href="/pricing"
               target="_blank"
-              className="text-blue-900 underline"
+              className="text-blue-900 dark:text-blue-400 underline"
             >
               For more information, visit our FAQs
             </a>{" "}
