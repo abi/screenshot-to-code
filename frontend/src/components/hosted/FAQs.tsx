@@ -18,12 +18,22 @@ function FAQs() {
     {
       question: "Can I upgrade or downgrade my plan?",
       answer:
-        "Yes, you can change your plan at any time. The changes will take effect immediately.",
+        "Yes, you can change your plan at any time. When upgrading, changes take effect immediately. When downgrading, changes will take effect at the start of your next billing cycle.",
     },
     {
       question: "What payment methods do you accept?",
       answer:
         "We accept all major credit cards, Alipay, Amazon Pay and Cash App Pay. Certain payment methods may not be available in your country.",
+    },
+    {
+      question: "What is your refund policy?",
+      answer:
+        "As we provide instant access to digital services and credits, we do not offer refunds. All purchases are final. Unused credits expire at the end of each calendar month.",
+    },
+    {
+      question: "How is the service delivered?",
+      answer:
+        "Our service is delivered instantly through our web platform. Upon successful payment, credits are immediately added to your account and you can start using the service right away.",
     },
   ];
 
