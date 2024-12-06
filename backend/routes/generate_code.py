@@ -167,7 +167,7 @@ async def extract_params(
             raise Exception("Unknown error occurred when checking subscription credits")
 
     user_id = res.user_id
-    
+
     print("Payment method: ", payment_method)
 
     if payment_method is PaymentMethod.UNKNOWN:
@@ -336,9 +336,17 @@ async def stream_code(websocket: WebSocket):
                 # Depending on the presence and absence of various keys,
                 # we decide which models to run
                 variant_models = []
+
+                # For creation, use Claude Sonnet 3.6 but it can be lazy
+                # so for updates, we use Claude Sonnet 3.5
+                if params["generationType"] == "create":
+                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_10_22
+                else:
+                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+
                 if openai_api_key and anthropic_api_key:
                     variant_models = [
-                        Llm.CLAUDE_3_5_SONNET_2024_06_20,
+                        claude_model,
                         Llm.GPT_4O_2024_05_13,
                     ]
                 elif openai_api_key:
@@ -348,7 +356,7 @@ async def stream_code(websocket: WebSocket):
                     ]
                 elif anthropic_api_key:
                     variant_models = [
-                        Llm.CLAUDE_3_5_SONNET_2024_06_20,
+                        claude_model,
                         Llm.CLAUDE_3_5_SONNET_2024_06_20,
                     ]
                 else:
@@ -377,13 +385,6 @@ async def stream_code(websocket: WebSocket):
                         if anthropic_api_key is None:
                             await throw_error("Anthropic API key is missing.")
                             raise Exception("Anthropic API key is missing.")
-
-                        # For creation, use Claude Sonnet 3.6 but it can be lazy
-                        # so for updates, we use Claude Sonnet 3.5
-                        if params["generationType"] == "create":
-                            claude_model = Llm.CLAUDE_3_5_SONNET_2024_10_22
-                        else:
-                            claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
                         tasks.append(
                             stream_claude_response(
