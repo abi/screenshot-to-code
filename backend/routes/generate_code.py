@@ -381,7 +381,10 @@ async def stream_code(websocket: WebSocket):
                                 model=Llm.GPT_4O_2024_05_13,
                             )
                         )
-                    elif model == Llm.CLAUDE_3_5_SONNET_2024_06_20:
+                    elif (
+                        model == Llm.CLAUDE_3_5_SONNET_2024_06_20
+                        or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
+                    ):
                         if anthropic_api_key is None:
                             await throw_error("Anthropic API key is missing.")
                             raise Exception("Anthropic API key is missing.")
