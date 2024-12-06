@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { HTTP_BACKEND_URL } from "../../config";
 
 interface Eval {
@@ -24,6 +24,9 @@ function PairwiseEvalsPage() {
     left: "",
     right: "",
   });
+  const [folder1Path, setFolder1Path] = useState("");
+  const [folder2Path, setFolder2Path] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Calculate statistics
   const totalVotes = outcomes.filter((o) => o !== null).length;
@@ -42,20 +45,39 @@ function PairwiseEvalsPage() {
     ? ((ties / totalVotes) * 100).toFixed(1)
     : "0.0";
 
-  useEffect(() => {
-    if (evals.length > 0) return;
+  const loadEvals = async () => {
+    if (!folder1Path || !folder2Path) {
+      alert("Please enter both folder paths");
+      return;
+    }
 
-    fetch(`${HTTP_BACKEND_URL}/pairwise-evals`)
-      .then((res) => res.json())
-      .then((data: PairwiseEvalsResponse) => {
-        setEvals(data.evals);
-        setOutcomes(new Array(data.evals.length).fill(null));
-        setFolderNames({
-          left: data.folder1_name,
-          right: data.folder2_name,
-        });
+    setIsLoading(true);
+    try {
+      const queryParams = new URLSearchParams({
+        folder1: folder1Path,
+        folder2: folder2Path,
       });
-  }, [evals]);
+
+      const response = await fetch(
+        `${HTTP_BACKEND_URL}/pairwise-evals?${queryParams}`
+      );
+      const data: PairwiseEvalsResponse = await response.json();
+
+      setEvals(data.evals);
+      setOutcomes(new Array(data.evals.length).fill(null));
+      setFolderNames({
+        left: data.folder1_name,
+        right: data.folder2_name,
+      });
+    } catch (error) {
+      console.error("Error loading evals:", error);
+      alert(
+        "Error loading evals. Please check the folder paths and try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleVote = (index: number, outcome: Outcome) => {
     const newOutcomes = [...outcomes];
@@ -66,20 +88,48 @@ function PairwiseEvalsPage() {
   return (
     <div className="mx-auto">
       <div className="flex flex-col items-center justify-center w-full py-4 bg-zinc-950 text-white">
-        <span className="text-2xl font-semibold">
-          Total votes: {totalVotes}
-        </span>
-        <div className="text-lg mt-2">
-          <span>
-            {folderNames.left}: {leftWins} ({leftPercentage}%) |{" "}
-          </span>
-          <span>
-            {folderNames.right}: {rightWins} ({rightPercentage}%) |{" "}
-          </span>
-          <span>
-            Ties: {ties} ({tiePercentage}%)
-          </span>
+        <div className="flex flex-col gap-4 mb-4 w-full max-w-2xl px-4">
+          <input
+            type="text"
+            value={folder1Path}
+            onChange={(e) => setFolder1Path(e.target.value)}
+            placeholder="Enter absolute path to first folder"
+            className="w-full px-4 py-2 rounded text-black"
+          />
+          <input
+            type="text"
+            value={folder2Path}
+            onChange={(e) => setFolder2Path(e.target.value)}
+            placeholder="Enter absolute path to second folder"
+            className="w-full px-4 py-2 rounded text-black"
+          />
+          <button
+            onClick={loadEvals}
+            disabled={isLoading}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-blue-300"
+          >
+            {isLoading ? "Loading..." : "Start Comparison"}
+          </button>
         </div>
+
+        {evals.length > 0 && (
+          <>
+            <span className="text-2xl font-semibold">
+              Total votes: {totalVotes}
+            </span>
+            <div className="text-lg mt-2">
+              <span>
+                {folderNames.left}: {leftWins} ({leftPercentage}%) |{" "}
+              </span>
+              <span>
+                {folderNames.right}: {rightWins} ({rightPercentage}%) |{" "}
+              </span>
+              <span>
+                Ties: {ties} ({tiePercentage}%)
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="flex flex-col gap-y-8 mt-4 mx-auto justify-center">
