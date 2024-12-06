@@ -33,17 +33,16 @@ function PairwiseEvalsPage() {
   const leftWins = outcomes.filter((o) => o === "left").length;
   const rightWins = outcomes.filter((o) => o === "right").length;
   const ties = outcomes.filter((o) => o === "tie").length;
-
   // Calculate percentages
   const leftPercentage = totalVotes
-    ? ((leftWins / totalVotes) * 100).toFixed(1)
-    : "0.0";
+    ? ((leftWins / totalVotes) * 100).toFixed(2)
+    : "0.00";
   const rightPercentage = totalVotes
-    ? ((rightWins / totalVotes) * 100).toFixed(1)
-    : "0.0";
+    ? ((rightWins / totalVotes) * 100).toFixed(2)
+    : "0.00";
   const tiePercentage = totalVotes
-    ? ((ties / totalVotes) * 100).toFixed(1)
-    : "0.0";
+    ? ((ties / totalVotes) * 100).toFixed(2)
+    : "0.00";
 
   const loadEvals = async () => {
     if (!folder1Path || !folder2Path) {
