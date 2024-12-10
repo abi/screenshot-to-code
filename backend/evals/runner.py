@@ -1,4 +1,4 @@
-from typing import Any, Coroutine, List
+from typing import Any, Coroutine, List, Optional
 import asyncio
 import os
 from llm import Llm
@@ -7,18 +7,34 @@ from .utils import image_to_data_url
 from .config import EVALS_DIR
 from typing_extensions import Literal
 
-Stack = Literal['html_css', 'html_tailwind', 'react_tailwind', 'bootstrap', 'ionic_tailwind', 'vue_tailwind', 'svg']
+Stack = Literal[
+    "html_css",
+    "html_tailwind",
+    "react_tailwind",
+    "bootstrap",
+    "ionic_tailwind",
+    "vue_tailwind",
+    "svg",
+]
+
 
 async def run_image_evals(
-    stack: Stack = "html_tailwind", 
-    model: Llm = Llm.CLAUDE_3_5_SONNET_2024_10_22, 
-    n: int = 1
+    stack: Stack = "html_tailwind", model: Optional[str] = None, n: int = 1
 ) -> List[str]:
     INPUT_DIR = EVALS_DIR + "/inputs"
     OUTPUT_DIR = EVALS_DIR + "/outputs"
 
     # Get all the files in the directory (only grab pngs)
     evals = [f for f in os.listdir(INPUT_DIR) if f.endswith(".png")]
+
+    print("User selected model:", model)
+
+    # If model is provided as string, convert it to Llm enum
+    if not model:
+        raise ValueError("No model was provided")
+
+    selected_model = Llm(model)
+    print(f"Running evals for {selected_model} model")
 
     tasks: list[Coroutine[Any, Any, str]] = []
     for filename in evals:
@@ -29,7 +45,7 @@ async def run_image_evals(
                 task = generate_code_for_image(
                     image_url=data_url,
                     stack=stack,
-                    model=model,
+                    model=selected_model,
                 )
             else:
                 task = generate_code_for_image(
@@ -56,4 +72,4 @@ async def run_image_evals(
             file.write(content)
         output_files.append(output_filename)
 
-    return output_files 
+    return output_files

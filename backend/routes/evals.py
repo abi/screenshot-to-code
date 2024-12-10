@@ -6,7 +6,7 @@ from evals.config import EVALS_DIR
 from typing import Set
 from evals.runner import run_image_evals
 from typing import List
-
+from llm import Llm
 
 router = APIRouter()
 
@@ -137,7 +137,21 @@ async def get_pairwise_evals(
 
 
 @router.post("/run_evals", response_model=List[str])
-async def run_evals():
+async def run_evals(model: str):
     """Run evaluations on all images in the inputs directory"""
-    output_files = await run_image_evals()
+    output_files = await run_image_evals(model=model)
     return output_files
+
+
+@router.get("/models")
+async def get_models():
+    current_models = [
+        model.value
+        for model in Llm
+        if model != Llm.GPT_4_TURBO_2024_04_09
+        and model != Llm.GPT_4_VISION
+        and model != Llm.CLAUDE_3_SONNET
+        and model != Llm.CLAUDE_3_OPUS
+        and model != Llm.CLAUDE_3_HAIKU
+    ]
+    return {"models": current_models}
