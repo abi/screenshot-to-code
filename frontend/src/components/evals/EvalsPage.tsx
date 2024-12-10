@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { HTTP_BACKEND_URL } from "../../config";
 import RatingPicker from "./RatingPicker";
+import { Button } from "../ui/button";
 
 interface Eval {
   input: string;
@@ -10,6 +11,7 @@ interface Eval {
 function EvalsPage() {
   const [evals, setEvals] = React.useState<Eval[]>([]);
   const [ratings, setRatings] = React.useState<number[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
 
   const total = ratings.reduce((a, b) => a + b, 0);
   const max = ratings.length * 4;
@@ -26,13 +28,42 @@ function EvalsPage() {
       });
   }, [evals]);
 
+  const runEvals = async () => {
+    try {
+      setIsRunning(true);
+      const response = await fetch(`${HTTP_BACKEND_URL}/run_evals`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to run evals");
+      }
+
+      const outputFiles = await response.json();
+      console.log("Generated files:", outputFiles);
+
+      // Refresh the evals list after running
+      const evalsResponse = await fetch(`${HTTP_BACKEND_URL}/evals`);
+      const newEvals = await evalsResponse.json();
+      setEvals(newEvals);
+      setRatings(new Array(newEvals.length).fill(0));
+    } catch (error) {
+      console.error("Error running evals:", error);
+      // You might want to add a toast notification here
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
   return (
     <div className="mx-auto">
-      {/* Display total */}
-      <div className="flex items-center justify-center w-full h-12 bg-zinc-950">
-        <span className="text-2xl font-semibold text-white">
+      <div className="flex items-center justify-between w-full h-12 bg-zinc-950">
+        <span className="text-2xl font-semibold text-white ml-4">
           Total: {total} out of {max} ({score}%)
         </span>
+        <Button onClick={runEvals} disabled={isRunning} className="mr-4">
+          {isRunning ? "Running Evals..." : "Run Evals"}
+        </Button>
       </div>
 
       <div className="flex flex-col gap-y-4 mt-4 mx-auto justify-center">

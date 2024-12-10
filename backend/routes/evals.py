@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from evals.utils import image_to_data_url
 from evals.config import EVALS_DIR
 from typing import Set
+from evals.runner import run_image_evals
+from typing import List
 
 
 router = APIRouter()
@@ -132,3 +134,10 @@ async def get_pairwise_evals(
     return PairwiseEvalResponse(
         evals=evals, folder1_name=folder1_name, folder2_name=folder2_name
     )
+
+
+@router.post("/run_evals", response_model=List[str])
+async def run_evals():
+    """Run evaluations on all images in the inputs directory"""
+    output_files = await run_image_evals()
+    return output_files
