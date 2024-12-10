@@ -9,7 +9,7 @@ from .config import EVALS_DIR
 
 
 async def run_image_evals(
-    stack: Stack = "html_tailwind", model: Optional[str] = None, n: int = 1
+    stack: Optional[Stack] = None, model: Optional[str] = None, n: int = 1
 ) -> List[str]:
     INPUT_DIR = EVALS_DIR + "/inputs"
     OUTPUT_DIR = EVALS_DIR + "/outputs"
@@ -17,6 +17,10 @@ async def run_image_evals(
     # Get all the files in the directory (only grab pngs)
     evals = [f for f in os.listdir(INPUT_DIR) if f.endswith(".png")]
 
+    if not stack:
+        raise ValueError("No stack was provided")
+
+    print("User selected stack:", stack)
     print("User selected model:", model)
 
     # If model is provided as string, convert it to Llm enum

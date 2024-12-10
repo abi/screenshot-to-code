@@ -5,8 +5,9 @@ from evals.utils import image_to_data_url
 from evals.config import EVALS_DIR
 from typing import Set
 from evals.runner import run_image_evals
-from typing import List
+from typing import List, Dict
 from llm import Llm
+from prompts.types import Stack
 
 router = APIRouter()
 
@@ -137,13 +138,13 @@ async def get_pairwise_evals(
 
 
 @router.post("/run_evals", response_model=List[str])
-async def run_evals(model: str):
+async def run_evals(model: str, stack: Stack):
     """Run evaluations on all images in the inputs directory"""
-    output_files = await run_image_evals(model=model)
+    output_files = await run_image_evals(model=model, stack=stack)
     return output_files
 
 
-@router.get("/models")
+@router.get("/models", response_model=Dict[str, List[str]])
 async def get_models():
     current_models = [
         model.value
@@ -154,4 +155,8 @@ async def get_models():
         and model != Llm.CLAUDE_3_OPUS
         and model != Llm.CLAUDE_3_HAIKU
     ]
-    return {"models": current_models}
+
+    # Import Stack type from prompts.types and get all literal values
+    available_stacks = list(Stack.__args__)
+
+    return {"models": current_models, "stacks": available_stacks}

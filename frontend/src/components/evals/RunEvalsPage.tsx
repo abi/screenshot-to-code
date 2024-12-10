@@ -5,23 +5,28 @@ import { useNavigate } from "react-router-dom";
 
 interface ModelResponse {
   models: string[];
+  stacks: string[];
 }
 
 function RunEvalsPage() {
   const [isRunning, setIsRunning] = useState(false);
   const navigate = useNavigate();
   const [models, setModels] = useState<string[]>([]);
+  const [stacks, setStacks] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
+  const [selectedStack, setSelectedStack] = useState<string>("");
 
   useEffect(() => {
-    console.log("fetching models");
-
     const fetchModels = async () => {
       const response = await fetch(`${HTTP_BACKEND_URL}/models`);
       const data: ModelResponse = await response.json();
       setModels(data.models);
+      setStacks(data.stacks);
       if (data.models.length > 0) {
         setSelectedModel(data.models[0]);
+      }
+      if (data.stacks.length > 0) {
+        setSelectedStack(data.stacks[0]);
       }
     };
     fetchModels();
@@ -31,7 +36,7 @@ function RunEvalsPage() {
     try {
       setIsRunning(true);
       const response = await fetch(
-        `${HTTP_BACKEND_URL}/run_evals?model=${selectedModel}`,
+        `${HTTP_BACKEND_URL}/run_evals?model=${selectedModel}&stack=${selectedStack}`,
         {
           method: "POST",
         }
@@ -44,7 +49,6 @@ function RunEvalsPage() {
       const outputFiles = await response.json();
       console.log("Generated files:", outputFiles);
 
-      // Navigate to evals page after completion
       navigate("/evals");
     } catch (error) {
       console.error("Error running evals:", error);
@@ -72,24 +76,45 @@ function RunEvalsPage() {
         </p>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Select Model
-        </label>
-        <select
-          value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          className="shadow border rounded w-full py-2 px-3 text-gray-700"
-          required
-        >
-          {models.map((model) => (
-            <option key={model} value={model}>
-              {model}
-            </option>
-          ))}
-        </select>
+      <div className="space-y-4 w-full max-w-md">
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Select Model
+          </label>
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="shadow border rounded w-full py-2 px-3 text-gray-700"
+            required
+          >
+            {models.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Select Stack
+          </label>
+          <select
+            value={selectedStack}
+            onChange={(e) => setSelectedStack(e.target.value)}
+            className="shadow border rounded w-full py-2 px-3 text-gray-700"
+            required
+          >
+            {stacks.map((stack) => (
+              <option key={stack} value={stack}>
+                {stack}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-      <Button onClick={runEvals} disabled={isRunning} className="w-48">
+
+      <Button onClick={runEvals} disabled={isRunning} className="w-48 mt-6">
         {isRunning ? "Running Evals..." : "Run Evals"}
       </Button>
     </div>
