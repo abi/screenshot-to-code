@@ -1,6 +1,7 @@
 from typing import Any, Coroutine, List, Optional
 import asyncio
 import os
+from datetime import datetime
 from llm import Llm
 from prompts.types import Stack
 from .core import generate_code_for_image
@@ -30,6 +31,13 @@ async def run_image_evals(
     selected_model = Llm(model)
     print(f"Running evals for {selected_model} model")
 
+    # Create output subfolder with date, model and stack
+    today = datetime.now().strftime("%b_%d_%Y")
+    output_subfolder = os.path.join(
+        OUTPUT_DIR, f"{today}_{selected_model.value}_{stack}"
+    )
+    os.makedirs(output_subfolder, exist_ok=True)
+
     tasks: list[Coroutine[Any, Any, str]] = []
     for filename in evals:
         filepath = os.path.join(INPUT_DIR, filename)
@@ -51,8 +59,6 @@ async def run_image_evals(
 
     results = await asyncio.gather(*tasks)
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
     output_files: List[str] = []
     for i, content in enumerate(results):
         # Calculate index for filename and output number
@@ -61,7 +67,7 @@ async def run_image_evals(
         filename = evals[eval_index]
         # File name is derived from the original filename in evals with an added output number
         output_filename = f"{os.path.splitext(filename)[0]}_{output_number}.html"
-        output_filepath = os.path.join(OUTPUT_DIR, output_filename)
+        output_filepath = os.path.join(output_subfolder, output_filename)
         with open(output_filepath, "w") as file:
             file.write(content)
         output_files.append(output_filename)
