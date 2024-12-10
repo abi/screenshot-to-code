@@ -53,8 +53,8 @@ function PairwiseEvalsPage() {
     setIsLoading(true);
     try {
       const queryParams = new URLSearchParams({
-        folder1: folder1Path,
-        folder2: folder2Path,
+        folder1: `/Users/abi/Downloads/${folder1Path}`,
+        folder2: `/Users/abi/Downloads/${folder2Path}`,
       });
 
       const response = await fetch(
@@ -92,14 +92,14 @@ function PairwiseEvalsPage() {
             type="text"
             value={folder1Path}
             onChange={(e) => setFolder1Path(e.target.value)}
-            placeholder="Enter absolute path to first folder"
+            placeholder="Enter folder name in Downloads"
             className="w-full px-4 py-2 rounded text-black"
           />
           <input
             type="text"
             value={folder2Path}
             onChange={(e) => setFolder2Path(e.target.value)}
-            placeholder="Enter absolute path to second folder"
+            placeholder="Enter folder name in Downloads"
             className="w-full px-4 py-2 rounded text-black"
           />
           <button
