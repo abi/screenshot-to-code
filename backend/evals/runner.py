@@ -2,20 +2,10 @@ from typing import Any, Coroutine, List, Optional
 import asyncio
 import os
 from llm import Llm
+from prompts.types import Stack
 from .core import generate_code_for_image
 from .utils import image_to_data_url
 from .config import EVALS_DIR
-from typing_extensions import Literal
-
-Stack = Literal[
-    "html_css",
-    "html_tailwind",
-    "react_tailwind",
-    "bootstrap",
-    "ionic_tailwind",
-    "vue_tailwind",
-    "svg",
-]
 
 
 async def run_image_evals(

@@ -56,6 +56,22 @@ function RunEvalsPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <h1 className="text-2xl font-bold mb-8">Run Evaluations</h1>
+
+      <div className="max-w-md text-center mb-8 text-gray-600">
+        <p className="mb-2">
+          Evaluation inputs will be read from:
+          <code className="block bg-gray-100 p-1 mt-1 rounded">
+            backend/evals_data/inputs
+          </code>
+        </p>
+        <p>
+          Results will be saved to:
+          <code className="block bg-gray-100 p-1 mt-1 rounded">
+            backend/evals_data/outputs
+          </code>
+        </p>
+      </div>
+
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">
           Select Model
