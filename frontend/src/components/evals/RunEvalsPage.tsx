@@ -13,7 +13,7 @@ function RunEvalsPage() {
   const navigate = useNavigate();
   const [models, setModels] = useState<string[]>([]);
   const [stacks, setStacks] = useState<string[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedStack, setSelectedStack] = useState<string>("");
 
   useEffect(() => {
@@ -23,7 +23,7 @@ function RunEvalsPage() {
       setModels(data.models);
       setStacks(data.stacks);
       if (data.models.length > 0) {
-        setSelectedModel(data.models[0]);
+        setSelectedModels([data.models[0]]);
       }
       if (data.stacks.length > 0) {
         setSelectedStack(data.stacks[0]);
@@ -36,9 +36,16 @@ function RunEvalsPage() {
     try {
       setIsRunning(true);
       const response = await fetch(
-        `${HTTP_BACKEND_URL}/run_evals?model=${selectedModel}&stack=${selectedStack}`,
+        `${HTTP_BACKEND_URL}/run_evals`,
         {
           method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            models: selectedModels,
+            stack: selectedStack
+          })
         }
       );
 
@@ -55,6 +62,11 @@ function RunEvalsPage() {
     } finally {
       setIsRunning(false);
     }
+  };
+
+  const handleModelSelection = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOptions = Array.from(event.target.selectedOptions).map(option => option.value);
+    setSelectedModels(selectedOptions);
   };
 
   return (
@@ -79,13 +91,15 @@ function RunEvalsPage() {
       <div className="space-y-4 w-full max-w-md">
         <div>
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Select Model
+            Select Models
           </label>
           <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
+            multiple
+            value={selectedModels}
+            onChange={handleModelSelection}
             className="shadow border rounded w-full py-2 px-3 text-gray-700"
             required
+            size={4}
           >
             {models.map((model) => (
               <option key={model} value={model}>
@@ -93,6 +107,9 @@ function RunEvalsPage() {
               </option>
             ))}
           </select>
+          <p className="text-sm text-gray-500 mt-1">
+            Hold Ctrl/Cmd to select multiple models
+          </p>
         </div>
 
         <div>
@@ -114,7 +131,11 @@ function RunEvalsPage() {
         </div>
       </div>
 
-      <Button onClick={runEvals} disabled={isRunning} className="w-48 mt-6">
+      <Button 
+        onClick={runEvals} 
+        disabled={isRunning || selectedModels.length === 0} 
+        className="w-48 mt-6"
+      >
         {isRunning ? "Running Evals..." : "Run Evals"}
       </Button>
     </div>

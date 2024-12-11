@@ -137,11 +137,21 @@ async def get_pairwise_evals(
     )
 
 
+class RunEvalsRequest(BaseModel):
+    models: List[str]
+    stack: Stack
+
+
 @router.post("/run_evals", response_model=List[str])
-async def run_evals(model: str, stack: Stack):
-    """Run evaluations on all images in the inputs directory"""
-    output_files = await run_image_evals(model=model, stack=stack)
-    return output_files
+async def run_evals(request: RunEvalsRequest) -> List[str]:
+    """Run evaluations on all images in the inputs directory for multiple models"""
+    all_output_files: List[str] = []
+
+    for model in request.models:
+        output_files = await run_image_evals(model=model, stack=request.stack)
+        all_output_files.extend(output_files)
+
+    return all_output_files
 
 
 @router.get("/models", response_model=Dict[str, List[str]])
