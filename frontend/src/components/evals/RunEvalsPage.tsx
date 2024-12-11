@@ -14,7 +14,7 @@ function RunEvalsPage() {
   const [models, setModels] = useState<string[]>([]);
   const [stacks, setStacks] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [selectedStack, setSelectedStack] = useState<string>("");
+  const [selectedStack, setSelectedStack] = useState<string>("html_tailwind");
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -24,9 +24,6 @@ function RunEvalsPage() {
       setStacks(data.stacks);
       if (data.models.length > 0) {
         setSelectedModels([data.models[0]]);
-      }
-      if (data.stacks.length > 0) {
-        setSelectedStack(data.stacks[0]);
       }
     };
     fetchModels();
