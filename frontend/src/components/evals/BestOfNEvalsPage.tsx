@@ -20,13 +20,13 @@ function BestOfNEvalsPage() {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [folderNames, setFolderNames] = useState<string[]>([]);
   // Track multiple folder paths
-  const [folderPaths, setFolderPaths] = useState<string[]>(['']);
+  const [folderPaths, setFolderPaths] = useState<string[]>([""]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedHtml, setSelectedHtml] = useState<string>("");
 
   // Add/remove folder input fields
   const addFolderInput = () => {
-    setFolderPaths([...folderPaths, '']);
+    setFolderPaths([...folderPaths, ""]);
   };
 
   const removeFolderInput = (index: number) => {
@@ -44,17 +44,21 @@ function BestOfNEvalsPage() {
     const totalVotes = outcomes.filter((o) => o !== null).length;
     const stats = folderNames.map((name, index) => {
       const wins = outcomes.filter((o) => o === index).length;
-      const percentage = totalVotes ? ((wins / totalVotes) * 100).toFixed(2) : "0.00";
+      const percentage = totalVotes
+        ? ((wins / totalVotes) * 100).toFixed(2)
+        : "0.00";
       return { name, wins, percentage };
     });
     const ties = outcomes.filter((o) => o === "tie").length;
-    const tiePercentage = totalVotes ? ((ties / totalVotes) * 100).toFixed(2) : "0.00";
-    
+    const tiePercentage = totalVotes
+      ? ((ties / totalVotes) * 100).toFixed(2)
+      : "0.00";
+
     return { stats, ties, tiePercentage, totalVotes };
   };
 
   const loadEvals = async () => {
-    if (folderPaths.some(path => !path)) {
+    if (folderPaths.some((path) => !path)) {
       alert("Please enter all folder paths");
       return;
     }
@@ -63,7 +67,10 @@ function BestOfNEvalsPage() {
     try {
       const queryParams = new URLSearchParams();
       folderPaths.forEach((path, index) => {
-        queryParams.append(`folder${index + 1}`, `/Users/abi/Downloads/${path}`);
+        queryParams.append(
+          `folder${index + 1}`,
+          `/Users/abi/Downloads/${path}`
+        );
       });
 
       const response = await fetch(
@@ -71,12 +78,16 @@ function BestOfNEvalsPage() {
       );
       const data: BestOfNEvalsResponse = await response.json();
 
+      console.log(data.evals);
+
       setEvals(data.evals);
       setOutcomes(new Array(data.evals.length).fill(null));
       setFolderNames(data.folder_names);
     } catch (error) {
       console.error("Error loading evals:", error);
-      alert("Error loading evals. Please check the folder paths and try again.");
+      alert(
+        "Error loading evals. Please check the folder paths and try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +124,7 @@ function BestOfNEvalsPage() {
               )}
             </div>
           ))}
-          
+
           <button
             onClick={addFolderInput}
             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
@@ -173,6 +184,9 @@ function BestOfNEvalsPage() {
                   key={outputIndex}
                 >
                   <div className="relative">
+                    <div className="absolute top-0 left-0 bg-black text-white px-2 py-1 z-10">
+                      {folderNames[outputIndex]}
+                    </div>
                     <iframe
                       srcDoc={output}
                       className="w-[1200px] h-[800px] transform scale-[0.55]"
@@ -188,6 +202,9 @@ function BestOfNEvalsPage() {
                         </button>
                       </DialogTrigger>
                       <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh]">
+                        <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 z-10">
+                          {folderNames[outputIndex]}
+                        </div>
                         <iframe
                           srcDoc={selectedHtml}
                           className="w-[1400px] h-[800px] transform scale-[0.90]"
