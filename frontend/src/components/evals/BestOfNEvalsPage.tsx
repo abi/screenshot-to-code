@@ -168,15 +168,15 @@ function BestOfNEvalsPage() {
             </h2>
 
             <div className="w-full flex justify-center mb-4">
-              <div className="w-1/2 p-1 border">
+              <div className="w-1/2 max-w-2xl p-1 border">
                 <img src={e.input} alt={`Input for comparison ${index}`} />
               </div>
             </div>
 
-            <div className="flex gap-x-4 justify-center">
+            <div className="flex flex-wrap gap-4 justify-center px-4">
               {e.outputs.map((output, outputIndex) => (
                 <div
-                  className={`w-1/2 p-1 border ${
+                  className={`w-full sm:w-[calc(50%-1rem)] p-1 border ${
                     outcomes[index] === outputIndex
                       ? "border-green-500 border-4"
                       : ""
@@ -189,8 +189,8 @@ function BestOfNEvalsPage() {
                     </div>
                     <iframe
                       srcDoc={output}
-                      className="w-[1200px] h-[800px] transform scale-[0.55]"
-                      style={{ transformOrigin: "top left" }}
+                      className="w-full aspect-[3/2] transform scale-100"
+                      style={{ minHeight: "400px" }}
                     ></iframe>
                     <Dialog>
                       <DialogTrigger asChild>
@@ -207,7 +207,7 @@ function BestOfNEvalsPage() {
                         </div>
                         <iframe
                           srcDoc={selectedHtml}
-                          className="w-[1400px] h-[800px] transform scale-[0.90]"
+                          className="w-full h-full"
                         ></iframe>
                       </DialogContent>
                     </Dialog>
@@ -216,7 +216,7 @@ function BestOfNEvalsPage() {
               ))}
             </div>
 
-            <div className="flex justify-center gap-x-4 mt-4">
+            <div className="flex flex-wrap justify-center gap-2 mt-4 px-4">
               {folderNames.map((name, i) => (
                 <button
                   key={i}
