@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { HTTP_BACKEND_URL } from "../../config";
 import { useNavigate } from "react-router-dom";
+import { BsCheckLg } from "react-icons/bs";
 
 interface ModelResponse {
   models: string[];
@@ -61,9 +62,17 @@ function RunEvalsPage() {
     }
   };
 
-  const handleModelSelection = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(event.target.selectedOptions).map(option => option.value);
-    setSelectedModels(selectedOptions);
+  const handleModelToggle = (model: string) => {
+    setSelectedModels(prev => {
+      if (prev.includes(model)) {
+        return prev.filter(m => m !== model);
+      }
+      return [...prev, model];
+    });
+  };
+
+  const handleSelectAll = () => {
+    setSelectedModels(models);
   };
 
   return (
@@ -90,23 +99,51 @@ function RunEvalsPage() {
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Select Models
           </label>
-          <select
-            multiple
-            value={selectedModels}
-            onChange={handleModelSelection}
-            className="shadow border rounded w-full py-2 px-3 text-gray-700"
-            required
-            size={4}
-          >
+          <div className="border rounded-md p-2 space-y-2">
             {models.map((model) => (
-              <option key={model} value={model}>
-                {model}
-              </option>
+              <div
+                key={model}
+                className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-gray-50 ${
+                  selectedModels.includes(model) ? 'bg-blue-50 border border-blue-200' : ''
+                }`}
+                onClick={() => handleModelToggle(model)}
+              >
+                <span className="text-sm">{model}</span>
+                {selectedModels.includes(model) ? (
+                  <BsCheckLg className="h-4 w-4 text-blue-500" />
+                ) : (
+                  <div className="h-4 w-4 border rounded-sm" />
+                )}
+              </div>
             ))}
-          </select>
-          <p className="text-sm text-gray-500 mt-1">
-            Hold Ctrl/Cmd to select multiple models
-          </p>
+          </div>
+          <div className="flex justify-between mt-2">
+            <p className="text-sm text-gray-500">
+              Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+            </p>
+            <div className="space-x-2">
+              {selectedModels.length < models.length && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Select all
+                </Button>
+              )}
+              {selectedModels.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedModels([])}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Clear all
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div>
