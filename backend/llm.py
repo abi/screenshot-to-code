@@ -244,6 +244,90 @@ async def stream_gemini_response(
     model: Llm,
 ) -> str:
 
+    API_TYPE = "openai_compatible"
+
+    if API_TYPE == "openai_compatible":
+        return await generate_gemini_response_openai_compatible(
+            messages, api_key, callback, model
+        )
+    elif API_TYPE == "google_generativeai":
+        return await generate_gemini_response_google_generativeai(
+            messages, api_key, callback, model
+        )
+    else:
+        raise Exception(f"Invalid API type: {API_TYPE}")
+
+
+# Disabled for now
+async def generate_gemini_response_google_generativeai(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> str:
+    return ""
+
+    # import google.generativeai as genai
+
+    # # # Extract image URLs from the message
+    # image_urls = []
+    # for content_part in messages[-1]["content"]:
+    #     if content_part["type"] == "image_url":
+    #         image_url = content_part["image_url"]["url"]
+    #         if image_url.startswith("data:"):
+    #             # Extract base64 data and mime type for data URLs
+    #             mime_type = image_url.split(";")[0].split(":")[1]
+    #             base64_data = image_url.split(",")[1]
+    #             image_urls = [{"mime_type": mime_type, "data": base64_data}]
+    #         else:
+    #             # Store regular URLs
+    #             image_urls = [{"uri": image_url}]
+    #         break  # Exit after first image URL
+
+    # # Print image URLs with truncated base64 data for debugging
+    # for url in image_urls:
+    #     if "data" in url:
+    #         # Truncate base64 data to first 50 chars
+    #         truncated_url = {
+    #             "mime_type": url["mime_type"],
+    #             "data": (
+    #                 url["data"][:50] + "..." if len(url["data"]) > 50 else url["data"]
+    #             ),
+    #         }
+    #         print("Image URL (base64):", truncated_url)
+    #     else:
+    #         print("Image URL:", url)
+
+    # genai.configure(api_key=api_key)
+
+    # gemini_model = genai.GenerativeModel(
+    #     model.value,
+    #     generation_config=genai.GenerationConfig(
+    #         temperature=1.0,
+    #         top_p=0.95,
+    #         top_k=40,
+    #         max_output_tokens=8192,
+    #         response_mime_type="text/plain",
+    #     ),
+    # )
+
+    # full_response = ""
+    # async for response in await gemini_model.generate_content_async(
+    #     [image_urls[0], messages[0]["content"]], stream=True
+    # ):
+    #     if response.text:
+    #         full_response += response.text
+    #         await callback(response.text)
+
+    # return full_response
+
+
+async def generate_gemini_response_openai_compatible(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> str:
     client = AsyncOpenAI(
         api_key=api_key,
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
