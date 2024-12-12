@@ -23,6 +23,7 @@ class Llm(Enum):
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
     CLAUDE_3_5_SONNET_2024_06_20 = "claude-3-5-sonnet-20240620"
     CLAUDE_3_5_SONNET_2024_10_22 = "claude-3-5-sonnet-20241022"
+    GEMINI_2_0_FLASH_EXP = "gemini-2.0-flash-exp"
 
 
 # Will throw errors if you send a garbage string
@@ -234,3 +235,46 @@ async def stream_claude_response_native(
         raise Exception("No HTML response found in AI response")
     else:
         return response.content[0].text
+
+
+async def stream_gemini_response(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> str:
+
+    client = AsyncOpenAI(
+        api_key=api_key,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    )
+
+    # Base parameters
+    params = {
+        "model": model.value,
+        "messages": messages,
+        "stream": True,
+        "timeout": 600,
+        "temperature": 0.0,
+        "top_p": 0.95,
+        # "top_k": 40,  # TODO: Not a valid param for openai?
+        "max_tokens": 8192,
+    }
+
+    stream = await client.chat.completions.create(**params)  # type: ignore
+    full_response = ""
+    async for chunk in stream:  # type: ignore
+        assert isinstance(chunk, ChatCompletionChunk)
+        if (
+            chunk.choices
+            and len(chunk.choices) > 0
+            and chunk.choices[0].delta
+            and chunk.choices[0].delta.content
+        ):
+            content = chunk.choices[0].delta.content or ""
+            full_response += content
+            await callback(content)
+
+    await client.close()
+
+    return full_response
