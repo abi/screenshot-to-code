@@ -23,7 +23,7 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
     if (iframe) {
       iframe.srcdoc = throttledCode;
 
-      // Set up click handler for select and edit funtionality
+      // Set up click handler for select and edit functionality
       iframe.addEventListener("load", function () {
         iframe.contentWindow?.document.body.addEventListener(
           "click",
