@@ -23,6 +23,9 @@ function RunEvalsPage() {
       const data: ModelResponse = await response.json();
       setModels(data.models);
       setStacks(data.stacks);
+      if (data.models.length > 0) {
+        setSelectedModels([data.models[0]]);
+      }
     };
     fetchModels();
   }, []);

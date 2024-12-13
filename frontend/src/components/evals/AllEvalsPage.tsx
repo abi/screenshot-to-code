@@ -39,6 +39,16 @@ function AllEvalsPage() {
               Compare multiple model outputs side by side
             </p>
           </Link>
+
+          <Link
+            to="/evals"
+            className="block w-full p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200"
+          >
+            <h2 className="text-xl font-semibold text-gray-800">
+              Single Model Eval
+            </h2>
+            <p className="text-gray-600">Score outputs from a single model</p>
+          </Link>
         </div>
       </div>
     </div>
