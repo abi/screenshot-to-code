@@ -349,12 +349,12 @@ async def stream_code(websocket: WebSocket):
                 if openai_api_key and anthropic_api_key:
                     variant_models = [
                         claude_model,
-                        Llm.GPT_4O_2024_05_13,
+                        Llm.GPT_4O_2024_11_20,
                     ]
                 elif openai_api_key:
                     variant_models = [
-                        Llm.GPT_4O_2024_05_13,
-                        Llm.GPT_4O_2024_05_13,
+                        Llm.GPT_4O_2024_11_20,
+                        Llm.GPT_4O_2024_11_20,
                     ]
                 elif anthropic_api_key:
                     variant_models = [
@@ -369,7 +369,7 @@ async def stream_code(websocket: WebSocket):
 
                 tasks: list[Coroutine[Any, Any, str]] = []
                 for index, model in enumerate(variant_models):
-                    if model == Llm.GPT_4O_2024_05_13:
+                    if model == Llm.GPT_4O_2024_11_20:
                         if openai_api_key is None:
                             await throw_error("OpenAI API key is missing.")
                             raise Exception("OpenAI API key is missing.")
@@ -380,10 +380,10 @@ async def stream_code(websocket: WebSocket):
                                 api_key=openai_api_key,
                                 base_url=openai_base_url,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model=Llm.GPT_4O_2024_11_20,
+                                model=model,
                             )
                         )
-                    elif model == "gemini" and GEMINI_API_KEY:
+                    elif model == Llm.GEMINI_2_0_FLASH_EXP and GEMINI_API_KEY:
                         tasks.append(
                             stream_gemini_response(
                                 prompt_messages,
