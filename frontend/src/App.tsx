@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
-import { IS_FREE_TRIAL_ENABLED, IS_RUNNING_ON_CLOUD } from "./config";
+import { IS_RUNNING_ON_CLOUD } from "./config";
 import SettingsDialog from "./components/settings/SettingsDialog";
 import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
 import { PicoBadge } from "./components/messages/PicoBadge";
@@ -429,7 +429,6 @@ function App({ navbarComponent }: Props) {
 
           {IS_RUNNING_ON_CLOUD &&
             !settings.openAiApiKey &&
-            !IS_FREE_TRIAL_ENABLED &&
             subscriberTier === "free" && <OnboardingNote />}
 
           {appState === AppState.INITIAL && (

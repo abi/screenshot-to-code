@@ -12,7 +12,6 @@ export const HTTP_BACKEND_URL =
 
 // Feature flags
 export const SHOULD_SHOW_FEEDBACK_CALL_NOTE = false;
-export const IS_FREE_TRIAL_ENABLED = false;
 
 // SaaS Backend
 export const SAAS_BACKEND_URL = import.meta.env.VITE_SAAS_BACKEND_URL || null;
