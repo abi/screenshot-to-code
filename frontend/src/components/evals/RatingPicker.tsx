@@ -1,36 +1,30 @@
-import React from "react";
-
-interface Props {
+interface RatingPickerProps {
   onSelect: (rating: number) => void;
+  maxRating?: number;
+  value?: number;
 }
 
-function RatingPicker({ onSelect }: Props) {
-  const [selected, setSelected] = React.useState<number | null>(null);
-
-  const renderCircle = (number: number) => {
-    const isSelected = selected === number;
-    const bgColor = isSelected ? "bg-black" : "bg-gray-300";
-    const textColor = isSelected ? "text-white" : "text-black";
-
-    return (
-      <div
-        className={`flex items-center justify-center w-8 h-8 ${bgColor} rounded-full cursor-pointer`}
-        onClick={() => {
-          setSelected(number);
-          onSelect(number);
-        }}
-      >
-        <span className={`text-lg font-semibold ${textColor}`}>{number}</span>
-      </div>
-    );
-  };
-
+function RatingPicker({
+  onSelect,
+  maxRating = 5,
+  value = 0,
+}: RatingPickerProps) {
   return (
-    <div className="flex space-x-4">
-      {renderCircle(1)}
-      {renderCircle(2)}
-      {renderCircle(3)}
-      {renderCircle(4)}
+    <div className="flex gap-x-2">
+      {Array.from({ length: maxRating }, (_, i) => i + 1).map((rating) => (
+        <button
+          key={rating}
+          onClick={() => onSelect(rating)}
+          className={`w-8 h-8 rounded-full border border-gray-300 
+            ${
+              value === rating
+                ? "bg-blue-500 text-white"
+                : "hover:bg-blue-500 hover:text-white"
+            }`}
+        >
+          {rating}
+        </button>
+      ))}
     </div>
   );
 }

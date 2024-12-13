@@ -7,15 +7,62 @@ interface Eval {
   outputs: string[];
 }
 
+interface RatingCriteria {
+  stackAdherence: number;
+  accuracy: number;
+  codeQuality: number;
+  mobileResponsiveness: number;
+  imageCaptionQuality: number;
+}
+
 function EvalsPage() {
   const [evals, setEvals] = React.useState<Eval[]>([]);
-  const [ratings, setRatings] = React.useState<number[]>([]);
+  const [ratings, setRatings] = React.useState<RatingCriteria[]>([]);
   const [folderPath, setFolderPath] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const total = ratings.reduce((a, b) => a + b, 0);
-  const max = ratings.length * 4;
-  const score = ((total / max) * 100 || 0).toFixed(2);
+  const calculateScores = () => {
+    if (ratings.length === 0) {
+      return {
+        stackAdherence: { total: 0, max: 0, percentage: "0.00" },
+        accuracy: { total: 0, max: 0, percentage: "0.00" },
+        codeQuality: { total: 0, max: 0, percentage: "0.00" },
+        mobileResponsiveness: { total: 0, max: 0, percentage: "0.00" },
+        imageCaptionQuality: { total: 0, max: 0, percentage: "0.00" },
+      };
+    }
+
+    const maxPerCriterion = ratings.length * 5; // max score of 5 * number of evals
+
+    const totals = ratings.reduce(
+      (acc, rating) => ({
+        stackAdherence: acc.stackAdherence + rating.stackAdherence,
+        accuracy: acc.accuracy + rating.accuracy,
+        codeQuality: acc.codeQuality + rating.codeQuality,
+        mobileResponsiveness: acc.mobileResponsiveness + rating.mobileResponsiveness,
+        imageCaptionQuality: acc.imageCaptionQuality + rating.imageCaptionQuality,
+      }),
+      {
+        stackAdherence: 0,
+        accuracy: 0,
+        codeQuality: 0,
+        mobileResponsiveness: 0,
+        imageCaptionQuality: 0,
+      }
+    );
+
+    return Object.entries(totals).reduce(
+      (acc, [key, total]) => ({
+        ...acc,
+        [key]: {
+          total,
+          max: maxPerCriterion,
+          percentage: ((total / maxPerCriterion) * 100).toFixed(2),
+        },
+      }),
+      {} as Record<keyof RatingCriteria, { total: number; max: number; percentage: string }>
+    );
+  };
 
   const loadEvals = async () => {
     if (!folderPath) {
@@ -35,13 +82,34 @@ function EvalsPage() {
       console.log(data);
 
       setEvals(data);
-      setRatings(new Array(data.length).fill(0));
+      setRatings(
+        data.map(() => ({
+          stackAdherence: 0,
+          accuracy: 0,
+          codeQuality: 0,
+          mobileResponsiveness: 0,
+          imageCaptionQuality: 0,
+        }))
+      );
     } catch (error) {
       console.error("Error loading evals:", error);
       alert("Error loading evals. Please check the folder path and try again.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const updateRating = (
+    index: number,
+    criterion: keyof RatingCriteria,
+    value: number
+  ) => {
+    const newRatings = [...ratings];
+    newRatings[index] = {
+      ...newRatings[index],
+      [criterion]: value,
+    };
+    setRatings(newRatings);
   };
 
   return (
@@ -65,24 +133,32 @@ function EvalsPage() {
         </div>
 
         {evals.length > 0 && (
-          <span className="text-2xl font-semibold">
-            Total: {total} out of {max} ({score}%)
-          </span>
+          <div className="flex flex-col items-center gap-2 text-lg">
+            <h2 className="text-2xl font-semibold mb-2">Scores by Category</h2>
+            {Object.entries(calculateScores()).map(([criterion, score]) => (
+              <div key={criterion} className="flex gap-x-4 items-center">
+                <span className="min-w-[200px] text-right capitalize">
+                  {criterion.replace(/([A-Z])/g, ' $1').trim()}:
+                </span>
+                <span>
+                  {score.total} / {score.max} ({score.percentage}%)
+                </span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      <div className="flex flex-col gap-y-4 mt-4 mx-auto justify-center">
+      <div className="flex flex-col gap-y-8 mt-4 mx-auto justify-center">
         {evals.map((e, index) => (
           <div className="flex flex-col justify-center" key={index}>
-            <h2 className="font-bold text-lg ml-4">{index}</h2>
+            <h2 className="font-bold text-lg ml-4">Evaluation {index + 1}</h2>
             <div className="flex gap-x-2 justify-center ml-4">
-              {/* Update w if N changes to a fixed number like w-[600px] */}
               <div className="w-1/2 p-1 border">
                 <img src={e.input} alt={`Input for eval ${index}`} />
               </div>
               {e.outputs.map((output, outputIndex) => (
                 <div className="w-1/2 p-1 border" key={outputIndex}>
-                  {/* Put output into an iframe */}
                   <iframe
                     srcDoc={output}
                     className="w-[1200px] h-[800px] transform scale-[0.60]"
@@ -91,14 +167,59 @@ function EvalsPage() {
                 </div>
               ))}
             </div>
-            <div className="ml-8 mt-4 flex justify-center">
-              <RatingPicker
-                onSelect={(rating) => {
-                  const newRatings = [...ratings];
-                  newRatings[index] = rating;
-                  setRatings(newRatings);
-                }}
-              />
+            <div className="ml-8 mt-4 space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex items-center gap-x-4">
+                  <span className="min-w-[160px]">Stack Adherence:</span>
+                  <RatingPicker
+                    onSelect={(rating) =>
+                      updateRating(index, "stackAdherence", rating)
+                    }
+                    maxRating={5}
+                    value={ratings[index].stackAdherence}
+                  />
+                </div>
+                <div className="flex items-center gap-x-4">
+                  <span className="min-w-[160px]">Accuracy:</span>
+                  <RatingPicker
+                    onSelect={(rating) =>
+                      updateRating(index, "accuracy", rating)
+                    }
+                    maxRating={5}
+                    value={ratings[index].accuracy}
+                  />
+                </div>
+                <div className="flex items-center gap-x-4">
+                  <span className="min-w-[160px]">Code Quality:</span>
+                  <RatingPicker
+                    onSelect={(rating) =>
+                      updateRating(index, "codeQuality", rating)
+                    }
+                    maxRating={5}
+                    value={ratings[index].codeQuality}
+                  />
+                </div>
+                <div className="flex items-center gap-x-4">
+                  <span className="min-w-[160px]">Mobile Responsiveness:</span>
+                  <RatingPicker
+                    onSelect={(rating) =>
+                      updateRating(index, "mobileResponsiveness", rating)
+                    }
+                    maxRating={5}
+                    value={ratings[index].mobileResponsiveness}
+                  />
+                </div>
+                <div className="flex items-center gap-x-4">
+                  <span className="min-w-[160px]">Image Caption Quality:</span>
+                  <RatingPicker
+                    onSelect={(rating) =>
+                      updateRating(index, "imageCaptionQuality", rating)
+                    }
+                    maxRating={5}
+                    value={ratings[index].imageCaptionQuality}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         ))}
