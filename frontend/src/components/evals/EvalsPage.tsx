@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import { HTTP_BACKEND_URL } from "../../config";
 import RatingPicker from "./RatingPicker";
 
@@ -10,28 +10,65 @@ interface Eval {
 function EvalsPage() {
   const [evals, setEvals] = React.useState<Eval[]>([]);
   const [ratings, setRatings] = React.useState<number[]>([]);
+  const [folderPath, setFolderPath] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const total = ratings.reduce((a, b) => a + b, 0);
   const max = ratings.length * 4;
   const score = ((total / max) * 100 || 0).toFixed(2);
 
-  useEffect(() => {
-    if (evals.length > 0) return;
+  const loadEvals = async () => {
+    if (!folderPath) {
+      alert("Please enter a folder path");
+      return;
+    }
 
-    fetch(`${HTTP_BACKEND_URL}/evals`)
-      .then((res) => res.json())
-      .then((data) => {
-        setEvals(data);
-        setRatings(new Array(data.length).fill(0));
+    setIsLoading(true);
+    try {
+      const queryParams = new URLSearchParams({
+        folder: `/Users/abi/Downloads/${folderPath}`,
       });
-  }, [evals]);
+
+      const response = await fetch(`${HTTP_BACKEND_URL}/evals?${queryParams}`);
+      const data = await response.json();
+
+      console.log(data);
+
+      setEvals(data);
+      setRatings(new Array(data.length).fill(0));
+    } catch (error) {
+      console.error("Error loading evals:", error);
+      alert("Error loading evals. Please check the folder path and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto">
-      <div className="flex items-center justify-between w-full h-12 bg-zinc-950">
-        <span className="text-2xl font-semibold text-white ml-4">
-          Total: {total} out of {max} ({score}%)
-        </span>
+      <div className="flex flex-col items-center justify-center w-full py-4 bg-zinc-950 text-white">
+        <div className="flex flex-col gap-4 mb-4 w-full max-w-2xl px-4">
+          <input
+            type="text"
+            value={folderPath}
+            onChange={(e) => setFolderPath(e.target.value)}
+            placeholder="Enter folder name in Downloads"
+            className="w-full px-4 py-2 rounded text-black"
+          />
+          <button
+            onClick={loadEvals}
+            disabled={isLoading}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-blue-300"
+          >
+            {isLoading ? "Loading..." : "Load Evals"}
+          </button>
+        </div>
+
+        {evals.length > 0 && (
+          <span className="text-2xl font-semibold">
+            Total: {total} out of {max} ({score}%)
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-y-4 mt-4 mx-auto justify-center">

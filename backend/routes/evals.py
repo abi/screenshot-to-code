@@ -1,5 +1,5 @@
 import os
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, HTTPException
 from pydantic import BaseModel
 from evals.utils import image_to_data_url
 from evals.config import EVALS_DIR
@@ -8,6 +8,8 @@ from evals.runner import run_image_evals
 from typing import List, Dict
 from llm import Llm
 from prompts.types import Stack
+from pathlib import Path
+import base64
 
 router = APIRouter()
 
@@ -20,43 +22,56 @@ class Eval(BaseModel):
     outputs: list[str]
 
 
-@router.get("/evals")
-async def get_evals():
-    # Get all evals from EVALS_DIR
-    input_dir = EVALS_DIR + "/inputs"
-    output_dir = EVALS_DIR + "/outputs"
+@router.get("/evals", response_model=list[Eval])
+async def get_evals(folder: str):
+    if not folder:
+        raise HTTPException(status_code=400, detail="Folder path is required")
 
-    evals: list[Eval] = []
-    for file in os.listdir(input_dir):
-        if file.endswith(".png"):
-            input_file_path = os.path.join(input_dir, file)
-            input_file = await image_to_data_url(input_file_path)
+    folder_path = Path(folder)
+    if not folder_path.exists():
+        raise HTTPException(status_code=404, detail=f"Folder not found: {folder}")
 
-            # Construct the corresponding output file names
-            output_file_names = [
-                file.replace(".png", f"_{i}.html") for i in range(0, N)
-            ]  # Assuming 3 outputs for each input
+    try:
+        evals: list[Eval] = []
+        # Get all HTML files from folder
+        files = {
+            f: os.path.join(folder, f)
+            for f in os.listdir(folder)
+            if f.endswith(".html")
+        }
 
-            output_files_data: list[str] = []
-            for output_file_name in output_file_names:
-                output_file_path = os.path.join(output_dir, output_file_name)
-                # Check if the output file exists
-                if os.path.exists(output_file_path):
-                    with open(output_file_path, "r") as f:
-                        output_files_data.append(f.read())
-                else:
-                    output_files_data.append(
-                        "<html><h1>Output file not found.</h1></html>"
-                    )
-
-            evals.append(
-                Eval(
-                    input=input_file,
-                    outputs=output_files_data,
-                )
+        # Extract base names
+        base_names: Set[str] = set()
+        for filename in files.keys():
+            base_name = (
+                filename.rsplit("_", 1)[0]
+                if "_" in filename
+                else filename.replace(".html", "")
             )
+            base_names.add(base_name)
 
-    return evals
+        for base_name in base_names:
+            input_path = os.path.join(EVALS_DIR, "inputs", f"{base_name}.png")
+            if not os.path.exists(input_path):
+                continue
+
+            # Find matching output file
+            output_file = None
+            for filename, filepath in files.items():
+                if filename.startswith(base_name):
+                    output_file = filepath
+                    break
+
+            if output_file:
+                input_data = await image_to_data_url(input_path)
+                with open(output_file, "r", encoding="utf-8") as f:
+                    output_html = f.read()
+                evals.append(Eval(input=input_data, outputs=[output_html]))
+
+        return evals
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing evals: {str(e)}")
 
 
 class PairwiseEvalResponse(BaseModel):
@@ -181,7 +196,7 @@ class BestOfNEvalsResponse(BaseModel):
 async def get_best_of_n_evals(request: Request):
     # Get all query parameters
     query_params = dict(request.query_params)
-    
+
     # Extract all folder paths (folder1, folder2, folder3, etc.)
     folders = []
     i = 1
@@ -204,8 +219,8 @@ async def get_best_of_n_evals(request: Request):
     files_by_folder = []
     for folder in folders:
         files = {
-            f: os.path.join(folder, f) 
-            for f in os.listdir(folder) 
+            f: os.path.join(folder, f)
+            for f in os.listdir(folder)
             if f.endswith(".html")
         }
         files_by_folder.append(files)
@@ -253,7 +268,4 @@ async def get_best_of_n_evals(request: Request):
         if len(outputs) == len(folders):  # Only add if we have outputs from all folders
             evals.append(Eval(input=input_image, outputs=outputs))
 
-    return BestOfNEvalsResponse(
-        evals=evals,
-        folder_names=folder_names
-    )
+    return BestOfNEvalsResponse(evals=evals, folder_names=folder_names)
