@@ -15,11 +15,16 @@ interface RatingCriteria {
   imageCaptionQuality: number;
 }
 
+interface OutputDisplay {
+  showSource: boolean;
+}
+
 function EvalsPage() {
   const [evals, setEvals] = React.useState<Eval[]>([]);
   const [ratings, setRatings] = React.useState<RatingCriteria[]>([]);
   const [folderPath, setFolderPath] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [outputDisplays, setOutputDisplays] = useState<OutputDisplay[]>([]);
 
   const calculateScores = () => {
     if (ratings.length === 0) {
@@ -117,6 +122,15 @@ function EvalsPage() {
     setRatings(newRatings);
   };
 
+  const toggleSourceView = (evalIndex: number) => {
+    const newDisplays = [...outputDisplays];
+    if (!newDisplays[evalIndex]) {
+      newDisplays[evalIndex] = { showSource: false };
+    }
+    newDisplays[evalIndex] = { showSource: !newDisplays[evalIndex].showSource };
+    setOutputDisplays(newDisplays);
+  };
+
   return (
     <div className="mx-auto">
       <div className="flex flex-col items-center justify-center w-full py-4 bg-zinc-950 text-white">
@@ -164,11 +178,25 @@ function EvalsPage() {
               </div>
               {e.outputs.map((output, outputIndex) => (
                 <div className="w-1/2 p-1 border" key={outputIndex}>
-                  <iframe
-                    srcDoc={output}
-                    className="w-[1200px] h-[800px] transform scale-[0.60]"
-                    style={{ transformOrigin: "top left" }}
-                  ></iframe>
+                  <div className="mb-2">
+                    <button
+                      onClick={() => toggleSourceView(index)}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm"
+                    >
+                      {outputDisplays[index]?.showSource ? "Show Preview" : "Show Source"}
+                    </button>
+                  </div>
+                  {outputDisplays[index]?.showSource ? (
+                    <pre className="whitespace-pre-wrap text-sm p-2 bg-gray-100 max-h-[480px] overflow-auto">
+                      {output}
+                    </pre>
+                  ) : (
+                    <iframe
+                      srcDoc={output}
+                      className="w-[1200px] h-[800px] transform scale-[0.60]"
+                      style={{ transformOrigin: "top left" }}
+                    ></iframe>
+                  )}
                 </div>
               ))}
             </div>
