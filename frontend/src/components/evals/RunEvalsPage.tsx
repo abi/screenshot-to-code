@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { HTTP_BACKEND_URL } from "../../config";
-import { useNavigate } from "react-router-dom";
 import { BsCheckLg } from "react-icons/bs";
 
 interface ModelResponse {
@@ -11,7 +10,6 @@ interface ModelResponse {
 
 function RunEvalsPage() {
   const [isRunning, setIsRunning] = useState(false);
-  const navigate = useNavigate();
   const [models, setModels] = useState<string[]>([]);
   const [stacks, setStacks] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -30,22 +28,27 @@ function RunEvalsPage() {
     fetchModels();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      document.title = "Screenshot to Code";
+    };
+  }, []);
+
   const runEvals = async () => {
     try {
       setIsRunning(true);
-      const response = await fetch(
-        `${HTTP_BACKEND_URL}/run_evals`,
-        {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            models: selectedModels,
-            stack: selectedStack
-          })
-        }
-      );
+      document.title = "Running Evals...";
+
+      const response = await fetch(`${HTTP_BACKEND_URL}/run_evals`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          models: selectedModels,
+          stack: selectedStack,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to run evals");
@@ -54,18 +57,22 @@ function RunEvalsPage() {
       const outputFiles = await response.json();
       console.log("Generated files:", outputFiles);
 
-      navigate("/evals");
+      document.title = "✓ Evals Complete";
     } catch (error) {
       console.error("Error running evals:", error);
+      document.title = "❌ Eval Error";
+      setTimeout(() => {
+        document.title = "Screenshot to Code";
+      }, 5000);
     } finally {
       setIsRunning(false);
     }
   };
 
   const handleModelToggle = (model: string) => {
-    setSelectedModels(prev => {
+    setSelectedModels((prev) => {
       if (prev.includes(model)) {
-        return prev.filter(m => m !== model);
+        return prev.filter((m) => m !== model);
       }
       return [...prev, model];
     });
@@ -104,7 +111,9 @@ function RunEvalsPage() {
               <div
                 key={model}
                 className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-gray-50 ${
-                  selectedModels.includes(model) ? 'bg-blue-50 border border-blue-200' : ''
+                  selectedModels.includes(model)
+                    ? "bg-blue-50 border border-blue-200"
+                    : ""
                 }`}
                 onClick={() => handleModelToggle(model)}
               >
@@ -119,7 +128,8 @@ function RunEvalsPage() {
           </div>
           <div className="flex justify-between mt-2">
             <p className="text-sm text-gray-500">
-              Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+              Selected: {selectedModels.length} model
+              {selectedModels.length !== 1 ? "s" : ""}
             </p>
             <div className="space-x-2">
               {selectedModels.length < models.length && (
@@ -165,9 +175,9 @@ function RunEvalsPage() {
         </div>
       </div>
 
-      <Button 
-        onClick={runEvals} 
-        disabled={isRunning || selectedModels.length === 0} 
+      <Button
+        onClick={runEvals}
+        disabled={isRunning || selectedModels.length === 0}
         className="w-48 mt-6"
       >
         {isRunning ? "Running Evals..." : "Run Evals"}
