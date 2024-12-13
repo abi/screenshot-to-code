@@ -296,7 +296,7 @@ async def stream_code(websocket: WebSocket):
                                 api_key=openai_api_key,
                                 base_url=openai_base_url,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model=Llm.GPT_4O_2024_05_13,
+                                model=Llm.GPT_4O_2024_11_20,
                             )
                         )
                     elif model == "gemini" and GEMINI_API_KEY:

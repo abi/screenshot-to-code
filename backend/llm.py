@@ -62,6 +62,9 @@ async def stream_openai_response(
     ):
         params["max_tokens"] = 4096
 
+    if model == Llm.GPT_4O_2024_11_20:
+        params["max_tokens"] = 16384
+
     stream = await client.chat.completions.create(**params)  # type: ignore
     full_response = ""
     async for chunk in stream:  # type: ignore
