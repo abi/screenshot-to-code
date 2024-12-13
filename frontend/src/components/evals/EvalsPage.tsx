@@ -39,8 +39,10 @@ function EvalsPage() {
         stackAdherence: acc.stackAdherence + rating.stackAdherence,
         accuracy: acc.accuracy + rating.accuracy,
         codeQuality: acc.codeQuality + rating.codeQuality,
-        mobileResponsiveness: acc.mobileResponsiveness + rating.mobileResponsiveness,
-        imageCaptionQuality: acc.imageCaptionQuality + rating.imageCaptionQuality,
+        mobileResponsiveness:
+          acc.mobileResponsiveness + rating.mobileResponsiveness,
+        imageCaptionQuality:
+          acc.imageCaptionQuality + rating.imageCaptionQuality,
       }),
       {
         stackAdherence: 0,
@@ -60,7 +62,10 @@ function EvalsPage() {
           percentage: ((total / maxPerCriterion) * 100).toFixed(2),
         },
       }),
-      {} as Record<keyof RatingCriteria, { total: number; max: number; percentage: string }>
+      {} as Record<
+        keyof RatingCriteria,
+        { total: number; max: number; percentage: string }
+      >
     );
   };
 
@@ -138,7 +143,7 @@ function EvalsPage() {
             {Object.entries(calculateScores()).map(([criterion, score]) => (
               <div key={criterion} className="flex gap-x-4 items-center">
                 <span className="min-w-[200px] text-right capitalize">
-                  {criterion.replace(/([A-Z])/g, ' $1').trim()}:
+                  {criterion.replace(/([A-Z])/g, " $1").trim()}:
                 </span>
                 <span>
                   {score.total} / {score.max} ({score.percentage}%)
