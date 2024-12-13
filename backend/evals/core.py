@@ -1,5 +1,10 @@
-from config import ANTHROPIC_API_KEY, OPENAI_API_KEY
-from llm import Llm, stream_claude_response, stream_openai_response
+from config import ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY
+from llm import (
+    Llm,
+    stream_claude_response,
+    stream_gemini_response,
+    stream_openai_response,
+)
 from prompts import assemble_prompt
 from prompts.types import Stack
 from openai.types.chat import ChatCompletionMessageParam
@@ -28,6 +33,16 @@ async def generate_code_core(
         completion = await stream_claude_response(
             prompt_messages,
             api_key=ANTHROPIC_API_KEY,
+            callback=lambda x: process_chunk(x),
+            model=model,
+        )
+    elif model == Llm.GEMINI_2_0_FLASH_EXP:
+        if not GEMINI_API_KEY:
+            raise Exception("Gemini API key not found")
+
+        completion = await stream_gemini_response(
+            prompt_messages,
+            api_key=GEMINI_API_KEY,
             callback=lambda x: process_chunk(x),
             model=model,
         )

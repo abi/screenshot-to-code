@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { HTTP_BACKEND_URL } from "../../config";
+import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 
 interface Eval {
   input: string;
@@ -27,6 +28,7 @@ function PairwiseEvalsPage() {
   const [folder1Path, setFolder1Path] = useState("");
   const [folder2Path, setFolder2Path] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedHtml, setSelectedHtml] = useState<string>("");
 
   // Calculate statistics
   const totalVotes = outcomes.filter((o) => o !== null).length;
@@ -53,8 +55,8 @@ function PairwiseEvalsPage() {
     setIsLoading(true);
     try {
       const queryParams = new URLSearchParams({
-        folder1: folder1Path,
-        folder2: folder2Path,
+        folder1: `/Users/abi/Downloads/${folder1Path}`,
+        folder2: `/Users/abi/Downloads/${folder2Path}`,
       });
 
       const response = await fetch(
@@ -92,14 +94,14 @@ function PairwiseEvalsPage() {
             type="text"
             value={folder1Path}
             onChange={(e) => setFolder1Path(e.target.value)}
-            placeholder="Enter absolute path to first folder"
+            placeholder="Enter folder name in Downloads"
             className="w-full px-4 py-2 rounded text-black"
           />
           <input
             type="text"
             value={folder2Path}
             onChange={(e) => setFolder2Path(e.target.value)}
-            placeholder="Enter absolute path to second folder"
+            placeholder="Enter folder name in Downloads"
             className="w-full px-4 py-2 rounded text-black"
           />
           <button
@@ -154,11 +156,29 @@ function PairwiseEvalsPage() {
                   }`}
                   key={outputIndex}
                 >
-                  <iframe
-                    srcDoc={output}
-                    className="w-[1200px] h-[800px] transform scale-[0.55]"
-                    style={{ transformOrigin: "top left" }}
-                  ></iframe>
+                  <div className="relative">
+                    <iframe
+                      srcDoc={output}
+                      className="w-[1200px] h-[800px] transform scale-[0.55]"
+                      style={{ transformOrigin: "top left" }}
+                    ></iframe>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-sm"
+                          onClick={() => setSelectedHtml(output)}
+                        >
+                          Full Screen
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh]">
+                        <iframe
+                          srcDoc={selectedHtml}
+                          className="w-[1400px] h-[800px] transform scale-[0.90]"
+                        ></iframe>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               ))}
             </div>
