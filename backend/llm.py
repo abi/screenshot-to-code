@@ -24,6 +24,7 @@ class Llm(Enum):
     CLAUDE_3_5_SONNET_2024_06_20 = "claude-3-5-sonnet-20240620"
     CLAUDE_3_5_SONNET_2024_10_22 = "claude-3-5-sonnet-20241022"
     GEMINI_2_0_FLASH_EXP = "gemini-2.0-flash-exp"
+    O1_2024_12_17 = "o1-2024-12-17"
 
 
 # Will throw errors if you send a garbage string
