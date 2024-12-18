@@ -351,6 +351,7 @@ async def stream_code(websocket: WebSocket):
                     if isinstance(completion, Exception):
                         completions[index] = ""
                         print("Generation failed for variant", index)
+                        print(completion)
 
                 print("Models used for generation: ", variant_models)
 
