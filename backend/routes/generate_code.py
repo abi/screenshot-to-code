@@ -326,6 +326,7 @@ async def stream_code(websocket: WebSocket):
                         (
                             Llm.GEMINI_2_0_FLASH_EXP
                             if params["generationType"] == "create"
+                            and input_mode == "image"
                             else Llm.GPT_4O_2024_11_20
                         ),
                     ]
