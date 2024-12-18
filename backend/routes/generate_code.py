@@ -239,12 +239,29 @@ async def stream_code(websocket: WebSocket):
                 # Depending on the presence and absence of various keys,
                 # we decide which models to run
                 variant_models = []
+
+                # For creation, use Claude Sonnet 3.6 but it can be lazy
+                # so for updates, we use Claude Sonnet 3.5
+                if params["generationType"] == "create":
+                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_10_22
+                else:
+                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+
                 if openai_api_key and anthropic_api_key:
-                    variant_models = ["anthropic", "openai"]
+                    variant_models = [
+                        claude_model,
+                        Llm.GPT_4O_2024_11_20,
+                    ]
                 elif openai_api_key:
-                    variant_models = ["openai", "openai"]
+                    variant_models = [
+                        Llm.GPT_4O_2024_11_20,
+                        Llm.GPT_4O_2024_11_20,
+                    ]
                 elif anthropic_api_key:
-                    variant_models = ["anthropic", "anthropic"]
+                    variant_models = [
+                        claude_model,
+                        Llm.CLAUDE_3_5_SONNET_2024_06_20,
+                    ]
                 else:
                     await throw_error(
                         "No OpenAI or Anthropic API key found. Please add the environment variable OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. If you add it to .env, make sure to restart the backend server."
@@ -253,7 +270,7 @@ async def stream_code(websocket: WebSocket):
 
                 tasks: List[Coroutine[Any, Any, str]] = []
                 for index, model in enumerate(variant_models):
-                    if model == "openai":
+                    if model == Llm.GPT_4O_2024_11_20:
                         if openai_api_key is None:
                             await throw_error("OpenAI API key is missing.")
                             raise Exception("OpenAI API key is missing.")
@@ -267,7 +284,7 @@ async def stream_code(websocket: WebSocket):
                                 model=Llm.GPT_4O_2024_11_20,
                             )
                         )
-                    elif model == "gemini" and GEMINI_API_KEY:
+                    elif model == Llm.GEMINI_2_0_FLASH_EXP and GEMINI_API_KEY:
                         tasks.append(
                             stream_gemini_response(
                                 prompt_messages,
@@ -276,7 +293,10 @@ async def stream_code(websocket: WebSocket):
                                 model=Llm.GEMINI_2_0_FLASH_EXP,
                             )
                         )
-                    elif model == "anthropic":
+                    elif (
+                        model == Llm.CLAUDE_3_5_SONNET_2024_06_20
+                        or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
+                    ):
                         if anthropic_api_key is None:
                             await throw_error("Anthropic API key is missing.")
                             raise Exception("Anthropic API key is missing.")
