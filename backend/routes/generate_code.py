@@ -11,6 +11,7 @@ from config import (
     NUM_VARIANTS,
     OPENAI_BASE_URL,
     PLATFORM_ANTHROPIC_API_KEY,
+    PLATFORM_GEMINI_API_KEY,
     PLATFORM_OPENAI_API_KEY,
     REPLICATE_API_KEY,
     SHOULD_MOCK_AI_RESPONSE,
@@ -84,6 +85,7 @@ class ExtractedParams:
     should_generate_images: bool
     openai_api_key: str | None
     anthropic_api_key: str | None
+    gemini_api_key: str | None
     openai_base_url: str | None
     payment_method: PaymentMethod
 
@@ -113,6 +115,7 @@ async def extract_params(
 
     openai_api_key = None
     anthropic_api_key = None
+    gemini_api_key = None
 
     # Track how this generation is being paid for
     payment_method: PaymentMethod = PaymentMethod.UNKNOWN
@@ -132,6 +135,7 @@ async def extract_params(
             )
             openai_api_key = PLATFORM_OPENAI_API_KEY
             anthropic_api_key = PLATFORM_ANTHROPIC_API_KEY
+            gemini_api_key = PLATFORM_GEMINI_API_KEY
             print("Subscription - using platform API key")
         elif res.status == "subscriber_has_no_credits":
             await throw_error(
@@ -183,6 +187,7 @@ async def extract_params(
         should_generate_images=should_generate_images,
         openai_api_key=openai_api_key,
         anthropic_api_key=anthropic_api_key,
+        gemini_api_key=gemini_api_key,
         openai_base_url=openai_base_url,
         payment_method=payment_method,
     )
@@ -244,6 +249,7 @@ async def stream_code(websocket: WebSocket):
     openai_api_key = extracted_params.openai_api_key
     openai_base_url = extracted_params.openai_base_url
     anthropic_api_key = extracted_params.anthropic_api_key
+    gemini_api_key = extracted_params.gemini_api_key
     should_generate_images = extracted_params.should_generate_images
     payment_method = extracted_params.payment_method
 
@@ -314,7 +320,16 @@ async def stream_code(websocket: WebSocket):
                 else:
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
-                if openai_api_key and anthropic_api_key:
+                if anthropic_api_key and gemini_api_key and openai_api_key:
+                    variant_models = [
+                        claude_model,
+                        (
+                            Llm.GEMINI_2_0_FLASH_EXP
+                            if params["generationType"] == "create"
+                            else Llm.GPT_4O_2024_11_20
+                        ),
+                    ]
+                elif openai_api_key and anthropic_api_key:
                     variant_models = [
                         claude_model,
                         Llm.GPT_4O_2024_11_20,
@@ -351,11 +366,15 @@ async def stream_code(websocket: WebSocket):
                                 model=model,
                             )
                         )
-                    elif model == Llm.GEMINI_2_0_FLASH_EXP and GEMINI_API_KEY:
+                    elif model == Llm.GEMINI_2_0_FLASH_EXP:
+                        if gemini_api_key is None:
+                            await throw_error("Gemini API key is missing.")
+                            raise Exception("Gemini API key is missing.")
+
                         tasks.append(
                             stream_gemini_response(
                                 prompt_messages,
-                                api_key=GEMINI_API_KEY,
+                                api_key=gemini_api_key,
                                 callback=lambda x, i=index: process_chunk(x, i),
                                 model=Llm.GEMINI_2_0_FLASH_EXP,
                             )
