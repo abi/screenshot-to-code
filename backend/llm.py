@@ -1,12 +1,15 @@
 import copy
 from enum import Enum
-from typing import Any, Awaitable, Callable, List, Literal, cast
+import base64
+from typing import Any, Awaitable, Callable, List, cast
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
 from config import IS_DEBUG_ENABLED
 from debug.DebugFileWriter import DebugFileWriter
 from image_processing.utils import process_image
+from google import genai
+from google.genai import types
 
 from utils import pprint_prompt
 
@@ -228,7 +231,7 @@ async def stream_claude_response_native(
     if not response:
         raise Exception("No HTML response found in AI response")
     else:
-        return response.content[0].text
+        return response.content[0].text  # type: ignore
 
 
 async def stream_gemini_response(
@@ -238,96 +241,7 @@ async def stream_gemini_response(
     model: Llm,
 ) -> str:
 
-    API_TYPE: Literal["openai_compatible", "google_generativeai"] = (
-        "google_generativeai"
-    )
-
-    if API_TYPE == "openai_compatible":  # type: ignore
-        return await generate_gemini_response_openai_compatible(
-            messages, api_key, callback, model
-        )
-    elif API_TYPE == "google_generativeai":
-        return await stream_gemini_response_using_python_genai(
-            messages, api_key, callback, model
-        )
-
-
-# Disabled for now
-async def generate_gemini_response_google_generativeai(
-    messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    model: Llm,
-) -> str:
-    return ""
-
-    # import google.generativeai as genai
-
-    # # # Extract image URLs from the message
-    # image_urls = []
-    # for content_part in messages[-1]["content"]:
-    #     if content_part["type"] == "image_url":
-    #         image_url = content_part["image_url"]["url"]
-    #         if image_url.startswith("data:"):
-    #             # Extract base64 data and mime type for data URLs
-    #             mime_type = image_url.split(";")[0].split(":")[1]
-    #             base64_data = image_url.split(",")[1]
-    #             image_urls = [{"mime_type": mime_type, "data": base64_data}]
-    #         else:
-    #             # Store regular URLs
-    #             image_urls = [{"uri": image_url}]
-    #         break  # Exit after first image URL
-
-    # # Print image URLs with truncated base64 data for debugging
-    # for url in image_urls:
-    #     if "data" in url:
-    #         # Truncate base64 data to first 50 chars
-    #         truncated_url = {
-    #             "mime_type": url["mime_type"],
-    #             "data": (
-    #                 url["data"][:50] + "..." if len(url["data"]) > 50 else url["data"]
-    #             ),
-    #         }
-    #         print("Image URL (base64):", truncated_url)
-    #     else:
-    #         print("Image URL:", url)
-
-    # genai.configure(api_key=api_key)
-
-    # gemini_model = genai.GenerativeModel(
-    #     model.value,
-    #     generation_config=genai.GenerationConfig(
-    #         temperature=1.0,
-    #         top_p=0.95,
-    #         top_k=40,
-    #         max_output_tokens=8192,
-    #         response_mime_type="text/plain",
-    #     ),
-    # )
-
-    # full_response = ""
-    # async for response in await gemini_model.generate_content_async(
-    #     [image_urls[0], messages[0]["content"]], stream=True
-    # ):
-    #     if response.text:
-    #         full_response += response.text
-    #         await callback(response.text)
-
-    # return full_response
-
-
-async def stream_gemini_response_using_python_genai(
-    messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    model: Llm,
-) -> str:
-
-    from google import genai
-    from google.genai import types
-    import base64
-
-    # Extract image URLs from the message
+    # Extract image URLs from messages
     image_urls = []
     for content_part in messages[-1]["content"]:  # type: ignore
         if content_part["type"] == "image_url":  # type: ignore
@@ -344,64 +258,22 @@ async def stream_gemini_response_using_python_genai(
 
     client = genai.Client(api_key=api_key)  # type: ignore
     full_response = ""
-    async for response in client.aio.models.generate_content_stream(
+    async for response in client.aio.models.generate_content_stream(  # type: ignore
         model=model.value,
         contents={
             "parts": [
                 {"text": messages[0]["content"]},  # type: ignore
-                types.Part.from_bytes(
+                types.Part.from_bytes(  # type: ignore
                     data=base64.b64decode(image_urls[0]["data"]),  # type: ignore
                     mime_type=image_urls[0]["mime_type"],  # type: ignore
                 ),
             ]  # type: ignore
-        },
-        config=types.GenerateContentConfig(
+        },  # type: ignore
+        config=types.GenerateContentConfig(  # type: ignore
             temperature=0,
         ),
-    ):
-        if response.text:
-            full_response += response.text
-            await callback(response.text)
-    return full_response
-
-
-async def generate_gemini_response_openai_compatible(
-    messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    model: Llm,
-) -> str:
-    client = AsyncOpenAI(
-        api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-    )
-
-    # Base parameters
-    params = {
-        "model": model.value,
-        "messages": messages,
-        "stream": True,
-        "timeout": 600,
-        "temperature": 0.0,
-        "top_p": 0.95,
-        # "top_k": 40,  # TODO: Not a valid param for openai?
-        "max_tokens": 8192,
-    }
-
-    stream = await client.chat.completions.create(**params)  # type: ignore
-    full_response = ""
-    async for chunk in stream:  # type: ignore
-        assert isinstance(chunk, ChatCompletionChunk)
-        if (
-            chunk.choices
-            and len(chunk.choices) > 0
-            and chunk.choices[0].delta
-            and chunk.choices[0].delta.content
-        ):
-            content = chunk.choices[0].delta.content or ""
-            full_response += content
-            await callback(content)
-
-    await client.close()
-
-    return full_response
+    ):  # type: ignore
+        if response.text:  # type: ignore
+            full_response += response.text  # type: ignore
+            await callback(response.text)  # type: ignore
+    return full_response  # type: ignore
