@@ -270,7 +270,7 @@ async def stream_gemini_response(
             ]  # type: ignore
         },  # type: ignore
         config=types.GenerateContentConfig(  # type: ignore
-            temperature=0,
+            temperature=0, max_output_tokens=8192
         ),
     ):  # type: ignore
         if response.text:  # type: ignore
