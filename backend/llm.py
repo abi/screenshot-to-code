@@ -27,16 +27,6 @@ class Llm(Enum):
     O1_2024_12_17 = "o1-2024-12-17"
 
 
-# Will throw errors if you send a garbage string
-def convert_frontend_str_to_llm(frontend_str: str) -> Llm:
-    if frontend_str == "gpt_4_vision":
-        return Llm.GPT_4_VISION
-    elif frontend_str == "claude_3_sonnet":
-        return Llm.CLAUDE_3_SONNET
-    else:
-        return Llm(frontend_str)
-
-
 async def stream_openai_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
