@@ -1,6 +1,6 @@
 import copy
 from enum import Enum
-from typing import Any, Awaitable, Callable, List, cast
+from typing import Any, Awaitable, Callable, List, Literal, cast
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
@@ -248,18 +248,18 @@ async def stream_gemini_response(
     model: Llm,
 ) -> str:
 
-    API_TYPE = "openai_compatible"
+    API_TYPE: Literal["openai_compatible", "google_generativeai"] = (
+        "google_generativeai"
+    )
 
-    if API_TYPE == "openai_compatible":
+    if API_TYPE == "openai_compatible":  # type: ignore
         return await generate_gemini_response_openai_compatible(
             messages, api_key, callback, model
         )
     elif API_TYPE == "google_generativeai":
-        return await generate_gemini_response_google_generativeai(
+        return await stream_gemini_response_using_python_genai(
             messages, api_key, callback, model
         )
-    else:
-        raise Exception(f"Invalid API type: {API_TYPE}")
 
 
 # Disabled for now
@@ -324,6 +324,55 @@ async def generate_gemini_response_google_generativeai(
     #         await callback(response.text)
 
     # return full_response
+
+
+async def stream_gemini_response_using_python_genai(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> str:
+
+    from google import genai
+    from google.genai import types
+    import base64
+
+    # Extract image URLs from the message
+    image_urls = []
+    for content_part in messages[-1]["content"]:  # type: ignore
+        if content_part["type"] == "image_url":  # type: ignore
+            image_url = content_part["image_url"]["url"]  # type: ignore
+            if image_url.startswith("data:"):  # type: ignore
+                # Extract base64 data and mime type for data URLs
+                mime_type = image_url.split(";")[0].split(":")[1]  # type: ignore
+                base64_data = image_url.split(",")[1]  # type: ignore
+                image_urls = [{"mime_type": mime_type, "data": base64_data}]  # type: ignore
+            else:
+                # Store regular URLs
+                image_urls = [{"uri": image_url}]  # type: ignore
+            break  # Exit after first image URL
+
+    client = genai.Client(api_key=api_key)  # type: ignore
+    full_response = ""
+    async for response in client.aio.models.generate_content_stream(
+        model=model.value,
+        contents={
+            "parts": [
+                {"text": messages[0]["content"]},  # type: ignore
+                types.Part.from_bytes(
+                    data=base64.b64decode(image_urls[0]["data"]),  # type: ignore
+                    mime_type=image_urls[0]["mime_type"],  # type: ignore
+                ),
+            ]  # type: ignore
+        },
+        config=types.GenerateContentConfig(
+            temperature=0,
+        ),
+    ):
+        if response.text:
+            full_response += response.text
+            await callback(response.text)
+    return full_response
 
 
 async def generate_gemini_response_openai_compatible(
