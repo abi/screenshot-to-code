@@ -1,4 +1,3 @@
-import { Switch } from "@radix-ui/react-switch";
 import classNames from "classnames";
 import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
@@ -29,13 +28,7 @@ function Sidebar({
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const {
-    appState,
-    updateInstruction,
-    setUpdateInstruction,
-    shouldIncludeResultImage,
-    setShouldIncludeResultImage,
-  } = useAppStore();
+  const { appState, updateInstruction, setUpdateInstruction } = useAppStore();
 
   const { inputMode, referenceImages, executionConsoles, head, commits } =
     useProjectStore();
@@ -105,16 +98,6 @@ function Sidebar({
               }}
               value={updateInstruction}
             />
-            <div className="flex justify-between items-center gap-x-2">
-              <div className="font-500 text-xs text-slate-700 dark:text-white">
-                Include screenshot of current version?
-              </div>
-              <Switch
-                checked={shouldIncludeResultImage}
-                onCheckedChange={setShouldIncludeResultImage}
-                className="dark:bg-gray-700"
-              />
-            </div>
             <Button
               onClick={() => doUpdate(updateInstruction)}
               className="dark:text-white dark:bg-gray-700 update-btn"

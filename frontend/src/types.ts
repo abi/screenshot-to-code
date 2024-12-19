@@ -35,7 +35,6 @@ export interface CodeGenerationParams {
   generationType: "create" | "update";
   inputMode: "image" | "video";
   image: string;
-  resultImage?: string;
   history?: string[];
   isImportedFromCode?: boolean;
 }
