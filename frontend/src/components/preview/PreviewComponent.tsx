@@ -11,12 +11,37 @@ interface Props {
 
 function PreviewComponent({ code, device, doUpdate }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   // Don't update code more often than every 200ms.
   const throttledCode = useThrottle(code, 200);
 
   // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
+
+  // Add scaling logic
+  useEffect(() => {
+    const updateScale = () => {
+      const wrapper = wrapperRef.current;
+      const iframe = iframeRef.current;
+      if (!wrapper || !iframe) return;
+
+      const viewportWidth = wrapper.clientWidth;
+      const baseWidth = device === "desktop" ? 1440 : 375;
+      const scale = Math.min(1, viewportWidth / baseWidth);
+
+      iframe.style.transform = `scale(${scale})`;
+      iframe.style.transformOrigin = "top left";
+      // Adjust wrapper height to account for scaling
+      wrapper.style.height = `${iframe.offsetHeight * scale}px`;
+    };
+
+    updateScale();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, [device]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -34,21 +59,29 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
   }, [throttledCode]);
 
   return (
-    <div className="flex justify-center mx-2">
-      <iframe
-        id={`preview-${device}`}
-        ref={iframeRef}
-        title="Preview"
-        className={classNames(
-          "border-[4px] border-black rounded-[20px] shadow-lg",
-          "transform scale-[0.9] origin-top",
-          {
-            "w-full h-[832px]": device === "desktop",
-            "w-[400px] h-[832px]": device === "mobile",
-          }
-        )}
-      ></iframe>
-      <EditPopup event={clickEvent} iframeRef={iframeRef} doUpdate={doUpdate} />
+    <div className="flex justify-center mr-4">
+      <div
+        ref={wrapperRef}
+        className="overflow-y-auto overflow-x-hidden w-full"
+      >
+        <iframe
+          id={`preview-${device}`}
+          ref={iframeRef}
+          title="Preview"
+          className={classNames(
+            "border-[4px] border-black rounded-[20px] shadow-lg mx-auto",
+            {
+              "w-[1440px] h-[900px]": device === "desktop",
+              "w-[375px] h-[812px]": device === "mobile",
+            }
+          )}
+        ></iframe>
+        <EditPopup
+          event={clickEvent}
+          iframeRef={iframeRef}
+          doUpdate={doUpdate}
+        />
+      </div>
     </div>
   );
 }
