@@ -6,7 +6,7 @@ import { AppState } from "../../types";
 import CodePreview from "../preview/CodePreview";
 import Spinner from "../core/Spinner";
 import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
-import TipLink from "../messages/TipLink";
+// import TipLink from "../messages/TipLink";
 import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeToggleButton";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
@@ -131,9 +131,9 @@ function Sidebar({
             </Button>
             {showSelectAndEditFeature && <SelectAndEditModeToggleButton />}
           </div>
-          <div className="flex justify-end items-center mt-2">
+          {/* <div className="flex justify-end items-center mt-2">
             <TipLink />
-          </div>
+          </div> */}
         </div>
       )}
 

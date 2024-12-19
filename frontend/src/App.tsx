@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
-import TipLink from "./components/messages/TipLink";
+// import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import Sidebar from "./components/sidebar/Sidebar";
@@ -367,7 +367,7 @@ function App() {
           {showBetterModelMessage && <DeprecationMessage />}
 
           {/* Show tip link until coding is complete */}
-          {appState !== AppState.CODE_READY && <TipLink />}
+          {/* {appState !== AppState.CODE_READY && <TipLink />} */}
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
