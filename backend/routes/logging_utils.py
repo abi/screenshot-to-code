@@ -28,6 +28,7 @@ async def send_to_saas_backend(
     is_imported_from_code: bool,
     includes_result_image: bool,
     input_mode: InputMode,
+    other_info: dict[str, str | bool] = {},
 ):
     if IS_PROD:
         async with httpx.AsyncClient() as client:
@@ -44,6 +45,7 @@ async def send_to_saas_backend(
                     "is_imported_from_code": is_imported_from_code,
                     "includes_result_image": includes_result_image,
                     "input_mode": input_mode,
+                    "other_info": other_info,
                 }
             )
 

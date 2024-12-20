@@ -490,6 +490,7 @@ async def stream_code(websocket: WebSocket):
                 is_imported_from_code=bool(params.get("isImportedFromCode", False)),
                 includes_result_image=bool(params.get("resultImage", False)),
                 input_mode=input_mode,
+                other_info={"generation_type": generation_type},
             )
         except Exception as e:
             print("Error sending to SaaS backend", e)
