@@ -6,7 +6,6 @@ import openai
 import sentry_sdk
 from codegen.utils import extract_html_content
 from config import (
-    GEMINI_API_KEY,
     IS_PROD,
     NUM_VARIANTS,
     OPENAI_BASE_URL,
@@ -88,6 +87,7 @@ class ExtractedParams:
     gemini_api_key: str | None
     openai_base_url: str | None
     payment_method: PaymentMethod
+    generation_type: Literal["create", "update"]
 
 
 async def extract_params(
@@ -180,6 +180,13 @@ async def extract_params(
         bool(params.get("isImageGenerationEnabled", True)) if not IS_PROD else True
     )
 
+    # Extract and validate generation type
+    generation_type = params.get("generationType", "create")
+    if generation_type not in ["create", "update"]:
+        await throw_error(f"Invalid generation type: {generation_type}")
+        raise ValueError(f"Invalid generation type: {generation_type}")
+    generation_type = cast(Literal["create", "update"], generation_type)
+
     return ExtractedParams(
         user_id=user_id,
         stack=validated_stack,
@@ -190,6 +197,7 @@ async def extract_params(
         gemini_api_key=gemini_api_key,
         openai_base_url=openai_base_url,
         payment_method=payment_method,
+        generation_type=generation_type,
     )
 
 
@@ -252,6 +260,7 @@ async def stream_code(websocket: WebSocket):
     gemini_api_key = extracted_params.gemini_api_key
     should_generate_images = extracted_params.should_generate_images
     payment_method = extracted_params.payment_method
+    generation_type = extracted_params.generation_type
 
     # If the payment method is unknown, we shouldn't proceed
     if payment_method is PaymentMethod.UNKNOWN:
@@ -315,7 +324,7 @@ async def stream_code(websocket: WebSocket):
 
                 # For creation, use Claude Sonnet 3.6 but it can be lazy
                 # so for updates, we use Claude Sonnet 3.5
-                if params["generationType"] == "create":
+                if generation_type == "create":
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_10_22
                 else:
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
