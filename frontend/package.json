@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev-hosted": "vite --mode prod",
+    "dev-hosted": "vite --mode prod --port 5175",
     "build": "tsc && vite build",
     "build-hosted": "tsc && vite build --mode prod",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
