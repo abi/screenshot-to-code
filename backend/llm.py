@@ -1,7 +1,8 @@
 import copy
 from enum import Enum
 import base64
-from typing import Any, Awaitable, Callable, List, cast
+import time
+from typing import Any, Awaitable, Callable, List, cast, TypedDict
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
@@ -32,13 +33,19 @@ class Llm(Enum):
     O1_2024_12_17 = "o1-2024-12-17"
 
 
+class Completion(TypedDict):
+    duration: float
+    code: str
+
+
 async def stream_openai_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
     base_url: str | None,
     callback: Callable[[str], Awaitable[None]],
     model: Llm,
-) -> str:
+) -> Completion:
+    start_time = time.time()
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
     # Base parameters
@@ -96,7 +103,8 @@ async def stream_openai_response(
 
     await client.close()
 
-    return full_response
+    completion_time = time.time() - start_time
+    return {"duration": completion_time, "code": full_response}
 
 
 # TODO: Have a seperate function that translates OpenAI messages to Claude messages
@@ -105,8 +113,8 @@ async def stream_claude_response(
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
     model: Llm,
-) -> str:
-
+) -> Completion:
+    start_time = time.time()
     client = AsyncAnthropic(api_key=api_key)
 
     # Base parameters
@@ -171,7 +179,8 @@ async def stream_claude_response(
     # Close the Anthropic client
     await client.close()
 
-    return response.content[0].text
+    completion_time = time.time() - start_time
+    return {"duration": completion_time, "code": response.content[0].text}
 
 
 async def stream_claude_response_native(
@@ -181,8 +190,8 @@ async def stream_claude_response_native(
     callback: Callable[[str], Awaitable[None]],
     include_thinking: bool = False,
     model: Llm = Llm.CLAUDE_3_OPUS,
-) -> str:
-
+) -> Completion:
+    start_time = time.time()
     client = AsyncAnthropic(api_key=api_key)
 
     # Base model parameters
@@ -254,13 +263,18 @@ async def stream_claude_response_native(
     # Close the Anthropic client
     await client.close()
 
+    completion_time = time.time() - start_time
+
     if IS_DEBUG_ENABLED:
         debug_file_writer.write_to_file("full_stream.txt", full_stream)
 
     if not response:
         raise Exception("No HTML response found in AI response")
     else:
-        return response.content[0].text  # type: ignore
+        return {
+            "duration": completion_time,
+            "code": response.content[0].text,  # type: ignore
+        }
 
 
 async def stream_gemini_response(
@@ -268,7 +282,8 @@ async def stream_gemini_response(
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
     model: Llm,
-) -> str:
+) -> Completion:
+    start_time = time.time()
 
     # Extract image URLs from messages
     image_urls = []
@@ -305,4 +320,5 @@ async def stream_gemini_response(
         if response.text:  # type: ignore
             full_response += response.text  # type: ignore
             await callback(response.text)  # type: ignore
-    return full_response  # type: ignore
+    completion_time = time.time() - start_time
+    return {"duration": completion_time, "code": full_response}

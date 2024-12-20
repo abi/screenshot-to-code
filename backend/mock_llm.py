@@ -2,6 +2,7 @@ import asyncio
 from typing import Awaitable, Callable
 
 from custom_types import InputMode
+from llm import Completion
 
 
 STREAM_CHUNK_SIZE = 20
@@ -9,7 +10,7 @@ STREAM_CHUNK_SIZE = 20
 
 async def mock_completion(
     process_chunk: Callable[[str, int], Awaitable[None]], input_mode: InputMode
-) -> str:
+) -> Completion:
     code_to_return = (
         TALLY_FORM_VIDEO_PROMPT_MOCK
         if input_mode == "video"
@@ -17,7 +18,7 @@ async def mock_completion(
     )
 
     for i in range(0, len(code_to_return), STREAM_CHUNK_SIZE):
-        await process_chunk(code_to_return[i : i + STREAM_CHUNK_SIZE], 0)
+        await process_chunk(code_to_return[i : i + STREAM_CHUNK_SIZE], i)
         await asyncio.sleep(0.01)
 
     if input_mode == "video":
@@ -30,7 +31,7 @@ async def mock_completion(
         else:
             code_to_return = "Error: HTML block not found."
 
-    return code_to_return
+    return {"duration": 0.1, "code": code_to_return}
 
 
 APPLE_MOCK_CODE = """<html lang="en">
@@ -138,7 +139,7 @@ NYTIMES_MOCK_CODE = """
                 <div class="grid grid-cols-3 gap-4">
                     <div class="col-span-2">
                         <article class="mb-4">
-                            <h2 class="text-xl font-bold mb-2">Israeli Military Raids Gaza’s Largest Hospital</h2>
+                            <h2 class="text-xl font-bold mb-2">Israeli Military Raids Gaza's Largest Hospital</h2>
                             <p class="text-gray-700 mb-2">Israeli troops have entered the Al-Shifa Hospital complex, where conditions have grown dire and Israel says Hamas fighters are embedded.</p>
                             <a href="#" class="text-blue-600 text-sm">See more updates <i class="fas fa-external-link-alt"></i></a>
                         </article>
@@ -206,7 +207,7 @@ NO_IMAGES_NYTIMES_MOCK_CODE = """
                 <div class="grid grid-cols-3 gap-4">
                     <div class="col-span-2">
                         <article class="mb-4">
-                            <h2 class="text-xl font-bold mb-2">Israeli Military Raids Gaza’s Largest Hospital</h2>
+                            <h2 class="text-xl font-bold mb-2">Israeli Military Raids Gaza's Largest Hospital</h2>
                             <p class="text-gray-700 mb-2">Israeli troops have entered the Al-Shifa Hospital complex, where conditions have grown dire and Israel says Hamas fighters are embedded.</p>
                             <a href="#" class="text-blue-600 text-sm">See more updates <i class="fas fa-external-link-alt"></i></a>
                         </article>

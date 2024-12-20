@@ -17,6 +17,7 @@ from config import (
 )
 from custom_types import InputMode
 from llm import (
+    Completion,
     Llm,
     stream_claude_response,
     stream_claude_response_native,
@@ -292,8 +293,11 @@ async def stream_code(websocket: WebSocket):
         await send_message("chunk", content, variantIndex)
 
     if SHOULD_MOCK_AI_RESPONSE:
-        completions = [await mock_completion(process_chunk, input_mode=input_mode)]
+        completion_results = [
+            await mock_completion(process_chunk, input_mode=input_mode)
+        ]
         variant_models = [Llm.GPT_4O_2024_05_13]
+        completions = [result["code"] for result in completion_results]
     else:
         try:
             if input_mode == "video":
@@ -306,7 +310,7 @@ async def stream_code(websocket: WebSocket):
                     )
                     raise Exception("No Anthropic key")
 
-                completions = [
+                completion_results = [
                     await stream_claude_response_native(
                         system_prompt=VIDEO_PROMPT,
                         messages=prompt_messages,  # type: ignore
@@ -317,6 +321,7 @@ async def stream_code(websocket: WebSocket):
                     )
                 ]
                 variant_models = [Llm.CLAUDE_3_OPUS]
+                completions = [result["code"] for result in completion_results]
             else:
                 # Depending on the presence and absence of various keys,
                 # we decide which models to run
@@ -360,7 +365,7 @@ async def stream_code(websocket: WebSocket):
                     )
                     raise Exception("No OpenAI or Anthropic key")
 
-                tasks: list[Coroutine[Any, Any, str]] = []
+                tasks: list[Coroutine[Any, Any, Completion]] = []
                 for index, model in enumerate(variant_models):
                     if model == Llm.GPT_4O_2024_11_20:
                         if openai_api_key is None:
@@ -411,22 +416,21 @@ async def stream_code(websocket: WebSocket):
 
                 # If all generations failed, throw an error
                 all_generations_failed = all(
-                    isinstance(completion, Exception) for completion in completions
+                    isinstance(completion, BaseException) for completion in completions
                 )
                 if all_generations_failed:
                     await throw_error("Error generating code. Please contact support.")
 
                     # Print the all the underlying exceptions for debugging
                     for completion in completions:
-                        traceback.print_exception(
-                            type(completion), completion, completion.__traceback__
-                        )
+                        if isinstance(completion, BaseException):
+                            traceback.print_exception(completion)
                     raise Exception("All generations failed")
 
                 # If some completions failed, replace them with empty strings
                 for index, completion in enumerate(completions):
-                    if isinstance(completion, Exception):
-                        completions[index] = ""
+                    if isinstance(completion, BaseException):
+                        completions[index] = Completion(duration=0, code="")
                         print("Generation failed for variant", index)
                         try:
                             raise Exception(
@@ -434,8 +438,16 @@ async def stream_code(websocket: WebSocket):
                             ) from completion
                         except:
                             sentry_sdk.capture_exception()
+                    else:
+                        print(
+                            f"{variant_models[index].value} completion took {completion['duration']:.2f} seconds"
+                        )
 
-                print("Models used for generation: ", variant_models)
+                completions = [
+                    result["code"]
+                    for result in completions
+                    if not isinstance(result, BaseException)
+                ]
 
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
