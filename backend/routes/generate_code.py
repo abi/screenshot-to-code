@@ -477,9 +477,6 @@ async def stream_code(websocket: WebSocket):
     # Strip the completion of everything except the HTML content
     completions = [extract_html_content(completion) for completion in completions]
 
-    # Write the messages dict into a log so that we can debug later
-    # write_logs(prompt_messages, completion)  # type: ignore
-
     if IS_PROD:
         # Catch any errors from sending to SaaS backend and continue
         try:
