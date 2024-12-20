@@ -140,7 +140,7 @@ async def extract_params(
             print("Subscription - using platform API key")
         elif res.status == "subscriber_has_no_credits":
             await throw_error(
-                "Your subscription has run out of monthly credits. Contact support and we can add more credits to your account for free."
+                "Your subscription has run out of monthly credits. Contact support to upgrade your plan."
             )
         else:
             await throw_error("Unknown error occurred. Contact support.")
