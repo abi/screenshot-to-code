@@ -80,6 +80,7 @@ class ExtractedParams:
     openai_api_key: str | None
     anthropic_api_key: str | None
     openai_base_url: str | None
+    generation_type: Literal["create", "update"]
 
 
 async def extract_params(
@@ -121,6 +122,13 @@ async def extract_params(
     # Get the image generation flag from the request. Fall back to True if not provided.
     should_generate_images = bool(params.get("isImageGenerationEnabled", True))
 
+    # Extract and validate generation type
+    generation_type = params.get("generationType", "create")
+    if generation_type not in ["create", "update"]:
+        await throw_error(f"Invalid generation type: {generation_type}")
+        raise ValueError(f"Invalid generation type: {generation_type}")
+    generation_type = cast(Literal["create", "update"], generation_type)
+
     return ExtractedParams(
         stack=validated_stack,
         input_mode=validated_input_mode,
@@ -128,6 +136,7 @@ async def extract_params(
         openai_api_key=openai_api_key,
         anthropic_api_key=anthropic_api_key,
         openai_base_url=openai_base_url,
+        generation_type=generation_type,
     )
 
 
@@ -187,6 +196,7 @@ async def stream_code(websocket: WebSocket):
     openai_base_url = extracted_params.openai_base_url
     anthropic_api_key = extracted_params.anthropic_api_key
     should_generate_images = extracted_params.should_generate_images
+    generation_type = extracted_params.generation_type
 
     print(f"Generating {stack} code in {input_mode} mode")
 
@@ -242,7 +252,7 @@ async def stream_code(websocket: WebSocket):
 
                 # For creation, use Claude Sonnet 3.6 but it can be lazy
                 # so for updates, we use Claude Sonnet 3.5
-                if params["generationType"] == "create":
+                if generation_type == "create":
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_10_22
                 else:
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
