@@ -162,7 +162,8 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
         </div>
       </div>
       <p className="text-center text-xs text-gray-600 dark:text-gray-400 mt-1">
-        1 credit = 1 code generation. Cancel subscription at any time. <br />{" "}
+        Every code generation and edit uses 1 credit. <br />
+        Cancel subscription at any time. <br />{" "}
         {shouldShowFAQLink && (
           <>
             <a
