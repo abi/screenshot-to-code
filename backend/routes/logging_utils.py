@@ -6,7 +6,7 @@ import json
 
 from config import BACKEND_SAAS_API_SECRET, BACKEND_SAAS_URL, IS_PROD
 from custom_types import InputMode
-from llm import Llm
+from llm import Completion, Llm
 from prompts.types import Stack
 
 
@@ -21,7 +21,7 @@ class PaymentMethod(Enum):
 async def send_to_saas_backend(
     user_id: str,
     prompt_messages: List[ChatCompletionMessageParam],
-    completions: list[str],
+    completions: list[Completion],
     llm_versions: list[Llm],
     payment_method: PaymentMethod,
     stack: Stack,

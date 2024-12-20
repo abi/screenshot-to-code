@@ -298,6 +298,7 @@ async def stream_code(websocket: WebSocket):
         ]
         variant_models = [Llm.GPT_4O_2024_05_13]
         completions = [result["code"] for result in completion_results]
+        completion_objs = [result for result in completion_results]
     else:
         try:
             if input_mode == "video":
@@ -320,6 +321,7 @@ async def stream_code(websocket: WebSocket):
                         include_thinking=True,
                     )
                 ]
+                completion_objs = completion_results
                 variant_models = [Llm.CLAUDE_3_OPUS]
                 completions = [result["code"] for result in completion_results]
             else:
@@ -443,6 +445,12 @@ async def stream_code(websocket: WebSocket):
                             f"{variant_models[index].value} completion took {completion['duration']:.2f} seconds"
                         )
 
+                completion_objs = [
+                    result
+                    for result in completions
+                    if not isinstance(result, BaseException)
+                ]
+
                 completions = [
                     result["code"]
                     for result in completions
@@ -495,7 +503,7 @@ async def stream_code(websocket: WebSocket):
             await send_to_saas_backend(
                 user_id,
                 prompt_messages,
-                completions,
+                completion_objs,
                 payment_method=payment_method,
                 llm_versions=variant_models,
                 stack=stack,
