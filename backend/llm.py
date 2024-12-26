@@ -50,35 +50,42 @@ async def stream_openai_response(
     params = {
         "model": model.value,
         "messages": messages,
-        "stream": True,
         "timeout": 600,
-        "temperature": 0.0,
     }
 
-    # Add 'max_tokens' only if the model is a GPT4 vision or Turbo model
-    if (
-        model == Llm.GPT_4_VISION
-        or model == Llm.GPT_4_TURBO_2024_04_09
-        or model == Llm.GPT_4O_2024_05_13
-    ):
+    # O1 doesn't support streaming or temperature
+    if model != Llm.O1_2024_12_17:
+        params["temperature"] = 0
+        params["stream"] = True
+
+    # Add 'max_tokens' corresponding to the model
+    if model == Llm.GPT_4O_2024_05_13:
         params["max_tokens"] = 4096
 
     if model == Llm.GPT_4O_2024_11_20:
         params["max_tokens"] = 16384
 
-    stream = await client.chat.completions.create(**params)  # type: ignore
-    full_response = ""
-    async for chunk in stream:  # type: ignore
-        assert isinstance(chunk, ChatCompletionChunk)
-        if (
-            chunk.choices
-            and len(chunk.choices) > 0
-            and chunk.choices[0].delta
-            and chunk.choices[0].delta.content
-        ):
-            content = chunk.choices[0].delta.content or ""
-            full_response += content
-            await callback(content)
+    if model == Llm.O1_2024_12_17:
+        params["max_completion_tokens"] = 20000
+
+    # O1 doesn't support streaming
+    if model == Llm.O1_2024_12_17:
+        response = await client.chat.completions.create(**params)  # type: ignore
+        full_response = response.choices[0].message.content  # type: ignore
+    else:
+        stream = await client.chat.completions.create(**params)  # type: ignore
+        full_response = ""
+        async for chunk in stream:  # type: ignore
+            assert isinstance(chunk, ChatCompletionChunk)
+            if (
+                chunk.choices
+                and len(chunk.choices) > 0
+                and chunk.choices[0].delta
+                and chunk.choices[0].delta.content
+            ):
+                content = chunk.choices[0].delta.content or ""
+                full_response += content
+                await callback(content)
 
     await client.close()
 
