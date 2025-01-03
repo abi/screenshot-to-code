@@ -1,0 +1,12 @@
+fastapi==0.115.6
+uvicorn==0.25.0
+python-dotenv==1.0.1
+openai==1.58.1
+anthropic==0.37.1
+google-genai==0.3.0
+pillow==10.4.0
+moviepy==1.0.3
+pytest==7.4.4
+pre-commit==3.8.0
+pyright==1.1.391
+beautifulsoup4==4.12.3 
