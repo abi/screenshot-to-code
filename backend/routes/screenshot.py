@@ -57,10 +57,17 @@ async def app_screenshot(request: ScreenshotRequest):
     url = request.url
     api_key = request.apiKey
 
-    # TODO: Add error handling
-    image_bytes = await capture_screenshot(url, api_key=api_key)
+    # Validate the URL
+    if not url.startswith(("http://", "https://")):
+        raise Exception("Invalid URL format. It must start with http:// or https://.")
 
-    # Convert the image bytes to a data url
-    data_url = bytes_to_data_url(image_bytes, "image/png")
+    try:
+        # Capture the screenshot
+        image_bytes = await capture_screenshot(url, api_key=api_key)
 
-    return ScreenshotResponse(url=data_url)
+        # Convert the image bytes to a data url
+        data_url = bytes_to_data_url(image_bytes, "image/png")
+
+        return ScreenshotResponse(url=data_url)
+    except Exception as e:
+        raise Exception (str(e))
