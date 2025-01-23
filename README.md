@@ -52,6 +52,7 @@ cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
 echo "ANTHROPIC_API_KEY=your-key" > .env
 poetry install
+poetry self add poetry-plugin-shell
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
