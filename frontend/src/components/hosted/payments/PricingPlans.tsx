@@ -31,7 +31,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
         </Button>
       </div>
       <div className="flex justify-center items-center">
-        <div className="grid grid-cols-3 gap-8 p-2">
+        <div className="grid grid-cols-2 gap-8 p-2">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h2 className="font-semibold dark:text-white">Hobby</h2>
             <p className="text-gray-500 dark:text-gray-400">Great to start</p>
@@ -120,42 +120,6 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
               <li className="flex items-center dark:text-white">
                 <FaCheckCircle className="text-black dark:text-white mr-2" />
                 Chat support
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="font-semibold dark:text-white">Enterprise</h2>
-            <p className="text-gray-500 dark:text-gray-400">
-              For medium to large companies
-            </p>
-            <div className="my-4">
-              <span className="text-gray-500 dark:text-gray-400">
-                Starting at $8000 annually
-              </span>
-            </div>
-
-            <a
-              href="https://cal.com/abi-raja-wy2pfh/30min"
-              target="_blank"
-              className="bg-black text-white dark:bg-white dark:text-black rounded py-2 px-4 w-full text-sm 
-                flex justify-center items-center gap-x-2 no-underline"
-            >
-              Contact Us
-            </a>
-
-            <ul className="mt-4 space-y-2">
-              <li className="flex items-center dark:text-white">
-                <FaCheckCircle className="text-black dark:text-white mr-2" />
-                Unlimited credits
-              </li>
-              <li className="flex items-center dark:text-white">
-                <FaCheckCircle className="text-black dark:text-white mr-2" />
-                Unlimited users
-              </li>
-              <li className="flex items-center dark:text-white">
-                <FaCheckCircle className="text-black dark:text-white mr-2" />
-                Custom integrations
               </li>
             </ul>
           </div>
