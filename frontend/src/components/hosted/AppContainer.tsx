@@ -43,6 +43,15 @@ function AppContainer() {
       if (!user.subscriber_tier) {
         setSubscriberTier("free");
       } else {
+        // Initialize Intercom only for paid users
+        Intercom({
+          app_id: "c5eiaj9m",
+          user_id: user.email,
+          name: user.first_name,
+          email: user.email,
+          "Subscriber Tier": user.subscriber_tier || "free",
+        });
+
         // Initialize PostHog only for paid users
         // and unmask all inputs except for passwords
         posthog.init(POSTHOG_KEY, {
@@ -63,15 +72,6 @@ function AppContainer() {
 
         setSubscriberTier(user.subscriber_tier);
       }
-
-      // Initialize Intercom
-      Intercom({
-        app_id: "c5eiaj9m",
-        user_id: user.email,
-        name: user.first_name,
-        email: user.email,
-        "Subscriber Tier": user.subscriber_tier || "free",
-      });
 
       // Identify user to Sentry
       Sentry.setUser({ email: user.email });
