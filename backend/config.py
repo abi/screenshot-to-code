@@ -2,6 +2,15 @@
 # Setting to True will stream a mock response instead of calling the OpenAI API
 # TODO: Should only be set to true when value is 'True', not any abitrary truthy value
 import os
+import boto3
+
+def has_valid_aws_credentials():
+    sts = boto3.client('sts')
+    try:
+        sts.get_caller_identity()
+        return True
+    except boto3.exceptions.ClientError:
+        return False
 
 NUM_VARIANTS = 2
 
@@ -10,6 +19,7 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", None)
+AWS_CREDENTIALS = has_valid_aws_credentials()
 
 # Image generation (optional)
 REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)

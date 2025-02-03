@@ -13,6 +13,7 @@ from config import (
     OPENAI_BASE_URL,
     REPLICATE_API_KEY,
     SHOULD_MOCK_AI_RESPONSE,
+    AWS_CREDENTIALS
 )
 from custom_types import InputMode
 from llm import (
@@ -22,6 +23,7 @@ from llm import (
     stream_claude_response_native,
     stream_gemini_response,
     stream_openai_response,
+    stream_bedrock_response,
 )
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
@@ -80,6 +82,7 @@ class ExtractedParams:
     should_generate_images: bool
     openai_api_key: str | None
     anthropic_api_key: str | None
+    aws_credentials: bool
     openai_base_url: str | None
     generation_type: Literal["create", "update"]
 
@@ -110,6 +113,11 @@ async def extract_params(
         params, "anthropicApiKey", ANTHROPIC_API_KEY
     )
 
+    # If neither is provided, we throw an error later only if Claude is used.
+    aws_credentials = get_from_settings_dialog_or_env(
+        params, "awsCredentials", AWS_CREDENTIALS
+    )
+
     # Base URL for OpenAI API
     openai_base_url: str | None = None
     # Disable user-specified OpenAI Base URL in prod
@@ -136,13 +144,14 @@ async def extract_params(
         should_generate_images=should_generate_images,
         openai_api_key=openai_api_key,
         anthropic_api_key=anthropic_api_key,
+        aws_credentials=aws_credentials,
         openai_base_url=openai_base_url,
         generation_type=generation_type,
     )
 
 
 def get_from_settings_dialog_or_env(
-    params: dict[str, str], key: str, env_var: str | None
+    params: dict[str, str], key: str, env_var: str | bool | None
 ) -> str | None:
     value = params.get(key)
     if value:
@@ -196,6 +205,7 @@ async def stream_code(websocket: WebSocket):
     openai_api_key = extracted_params.openai_api_key
     openai_base_url = extracted_params.openai_base_url
     anthropic_api_key = extracted_params.anthropic_api_key
+    aws_credentials = extracted_params.aws_credentials
     should_generate_images = extracted_params.should_generate_images
     generation_type = extracted_params.generation_type
 
@@ -277,11 +287,16 @@ async def stream_code(websocket: WebSocket):
                         claude_model,
                         Llm.CLAUDE_3_5_SONNET_2024_06_20,
                     ]
+                elif aws_credentials:
+                    variant_models = [
+                        Llm.BEDROCK_CLAUDE_3_5_SONNET_2024_06_20,
+                        Llm.BEDROCK_CLAUDE_3_5_SONNET_2024_06_20,
+                    ]
                 else:
                     await throw_error(
-                        "No OpenAI or Anthropic API key found. Please add the environment variable OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. If you add it to .env, make sure to restart the backend server."
+                        "No OpenAI and Anthropic API key found nor AWS credentials. Please add the environment variable OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog or configure your AWS credentials following their documentation. If you add it to .env, make sure to restart the backend server."
                     )
-                    raise Exception("No OpenAI or Anthropic key")
+                    raise Exception("No OpenAI, Anthropic or AWS credentials")
 
                 tasks: List[Coroutine[Any, Any, Completion]] = []
                 for index, model in enumerate(variant_models):
@@ -329,6 +344,18 @@ async def stream_code(websocket: WebSocket):
                                 api_key=anthropic_api_key,
                                 callback=lambda x, i=index: process_chunk(x, i),
                                 model=claude_model,
+                            )
+                        )
+                    elif model == Llm.BEDROCK_CLAUDE_3_5_SONNET_2024_06_20: 
+                        if not aws_credentials:
+                            await throw_error("AWS credentials are missing.")
+                            raise Exception("AWS credentials are missing.")
+
+                        tasks.append(
+                            stream_bedrock_response(
+                                prompt_messages,
+                                callback=lambda x, i=index: process_chunk(x, i),
+                                model=Llm.BEDROCK_CLAUDE_3_5_SONNET_2024_06_20,
                             )
                         )
 

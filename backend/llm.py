@@ -11,6 +11,8 @@ from debug.DebugFileWriter import DebugFileWriter
 from image_processing.utils import process_image
 from google import genai
 from google.genai import types
+from boto3 import Session
+import json
 
 from utils import pprint_prompt
 
@@ -29,6 +31,7 @@ class Llm(Enum):
     CLAUDE_3_5_SONNET_2024_10_22 = "claude-3-5-sonnet-20241022"
     GEMINI_2_0_FLASH_EXP = "gemini-2.0-flash-exp"
     O1_2024_12_17 = "o1-2024-12-17"
+    BEDROCK_CLAUDE_3_5_SONNET_2024_06_20 = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
 
 class Completion(TypedDict):
@@ -299,4 +302,98 @@ async def stream_gemini_response(
             full_response += response.text  # type: ignore
             await callback(response.text)  # type: ignore
     completion_time = time.time() - start_time
+    return {"duration": completion_time, "code": full_response}
+
+
+async def stream_bedrock_response(
+    messages: List[ChatCompletionMessageParam],
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> Completion:
+    print(f"Invoking {model} on AWS Bedrock")
+    start_time = time.time()
+
+    # Initialize Bedrock runtime client
+    session = Session()
+
+    # Expect configuration from environment variables or /.aws/credentials
+    bedrock_client = session.client(
+        service_name='bedrock-runtime',
+    )
+
+    full_response = ""
+
+    # Deep copy messages to avoid modifying the original list
+    cloned_messages = copy.deepcopy(messages)
+
+    system_prompt = cast(str, cloned_messages[0].get("content"))
+    claude_messages = [dict(message) for message in cloned_messages[1:]]
+    for message in claude_messages:
+        if not isinstance(message["content"], list):
+            continue
+
+        for content in message["content"]:  # type: ignore
+            if content["type"] == "image_url":
+                content["type"] = "image"
+
+                # Extract base64 data and media type from data URL
+                # Example base64 data URL: data:image/png;base64,iVBOR...
+                image_data_url = cast(str, content["image_url"]["url"])
+
+                # Process image and split media type and data
+                # so it works with Claude (under 5mb in base64 encoding)
+                (media_type, base64_data) = process_image(image_data_url)
+
+                # Remove OpenAI parameter
+                del content["image_url"]
+
+                content["source"] = {
+                    "type": "base64",
+                    "media_type": media_type,
+                    "data": base64_data,
+                }
+
+    body = {
+        "anthropic_version": "bedrock-2023-05-31", 
+        "max_tokens": 8192,
+        "messages": claude_messages,
+        "temperature":0.0,
+        "system":system_prompt,
+    }
+        
+    # Convert the payload to bytes
+    body_bytes = json.dumps(body).encode('utf-8')    
+
+    response = bedrock_client.invoke_model_with_response_stream(
+        body=body_bytes,
+        contentType='application/json',
+        accept='application/json',
+        modelId=model.value,
+        trace='DISABLED',
+    )
+
+    for event in response['body']:
+        if 'chunk' in event:
+            chunk = event['chunk']['bytes'].decode('utf-8')
+            if chunk:
+                chunk_obj = json.loads(chunk)
+                if chunk_obj.get('delta', {}).get('type') == 'text_delta':
+                    response_text = chunk_obj['delta']['text']
+                    full_response += response_text
+                    await callback(response_text)
+        elif 'internalServerException' in event:
+            raise Exception(event['internalServerException']['message'])
+        elif 'modelStreamErrorException' in event:
+            raise Exception(event['modelStreamErrorException']['message'])
+        elif 'validationException' in event:
+            raise Exception(event['validationException']['message'])
+        elif 'throttlingException' in event:
+            raise Exception(event['throttlingException']['message'])
+        elif 'modelTimeoutException' in event:
+            raise Exception(event['modelTimeoutException']['message'])
+        elif 'serviceUnavailableException' in event:
+            raise Exception(event['serviceUnavailableException']['message'])
+
+    completion_time = time.time() - start_time
+
     return {"duration": completion_time, "code": full_response}

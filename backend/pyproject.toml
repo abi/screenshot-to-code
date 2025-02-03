@@ -22,6 +22,7 @@ types-pillow = "^10.2.0.20240520"
 aiohttp = "^3.9.5"
 pydantic = "^2.10"
 google-genai = "^0.3.0"
+boto3 = "^1.36.11"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
