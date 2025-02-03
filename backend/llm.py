@@ -94,24 +94,13 @@ async def stream_openai_response(
 
     completion_time = time.time() - start_time
     return {"duration": completion_time, "code": full_response}
+    
 
-
-# TODO: Have a seperate function that translates OpenAI messages to Claude messages
-async def stream_claude_response(
-    messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    model: Llm,
-) -> Completion:
-    start_time = time.time()
-    client = AsyncAnthropic(api_key=api_key)
-
-    # Base parameters
-    max_tokens = 8192
-    temperature = 0.0
-
-    # Translate OpenAI messages to Claude messages
-
+def process_claude_messages(messages: List[ChatCompletionMessageParam]) -> tuple[str, List[dict]]:
+    """
+    Process messages for Claude by converting image URLs to base64 data
+    and removing the image URL parameter from the message.
+    """
     # Deep copy messages to avoid modifying the original list
     cloned_messages = copy.deepcopy(messages)
 
@@ -141,6 +130,27 @@ async def stream_claude_response(
                     "media_type": media_type,
                     "data": base64_data,
                 }
+
+    return system_prompt, claude_messages
+
+
+# TODO: Have a seperate function that translates OpenAI messages to Claude messages
+async def stream_claude_response(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> Completion:
+    start_time = time.time()
+    client = AsyncAnthropic(api_key=api_key)
+
+    # Base parameters
+    max_tokens = 8192
+    temperature = 0.0
+
+    # Translate OpenAI messages to Claude messages
+
+    system_prompt, claude_messages = process_claude_messages(messages)
 
     # Stream Claude response
     async with client.messages.stream(
@@ -323,35 +333,7 @@ async def stream_bedrock_response(
 
     full_response = ""
 
-    # Deep copy messages to avoid modifying the original list
-    cloned_messages = copy.deepcopy(messages)
-
-    system_prompt = cast(str, cloned_messages[0].get("content"))
-    claude_messages = [dict(message) for message in cloned_messages[1:]]
-    for message in claude_messages:
-        if not isinstance(message["content"], list):
-            continue
-
-        for content in message["content"]:  # type: ignore
-            if content["type"] == "image_url":
-                content["type"] = "image"
-
-                # Extract base64 data and media type from data URL
-                # Example base64 data URL: data:image/png;base64,iVBOR...
-                image_data_url = cast(str, content["image_url"]["url"])
-
-                # Process image and split media type and data
-                # so it works with Claude (under 5mb in base64 encoding)
-                (media_type, base64_data) = process_image(image_data_url)
-
-                # Remove OpenAI parameter
-                del content["image_url"]
-
-                content["source"] = {
-                    "type": "base64",
-                    "media_type": media_type,
-                    "data": base64_data,
-                }
+    system_prompt, claude_messages = process_claude_messages(messages)
 
     body = {
         "anthropic_version": "bedrock-2023-05-31", 
