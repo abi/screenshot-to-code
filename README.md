@@ -32,7 +32,7 @@ We also just added experimental support for taking a video/screen recording of a
 
 ## 🌍  Hosted Version
 
-[Try it live on the hosted version (paid)](https://screenshottocode.com). If you're a large or medium enterprise (50+ employees), [book a meeting to explore custom enterprise plans](https://cal.com/abi-raja-wy2pfh/30min).
+[Try it live on the hosted version (paid)](https://screenshottocode.com).
 
 ## 🛠 Getting Started
 
