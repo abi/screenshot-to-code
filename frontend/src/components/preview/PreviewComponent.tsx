@@ -18,6 +18,7 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
 
   // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
+  const [scale, setScale] = useState(1);
 
   // Add scaling logic
   useEffect(() => {
@@ -28,12 +29,14 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
 
       const viewportWidth = wrapper.clientWidth;
       const baseWidth = device === "desktop" ? 1440 : 375;
-      const scale = Math.min(1, viewportWidth / baseWidth);
+      const scaleValue = Math.min(1, viewportWidth / baseWidth);
 
-      iframe.style.transform = `scale(${scale})`;
+      setScale(scaleValue);
+
+      iframe.style.transform = `scale(${scaleValue})`;
       iframe.style.transformOrigin = "top left";
       // Adjust wrapper height to account for scaling
-      wrapper.style.height = `${iframe.offsetHeight * scale}px`;
+      wrapper.style.height = `${iframe.offsetHeight * scaleValue}px`;
     };
 
     updateScale();
@@ -80,6 +83,7 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
           event={clickEvent}
           iframeRef={iframeRef}
           doUpdate={doUpdate}
+          scale={scale}
         />
       </div>
     </div>
