@@ -13,7 +13,9 @@ import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
+import CodeViewer2 from "@/components/preview/code-viewer2";
 import { downloadCode } from "./download";
+import { Stack } from "../../lib/stacks";
 
 interface Props {
   doUpdate: (instruction: string) => void;
@@ -34,6 +36,9 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
     inputMode === "video" && appState === AppState.CODING
       ? extractHtml(currentCode)
       : currentCode;
+
+  // Determine whether to use CodeViewer or PreviewComponent
+  const ShouldUseCodeViewer = settings.generatedCodeConfig === Stack.REACT_SHADCN;
 
   return (
     <div className="ml-4">
@@ -74,19 +79,36 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
             </TabsList>
           </div>
         </div>
+      
         <TabsContent value="desktop">
-          <PreviewComponent
-            code={previewCode}
-            device="desktop"
-            doUpdate={doUpdate}
-          />
+          {ShouldUseCodeViewer ? (
+            <CodeViewer2
+              code={previewCode}
+              //device="desktop"
+              //doUpdate={doUpdate}
+            />
+          ) : (
+            <PreviewComponent
+              code={previewCode}
+              device="desktop"
+              doUpdate={doUpdate}
+            />
+          )}
         </TabsContent>
         <TabsContent value="mobile">
-          <PreviewComponent
-            code={previewCode}
-            device="mobile"
-            doUpdate={doUpdate}
-          />
+          {ShouldUseCodeViewer ? (
+            <CodeViewer2
+              code={previewCode}
+              //device="mobile"
+              //doUpdate={doUpdate}
+            />
+          ) : (
+            <PreviewComponent
+              code={previewCode}
+              device="mobile"
+              doUpdate={doUpdate}
+            />
+          )}
         </TabsContent>
         <TabsContent value="code">
           <CodeTab code={previewCode} setCode={() => {}} settings={settings} />
