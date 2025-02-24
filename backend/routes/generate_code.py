@@ -302,6 +302,7 @@ async def stream_code(websocket: WebSocket):
                     elif GEMINI_API_KEY and (
                         model == Llm.GEMINI_2_0_PRO_EXP
                         or model == Llm.GEMINI_2_0_FLASH_EXP
+                        or model == Llm.GEMINI_2_0_FLASH
                     ):
                         tasks.append(
                             stream_gemini_response(
