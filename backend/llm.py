@@ -29,6 +29,7 @@ class Llm(Enum):
     CLAUDE_3_5_SONNET_2024_10_22 = "claude-3-5-sonnet-20241022"
     GEMINI_2_0_FLASH_EXP = "gemini-2.0-flash-exp"
     O1_2024_12_17 = "o1-2024-12-17"
+    GROK_2_VISION = "grok-2-vision-1212"
 
 
 class Completion(TypedDict):
@@ -254,6 +255,75 @@ async def stream_claude_response_native(
             "code": response.content[0].text,  # type: ignore
         }
 
+
+async def stream_xai_response(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> Completion:
+    start_time = time.time()
+    
+    # Extract image data from messages
+    image_data = None
+    for message in messages:
+        if isinstance(message.get("content"), list):
+            for content in message["content"]:
+                if content.get("type") == "image_url":
+                    image_url = content["image_url"]["url"]
+                    if image_url.startswith("data:"):
+                        # Process image data URL
+                        media_type = image_url.split(";")[0].split(":")[1]
+                        base64_data = image_url.split(",")[1]
+                        image_data = {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": base64_data
+                            }
+                        }
+                    break
+
+    # Import xai only when needed to avoid startup impact
+    try:
+        import xai
+    except ImportError:
+        raise ImportError("xai package is required for Grok-2-vision support")
+
+    client = xai.Client(api_key=api_key)
+    
+    try:
+        # Set up streaming parameters
+        stream = await client.chat.completions.create(
+            model=model.value,
+            messages=[
+                {
+                    "role": msg["role"],
+                    "content": image_data if image_data and msg["role"] == "user" else msg["content"]
+                }
+                for msg in messages
+            ],
+            temperature=0,
+            max_tokens=4096,
+            stream=True
+        )
+
+        full_response = ""
+        async for chunk in stream:
+            if chunk.choices and chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                full_response += content
+                await callback(content)
+
+    except Exception as e:
+        raise Exception(f"XAI API error: {str(e)}")
+
+    finally:
+        await client.close()
+
+    completion_time = time.time() - start_time
+    return {"duration": completion_time, "code": full_response}
 
 async def stream_gemini_response(
     messages: List[ChatCompletionMessageParam],
