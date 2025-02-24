@@ -37,7 +37,7 @@ async def generate_code_core(
             callback=lambda x: process_chunk(x),
             model=model,
         )
-    elif model == Llm.GEMINI_2_0_FLASH_EXP:
+    elif model == Llm.GEMINI_2_0_FLASH_EXP or model == Llm.GEMINI_2_0_PRO_EXP:
         if not GEMINI_API_KEY:
             raise Exception("Gemini API key not found")
 
