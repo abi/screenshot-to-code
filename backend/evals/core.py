@@ -26,6 +26,7 @@ async def generate_code_core(
         model == Llm.CLAUDE_3_SONNET
         or model == Llm.CLAUDE_3_5_SONNET_2024_06_20
         or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
+        or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
     ):
         if not ANTHROPIC_API_KEY:
             raise Exception("Anthropic API key not found")
@@ -58,4 +59,4 @@ async def generate_code_core(
             model=model,
         )
 
-    return completion
+    return completion["code"]

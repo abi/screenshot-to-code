@@ -255,10 +255,10 @@ async def stream_code(websocket: WebSocket):
                 # we decide which models to run
                 variant_models = []
 
-                # For creation, use Claude Sonnet 3.6 but it can be lazy
-                # so for updates, we use Claude Sonnet 3.5
+                # For creation, use Claude Sonnet 3.7
+                # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
                 if generation_type == "create":
-                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_10_22
+                    claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
                 else:
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
@@ -311,15 +311,16 @@ async def stream_code(websocket: WebSocket):
                     elif (
                         model == Llm.CLAUDE_3_5_SONNET_2024_06_20
                         or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
+                        or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
                     ):
                         if anthropic_api_key is None:
                             await throw_error("Anthropic API key is missing.")
                             raise Exception("Anthropic API key is missing.")
 
-                        # For creation, use Claude Sonnet 3.6 but it can be lazy
-                        # so for updates, we use Claude Sonnet 3.5
+                        # For creation, use Claude Sonnet 3.7
+                        # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
                         if params["generationType"] == "create":
-                            claude_model = Llm.CLAUDE_3_5_SONNET_2024_10_22
+                            claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
                         else:
                             claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
