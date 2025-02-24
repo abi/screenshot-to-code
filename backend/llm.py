@@ -3,10 +3,11 @@ from enum import Enum
 import base64
 import time
 from typing import Any, Awaitable, Callable, List, cast, TypedDict
-from anthropic import AsyncAnthropic
+from anthropic.types import Message
+from anthropic import AsyncAnthropic, Anthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
-from config import IS_DEBUG_ENABLED
+from config import IS_DEBUG_ENABLED, XAI_BASE_URL
 from debug.DebugFileWriter import DebugFileWriter
 from image_processing.utils import process_image
 from google import genai
@@ -256,71 +257,58 @@ async def stream_claude_response_native(
         }
 
 
-async def stream_xai_response(
+async def stream_grok_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
     model: Llm,
 ) -> Completion:
     start_time = time.time()
-    
-    # Extract image data from messages
-    image_data = None
-    for message in messages:
-        if isinstance(message.get("content"), list):
-            for content in message["content"]:
-                if content.get("type") == "image_url":
-                    image_url = content["image_url"]["url"]
-                    if image_url.startswith("data:"):
-                        # Process image data URL
-                        media_type = image_url.split(";")[0].split(":")[1]
-                        base64_data = image_url.split(",")[1]
-                        image_data = {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": media_type,
-                                "data": base64_data
-                            }
-                        }
-                    break
+    client = Anthropic(
+        api_key=api_key,
+        base_url=XAI_BASE_URL
+    )
 
-    # Import xai only when needed to avoid startup impact
-    try:
-        import xai
-    except ImportError:
-        raise ImportError("xai package is required for Grok-2-vision support")
+    # Deep copy messages to avoid modifying the original list
+    cloned_messages = copy.deepcopy(messages)
 
-    client = xai.Client(api_key=api_key)
+    system_prompt = cast(str, cloned_messages[0].get("content"))
+    grok_messages = [dict(message) for message in cloned_messages[1:]]
     
-    try:
-        # Set up streaming parameters
-        stream = await client.chat.completions.create(
-            model=model.value,
-            messages=[
-                {
-                    "role": msg["role"],
-                    "content": image_data if image_data and msg["role"] == "user" else msg["content"]
+    # Process image content similar to Claude
+    for message in grok_messages:
+        if not isinstance(message["content"], list):
+            continue
+
+        for content in message["content"]:  # type: ignore
+            if content["type"] == "image_url":
+                content["type"] = "image"
+                image_data_url = cast(str, content["image_url"]["url"])
+                # Use more aggressive compression for Grok
+                (media_type, base64_data) = process_image(image_data_url, max_size_kb=512)  # 512KB limit
+                del content["image_url"]
+                content["source"] = {
+                    "type": "base64",
+                    "media_type": media_type,
+                    "data": base64_data,
                 }
-                for msg in messages
-            ],
-            temperature=0,
-            max_tokens=4096,
-            stream=True
-        )
 
+    # Stream Grok response
+    # Make a synchronous call since Anthropic client doesn't support async streaming
+    response: Message = client.messages.create(
+        model=model.value,
+        max_tokens=16384,  # Grok has a large context window
+        temperature=0,
+        system=system_prompt,
+        messages=grok_messages,  # type: ignore
+    )
+
+    # Process the response
+    if response.content and len(response.content) > 0:
+        full_response = response.content[0].text
+        await callback(full_response)
+    else:
         full_response = ""
-        async for chunk in stream:
-            if chunk.choices and chunk.choices[0].delta.content:
-                content = chunk.choices[0].delta.content
-                full_response += content
-                await callback(content)
-
-    except Exception as e:
-        raise Exception(f"XAI API error: {str(e)}")
-
-    finally:
-        await client.close()
 
     completion_time = time.time() - start_time
     return {"duration": completion_time, "code": full_response}

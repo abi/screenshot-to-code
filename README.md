@@ -18,7 +18,13 @@ Supported AI models:
 
 - Claude Sonnet 3.5 - Best model!
 - GPT-4o - also recommended!
+- Grok-2 Vision - X.AI's vision model (Grok-3 will add when it release!)
 - DALL-E 3 or Flux Schnell (using Replicate) for image generation
+
+You can configure which provider to use by setting the `PROVIDER` environment variable:
+- `PROVIDER=openai` - Use OpenAI (GPT-4 Vision)
+- `PROVIDER=anthropic` - Use Anthropic (Claude)
+- `PROVIDER=xai` - Use X.AI (Grok)
 
 See the [Examples](#-examples) section below for more demos.
 
@@ -110,3 +116,10 @@ https://github.com/abi/screenshot-to-code/assets/23818/503eb86a-356e-4dfc-926a-d
 **Hacker News** but it gets the colors wrong at first so we nudge it
 
 https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-ac7410315e5d
+
+## 👥 Contributors
+
+- [Abi Raja](https://github.com/abi) - Owner and main developer
+- [Navid Mirzaaghazadeh](https://github.com/mirzaaghazadeh/) - X.AI (Grok) integration
+
+[View all contributors](https://github.com/abi/screenshot-to-code/graphs/contributors)

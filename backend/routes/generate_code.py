@@ -10,10 +10,12 @@ from config import (
     IS_PROD,
     NUM_VARIANTS,
     OPENAI_API_KEY,
-    OPENAI_BASE_URL,
     REPLICATE_API_KEY,
     SHOULD_MOCK_AI_RESPONSE,
     XAI_API_KEY,
+    Provider,
+    PROVIDER,
+    get_base_url,
 )
 from custom_types import InputMode
 from llm import (
@@ -22,8 +24,8 @@ from llm import (
     stream_claude_response,
     stream_claude_response_native,
     stream_gemini_response,
+    stream_grok_response,
     stream_openai_response,
-    stream_xai_response,
 )
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
@@ -45,7 +47,7 @@ async def perform_image_generation(
     completion: str,
     should_generate_images: bool,
     openai_api_key: str | None,
-    openai_base_url: str | None,
+    base_url: str | None,
     image_cache: dict[str, str],
 ):
     replicate_api_key = REPLICATE_API_KEY
@@ -69,7 +71,7 @@ async def perform_image_generation(
     return await generate_images(
         completion,
         api_key=api_key,
-        base_url=openai_base_url,
+        base_url=base_url,
         image_cache=image_cache,
         model=image_generation_model,
     )
@@ -83,7 +85,7 @@ class ExtractedParams:
     openai_api_key: str | None
     anthropic_api_key: str | None
     xai_api_key: str | None
-    openai_base_url: str | None
+    base_url: str | None
     generation_type: Literal["create", "update"]
 
 
@@ -112,21 +114,20 @@ async def extract_params(
     anthropic_api_key = get_from_settings_dialog_or_env(
         params, "anthropicApiKey", ANTHROPIC_API_KEY
     )
-    
-    # XAI API key for Grok support
+
+    # XAI API key for Grok
     xai_api_key = get_from_settings_dialog_or_env(
         params, "xaiApiKey", XAI_API_KEY
     )
 
-    # Base URL for OpenAI API
-    openai_base_url: str | None = None
-    # Disable user-specified OpenAI Base URL in prod
-    if not IS_PROD:
-        openai_base_url = get_from_settings_dialog_or_env(
-            params, "openAiBaseURL", OPENAI_BASE_URL
+    # Get base URL based on provider
+    base_url = get_base_url()
+    if PROVIDER == Provider.OPENAI and not IS_PROD:
+        # Allow custom OpenAI URL only in non-prod
+        base_url = get_from_settings_dialog_or_env(
+            params, "openAiBaseURL", base_url
         )
-    if not openai_base_url:
-        print("Using official OpenAI URL")
+    print(f"Using {PROVIDER} provider")
 
     # Get the image generation flag from the request. Fall back to True if not provided.
     should_generate_images = bool(params.get("isImageGenerationEnabled", True))
@@ -145,7 +146,7 @@ async def extract_params(
         openai_api_key=openai_api_key,
         anthropic_api_key=anthropic_api_key,
         xai_api_key=xai_api_key,
-        openai_base_url=openai_base_url,
+        base_url=base_url,
         generation_type=generation_type,
     )
 
@@ -203,10 +204,10 @@ async def stream_code(websocket: WebSocket):
     stack = extracted_params.stack
     input_mode = extracted_params.input_mode
     openai_api_key = extracted_params.openai_api_key
-    openai_base_url = extracted_params.openai_base_url
+    base_url = extracted_params.base_url
     anthropic_api_key = extracted_params.anthropic_api_key
     xai_api_key = extracted_params.xai_api_key
-    should_generate_images = extracted_params.should_generate_images 
+    should_generate_images = extracted_params.should_generate_images
     generation_type = extracted_params.generation_type
 
     print(f"Generating {stack} code in {input_mode} mode")
@@ -275,7 +276,7 @@ async def stream_code(websocket: WebSocket):
                 if xai_api_key:
                     variant_models = [
                         Llm.GROK_2_VISION,
-                        claude_model if anthropic_api_key else Llm.GPT_4O_2024_11_20,
+                        Llm.GROK_2_VISION,
                     ]
                 elif openai_api_key and anthropic_api_key:
                     variant_models = [
@@ -309,18 +310,18 @@ async def stream_code(websocket: WebSocket):
                             stream_openai_response(
                                 prompt_messages,
                                 api_key=openai_api_key,
-                                base_url=openai_base_url,
+                                base_url=base_url,
                                 callback=lambda x, i=index: process_chunk(x, i),
                                 model=model,
                             )
                         )
                     elif model == Llm.GROK_2_VISION:
                         if xai_api_key is None:
-                            await throw_error("XAI API key is missing.")
-                            raise Exception("XAI API key is missing.")
-                            
+                            await throw_error("X.AI API key is missing.")
+                            raise Exception("X.AI API key is missing.")
+
                         tasks.append(
-                            stream_xai_response(
+                            stream_grok_response(
                                 prompt_messages,
                                 api_key=xai_api_key,
                                 callback=lambda x, i=index: process_chunk(x, i),
@@ -427,12 +428,6 @@ async def stream_code(websocket: WebSocket):
                 )
             )
             return await throw_error(error_message)
-        except Exception as e:
-            if "XAI API error" in str(e):
-                print("[GENERATE_CODE] XAI API error", e)
-                error_message = "XAI API error. Please check your XAI API key and make sure you have access to the Grok-2-vision model."
-                return await throw_error(error_message)
-            raise
 
     ## Post-processing
 
@@ -452,7 +447,7 @@ async def stream_code(websocket: WebSocket):
             completion,
             should_generate_images,
             openai_api_key,
-            openai_base_url,
+            base_url,
             image_cache,
         )
         for completion in completions
