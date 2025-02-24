@@ -9,12 +9,14 @@ interface EditPopupProps {
   event: MouseEvent | null;
   iframeRef: React.RefObject<HTMLIFrameElement>;
   doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
+  scale: number;
 }
 
 const EditPopup: React.FC<EditPopupProps> = ({
   event,
   iframeRef,
   doUpdate,
+  scale,
 }) => {
   // App state
   const { inSelectAndEditMode } = useAppStore();
@@ -92,7 +94,8 @@ const EditPopup: React.FC<EditPopupProps> = ({
     const adjustedCoordinates = getAdjustedCoordinates(
       event.clientX,
       event.clientY,
-      iframeRef.current?.getBoundingClientRect()
+      iframeRef.current?.getBoundingClientRect(),
+      scale
     );
 
     // Show the popup at the click position
@@ -104,7 +107,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
 
     // Focus the textarea
     textareaRef.current?.focus();
-  }, [event, iframeRef]);
+  }, [event, iframeRef, scale]);
 
   // Focus the textarea when the popup is visible (we can't do this only when handling the click event
   // because the textarea is not rendered yet)

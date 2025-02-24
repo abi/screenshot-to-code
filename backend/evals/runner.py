@@ -68,8 +68,12 @@ async def run_image_evals(
         # File name is derived from the original filename in evals with an added output number
         output_filename = f"{os.path.splitext(filename)[0]}_{output_number}.html"
         output_filepath = os.path.join(output_subfolder, output_filename)
-        with open(output_filepath, "w") as file:
-            file.write(content)
+        try:
+            with open(output_filepath, "w") as file:
+                file.write(content)
+        except Exception as e:
+            print(f"Error writing file {output_filepath}: {content} {e}")
+            continue
         output_files.append(output_filename)
 
     return output_files

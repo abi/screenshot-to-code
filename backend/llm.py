@@ -29,7 +29,10 @@ class Llm(Enum):
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
     CLAUDE_3_5_SONNET_2024_06_20 = "claude-3-5-sonnet-20240620"
     CLAUDE_3_5_SONNET_2024_10_22 = "claude-3-5-sonnet-20241022"
+    CLAUDE_3_7_SONNET_2025_02_19 = "claude-3-7-sonnet-20250219"
     GEMINI_2_0_FLASH_EXP = "gemini-2.0-flash-exp"
+    GEMINI_2_0_FLASH = "gemini-2.0-flash"
+    GEMINI_2_0_PRO_EXP = "gemini-2.0-pro-exp-02-05"
     O1_2024_12_17 = "o1-2024-12-17"
 
 
@@ -52,54 +55,61 @@ async def stream_openai_response(
     params = {
         "model": model.value,
         "messages": messages,
-        "stream": True,
         "timeout": 600,
-        "temperature": 0.0,
     }
 
-    # Add 'max_tokens' only if the model is a GPT4 vision or Turbo model
-    if (
-        model == Llm.GPT_4_VISION
-        or model == Llm.GPT_4_TURBO_2024_04_09
-        or model == Llm.GPT_4O_2024_05_13
-    ):
+    # O1 doesn't support streaming or temperature
+    if model != Llm.O1_2024_12_17:
+        params["temperature"] = 0
+        params["stream"] = True
+
+    # Add 'max_tokens' corresponding to the model
+    if model == Llm.GPT_4O_2024_05_13:
         params["max_tokens"] = 4096
 
     if model == Llm.GPT_4O_2024_11_20:
         params["max_tokens"] = 16384
 
-    stream = await client.chat.completions.create(**params)  # type: ignore
-    full_response = ""
-    async for chunk in stream:  # type: ignore
-        assert isinstance(chunk, ChatCompletionChunk)
+    if model == Llm.O1_2024_12_17:
+        params["max_completion_tokens"] = 20000
 
-        # Log finish reason for OpenAI but don't halt streaming if it fails
-        try:
-            # Print finish reason if it exists
+    # O1 doesn't support streaming
+    if model == Llm.O1_2024_12_17:
+        response = await client.chat.completions.create(**params)  # type: ignore
+        full_response = response.choices[0].message.content  # type: ignore
+    else:
+        stream = await client.chat.completions.create(**params)  # type: ignore
+        full_response = ""
+        async for chunk in stream:  # type: ignore
+            assert isinstance(chunk, ChatCompletionChunk)
+
+            # Log finish reason for OpenAI but don't halt streaming if it fails
+            try:
+                # Print finish reason if it exists
+                if (
+                    chunk.choices
+                    and len(chunk.choices) > 0
+                    and chunk.choices[0].finish_reason
+                ):
+                    finish_reason = chunk.choices[0].finish_reason
+                    print("[STOP REASON] OpenAI " + finish_reason)
+                    if finish_reason == "length":
+                        try:
+                            raise Exception("OpenAI response too long")
+                        except Exception as e:
+                            sentry_sdk.capture_exception()
+            except Exception as e:
+                sentry_sdk.capture_exception(e)
+
             if (
                 chunk.choices
                 and len(chunk.choices) > 0
-                and chunk.choices[0].finish_reason
+                and chunk.choices[0].delta
+                and chunk.choices[0].delta.content
             ):
-                finish_reason = chunk.choices[0].finish_reason
-                print("[STOP REASON] OpenAI " + finish_reason)
-                if finish_reason == "length":
-                    try:
-                        raise Exception("OpenAI response too long")
-                    except Exception as e:
-                        sentry_sdk.capture_exception()
-        except Exception as e:
-            sentry_sdk.capture_exception(e)
-
-        if (
-            chunk.choices
-            and len(chunk.choices) > 0
-            and chunk.choices[0].delta
-            and chunk.choices[0].delta.content
-        ):
-            content = chunk.choices[0].delta.content or ""
-            full_response += content
-            await callback(content)
+                content = chunk.choices[0].delta.content or ""
+                full_response += content
+                await callback(content)
 
     await client.close()
 
@@ -189,7 +199,7 @@ async def stream_claude_response_native(
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
     include_thinking: bool = False,
-    model: Llm = Llm.CLAUDE_3_OPUS,
+    model: Llm = Llm.CLAUDE_3_7_SONNET_2025_02_19,
 ) -> Completion:
     start_time = time.time()
     client = AsyncAnthropic(api_key=api_key)

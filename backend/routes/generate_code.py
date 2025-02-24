@@ -329,10 +329,10 @@ async def stream_code(websocket: WebSocket):
                 # we decide which models to run
                 variant_models = []
 
-                # For creation, use Claude Sonnet 3.6 but it can be lazy
-                # so for updates, we use Claude Sonnet 3.5
+                # For creation, use Claude Sonnet 3.7
+                # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
                 if generation_type == "create":
-                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_10_22
+                    claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
                 else:
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
@@ -369,7 +369,7 @@ async def stream_code(websocket: WebSocket):
 
                 tasks: list[Coroutine[Any, Any, Completion]] = []
                 for index, model in enumerate(variant_models):
-                    if model == Llm.GPT_4O_2024_11_20:
+                    if model == Llm.GPT_4O_2024_11_20 or model == Llm.O1_2024_12_17:
                         if openai_api_key is None:
                             await throw_error("OpenAI API key is missing.")
                             raise Exception("OpenAI API key is missing.")
@@ -383,22 +383,26 @@ async def stream_code(websocket: WebSocket):
                                 model=model,
                             )
                         )
-                    elif model == Llm.GEMINI_2_0_FLASH_EXP:
+                    elif (
+                        model == Llm.GEMINI_2_0_PRO_EXP
+                        or model == Llm.GEMINI_2_0_FLASH_EXP
+                        or model == Llm.GEMINI_2_0_FLASH
+                    ):
                         if gemini_api_key is None:
                             await throw_error("Gemini API key is missing.")
                             raise Exception("Gemini API key is missing.")
-
                         tasks.append(
                             stream_gemini_response(
                                 prompt_messages,
                                 api_key=gemini_api_key,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model=Llm.GEMINI_2_0_FLASH_EXP,
+                                model=model,
                             )
                         )
                     elif (
                         model == Llm.CLAUDE_3_5_SONNET_2024_06_20
                         or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
+                        or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
                     ):
                         if anthropic_api_key is None:
                             await throw_error("Anthropic API key is missing.")

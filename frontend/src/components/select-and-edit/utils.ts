@@ -13,10 +13,13 @@ export function addHighlight(element: HTMLElement) {
 export function getAdjustedCoordinates(
   x: number,
   y: number,
-  rect: DOMRect | undefined
+  rect: DOMRect | undefined,
+  scale: number
 ) {
   const offsetX = rect ? rect.left : 0;
   const offsetY = rect ? rect.top : 0;
-
-  return { x: x + offsetX, y: y + offsetY };
+  return {
+    x: offsetX + x * scale,
+    y: offsetY + y * scale,
+  };
 }
