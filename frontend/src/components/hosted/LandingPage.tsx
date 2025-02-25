@@ -104,7 +104,7 @@ function LandingPage() {
               <FaGithub size={24} />
               <span>GitHub</span>
               <span className="text-sm bg-gray-200 rounded-full px-2 py-1">
-                53,939 stars
+                68,627 stars
               </span>
             </Button>
           </div>
@@ -115,7 +115,7 @@ function LandingPage() {
       <div className="mx-auto mt-12 px-4 sm:px-0">
         <p className="text-gray-600 text-xl mb-10 text-center">
           #1 tool used by developers and designers from leading companies. Fully
-          open source with 53,000+ stars on GitHub.
+          open source with 68,000+ stars on GitHub.
         </p>
         <div
           className="mx-auto grid max-w-lg items-center gap-x-2 
