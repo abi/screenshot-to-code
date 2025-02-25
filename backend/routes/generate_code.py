@@ -150,6 +150,8 @@ async def extract_params(
 
     print("Payment method: ", payment_method)
 
+    # Dummy comment for testing
+
     if payment_method is PaymentMethod.UNKNOWN:
         openai_api_key = get_from_settings_dialog_or_env(params, "openAiApiKey", None)
 
