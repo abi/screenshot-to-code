@@ -1,9 +1,10 @@
-from config import ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY
+from config import ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, AWS_CREDENTIALS
 from llm import (
     Llm,
     stream_claude_response,
     stream_gemini_response,
     stream_openai_response,
+    stream_bedrock_response
 )
 from prompts import assemble_prompt
 from prompts.types import Stack
@@ -48,6 +49,15 @@ async def generate_code_core(
         completion = await stream_gemini_response(
             prompt_messages,
             api_key=GEMINI_API_KEY,
+            callback=lambda x: process_chunk(x),
+            model=model,
+        )
+    elif model == Llm.BEDROCK_CLAUDE_3_5_SONNET_2024_06_20:
+        if not AWS_CREDENTIALS:
+            raise Exception("AWS credentials not found")
+
+        completion = await stream_bedrock_response(
+            prompt_messages,
             callback=lambda x: process_chunk(x),
             model=model,
         )
