@@ -11,6 +11,8 @@ from debug.DebugFileWriter import DebugFileWriter
 from image_processing.utils import process_image
 from google import genai
 from google.genai import types
+from boto3 import Session
+import json
 
 from utils import pprint_prompt
 
@@ -32,6 +34,7 @@ class Llm(Enum):
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_2_0_PRO_EXP = "gemini-2.0-pro-exp-02-05"
     O1_2024_12_17 = "o1-2024-12-17"
+    BEDROCK_CLAUDE_3_5_SONNET_2024_06_20 = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
 
 class Completion(TypedDict):
@@ -94,24 +97,13 @@ async def stream_openai_response(
 
     completion_time = time.time() - start_time
     return {"duration": completion_time, "code": full_response}
+    
 
-
-# TODO: Have a seperate function that translates OpenAI messages to Claude messages
-async def stream_claude_response(
-    messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    model: Llm,
-) -> Completion:
-    start_time = time.time()
-    client = AsyncAnthropic(api_key=api_key)
-
-    # Base parameters
-    max_tokens = 8192
-    temperature = 0.0
-
-    # Translate OpenAI messages to Claude messages
-
+def process_claude_messages(messages: List[ChatCompletionMessageParam]) -> tuple[str, List[dict]]:
+    """
+    Process messages for Claude by converting image URLs to base64 data
+    and removing the image URL parameter from the message.
+    """
     # Deep copy messages to avoid modifying the original list
     cloned_messages = copy.deepcopy(messages)
 
@@ -141,6 +133,27 @@ async def stream_claude_response(
                     "media_type": media_type,
                     "data": base64_data,
                 }
+
+    return system_prompt, claude_messages
+
+
+# TODO: Have a seperate function that translates OpenAI messages to Claude messages
+async def stream_claude_response(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> Completion:
+    start_time = time.time()
+    client = AsyncAnthropic(api_key=api_key)
+
+    # Base parameters
+    max_tokens = 8192
+    temperature = 0.0
+
+    # Translate OpenAI messages to Claude messages
+
+    system_prompt, claude_messages = process_claude_messages(messages)
 
     # Stream Claude response
     async with client.messages.stream(
@@ -302,4 +315,70 @@ async def stream_gemini_response(
             full_response += response.text  # type: ignore
             await callback(response.text)  # type: ignore
     completion_time = time.time() - start_time
+    return {"duration": completion_time, "code": full_response}
+
+
+async def stream_bedrock_response(
+    messages: List[ChatCompletionMessageParam],
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> Completion:
+    print(f"Invoking {model} on AWS Bedrock")
+    start_time = time.time()
+
+    # Initialize Bedrock runtime client
+    session = Session()
+
+    # Expect configuration from environment variables or /.aws/credentials
+    bedrock_client = session.client(
+        service_name='bedrock-runtime',
+    )
+
+    full_response = ""
+
+    system_prompt, claude_messages = process_claude_messages(messages)
+
+    body = {
+        "anthropic_version": "bedrock-2023-05-31", 
+        "max_tokens": 8192,
+        "messages": claude_messages,
+        "temperature":0.0,
+        "system":system_prompt,
+    }
+        
+    # Convert the payload to bytes
+    body_bytes = json.dumps(body).encode('utf-8')    
+
+    response = bedrock_client.invoke_model_with_response_stream(
+        body=body_bytes,
+        contentType='application/json',
+        accept='application/json',
+        modelId=model.value,
+        trace='DISABLED',
+    )
+
+    for event in response['body']:
+        if 'chunk' in event:
+            chunk = event['chunk']['bytes'].decode('utf-8')
+            if chunk:
+                chunk_obj = json.loads(chunk)
+                if chunk_obj.get('delta', {}).get('type') == 'text_delta':
+                    response_text = chunk_obj['delta']['text']
+                    full_response += response_text
+                    await callback(response_text)
+        elif 'internalServerException' in event:
+            raise Exception(event['internalServerException']['message'])
+        elif 'modelStreamErrorException' in event:
+            raise Exception(event['modelStreamErrorException']['message'])
+        elif 'validationException' in event:
+            raise Exception(event['validationException']['message'])
+        elif 'throttlingException' in event:
+            raise Exception(event['throttlingException']['message'])
+        elif 'modelTimeoutException' in event:
+            raise Exception(event['modelTimeoutException']['message'])
+        elif 'serviceUnavailableException' in event:
+            raise Exception(event['serviceUnavailableException']['message'])
+
+    completion_time = time.time() - start_time
+
     return {"duration": completion_time, "code": full_response}
