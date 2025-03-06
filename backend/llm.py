@@ -268,38 +268,52 @@ async def stream_gemini_response(
 
     # Extract image URLs from messages
     image_urls = []
-    for content_part in messages[-1]["content"]:  # type: ignore
-        if content_part["type"] == "image_url":  # type: ignore
-            image_url = content_part["image_url"]["url"]  # type: ignore
-            if image_url.startswith("data:"):  # type: ignore
-                # Extract base64 data and mime type for data URLs
-                mime_type = image_url.split(";")[0].split(":")[1]  # type: ignore
-                base64_data = image_url.split(",")[1]  # type: ignore
-                image_urls = [{"mime_type": mime_type, "data": base64_data}]  # type: ignore
-            else:
-                # Store regular URLs
-                image_urls = [{"uri": image_url}]  # type: ignore
-            break  # Exit after first image URL
+    for content_part in messages[1]["content"]:  # type: ignore
+        if isinstance(content_part, dict):
+            if content_part["type"] == "image_url":  # type: ignore
+                image_url = content_part["image_url"]["url"]  # type: ignore
+                if image_url.startswith("data:"):  # type: ignore
+                    # Extract base64 data and mime type for data URLs
+                    mime_type = image_url.split(";")[0].split(":")[1]  # type: ignore
+                    base64_data = image_url.split(",")[1]  # type: ignore
+                    image_urls = [{"mime_type": mime_type, "data": base64_data}]  # type: ignore
+                else:
+                    # Store regular URLs
+                    image_urls = [{"uri": image_url}]  # type: ignore
+                break  # Exit after first image URL
+
+    chat_history = []
+    for msg in messages:
+        if isinstance(msg["content"], str):
+            chat_history.append(f"{msg['role']}: {msg['content']}")
+        elif isinstance(msg["content"], list):
+            for element in msg["content"]:
+                if element.get("type") == "text":
+                    chat_history.append(f"{msg['role']}: {element['text']}")  # Extract the actual text
 
     client = genai.Client(api_key=api_key)  # type: ignore
+
     full_response = ""
+    # if image_urls:
     async for response in client.aio.models.generate_content_stream(  # type: ignore
-        model=model.value,
-        contents={
-            "parts": [
-                {"text": messages[0]["content"]},  # type: ignore
+            model=model.value,
+            contents={
+                "parts": [
+                {"text": "\n\n".join(chat_history)},  # type: ignore
                 types.Part.from_bytes(  # type: ignore
                     data=base64.b64decode(image_urls[0]["data"]),  # type: ignore
                     mime_type=image_urls[0]["mime_type"],  # type: ignore
                 ),
-            ]  # type: ignore
-        },  # type: ignore
-        config=types.GenerateContentConfig(  # type: ignore
-            temperature=0, max_output_tokens=8192
-        ),
+            ]
+            },
+            config=types.GenerateContentConfig(  # type: ignore
+                temperature=0, max_output_tokens=8192
+            ),
     ):  # type: ignore
         if response.text:  # type: ignore
             full_response += response.text  # type: ignore
             await callback(response.text)  # type: ignore
+
     completion_time = time.time() - start_time
+
     return {"duration": completion_time, "code": full_response}
