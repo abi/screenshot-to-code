@@ -48,9 +48,9 @@ You are an expert React/Tailwind developer.
 
 In terms of libraries,
 - Use these script to include React so that it can run on a standalone page:
-    <script src="https://unpkg.com/react@18.0.0/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18.0.0/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.0.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.0.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.js"></script>
 - Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
 {LIBRARY_INSTRUCTIONS}
 
