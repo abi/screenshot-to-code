@@ -110,6 +110,10 @@ async def stream_claude_response(
     max_tokens = 8192
     temperature = 0.0
 
+    # Claude 3.7 Sonnet can support higher max tokens
+    if model == Llm.CLAUDE_3_7_SONNET_2025_02_19:
+        max_tokens = 20000
+
     # Translate OpenAI messages to Claude messages
 
     # Deep copy messages to avoid modifying the original list
@@ -143,13 +147,13 @@ async def stream_claude_response(
                 }
 
     # Stream Claude response
-    async with client.messages.stream(
+    async with client.beta.messages.stream(
         model=model.value,
         max_tokens=max_tokens,
         temperature=temperature,
         system=system_prompt,
         messages=claude_messages,  # type: ignore
-        extra_headers={"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"},
+        betas=["output-128k-2025-02-19"],
     ) as stream:
         async for text in stream.text_stream:
             await callback(text)
