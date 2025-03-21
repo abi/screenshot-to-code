@@ -3,10 +3,11 @@ from enum import Enum
 import base64
 import time
 from typing import Any, Awaitable, Callable, List, cast, TypedDict
-from anthropic import AsyncAnthropic
+from anthropic.types import Message
+from anthropic import AsyncAnthropic, Anthropic
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionChunk
-from config import IS_DEBUG_ENABLED
+from config import IS_DEBUG_ENABLED, XAI_BASE_URL
 from debug.DebugFileWriter import DebugFileWriter
 from image_processing.utils import process_image
 from google import genai
@@ -32,6 +33,7 @@ class Llm(Enum):
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_2_0_PRO_EXP = "gemini-2.0-pro-exp-02-05"
     O1_2024_12_17 = "o1-2024-12-17"
+    GROK_2_VISION = "grok-2-vision-1212"
 
 
 class Completion(TypedDict):
@@ -261,6 +263,62 @@ async def stream_claude_response_native(
             "code": response.content[0].text,  # type: ignore
         }
 
+
+async def stream_grok_response(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model: Llm,
+) -> Completion:
+    start_time = time.time()
+    client = Anthropic(
+        api_key=api_key,
+        base_url=XAI_BASE_URL
+    )
+
+    # Deep copy messages to avoid modifying the original list
+    cloned_messages = copy.deepcopy(messages)
+
+    system_prompt = cast(str, cloned_messages[0].get("content"))
+    grok_messages = [dict(message) for message in cloned_messages[1:]]
+    
+    # Process image content similar to Claude
+    for message in grok_messages:
+        if not isinstance(message["content"], list):
+            continue
+
+        for content in message["content"]:  # type: ignore
+            if content["type"] == "image_url":
+                content["type"] = "image"
+                image_data_url = cast(str, content["image_url"]["url"])
+                # Use more aggressive compression for Grok
+                (media_type, base64_data) = process_image(image_data_url, max_size_kb=512)  # 512KB limit
+                del content["image_url"]
+                content["source"] = {
+                    "type": "base64",
+                    "media_type": media_type,
+                    "data": base64_data,
+                }
+
+    # Stream Grok response
+    # Make a synchronous call since Anthropic client doesn't support async streaming
+    response: Message = client.messages.create(
+        model=model.value,
+        max_tokens=16384,  # Grok has a large context window
+        temperature=0,
+        system=system_prompt,
+        messages=grok_messages,  # type: ignore
+    )
+
+    # Process the response
+    if response.content and len(response.content) > 0:
+        full_response = response.content[0].text
+        await callback(full_response)
+    else:
+        full_response = ""
+
+    completion_time = time.time() - start_time
+    return {"duration": completion_time, "code": full_response}
 
 async def stream_gemini_response(
     messages: List[ChatCompletionMessageParam],
