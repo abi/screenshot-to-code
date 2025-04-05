@@ -1,7 +1,5 @@
 # screenshot-to-code
 
-**NEW! 🚀 Interested in building full-stack apps with backends and databases using AI?** [Beta test our new tool for FREE.](https://fullyprivatechat.com/)
-
 A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. Now supporting Claude Sonnet 3.7!
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
