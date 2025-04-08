@@ -1,3 +1,4 @@
+(disable)↙️
 # screenshot-to-code
 
 A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. Now supporting Claude Sonnet 3.7!
