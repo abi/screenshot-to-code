@@ -6,7 +6,7 @@ import os
 import tempfile
 import uuid
 from typing import Any, Union, cast
-from moviepy.editor import VideoFileClip  # type: ignore
+from moviepy.video.io.VideoFileClip import VideoFileClip  # type: ignore
 from PIL import Image
 import math
 
