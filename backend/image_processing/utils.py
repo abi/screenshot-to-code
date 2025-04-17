@@ -7,8 +7,10 @@ CLAUDE_IMAGE_MAX_SIZE = 5 * 1024 * 1024
 CLAUDE_MAX_IMAGE_DIMENSION = 7990
 
 
-# Process image so it meets Claude requirements
-def process_image(image_data_url: str) -> tuple[str, str]:
+# Process image so it meets size requirements
+def process_image(image_data_url: str, max_size_kb: int | None = None) -> tuple[str, str]:
+    # Convert max_size_kb to bytes if provided, otherwise use Claude's limit
+    max_size = max_size_kb * 1024 if max_size_kb else CLAUDE_IMAGE_MAX_SIZE
 
     # Extract bytes and media type from base64 data URL
     media_type = image_data_url.split(";")[0].split(":")[1]
@@ -22,11 +24,11 @@ def process_image(image_data_url: str) -> tuple[str, str]:
         img.width < CLAUDE_MAX_IMAGE_DIMENSION
         and img.height < CLAUDE_MAX_IMAGE_DIMENSION
     )
-    is_under_size_limit = len(base64_data) <= CLAUDE_IMAGE_MAX_SIZE
+    is_under_size_limit = len(base64_data) <= max_size
 
     # If image is under both limits, no processing needed
     if is_under_dimension_limit and is_under_size_limit:
-        print("[CLAUDE IMAGE PROCESSING] no processing needed")
+        print("[IMAGE PROCESSING] no processing needed")
         return (media_type, base64_data)
 
     # Time image processing
@@ -59,7 +61,7 @@ def process_image(image_data_url: str) -> tuple[str, str]:
 
     # Reduce quality until image is under max size
     while (
-        len(base64.b64encode(output.getvalue())) > CLAUDE_IMAGE_MAX_SIZE
+        len(base64.b64encode(output.getvalue())) > max_size
         and quality > 10
     ):
         output = io.BytesIO()
