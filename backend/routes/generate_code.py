@@ -79,6 +79,7 @@ class ExtractedParams:
     input_mode: InputMode
     should_generate_images: bool
     openai_api_key: str | None
+    gemini_api_key: str | None
     anthropic_api_key: str | None
     openai_base_url: str | None
     generation_type: Literal["create", "update"]
@@ -109,6 +110,9 @@ async def extract_params(
     anthropic_api_key = get_from_settings_dialog_or_env(
         params, "anthropicApiKey", ANTHROPIC_API_KEY
     )
+    gemini_api_key = get_from_settings_dialog_or_env(
+        params, "geminiApiKey", GEMINI_API_KEY
+    )
 
     # Base URL for OpenAI API
     openai_base_url: str | None = None
@@ -136,6 +140,7 @@ async def extract_params(
         should_generate_images=should_generate_images,
         openai_api_key=openai_api_key,
         anthropic_api_key=anthropic_api_key,
+        gemini_api_key=gemini_api_key,
         openai_base_url=openai_base_url,
         generation_type=generation_type,
     )
@@ -196,6 +201,7 @@ async def stream_code(websocket: WebSocket):
     openai_api_key = extracted_params.openai_api_key
     openai_base_url = extracted_params.openai_base_url
     anthropic_api_key = extracted_params.anthropic_api_key
+    gemini_api_key = extracted_params.gemini_api_key
     should_generate_images = extracted_params.should_generate_images
     generation_type = extracted_params.generation_type
 
@@ -277,6 +283,12 @@ async def stream_code(websocket: WebSocket):
                         claude_model,
                         Llm.CLAUDE_3_5_SONNET_2024_06_20,
                     ]
+                elif gemini_api_key:
+                    variant_models = [
+                        Llm.GEMINI_2_0_FLASH_EXP,
+                        Llm.GEMINI_2_0_FLASH_EXP,
+                    ]
+
                 else:
                     await throw_error(
                         "No OpenAI or Anthropic API key found. Please add the environment variable OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. If you add it to .env, make sure to restart the backend server."
