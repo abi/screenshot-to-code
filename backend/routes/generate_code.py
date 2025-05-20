@@ -295,6 +295,7 @@ async def stream_code(websocket: WebSocket):
                         or model == Llm.O1_2024_12_17
                         or model == Llm.O4_MINI_2025_04_16
                         or model == Llm.O3_2025_04_16
+                        or model == Llm.GPT_4_1_2025_04_14
                     ):
                         if openai_api_key is None:
                             await throw_error("OpenAI API key is missing.")
