@@ -148,7 +148,16 @@ async def run_image_evals(
     if timing_data:
         timing_file_path = os.path.join(output_subfolder, "generation_times.txt")
         try:
-            with open(timing_file_path, "w") as file:
+            # Check if file exists to determine if we need to add a newline before appending
+            needs_newline = (
+                os.path.exists(timing_file_path)
+                and os.path.getsize(timing_file_path) > 0
+            )
+            with open(timing_file_path, "a") as file:  # Changed mode to "a" for append
+                if needs_newline:
+                    file.write(
+                        "\n"
+                    )  # Add a newline if appending to an existing non-empty file
                 file.write("\n".join(timing_data))
             print(f"Timing data saved to {timing_file_path}")
         except Exception as e:
