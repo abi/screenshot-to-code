@@ -110,7 +110,7 @@ async def generate_images(
         # Only include URL if the image starts with https://placehold.co
         # and it's not already in the image_cache
         if (
-            "src" in img
+            img.get("src", None)
             and img["src"].startswith("https://placehold.co")
             and image_cache.get(img.get("alt")) is None
         ):
