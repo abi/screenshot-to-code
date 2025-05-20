@@ -283,9 +283,19 @@ async def stream_code(websocket: WebSocket):
                     )
                     raise Exception("No OpenAI or Anthropic key")
 
+                # Print the variant models (one per line)
+                print("Variant models:")
+                for index, model in enumerate(variant_models):
+                    print(f"Variant {index}: {model.value}")
+
                 tasks: List[Coroutine[Any, Any, Completion]] = []
                 for index, model in enumerate(variant_models):
-                    if model == Llm.GPT_4O_2024_11_20 or model == Llm.O1_2024_12_17:
+                    if (
+                        model == Llm.GPT_4O_2024_11_20
+                        or model == Llm.O1_2024_12_17
+                        or model == Llm.O4_MINI_2025_04_16
+                        or model == Llm.O3_2025_04_16
+                    ):
                         if openai_api_key is None:
                             await throw_error("OpenAI API key is missing.")
                             raise Exception("OpenAI API key is missing.")
@@ -303,6 +313,8 @@ async def stream_code(websocket: WebSocket):
                         model == Llm.GEMINI_2_0_PRO_EXP
                         or model == Llm.GEMINI_2_0_FLASH_EXP
                         or model == Llm.GEMINI_2_0_FLASH
+                        or model == Llm.GEMINI_2_5_FLASH_PREVIEW_04_17
+                        or model == Llm.GEMINI_2_5_PRO_PREVIEW_05_06
                     ):
                         tasks.append(
                             stream_gemini_response(

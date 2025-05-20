@@ -31,7 +31,11 @@ class Llm(Enum):
     GEMINI_2_0_FLASH_EXP = "gemini-2.0-flash-exp"
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_2_0_PRO_EXP = "gemini-2.0-pro-exp-02-05"
+    GEMINI_2_5_FLASH_PREVIEW_04_17 = "gemini-2.5-flash-preview-04-17"
+    GEMINI_2_5_PRO_PREVIEW_05_06 = "gemini-2.5-pro-preview-05-06"
     O1_2024_12_17 = "o1-2024-12-17"
+    O4_MINI_2025_04_16 = "o4-mini-2025-04-16"
+    O3_2025_04_16 = "o3-2025-04-16"
 
 
 class Completion(TypedDict):
@@ -57,7 +61,11 @@ async def stream_openai_response(
     }
 
     # O1 doesn't support streaming or temperature
-    if model != Llm.O1_2024_12_17:
+    if (
+        model != Llm.O1_2024_12_17
+        and model != Llm.O4_MINI_2025_04_16
+        and model != Llm.O3_2025_04_16
+    ):
         params["temperature"] = 0
         params["stream"] = True
 
@@ -70,6 +78,11 @@ async def stream_openai_response(
 
     if model == Llm.O1_2024_12_17:
         params["max_completion_tokens"] = 20000
+
+    if model == Llm.O4_MINI_2025_04_16 or model == Llm.O3_2025_04_16:
+        params["max_completion_tokens"] = 20000
+        params["stream"] = True
+        params["reasoning_effort"] = "high"
 
     # O1 doesn't support streaming
     if model == Llm.O1_2024_12_17:
