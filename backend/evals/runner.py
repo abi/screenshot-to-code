@@ -32,7 +32,6 @@ async def generate_code_and_time(
         duration = end_time - start_time
         return original_input_filename, attempt_idx, content, duration, None
     except Exception as e:
-        # Log the error specific to this task attempt
         print(
             f"Error during code generation for {original_input_filename} (attempt {attempt_idx}): {e}"
         )
@@ -55,7 +54,7 @@ async def run_image_evals(
     print("User selected stack:", stack)
     print("User selected model:", model)
     selected_model = Llm(model)
-    print(f"Running evals for {selected_model} model")
+    print(f"Running evals for {selected_model.value} model")
 
     today = datetime.now().strftime("%b_%d_%Y")
     output_subfolder = os.path.join(
@@ -70,7 +69,7 @@ async def run_image_evals(
             Tuple[str, int, Optional[str], Optional[float], Optional[Exception]],
         ]
     ] = []
-    for original_filename in evals:  # Renamed for clarity
+    for original_filename in evals:
         filepath = os.path.join(INPUT_DIR, original_filename)
         data_url = await image_to_data_url(filepath)
         for n_idx in range(n):
@@ -94,7 +93,6 @@ async def run_image_evals(
 
     for future in asyncio.as_completed(task_coroutines):
         try:
-            # Unpack results from generate_code_and_time
             task_orig_fn, task_attempt_idx, generated_content, time_taken, error_obj = (
                 await future
             )
@@ -108,12 +106,10 @@ async def run_image_evals(
             )
 
             if error_obj is not None:
-                # Generation itself failed
                 failed_tasks_log.append(
                     f"Input: {task_orig_fn}, Attempt: {task_attempt_idx}, OutputFile: {final_output_html_filename}, Error: Generation failed - {str(error_obj)}"
                 )
             elif generated_content is not None and time_taken is not None:
-                # Generation succeeded, try to write file
                 try:
                     with open(output_html_filepath, "w") as file:
                         file.write(generated_content)
@@ -125,20 +121,15 @@ async def run_image_evals(
                         f"Successfully processed and wrote {final_output_html_filename}"
                     )
                 except Exception as e_write:
-                    # Failure during writing the successful result
                     failed_tasks_log.append(
                         f"Input: {task_orig_fn}, Attempt: {task_attempt_idx}, OutputFile: {final_output_html_filename}, Error: Writing to file failed - {str(e_write)}"
                     )
             else:
-                # Should not happen if error_obj is None, but as a safeguard
                 failed_tasks_log.append(
                     f"Input: {task_orig_fn}, Attempt: {task_attempt_idx}, OutputFile: {final_output_html_filename}, Error: Unknown issue - content or time_taken is None without explicit error."
                 )
 
         except Exception as e_as_completed:
-            # This catches errors if the future from as_completed fails unexpectedly
-            # (e.g., task cancelled, or an error not caught within generate_code_and_time)
-            # We don't have task_orig_fn or task_attempt_idx here, so logging is more general.
             print(f"A task in as_completed failed unexpectedly: {e_as_completed}")
             failed_tasks_log.append(
                 f"Critical Error: A task processing failed - {str(e_as_completed)}"
@@ -148,16 +139,17 @@ async def run_image_evals(
     if timing_data:
         timing_file_path = os.path.join(output_subfolder, "generation_times.txt")
         try:
-            # Check if file exists to determine if we need to add a newline before appending
-            needs_newline = (
-                os.path.exists(timing_file_path)
-                and os.path.getsize(timing_file_path) > 0
+            is_new_or_empty_file = (
+                not os.path.exists(timing_file_path)
+                or os.path.getsize(timing_file_path) == 0
             )
-            with open(timing_file_path, "a") as file:  # Changed mode to "a" for append
-                if needs_newline:
-                    file.write(
-                        "\n"
-                    )  # Add a newline if appending to an existing non-empty file
+
+            with open(timing_file_path, "a") as file:
+                if is_new_or_empty_file:
+                    file.write(f"Model: {selected_model.value}\n")
+                elif timing_data:
+                    file.write("\n")
+
                 file.write("\n".join(timing_data))
             print(f"Timing data saved to {timing_file_path}")
         except Exception as e:
