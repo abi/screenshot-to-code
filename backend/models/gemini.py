@@ -4,7 +4,7 @@ from typing import Awaitable, Callable, Dict, List
 from openai.types.chat import ChatCompletionMessageParam
 from google import genai
 from google.genai import types
-from llm import Completion
+from llm import Completion, Llm
 
 
 def extract_image_from_messages(
@@ -50,6 +50,25 @@ async def stream_gemini_response(
     client = genai.Client(api_key=api_key)
     full_response = ""
 
+    if model_name == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20.value:
+        # Gemini 2.5 Flash supports thinking budgets
+        config = types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=20000,
+            thinking_config=types.ThinkingConfig(thinking_budget=10),
+        )
+    elif model_name == Llm.GEMINI_2_5_PRO_PREVIEW_05_06.value:
+        config = types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=20000,
+        )
+    else:
+        # TODO: Fix output tokens here
+        config = types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=8000,
+        )
+
     async for chunk in await client.aio.models.generate_content_stream(
         model=model_name,
         contents={
@@ -61,11 +80,7 @@ async def stream_gemini_response(
                 ),
             ]
         },
-        config=types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=20000,
-            thinking_config=types.ThinkingConfig(thinking_budget=10),
-        ),
+        config=config,
     ):
         if chunk.text:
             full_response += chunk.text
