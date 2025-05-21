@@ -34,7 +34,7 @@ class Llm(Enum):
     GEMINI_2_0_FLASH_EXP = "gemini-2.0-flash-exp"
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_2_0_PRO_EXP = "gemini-2.0-pro-exp-02-05"
-    GEMINI_2_5_FLASH_PREVIEW_04_17 = "gemini-2.5-flash-preview-04-17"
+    GEMINI_2_5_FLASH_PREVIEW_05_20 = "gemini-2.5-flash-preview-05-20"
     GEMINI_2_5_PRO_PREVIEW_05_06 = "gemini-2.5-pro-preview-05-06"
     O1_2024_12_17 = "o1-2024-12-17"
     O4_MINI_2025_04_16 = "o4-mini-2025-04-16"
@@ -310,25 +310,28 @@ async def stream_gemini_response(
                 image_urls = [{"uri": image_url}]  # type: ignore
             break  # Exit after first image URL
 
-    client = genai.Client(api_key=api_key)  # type: ignore
+    client = genai.Client(api_key=api_key)
     full_response = ""
-    async for response in client.aio.models.generate_content_stream(  # type: ignore
+
+    async for chunk in await client.aio.models.generate_content_stream(
         model=model.value,
         contents={
             "parts": [
                 {"text": messages[0]["content"]},  # type: ignore
-                types.Part.from_bytes(  # type: ignore
-                    data=base64.b64decode(image_urls[0]["data"]),  # type: ignore
-                    mime_type=image_urls[0]["mime_type"],  # type: ignore
+                types.Part.from_bytes(
+                    data=base64.b64decode(image_urls[0]["data"]),
+                    mime_type=image_urls[0]["mime_type"],
                 ),
-            ]  # type: ignore
-        },  # type: ignore
-        config=types.GenerateContentConfig(  # type: ignore
-            temperature=0, max_output_tokens=8192
+            ]
+        },
+        config=types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=20000,
+            thinking_config=types.ThinkingConfig(thinking_budget=10000),
         ),
     ):  # type: ignore
-        if response.text:  # type: ignore
-            full_response += response.text  # type: ignore
-            await callback(response.text)  # type: ignore
+        if chunk.text:
+            full_response += chunk.text
+            await callback(chunk.text)
     completion_time = time.time() - start_time
     return {"duration": completion_time, "code": full_response}
