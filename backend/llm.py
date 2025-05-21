@@ -23,6 +23,8 @@ class Llm(Enum):
     GPT_4O_2024_08_06 = "gpt-4o-2024-08-06"
     GPT_4O_2024_11_20 = "gpt-4o-2024-11-20"
     GPT_4_1_2025_04_14 = "gpt-4.1-2025-04-14"
+    GPT_4_1_MINI_2025_04_14 = "gpt-4.1-mini-2025-04-14"
+    GPT_4_1_NANO_2025_04_14 = "gpt-4.1-nano-2025-04-14"
     CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
     CLAUDE_3_OPUS = "claude-3-opus-20240229"
     CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
@@ -70,8 +72,12 @@ async def stream_openai_response(
         params["temperature"] = 0
         params["stream"] = True
 
-    # Add 'max_tokens' corresponding to the model
-    if model == Llm.GPT_4_1_2025_04_14:
+    # 4.1 series
+    if (
+        model == Llm.GPT_4_1_2025_04_14
+        or model == Llm.GPT_4_1_MINI_2025_04_14
+        or model == Llm.GPT_4_1_NANO_2025_04_14
+    ):
         params["temperature"] = 0
         params["stream"] = True
         params["max_tokens"] = 10000
