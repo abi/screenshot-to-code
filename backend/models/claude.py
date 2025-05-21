@@ -1,39 +1,33 @@
 import copy
 import time
-from typing import Any, Awaitable, Callable, List, cast
+from typing import Any, Awaitable, Callable, Dict, List, Tuple, cast
 from anthropic import AsyncAnthropic
 from openai.types.chat import ChatCompletionMessageParam
 from config import IS_DEBUG_ENABLED
 from debug.DebugFileWriter import DebugFileWriter
 from image_processing.utils import process_image
 from utils import pprint_prompt
-from llm import Completion
+from llm import Completion, Llm
 
 
-async def stream_claude_response(
+def convert_openai_messages_to_claude(
     messages: List[ChatCompletionMessageParam],
-    api_key: str,
-    callback: Callable[[str], Awaitable[None]],
-    model_name: str,
-) -> Completion:
-    start_time = time.time()
-    client = AsyncAnthropic(api_key=api_key)
+) -> Tuple[str, List[Dict[str, Any]]]:
+    """
+    Convert OpenAI format messages to Claude format, handling image content properly.
 
-    # Base parameters
-    max_tokens = 8192
-    temperature = 0.0
+    Args:
+        messages: List of messages in OpenAI format
 
-    # Claude 3.7 Sonnet can support higher max tokens
-    if model_name == "claude-3-7-sonnet-20250219":
-        max_tokens = 20000
-
-    # Translate OpenAI messages to Claude messages
-
+    Returns:
+        Tuple of (system_prompt, claude_messages)
+    """
     # Deep copy messages to avoid modifying the original list
     cloned_messages = copy.deepcopy(messages)
 
     system_prompt = cast(str, cloned_messages[0].get("content"))
     claude_messages = [dict(message) for message in cloned_messages[1:]]
+
     for message in claude_messages:
         if not isinstance(message["content"], list):
             continue
@@ -59,26 +53,69 @@ async def stream_claude_response(
                     "data": base64_data,
                 }
 
-    # Stream Claude response
-    async with client.beta.messages.stream(
-        model=model_name,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        system=system_prompt,
-        messages=claude_messages,  # type: ignore
-        betas=["output-128k-2025-02-19"],
-    ) as stream:
-        async for text in stream.text_stream:
-            await callback(text)
+    return system_prompt, claude_messages
 
-    # Return final message
-    response = await stream.get_final_message()
+
+async def stream_claude_response(
+    messages: List[ChatCompletionMessageParam],
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model_name: str,
+) -> Completion:
+    start_time = time.time()
+    client = AsyncAnthropic(api_key=api_key)
+
+    # Base parameters
+    max_tokens = 8192
+    temperature = 0.0
+
+    # Claude 3.7 Sonnet can support higher max tokens
+    if model_name == "claude-3-7-sonnet-20250219":
+        max_tokens = 20000
+
+    # Translate OpenAI messages to Claude messages
+
+    # Convert OpenAI format messages to Claude format
+    system_prompt, claude_messages = convert_openai_messages_to_claude(messages)
+
+    response = ""
+
+    if model_name == Llm.CLAUDE_3_7_SONNET_2025_02_19.value:
+        # Thinking is not compatible with temperature
+        async with client.beta.messages.stream(
+            model=model_name,
+            thinking={"type": "enabled", "budget_tokens": 5000},
+            max_tokens=20000,
+            system=system_prompt,
+            messages=claude_messages,  # type: ignore
+        ) as stream:
+            async for event in stream:
+                if event.type == "content_block_delta":
+                    if event.delta.type == "thinking_delta":
+                        print(event.delta.thinking, end="")
+                    elif event.delta.type == "text_delta":
+                        response += event.delta.text
+                        await callback(event.delta.text)
+
+    else:
+        # Stream Claude response
+        async with client.beta.messages.stream(
+            model=model_name,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            system=system_prompt,
+            messages=claude_messages,  # type: ignore
+            betas=["output-128k-2025-02-19"],
+        ) as stream:
+            async for text in stream.text_stream:
+                response += text
+                await callback(text)
 
     # Close the Anthropic client
     await client.close()
 
     completion_time = time.time() - start_time
-    return {"duration": completion_time, "code": response.content[0].text}
+    return {"duration": completion_time, "code": response}
 
 
 async def stream_claude_response_native(
