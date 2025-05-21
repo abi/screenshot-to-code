@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { HTTP_BACKEND_URL } from "../../config";
-import { BsCheckLg } from "react-icons/bs";
+import { BsCheckLg, BsChevronDown, BsChevronRight } from "react-icons/bs";
 import InputFileSelector from "./InputFileSelector";
 
 interface ModelResponse {
@@ -16,6 +16,7 @@ function RunEvalsPage() {
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedStack, setSelectedStack] = useState<string>("html_tailwind");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [showPaths, setShowPaths] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -86,34 +87,78 @@ function RunEvalsPage() {
     setSelectedFiles(files);
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 text-center">Run Evaluations</h1>
+  // Format model list for display in the summary
+  const formatModelList = () => {
+    if (selectedModels.length === 0) return "None";
+    if (selectedModels.length === 1) return selectedModels[0];
+    if (selectedModels.length <= 2) return selectedModels.join(", ");
+    return `${selectedModels.slice(0, 2).join(", ")} +${selectedModels.length - 2} more`;
+  };
 
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 text-sm text-gray-600 mx-auto max-w-5xl">
-        <div className="flex justify-between items-center flex-wrap gap-4">
-          <div>
-            <p className="font-medium">Evaluation inputs:</p>
-            <code className="bg-gray-100 px-2 py-1 rounded text-xs">
-              backend/evals_data/inputs
-            </code>
+  const canRunEvals = selectedModels.length > 0 && selectedFiles.length > 0;
+
+  return (
+    <div className="container mx-auto px-4 py-6">
+      {/* Unified Header with Configuration Summary */}
+      <div className="mb-6 bg-white rounded-lg border border-gray-200 shadow-sm p-4 max-w-5xl mx-auto">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap justify-between items-center">
+            <h1 className="text-2xl font-bold">Run Evaluations</h1>
+            
+            <Button
+              onClick={runEvals}
+              disabled={isRunning || !canRunEvals}
+              className={`min-w-[120px] ${isRunning ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"}`}
+            >
+              {isRunning ? "Running..." : "Run Evals"}
+            </Button>
           </div>
-          <div>
-            <p className="font-medium">Results will be saved to:</p>
-            <code className="bg-gray-100 px-2 py-1 rounded text-xs">
-              backend/evals_data/outputs
-            </code>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-gray-100 pt-3">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-gray-700">Models</span>
+              <span className="text-sm text-gray-600 font-mono">{formatModelList()}</span>
+            </div>
+            
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-gray-700">Stack</span>
+              <span className="text-sm text-gray-600 font-mono">{selectedStack}</span>
+            </div>
+            
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-gray-700">Input Files</span>
+              <span className="text-sm text-gray-600">{selectedFiles.length} selected</span>
+            </div>
           </div>
-          <Button
-            onClick={runEvals}
-            disabled={isRunning || selectedModels.length === 0 || selectedFiles.length === 0}
-            className={`px-6 ${isRunning ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"}`}
+          
+          <div 
+            className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer mt-1 hover:bg-gray-50 inline-block rounded px-2 py-1"
+            onClick={() => setShowPaths(!showPaths)}
           >
-            {isRunning ? "Running Evals..." : "Run Evals"}
-          </Button>
+            {showPaths ? <BsChevronDown size={12} /> : <BsChevronRight size={12} />}
+            <span className="font-medium">Paths</span>
+          </div>
+          
+          {showPaths && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded-md">
+              <div>
+                <span className="font-medium">Input path:</span>
+                <code className="ml-2 bg-gray-100 px-2 py-0.5 rounded">
+                  backend/evals_data/inputs
+                </code>
+              </div>
+              <div>
+                <span className="font-medium">Output path:</span>
+                <code className="ml-2 bg-gray-100 px-2 py-0.5 rounded">
+                  backend/evals_data/outputs
+                </code>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Selection Controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {/* Model Selection Section */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -201,25 +246,6 @@ function RunEvalsPage() {
           <div className="p-3">
             <InputFileSelector onFilesSelected={handleFilesSelected} />
           </div>
-        </div>
-      </div>
-
-      {/* Summary Section */}
-      <div className="mt-6 bg-white rounded-lg border border-gray-200 p-4 max-w-5xl mx-auto">
-        <div className="flex flex-wrap gap-4 justify-between items-center">
-          <div className="flex flex-col gap-0.5">
-            <p className="text-sm font-medium">Configuration Summary</p>
-            <p className="text-xs text-gray-500">
-              {selectedModels.length} models • {selectedStack} • {selectedFiles.length} files
-            </p>
-          </div>
-          <Button
-            onClick={runEvals}
-            disabled={isRunning || selectedModels.length === 0 || selectedFiles.length === 0}
-            className={`w-36 ${isRunning ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"}`}
-          >
-            {isRunning ? "Running Evals..." : "Run Evals"}
-          </Button>
         </div>
       </div>
     </div>
