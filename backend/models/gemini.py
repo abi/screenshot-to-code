@@ -1,10 +1,39 @@
 import base64
 import time
-from typing import Awaitable, Callable, List
+from typing import Awaitable, Callable, Dict, List
 from openai.types.chat import ChatCompletionMessageParam
 from google import genai
 from google.genai import types
 from llm import Completion
+
+
+def extract_image_from_messages(
+    messages: List[ChatCompletionMessageParam],
+) -> Dict[str, str]:
+    """
+    Extracts image data from OpenAI-style chat completion messages.
+
+    Args:
+        messages: List of ChatCompletionMessageParam containing message content
+
+    Returns:
+        Dictionary with mime_type and data keys for the first image found
+    """
+    for content_part in messages[-1]["content"]:  # type: ignore
+        if content_part["type"] == "image_url":  # type: ignore
+            image_url = content_part["image_url"]["url"]  # type: ignore
+            if image_url.startswith("data:"):  # type: ignore
+                # Extract base64 data and mime type for data URLs
+                mime_type = image_url.split(";")[0].split(":")[1]  # type: ignore
+                base64_data = image_url.split(",")[1]  # type: ignore
+                return {"mime_type": mime_type, "data": base64_data}
+            else:
+                # Handle regular URLs - would need to download and convert to base64
+                # For now, just return the URI
+                return {"uri": image_url}  # type: ignore
+
+    # No image found
+    raise ValueError("No image found in messages")
 
 
 async def stream_gemini_response(
@@ -15,20 +44,8 @@ async def stream_gemini_response(
 ) -> Completion:
     start_time = time.time()
 
-    # Extract image URLs from messages
-    image_urls = []
-    for content_part in messages[-1]["content"]:  # type: ignore
-        if content_part["type"] == "image_url":  # type: ignore
-            image_url = content_part["image_url"]["url"]  # type: ignore
-            if image_url.startswith("data:"):  # type: ignore
-                # Extract base64 data and mime type for data URLs
-                mime_type = image_url.split(";")[0].split(":")[1]  # type: ignore
-                base64_data = image_url.split(",")[1]  # type: ignore
-                image_urls = [{"mime_type": mime_type, "data": base64_data}]  # type: ignore
-            else:
-                # Store regular URLs
-                image_urls = [{"uri": image_url}]  # type: ignore
-            break  # Exit after first image URL
+    # Get image data from messages
+    image_data = extract_image_from_messages(messages)
 
     client = genai.Client(api_key=api_key)
     full_response = ""
@@ -39,15 +56,15 @@ async def stream_gemini_response(
             "parts": [
                 {"text": messages[0]["content"]},  # type: ignore
                 types.Part.from_bytes(
-                    data=base64.b64decode(image_urls[0]["data"]),
-                    mime_type=image_urls[0]["mime_type"],
+                    data=base64.b64decode(image_data["data"]),
+                    mime_type=image_data["mime_type"],
                 ),
             ]
         },
         config=types.GenerateContentConfig(
             temperature=0,
             max_output_tokens=20000,
-            thinking_config=types.ThinkingConfig(thinking_budget=10000),
+            thinking_config=types.ThinkingConfig(thinking_budget=10),
         ),
     ):
         if chunk.text:
