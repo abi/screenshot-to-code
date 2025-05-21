@@ -22,6 +22,26 @@ class Eval(BaseModel):
     outputs: list[str]
 
 
+class InputFile(BaseModel):
+    name: str
+    path: str
+
+
+@router.get("/eval_input_files", response_model=List[InputFile])
+async def get_eval_input_files():
+    """Get a list of all input files available for evaluations"""
+    input_dir = os.path.join(EVALS_DIR, "inputs")
+    try:
+        files = []
+        for filename in os.listdir(input_dir):
+            if filename.endswith(".png"):
+                file_path = os.path.join(input_dir, filename)
+                files.append(InputFile(name=filename, path=file_path))
+        return sorted(files, key=lambda x: x.name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading input files: {str(e)}")
+
+
 @router.get("/evals", response_model=list[Eval])
 async def get_evals(folder: str):
     if not folder:
@@ -155,15 +175,20 @@ async def get_pairwise_evals(
 class RunEvalsRequest(BaseModel):
     models: List[str]
     stack: Stack
+    files: List[str] = []  # Optional list of specific file paths to run evals on
 
 
 @router.post("/run_evals", response_model=List[str])
 async def run_evals(request: RunEvalsRequest) -> List[str]:
-    """Run evaluations on all images in the inputs directory for multiple models"""
+    """Run evaluations on selected images in the inputs directory for multiple models"""
     all_output_files: List[str] = []
 
     for model in request.models:
-        output_files = await run_image_evals(model=model, stack=request.stack)
+        output_files = await run_image_evals(
+            model=model, 
+            stack=request.stack,
+            input_files=request.files
+        )
         all_output_files.extend(output_files)
 
     return all_output_files

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { HTTP_BACKEND_URL } from "../../config";
 import { BsCheckLg } from "react-icons/bs";
+import InputFileSelector from "./InputFileSelector";
 
 interface ModelResponse {
   models: string[];
@@ -14,6 +15,7 @@ function RunEvalsPage() {
   const [stacks, setStacks] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedStack, setSelectedStack] = useState<string>("html_tailwind");
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -44,6 +46,7 @@ function RunEvalsPage() {
         body: JSON.stringify({
           models: selectedModels,
           stack: selectedStack,
+          files: selectedFiles,
         }),
       });
 
@@ -79,6 +82,10 @@ function RunEvalsPage() {
     setSelectedModels(models);
   };
 
+  const handleFilesSelected = (files: string[]) => {
+    setSelectedFiles(files);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <h1 className="text-2xl font-bold mb-8">Run Evaluations</h1>
@@ -98,7 +105,7 @@ function RunEvalsPage() {
         </p>
       </div>
 
-      <div className="space-y-4 w-full max-w-md">
+      <div className="space-y-6 w-full max-w-md">
         <div>
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Select Models
@@ -170,11 +177,18 @@ function RunEvalsPage() {
             ))}
           </select>
         </div>
+
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Select Input Files
+          </label>
+          <InputFileSelector onFilesSelected={handleFilesSelected} />
+        </div>
       </div>
 
       <Button
         onClick={runEvals}
-        disabled={isRunning || selectedModels.length === 0}
+        disabled={isRunning || selectedModels.length === 0 || selectedFiles.length === 0}
         className="w-48 mt-6"
       >
         {isRunning ? "Running Evals..." : "Run Evals"}

@@ -39,12 +39,21 @@ async def generate_code_and_time(
 
 
 async def run_image_evals(
-    stack: Optional[Stack] = None, model: Optional[str] = None, n: int = 1
+    stack: Optional[Stack] = None, 
+    model: Optional[str] = None, 
+    n: int = 1,
+    input_files: Optional[List[str]] = None
 ) -> List[str]:
     INPUT_DIR = EVALS_DIR + "/inputs"
     OUTPUT_DIR = EVALS_DIR + "/outputs"
 
-    evals = [f for f in os.listdir(INPUT_DIR) if f.endswith(".png")]
+    # Get all evaluation image files
+    if input_files and len(input_files) > 0:
+        # Use the explicitly provided file list
+        evals = [os.path.basename(f) for f in input_files if f.endswith(".png")]
+    else:
+        # Use all PNG files from the input directory
+        evals = [f for f in os.listdir(INPUT_DIR) if f.endswith(".png")]
 
     if not stack:
         raise ValueError("No stack was provided")
@@ -55,6 +64,11 @@ async def run_image_evals(
     print("User selected model:", model)
     selected_model = Llm(model)
     print(f"Running evals for {selected_model.value} model")
+    
+    if input_files and len(input_files) > 0:
+        print(f"Running on {len(evals)} selected files")
+    else:
+        print(f"Running on all {len(evals)} files in {INPUT_DIR}")
 
     today = datetime.now().strftime("%b_%d_%Y")
     output_subfolder = os.path.join(
@@ -70,7 +84,13 @@ async def run_image_evals(
         ]
     ] = []
     for original_filename in evals:
-        filepath = os.path.join(INPUT_DIR, original_filename)
+        # Handle both full paths and relative filenames
+        if os.path.isabs(original_filename):
+            filepath = original_filename
+            original_filename = os.path.basename(original_filename)
+        else:
+            filepath = os.path.join(INPUT_DIR, original_filename)
+            
         data_url = await image_to_data_url(filepath)
         for n_idx in range(n):
             current_model_for_task = (
