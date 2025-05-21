@@ -84,7 +84,7 @@ async def stream_claude_response(
         # Thinking is not compatible with temperature
         async with client.beta.messages.stream(
             model=model_name,
-            thinking={"type": "enabled", "budget_tokens": 5000},
+            thinking={"type": "enabled", "budget_tokens": 1024},
             max_tokens=20000,
             system=system_prompt,
             messages=claude_messages,  # type: ignore
@@ -92,7 +92,8 @@ async def stream_claude_response(
             async for event in stream:
                 if event.type == "content_block_delta":
                     if event.delta.type == "thinking_delta":
-                        print(event.delta.thinking, end="")
+                        pass
+                        # print(event.delta.thinking, end="")
                     elif event.delta.type == "text_delta":
                         response += event.delta.text
                         await callback(event.delta.text)
