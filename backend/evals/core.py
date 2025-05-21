@@ -2,9 +2,9 @@ from config import ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY
 from llm import (
     Llm,
     stream_claude_response,
-    stream_gemini_response,
     stream_openai_response,
 )
+from gemini import stream_gemini_response
 from prompts import assemble_prompt
 from prompts.types import Stack
 from openai.types.chat import ChatCompletionMessageParam

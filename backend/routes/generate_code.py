@@ -20,9 +20,9 @@ from llm import (
     Llm,
     stream_claude_response,
     stream_claude_response_native,
-    stream_gemini_response,
     stream_openai_response,
 )
+from gemini import stream_gemini_response
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
 from typing import Any, Callable, Coroutine, Dict, List, Literal, cast, get_args
@@ -265,7 +265,7 @@ async def stream_code(websocket: WebSocket):
                 if openai_api_key and anthropic_api_key:
                     variant_models = [
                         claude_model,
-                        Llm.GEMINI_2_5_PRO_PREVIEW_05_06,
+                        Llm.GEMINI_2_5_FLASH_PREVIEW_05_20,
                     ]
                 elif openai_api_key:
                     variant_models = [
@@ -324,7 +324,7 @@ async def stream_code(websocket: WebSocket):
                                 prompt_messages,
                                 api_key=GEMINI_API_KEY,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model=model,
+                                model_name=model.value,
                             )
                         )
                     elif (
