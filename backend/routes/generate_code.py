@@ -15,14 +15,8 @@ from config import (
     SHOULD_MOCK_AI_RESPONSE,
 )
 from custom_types import InputMode
-from llm import (
-    Completion,
-    Llm,
-    stream_claude_response,
-    stream_claude_response_native,
-    stream_openai_response,
-)
-from gemini import stream_gemini_response
+from llm import Completion, Llm
+from models import stream_claude_response, stream_claude_response_native, stream_openai_response, stream_gemini_response
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
 from typing import Any, Callable, Coroutine, Dict, List, Literal, cast, get_args
@@ -244,7 +238,7 @@ async def stream_code(websocket: WebSocket):
                         messages=prompt_messages,  # type: ignore
                         api_key=anthropic_api_key,
                         callback=lambda x: process_chunk(x, 0),
-                        model=Llm.CLAUDE_3_OPUS,
+                        model_name=Llm.CLAUDE_3_OPUS.value,
                         include_thinking=True,
                     )
                 ]
@@ -309,7 +303,7 @@ async def stream_code(websocket: WebSocket):
                                 api_key=openai_api_key,
                                 base_url=openai_base_url,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model=model,
+                                model_name=model.value,
                             )
                         )
                     elif GEMINI_API_KEY and (
@@ -348,7 +342,7 @@ async def stream_code(websocket: WebSocket):
                                 prompt_messages,
                                 api_key=anthropic_api_key,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model=claude_model,
+                                model_name=claude_model.value,
                             )
                         )
 

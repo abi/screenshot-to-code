@@ -1,14 +1,10 @@
 import base64
 import time
-from typing import Awaitable, Callable, List, TypedDict
+from typing import Awaitable, Callable, List
 from openai.types.chat import ChatCompletionMessageParam
 from google import genai
 from google.genai import types
-
-
-class Completion(TypedDict):
-    duration: float
-    code: str
+from llm import Completion
 
 
 async def stream_gemini_response(

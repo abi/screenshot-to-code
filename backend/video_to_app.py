@@ -16,10 +16,8 @@ from prompts.claude_prompts import VIDEO_PROMPT
 from utils import pprint_prompt
 from config import ANTHROPIC_API_KEY
 from video.utils import extract_tag_content, assemble_claude_prompt_video
-from llm import (
-    Llm,
-    stream_claude_response_native,
-)
+from llm import Llm
+from models import stream_claude_response_native
 
 STACK = "html_tailwind"
 
@@ -86,7 +84,7 @@ async def main():
         messages=prompt_messages,
         api_key=ANTHROPIC_API_KEY,
         callback=lambda x: process_chunk(x),
-        model=Llm.CLAUDE_3_OPUS,
+        model_name=Llm.CLAUDE_3_OPUS.value,
         include_thinking=True,
     )
 

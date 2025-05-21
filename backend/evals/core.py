@@ -1,10 +1,6 @@
 from config import ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY
-from llm import (
-    Llm,
-    stream_claude_response,
-    stream_openai_response,
-)
-from gemini import stream_gemini_response
+from llm import Llm
+from models import stream_claude_response, stream_openai_response, stream_gemini_response
 from prompts import assemble_prompt
 from prompts.types import Stack
 from openai.types.chat import ChatCompletionMessageParam
@@ -35,7 +31,7 @@ async def generate_code_core(
             prompt_messages,
             api_key=ANTHROPIC_API_KEY,
             callback=lambda x: process_chunk(x),
-            model=model,
+            model_name=model.value,
         )
     elif (
         model == Llm.GEMINI_2_0_FLASH_EXP
@@ -51,7 +47,7 @@ async def generate_code_core(
             prompt_messages,
             api_key=GEMINI_API_KEY,
             callback=lambda x: process_chunk(x),
-            model=model,
+            model_name=model.value,
         )
     else:
         if not OPENAI_API_KEY:
@@ -62,7 +58,7 @@ async def generate_code_core(
             api_key=OPENAI_API_KEY,
             base_url=None,
             callback=lambda x: process_chunk(x),
-            model=model,
+            model_name=model.value,
         )
 
     return completion["code"]
