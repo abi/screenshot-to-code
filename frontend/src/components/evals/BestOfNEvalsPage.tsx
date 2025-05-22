@@ -27,6 +27,7 @@ function BestOfNEvalsPage() {
   
   // Navigation state
   const [currentComparisonIndex, setCurrentComparisonIndex] = useState(0);
+  const [currentModelIndex, setCurrentModelIndex] = useState(0);
   
   // Refs for synchronized scrolling
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
@@ -117,12 +118,22 @@ function BestOfNEvalsPage() {
           e.preventDefault();
           const modelIndex = parseInt(e.key) - 1;
           if (modelIndex < folderNames.length) {
-            handleVote(currentComparisonIndex, modelIndex);
+            if (e.shiftKey) {
+              // Shift + number = switch to model tab
+              setCurrentModelIndex(modelIndex);
+            } else {
+              // Number = vote for model
+              handleVote(currentComparisonIndex, modelIndex);
+            }
           }
           break;
         case 't':
           e.preventDefault();
           handleVote(currentComparisonIndex, 'tie');
+          break;
+        case 'Tab':
+          e.preventDefault();
+          setCurrentModelIndex(prev => (prev + 1) % folderNames.length);
           break;
       }
     };
@@ -191,6 +202,7 @@ function BestOfNEvalsPage() {
       setOutcomes(new Array(data.evals.length).fill(null));
       setFolderNames(data.folder_names);
       setCurrentComparisonIndex(0);
+      setCurrentModelIndex(0);
       // Reset iframe refs
       iframeRefs.current = [];
     } catch (error) {
@@ -307,7 +319,7 @@ function BestOfNEvalsPage() {
 
             {/* Keyboard shortcuts help */}
             <div className="text-xs text-gray-400 mb-4">
-              Use ← → arrows to navigate, number keys 1-{folderNames.length} to vote, 't' for tie
+              Use ← → arrows to navigate comparisons, Tab/Shift+1-{folderNames.length} to switch models, 1-{folderNames.length} to vote, 't' for tie
             </div>
           </>
         )}
@@ -315,48 +327,72 @@ function BestOfNEvalsPage() {
 
       {/* Single Comparison View */}
       {currentEval && (
-        <div className="flex flex-col gap-y-4 mt-4 mx-auto justify-center max-w-7xl px-4">
-          {/* Input Image */}
-          <div className="w-full flex justify-center mb-4">
-            <div className="w-1/2 max-w-md p-1 border">
-              <img src={currentEval.input} alt={`Input for comparison ${currentComparisonIndex + 1}`} />
+        <div className="flex flex-col gap-y-4 mt-4 mx-auto justify-center max-w-none px-4">
+          {/* Tabbed Interface Layout */}
+          <div className="flex gap-4 w-full">
+            {/* Fixed Reference Image */}
+            <div className="flex-shrink-0 p-1 border border-blue-300 w-[250px]">
+              <div className="relative">
+                <div className="absolute top-0 left-0 bg-blue-600 text-white px-2 py-1 z-10 font-semibold text-sm">
+                  Reference
+                </div>
+                <div className="w-full h-[600px] flex items-center justify-center bg-gray-50">
+                  <img 
+                    src={currentEval.input} 
+                    alt={`Input for comparison ${currentComparisonIndex + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Side-by-side outputs */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {currentEval.outputs.map((output, outputIndex) => (
+            {/* Tabbed Model Display */}
+            <div className="flex-1">
+              {/* Model Tabs */}
+              <div className="flex gap-2 mb-4">
+                {folderNames.map((name, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentModelIndex(index)}
+                    className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${
+                      currentModelIndex === index
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    {name} ({index + 1})
+                  </button>
+                ))}
+              </div>
+
+              {/* Current Model Output */}
               <div
                 className={`p-1 border ${
-                  outcomes[currentComparisonIndex] === outputIndex
+                  outcomes[currentComparisonIndex] === currentModelIndex
                     ? "border-green-500 border-4"
                     : "border-gray-300"
                 }`}
-                key={outputIndex}
               >
                 <div className="relative">
-                  <div className="absolute top-0 left-0 bg-black text-white px-3 py-2 z-10 font-semibold">
-                    {folderNames[outputIndex]} (Press {outputIndex + 1})
-                  </div>
                   <iframe
                     ref={(el) => {
-                      iframeRefs.current[outputIndex] = el;
+                      iframeRefs.current[currentModelIndex] = el;
                     }}
-                    srcDoc={output}
-                    className="w-full h-[600px] transform scale-100"
+                    srcDoc={currentEval.outputs[currentModelIndex]}
+                    className="w-full h-[600px]"
                   ></iframe>
                   <Dialog>
                     <DialogTrigger asChild>
                       <button
                         className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-sm z-10"
-                        onClick={() => setSelectedHtml(output)}
+                        onClick={() => setSelectedHtml(currentEval.outputs[currentModelIndex])}
                       >
                         Full Screen
                       </button>
                     </DialogTrigger>
                     <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh]">
                       <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 z-10">
-                        {folderNames[outputIndex]}
+                        {folderNames[currentModelIndex]}
                       </div>
                       <iframe
                         srcDoc={selectedHtml}
@@ -366,7 +402,7 @@ function BestOfNEvalsPage() {
                   </Dialog>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
 
           {/* Voting buttons */}
