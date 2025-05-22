@@ -80,7 +80,11 @@ async def stream_claude_response(
 
     response = ""
 
-    if model_name == Llm.CLAUDE_3_7_SONNET_2025_02_19.value:
+    if (
+        model_name == Llm.CLAUDE_3_7_SONNET_2025_02_19.value
+        or model_name == Llm.CLAUDE_4_SONNET_2025_05_14.value
+        or model_name == Llm.CLAUDE_4_OPUS_2025_05_14.value
+    ):
         # Thinking is not compatible with temperature
         async with client.beta.messages.stream(
             model=model_name,

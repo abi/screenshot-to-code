@@ -16,7 +16,12 @@ from config import (
 )
 from custom_types import InputMode
 from llm import Completion, Llm
-from models import stream_claude_response, stream_claude_response_native, stream_openai_response, stream_gemini_response
+from models import (
+    stream_claude_response,
+    stream_claude_response_native,
+    stream_openai_response,
+    stream_gemini_response,
+)
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
 from typing import Any, Callable, Coroutine, Dict, List, Literal, cast, get_args
@@ -325,6 +330,8 @@ async def stream_code(websocket: WebSocket):
                         model == Llm.CLAUDE_3_5_SONNET_2024_06_20
                         or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
                         or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
+                        or model == Llm.CLAUDE_4_SONNET_2025_05_14
+                        or model == Llm.CLAUDE_4_OPUS_2025_05_14
                     ):
                         if anthropic_api_key is None:
                             await throw_error("Anthropic API key is missing.")

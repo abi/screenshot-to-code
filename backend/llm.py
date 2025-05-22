@@ -18,6 +18,8 @@ class Llm(Enum):
     CLAUDE_3_5_SONNET_2024_06_20 = "claude-3-5-sonnet-20240620"
     CLAUDE_3_5_SONNET_2024_10_22 = "claude-3-5-sonnet-20241022"
     CLAUDE_3_7_SONNET_2025_02_19 = "claude-3-7-sonnet-20250219"
+    CLAUDE_4_SONNET_2025_05_14 = "claude-sonnet-4-20250514"
+    CLAUDE_4_OPUS_2025_05_14 = "claude-opus-4-20250514"
     GEMINI_2_0_FLASH_EXP = "gemini-2.0-flash-exp"
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_2_0_PRO_EXP = "gemini-2.0-pro-exp-02-05"
