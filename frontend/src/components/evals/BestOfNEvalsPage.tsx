@@ -103,9 +103,17 @@ function BestOfNEvalsPage() {
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
-          goToPrevious();
+          setCurrentModelIndex(prev => prev > 0 ? prev - 1 : folderNames.length - 1);
           break;
         case 'ArrowRight':
+          e.preventDefault();
+          setCurrentModelIndex(prev => (prev + 1) % folderNames.length);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          goToPrevious();
+          break;
+        case 'ArrowDown':
           e.preventDefault();
           goToNext();
           break;
@@ -135,14 +143,6 @@ function BestOfNEvalsPage() {
           handleVote(currentComparisonIndex, 'tie');
           break;
         case 'Tab':
-          e.preventDefault();
-          setCurrentModelIndex(prev => (prev + 1) % folderNames.length);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setCurrentModelIndex(prev => prev > 0 ? prev - 1 : folderNames.length - 1);
-          break;
-        case 'ArrowDown':
           e.preventDefault();
           setCurrentModelIndex(prev => (prev + 1) % folderNames.length);
           break;
@@ -237,37 +237,14 @@ function BestOfNEvalsPage() {
 
   // Copy results as CSV to clipboard
   const copyResultsAsCSV = async () => {
-    const headers = ['Comparison', 'Winner', 'Model1', 'Model2', 'Model3', 'Model4', 'Model5'].slice(0, 2 + folderNames.length);
-    const rows = [headers.join(',')];
+    const rows: string[] = [];
     
-    evals.forEach((_, index) => {
-      const outcome = outcomes[index];
-      let winner = '';
-      if (outcome === 'tie') {
-        winner = 'Tie';
-      } else if (typeof outcome === 'number') {
-        winner = folderNames[outcome] || '';
-      } else {
-        winner = 'Not Voted';
-      }
-      
-      const row = [
-        `Comparison ${index + 1}`,
-        winner,
-        ...folderNames
-      ];
-      rows.push(row.join(','));
-    });
-    
-    // Add summary statistics
-    rows.push('');
-    rows.push('Summary Statistics');
-    rows.push('Model,Wins,Percentage');
+    // Add summary statistics only
     stats.stats.forEach(stat => {
-      rows.push(`${stat.name},${stat.wins},${stat.percentage}%`);
+      rows.push(`${stat.name}\t${stat.wins}\t${stat.percentage}%`);
     });
     if (stats.ties > 0) {
-      rows.push(`Ties,${stats.ties},${stats.tiePercentage}%`);
+      rows.push(`Ties\t${stats.ties}\t${stats.tiePercentage}%`);
     }
     
     const csvContent = rows.join('\n');
@@ -448,7 +425,7 @@ function BestOfNEvalsPage() {
 
               {/* Right: Quick help */}
               <div className="text-xs text-gray-400">
-                ← → navigate | ↑ ↓ Tab switch models | 1-{folderNames.length} vote | T tie
+                ↑ ↓ navigate | ← → Tab switch models | 1-{folderNames.length} vote | T tie
               </div>
             </div>
           </div>
@@ -478,21 +455,45 @@ function BestOfNEvalsPage() {
 
             {/* Tabbed Model Display */}
             <div className="flex-1">
-              {/* Model Tabs */}
+              {/* Model Tabs with Voting */}
               <div className="flex gap-2 mb-4">
                 {folderNames.map((name, index) => (
+                  <div key={index} className="flex flex-col">
+                    <button
+                      onClick={() => setCurrentModelIndex(index)}
+                      className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${
+                        currentModelIndex === index
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      }`}
+                    >
+                      {name} ({index + 1})
+                    </button>
+                    <button
+                      onClick={() => handleVote(currentComparisonIndex, index)}
+                      className={`px-4 py-1 rounded-b-lg text-sm font-medium transition-colors ${
+                        outcomes[currentComparisonIndex] === index
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      {outcomes[currentComparisonIndex] === index ? "✓ Winner" : "Vote"}
+                    </button>
+                  </div>
+                ))}
+                <div className="flex flex-col">
+                  <div className="px-4 py-2 rounded-t-lg bg-gray-100"></div>
                   <button
-                    key={index}
-                    onClick={() => setCurrentModelIndex(index)}
-                    className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${
-                      currentModelIndex === index
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    onClick={() => handleVote(currentComparisonIndex, "tie")}
+                    className={`px-4 py-1 rounded-b-lg text-sm font-medium transition-colors ${
+                      outcomes[currentComparisonIndex] === "tie"
+                        ? "bg-yellow-500 text-white"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
-                    {name} ({index + 1})
+                    {outcomes[currentComparisonIndex] === "tie" ? "✓ Tie" : "Tie (T)"}
                   </button>
-                ))}
+                </div>
               </div>
 
               {/* Current Model Output */}
@@ -535,32 +536,6 @@ function BestOfNEvalsPage() {
             </div>
           </div>
 
-          {/* Voting buttons */}
-          <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {folderNames.map((name, i) => (
-              <button
-                key={i}
-                className={`px-6 py-3 rounded text-lg font-semibold ${
-                  outcomes[currentComparisonIndex] === i
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-black"
-                }`}
-                onClick={() => handleVote(currentComparisonIndex, i)}
-              >
-                {name} Wins ({i + 1})
-              </button>
-            ))}
-            <button
-              className={`px-6 py-3 rounded text-lg font-semibold ${
-                outcomes[currentComparisonIndex] === "tie"
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 hover:bg-gray-300 text-black"
-              }`}
-              onClick={() => handleVote(currentComparisonIndex, "tie")}
-            >
-              Tie (T)
-            </button>
-          </div>
         </div>
       )}
     </div>
