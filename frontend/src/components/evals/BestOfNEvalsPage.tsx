@@ -579,7 +579,7 @@ function BestOfNEvalsPage() {
                     <div key={index} className="flex-1 flex items-center">
                       <button
                         onClick={() => setCurrentModelIndex(index)}
-                        className={`flex-1 px-3 py-2 text-sm font-medium transition-all border-r border-gray-200 ${
+                        className={`flex-1 px-3 py-2 text-xs font-medium transition-all border-r border-gray-200 ${
                           currentModelIndex === index
                             ? "bg-blue-50 text-blue-700 border-b-2 border-b-blue-500"
                             : "text-gray-600 hover:bg-gray-50"
