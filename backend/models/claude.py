@@ -88,8 +88,8 @@ async def stream_claude_response(
         # Thinking is not compatible with temperature
         async with client.beta.messages.stream(
             model=model_name,
-            # thinking={"type": "enabled", "budget_tokens": 1024},
-            max_tokens=20000,
+            thinking={"type": "enabled", "budget_tokens": 10000},
+            max_tokens=30000,
             system=system_prompt,
             messages=claude_messages,  # type: ignore
         ) as stream:
