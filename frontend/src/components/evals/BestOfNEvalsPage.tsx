@@ -265,53 +265,76 @@ function BestOfNEvalsPage() {
   return (
     <div className="mx-auto">
       <EvalNavigation />
-      <div className="w-full py-3 bg-zinc-950 text-white">
+      <div className="w-full py-4 bg-gradient-to-b from-gray-900 to-gray-800 text-white border-b border-gray-700">
         {evals.length === 0 ? (
           /* Setup Section */
-          <div className="flex flex-col gap-3 max-w-4xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className="flex flex-col gap-4 max-w-5xl mx-auto px-6">
+            <h2 className="text-xl font-semibold text-gray-200 mb-2">Configure Model Comparison</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {folderPaths.map((path, index) => (
-                <div key={index} className="flex gap-1">
+                <div key={index} className="flex gap-2">
                   <input
                     type="text"
                     value={path}
                     onChange={(e) => updateFolderPath(index, e.target.value)}
                     placeholder="Enter folder name in Downloads"
-                    className="flex-1 px-3 py-1 rounded text-black text-sm"
+                    className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:border-blue-500 focus:outline-none transition-colors text-sm"
                   />
                   {index > 0 && (
                     <button
                       onClick={() => removeFolderInput(index)}
-                      className="bg-red-500 px-2 py-1 rounded text-xs"
+                      className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg transition-colors"
+                      title="Remove model"
                     >
-                      ✕
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
                   )}
                 </div>
               ))}
             </div>
-            <div className="flex gap-2 justify-center">
+            <div className="flex gap-3 justify-center mt-2">
               <button
                 onClick={addFolderInput}
-                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
                 Add Model
               </button>
               <button
                 onClick={loadEvals}
                 disabled={isLoading}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded text-sm disabled:bg-blue-300"
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
               >
-                {isLoading ? "Loading..." : "Start Comparison"}
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Start Comparison
+                  </>
+                )}
               </button>
             </div>
           </div>
         ) : (
           /* Comparison Header */
-          <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               {/* Left: Navigation */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     setEvals([]);
@@ -320,67 +343,81 @@ function BestOfNEvalsPage() {
                     setCurrentComparisonIndex(0);
                     setCurrentModelIndex(0);
                   }}
-                  className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                  className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
+                  title="Back to setup"
                 >
-                  ← Setup
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
                 </button>
                 
-                <button
-                  onClick={goToPrevious}
-                  disabled={currentComparisonIndex === 0}
-                  className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-800 text-white px-3 py-1 rounded text-sm"
-                >
-                  ← Prev
-                </button>
-                
-                <select
-                  value={currentComparisonIndex}
-                  onChange={(e) => goToComparison(parseInt(e.target.value))}
-                  className="bg-gray-700 text-white px-2 py-1 rounded text-sm"
-                >
-                  {evals.map((_, index) => (
-                    <option key={index} value={index}>
-                      #{index + 1} {outcomes[index] !== null ? '✓' : ''}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center bg-gray-700 rounded-lg">
+                  <button
+                    onClick={goToPrevious}
+                    disabled={currentComparisonIndex === 0}
+                    className="px-3 py-1.5 rounded-l-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Previous comparison (↑)"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  
+                  <select
+                    value={currentComparisonIndex}
+                    onChange={(e) => goToComparison(parseInt(e.target.value))}
+                    className="bg-transparent text-white px-4 py-1.5 text-sm font-medium focus:outline-none appearance-none cursor-pointer"
+                  >
+                    {evals.map((_, index) => (
+                      <option key={index} value={index} className="bg-gray-800">
+                        Comparison {index + 1} {outcomes[index] !== null ? '✓' : ''}
+                      </option>
+                    ))}
+                  </select>
 
-                <button
-                  onClick={goToNext}
-                  disabled={currentComparisonIndex === evals.length - 1}
-                  className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-800 text-white px-3 py-1 rounded text-sm"
-                >
-                  Next →
-                </button>
+                  <button
+                    onClick={goToNext}
+                    disabled={currentComparisonIndex === evals.length - 1}
+                    className="px-3 py-1.5 rounded-r-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Next comparison (↓)"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
 
-                <span className="text-sm text-gray-300">
+                <span className="text-sm text-gray-400 font-medium">
                   {currentComparisonIndex + 1} of {evals.length}
                 </span>
               </div>
 
               {/* Center: Progress and Results */}
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-300">Progress:</span>
-                  <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="flex items-center gap-3 bg-gray-700/50 px-4 py-2 rounded-lg">
+                  <span className="text-xs text-gray-400 font-medium">Progress</span>
+                  <div className="w-32 h-2 bg-gray-600 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-blue-500 transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500 ease-out"
                       style={{ width: `${Math.round((stats.totalVotes / evals.length) * 100)}%` }}
                     ></div>
                   </div>
-                  <span className="text-xs text-gray-300">
+                  <span className="text-sm font-semibold text-gray-200">
                     {Math.round((stats.totalVotes / evals.length) * 100)}%
                   </span>
                 </div>
                 
                 <button
                   onClick={() => setShowResults(!showResults)}
-                  className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-200 transition-colors"
                 >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                   Results
-                  <span className={`transition-transform duration-200 ${showResults ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
+                  <svg className={`w-3 h-3 transition-transform duration-200 ${showResults ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
                 
                 {showResults && (
@@ -434,20 +471,24 @@ function BestOfNEvalsPage() {
 
       {/* Single Comparison View */}
       {currentEval && (
-        <div className="flex flex-col gap-y-4 mt-4 mx-auto justify-center max-w-none px-4">
-          {/* Tabbed Interface Layout */}
-          <div className="flex gap-4 w-full">
+        <div className="bg-gray-50 min-h-screen">
+          <div className="flex gap-6 p-6 max-w-full">
             {/* Fixed Reference Image */}
-            <div className="flex-shrink-0 p-1 border border-blue-300 w-[400px]">
-              <div className="relative">
-                <div className="absolute top-0 left-0 bg-blue-600 text-white px-2 py-1 z-10 font-semibold text-sm">
-                  Reference
+            <div className="flex-shrink-0 w-[420px]">
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Reference Image
+                  </h3>
                 </div>
-                <div className="w-full h-[600px] flex items-center justify-center bg-gray-50">
+                <div className="w-full h-[600px] flex items-center justify-center bg-gray-50 p-4">
                   <img 
                     src={currentEval.input} 
                     alt={`Input for comparison ${currentComparisonIndex + 1}`}
-                    className="max-w-full max-h-full object-contain"
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
                   />
                 </div>
               </div>
@@ -456,86 +497,119 @@ function BestOfNEvalsPage() {
             {/* Tabbed Model Display */}
             <div className="flex-1">
               {/* Model Tabs with Voting */}
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-3 mb-6">
                 {folderNames.map((name, index) => (
-                  <div key={index} className="flex flex-col">
+                  <div key={index} className="flex flex-col gap-1">
                     <button
                       onClick={() => setCurrentModelIndex(index)}
-                      className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${
+                      className={`px-5 py-2.5 rounded-t-xl font-semibold text-sm transition-all ${
                         currentModelIndex === index
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                          ? "bg-white text-gray-900 shadow-lg transform -translate-y-0.5"
+                          : "bg-gray-200 text-gray-600 hover:bg-gray-300"
                       }`}
                     >
-                      {name} ({index + 1})
+                      <div className="flex items-center gap-2">
+                        <span>{name}</span>
+                        <span className="text-xs opacity-70">({index + 1})</span>
+                      </div>
                     </button>
                     <button
                       onClick={() => handleVote(currentComparisonIndex, index)}
-                      className={`px-4 py-1 rounded-b-lg text-sm font-medium transition-colors ${
+                      className={`px-5 py-2 rounded-b-xl text-sm font-medium transition-all ${
                         outcomes[currentComparisonIndex] === index
-                          ? "bg-green-500 text-white"
+                          ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      {outcomes[currentComparisonIndex] === index ? "✓ Winner" : "Vote"}
+                      {outcomes[currentComparisonIndex] === index ? (
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Winner
+                        </span>
+                      ) : "Vote"}
                     </button>
                   </div>
                 ))}
-                <div className="flex flex-col">
-                  <div className="px-4 py-2 rounded-t-lg bg-gray-100"></div>
+                <div className="flex flex-col gap-1">
+                  <div className="px-5 py-2.5 rounded-t-xl bg-gray-100"></div>
                   <button
                     onClick={() => handleVote(currentComparisonIndex, "tie")}
-                    className={`px-4 py-1 rounded-b-lg text-sm font-medium transition-colors ${
+                    className={`px-5 py-2 rounded-b-xl text-sm font-medium transition-all ${
                       outcomes[currentComparisonIndex] === "tie"
-                        ? "bg-yellow-500 text-white"
+                        ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-md"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
-                    {outcomes[currentComparisonIndex] === "tie" ? "✓ Tie" : "Tie (T)"}
+                    {outcomes[currentComparisonIndex] === "tie" ? (
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Tie
+                      </span>
+                    ) : "Tie (T)"}
                   </button>
                 </div>
               </div>
 
               {/* Current Model Output */}
-              <div
-                className={`p-1 border ${
-                  outcomes[currentComparisonIndex] === currentModelIndex
-                    ? "border-green-500 border-4"
-                    : "border-gray-300"
-                }`}
-              >
-                <div className="relative">
+              <div className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
+                outcomes[currentComparisonIndex] === currentModelIndex
+                  ? "ring-4 ring-green-500 ring-opacity-50"
+                  : ""
+              }`}>
+                <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                      </svg>
+                      {folderNames[currentModelIndex]} Output
+                      {outcomes[currentComparisonIndex] === currentModelIndex && (
+                        <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                          Winner
+                        </span>
+                      )}
+                    </h3>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          className="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
+                          onClick={() => setSelectedHtml(currentEval.outputs[currentModelIndex])}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          </svg>
+                          Full Screen
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh] bg-gray-900">
+                        <div className="absolute top-4 left-4 bg-black/80 backdrop-blur text-white px-3 py-2 rounded-lg z-10">
+                          <span className="font-semibold">{folderNames[currentModelIndex]}</span>
+                        </div>
+                        <iframe
+                          srcDoc={selectedHtml}
+                          className="w-full h-full rounded-lg"
+                        ></iframe>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+                <div className="relative bg-gray-50">
                   <iframe
                     ref={(el) => {
                       iframeRefs.current[currentModelIndex] = el;
                     }}
                     srcDoc={currentEval.outputs[currentModelIndex]}
                     className="w-full h-[600px]"
+                    style={{ colorScheme: 'light' }}
                   ></iframe>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <button
-                        className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-sm z-10"
-                        onClick={() => setSelectedHtml(currentEval.outputs[currentModelIndex])}
-                      >
-                        Full Screen
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh]">
-                      <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 z-10">
-                        {folderNames[currentModelIndex]}
-                      </div>
-                      <iframe
-                        srcDoc={selectedHtml}
-                        className="w-full h-full"
-                      ></iframe>
-                    </DialogContent>
-                  </Dialog>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       )}
     </div>
