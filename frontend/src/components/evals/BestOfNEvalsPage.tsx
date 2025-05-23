@@ -29,6 +29,9 @@ function BestOfNEvalsPage() {
   const [currentComparisonIndex, setCurrentComparisonIndex] = useState(0);
   const [currentModelIndex, setCurrentModelIndex] = useState(0);
   
+  // UI state
+  const [showResults, setShowResults] = useState(false);
+  
   // Refs for synchronized scrolling
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
@@ -227,101 +230,148 @@ function BestOfNEvalsPage() {
   return (
     <div className="mx-auto">
       <EvalNavigation />
-      <div className="flex flex-col items-center justify-center w-full py-4 bg-zinc-950 text-white">
-        <div className="flex flex-col gap-4 mb-4 w-full max-w-2xl px-4">
-          {folderPaths.map((path, index) => (
-            <div key={index} className="flex gap-2">
-              <input
-                type="text"
-                value={path}
-                onChange={(e) => updateFolderPath(index, e.target.value)}
-                placeholder="Enter folder name in Downloads"
-                className="w-full px-4 py-2 rounded text-black"
-              />
-              {index > 0 && (
-                <button
-                  onClick={() => removeFolderInput(index)}
-                  className="bg-red-500 px-3 py-2 rounded"
-                >
-                  ✕
-                </button>
-              )}
+      <div className="w-full py-3 bg-zinc-950 text-white">
+        {evals.length === 0 ? (
+          /* Setup Section */
+          <div className="flex flex-col gap-3 max-w-4xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {folderPaths.map((path, index) => (
+                <div key={index} className="flex gap-1">
+                  <input
+                    type="text"
+                    value={path}
+                    onChange={(e) => updateFolderPath(index, e.target.value)}
+                    placeholder="Enter folder name in Downloads"
+                    className="flex-1 px-3 py-1 rounded text-black text-sm"
+                  />
+                  {index > 0 && (
+                    <button
+                      onClick={() => removeFolderInput(index)}
+                      className="bg-red-500 px-2 py-1 rounded text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={addFolderInput}
+                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+              >
+                Add Model
+              </button>
+              <button
+                onClick={loadEvals}
+                disabled={isLoading}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded text-sm disabled:bg-blue-300"
+              >
+                {isLoading ? "Loading..." : "Start Comparison"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Comparison Header */
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {/* Left: Navigation */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={goToPrevious}
+                  disabled={currentComparisonIndex === 0}
+                  className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-800 text-white px-3 py-1 rounded text-sm"
+                >
+                  ← Prev
+                </button>
+                
+                <select
+                  value={currentComparisonIndex}
+                  onChange={(e) => goToComparison(parseInt(e.target.value))}
+                  className="bg-gray-700 text-white px-2 py-1 rounded text-sm"
+                >
+                  {evals.map((_, index) => (
+                    <option key={index} value={index}>
+                      #{index + 1} {outcomes[index] !== null ? '✓' : ''}
+                    </option>
+                  ))}
+                </select>
 
-          <button
-            onClick={addFolderInput}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-          >
-            Add Model
-          </button>
+                <button
+                  onClick={goToNext}
+                  disabled={currentComparisonIndex === evals.length - 1}
+                  className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-800 text-white px-3 py-1 rounded text-sm"
+                >
+                  Next →
+                </button>
 
-          <button
-            onClick={loadEvals}
-            disabled={isLoading}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-blue-300"
-          >
-            {isLoading ? "Loading..." : "Start Comparison"}
-          </button>
-        </div>
-
-        {evals.length > 0 && (
-          <>
-            <div className="text-center mb-4">
-              <div className="text-2xl font-semibold mb-2">
-                Comparison {currentComparisonIndex + 1} of {evals.length}
-              </div>
-              <div className="text-lg">
-                Total votes: {stats.totalVotes} | Progress: {Math.round((stats.totalVotes / evals.length) * 100)}%
-              </div>
-              <div className="text-sm mt-1">
-                {stats.stats.map((stat, i) => (
-                  <span key={i}>
-                    {stat.name}: {stat.wins} ({stat.percentage}%) |{" "}
-                  </span>
-                ))}
-                <span>
-                  Ties: {stats.ties} ({stats.tiePercentage}%)
+                <span className="text-sm text-gray-300">
+                  {currentComparisonIndex + 1} of {evals.length}
                 </span>
               </div>
-            </div>
 
-            {/* Navigation Controls */}
-            <div className="flex items-center gap-4 mb-4">
-              <button
-                onClick={goToPrevious}
-                disabled={currentComparisonIndex === 0}
-                className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-800 text-white px-4 py-2 rounded"
-              >
-                ← Previous
-              </button>
-              
-              <select
-                value={currentComparisonIndex}
-                onChange={(e) => goToComparison(parseInt(e.target.value))}
-                className="bg-gray-700 text-white px-3 py-2 rounded"
-              >
-                {evals.map((_, index) => (
-                  <option key={index} value={index}>
-                    Comparison {index + 1} {outcomes[index] !== null ? '✓' : ''}
-                  </option>
-                ))}
-              </select>
+              {/* Center: Progress and Results */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-300">Progress:</span>
+                  <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 transition-all duration-300"
+                      style={{ width: `${Math.round((stats.totalVotes / evals.length) * 100)}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-300">
+                    {Math.round((stats.totalVotes / evals.length) * 100)}%
+                  </span>
+                </div>
+                
+                <button
+                  onClick={() => setShowResults(!showResults)}
+                  className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300"
+                >
+                  Results
+                  <span className={`transition-transform duration-200 ${showResults ? 'rotate-180' : ''}`}>
+                    ▼
+                  </span>
+                </button>
+                
+                {showResults && (
+                  <div className="bg-gray-800 rounded overflow-hidden">
+                    <table className="text-xs">
+                      <thead>
+                        <tr className="bg-gray-700">
+                          <th className="px-2 py-1 text-gray-300">Model</th>
+                          <th className="px-2 py-1 text-gray-300">Wins</th>
+                          <th className="px-2 py-1 text-gray-300">%</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.stats.map((stat, i) => (
+                          <tr key={i} className="border-t border-gray-600">
+                            <td className="px-2 py-1 text-white">{stat.name}</td>
+                            <td className="px-2 py-1 text-green-400 text-center">{stat.wins}</td>
+                            <td className="px-2 py-1 text-green-400 text-center">{stat.percentage}%</td>
+                          </tr>
+                        ))}
+                        {stats.ties > 0 && (
+                          <tr className="border-t border-gray-600">
+                            <td className="px-2 py-1 text-white">Ties</td>
+                            <td className="px-2 py-1 text-yellow-400 text-center">{stats.ties}</td>
+                            <td className="px-2 py-1 text-yellow-400 text-center">{stats.tiePercentage}%</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
 
-              <button
-                onClick={goToNext}
-                disabled={currentComparisonIndex === evals.length - 1}
-                className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-800 text-white px-4 py-2 rounded"
-              >
-                Next →
-              </button>
+              {/* Right: Quick help */}
+              <div className="text-xs text-gray-400">
+                ← → navigate | Tab switch models | 1-{folderNames.length} vote | T tie
+              </div>
             </div>
-
-            {/* Keyboard shortcuts help */}
-            <div className="text-xs text-gray-400 mb-4">
-              Use ← → arrows to navigate comparisons, Tab/Shift+1-{folderNames.length} to switch models, 1-{folderNames.length} to vote, 't' for tie
-            </div>
-          </>
+          </div>
         )}
       </div>
 
