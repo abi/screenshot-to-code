@@ -40,6 +40,7 @@ function BestOfNEvalsPage() {
   
   // UI state
   const [showResults, setShowResults] = useState(false);
+  const [winnerFilter, setWinnerFilter] = useState<number | "tie" | "all">("all");
   
   // Refs for synchronized scrolling
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
@@ -105,18 +106,55 @@ function BestOfNEvalsPage() {
     return () => clearTimeout(timer);
   }, [currentComparisonIndex, evals]);
 
+  // Get filtered comparisons indices
+  const getFilteredIndices = () => {
+    if (winnerFilter === "all") {
+      return evals.map((_, index) => index);
+    }
+    return evals.map((_, index) => index).filter(index => {
+      const outcome = outcomes[index];
+      if (winnerFilter === "tie") {
+        return outcome === "tie";
+      }
+      return outcome === winnerFilter;
+    });
+  };
+
+  const filteredIndices = getFilteredIndices();
+
   // Navigation functions
   const goToPrevious = () => {
-    setCurrentComparisonIndex(prev => Math.max(0, prev - 1));
+    if (winnerFilter === "all") {
+      setCurrentComparisonIndex(prev => Math.max(0, prev - 1));
+    } else {
+      const currentFilteredIndex = filteredIndices.indexOf(currentComparisonIndex);
+      if (currentFilteredIndex > 0) {
+        setCurrentComparisonIndex(filteredIndices[currentFilteredIndex - 1]);
+      }
+    }
   };
 
   const goToNext = () => {
-    setCurrentComparisonIndex(prev => Math.min(evals.length - 1, prev + 1));
+    if (winnerFilter === "all") {
+      setCurrentComparisonIndex(prev => Math.min(evals.length - 1, prev + 1));
+    } else {
+      const currentFilteredIndex = filteredIndices.indexOf(currentComparisonIndex);
+      if (currentFilteredIndex < filteredIndices.length - 1) {
+        setCurrentComparisonIndex(filteredIndices[currentFilteredIndex + 1]);
+      }
+    }
   };
 
   const goToComparison = (index: number) => {
     setCurrentComparisonIndex(Math.max(0, Math.min(evals.length - 1, index)));
   };
+
+  // Update current index when filter changes
+  useEffect(() => {
+    if (winnerFilter !== "all" && filteredIndices.length > 0 && !filteredIndices.includes(currentComparisonIndex)) {
+      setCurrentComparisonIndex(filteredIndices[0]);
+    }
+  }, [winnerFilter, filteredIndices, currentComparisonIndex]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -444,11 +482,19 @@ function BestOfNEvalsPage() {
                     onChange={(e) => goToComparison(parseInt(e.target.value))}
                     className="bg-transparent text-white px-3 py-1 text-sm font-medium focus:outline-none appearance-none cursor-pointer"
                   >
-                    {evals.map((_, index) => (
-                      <option key={index} value={index} className="bg-gray-800">
-                        Comparison {index + 1} {outcomes[index] !== null ? '✓' : ''}
-                      </option>
-                    ))}
+                    {winnerFilter === "all" ? (
+                      evals.map((_, index) => (
+                        <option key={index} value={index} className="bg-gray-800">
+                          Comparison {index + 1} {outcomes[index] !== null ? '✓' : ''}
+                        </option>
+                      ))
+                    ) : (
+                      filteredIndices.map((index) => (
+                        <option key={index} value={index} className="bg-gray-800">
+                          Comparison {index + 1} {outcomes[index] !== null ? '✓' : ''}
+                        </option>
+                      ))
+                    )}
                   </select>
 
                   <button
@@ -464,7 +510,10 @@ function BestOfNEvalsPage() {
                 </div>
 
                 <span className="text-sm text-gray-400 font-medium">
-                  {currentComparisonIndex + 1} of {evals.length}
+                  {winnerFilter === "all" 
+                    ? `${currentComparisonIndex + 1} of ${evals.length}`
+                    : `${filteredIndices.indexOf(currentComparisonIndex) + 1} of ${filteredIndices.length} (filtered)`
+                  }
                 </span>
               </div>
 
@@ -495,6 +544,28 @@ function BestOfNEvalsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
+
+                {/* Filter Dropdown */}
+                <select
+                  value={winnerFilter}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "all" || value === "tie") {
+                      setWinnerFilter(value);
+                    } else {
+                      setWinnerFilter(parseInt(value));
+                    }
+                  }}
+                  className="px-2 py-1 bg-gray-700 text-white text-xs rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="all">All Comparisons</option>
+                  {folderNames.map((name, index) => (
+                    <option key={index} value={index}>
+                      {name} Wins
+                    </option>
+                  ))}
+                  <option value="tie">Ties</option>
+                </select>
                 
                 {showResults && (
                   <div className="bg-gray-800 rounded overflow-hidden">
