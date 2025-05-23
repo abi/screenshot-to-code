@@ -550,21 +550,21 @@ function BestOfNEvalsPage() {
         <div className="bg-gray-50 min-h-screen">
           <div className="flex gap-4 p-3 max-w-full">
             {/* Fixed Reference Image */}
-            <div className="flex-shrink-0 w-[420px]">
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="bg-gray-100 text-gray-700 px-3 py-2 border-b border-gray-200">
-                  <h3 className="font-semibold text-sm flex items-center gap-1.5">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex-shrink-0 w-[380px]">
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-gray-100 text-gray-700 px-3 py-1.5 border-b border-gray-200">
+                  <h3 className="font-medium text-xs flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     Reference Image
                   </h3>
                 </div>
-                <div className="w-full h-[600px] flex items-center justify-center bg-gray-50 p-3">
+                <div className="w-full h-[calc(100vh-200px)] flex items-center justify-center bg-gray-50 p-2">
                   <img 
                     src={currentEval.input} 
                     alt={`Input for comparison ${currentComparisonIndex + 1}`}
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+                    className="max-w-full max-h-full object-contain rounded shadow-sm"
                   />
                 </div>
               </div>
@@ -572,95 +572,67 @@ function BestOfNEvalsPage() {
 
             {/* Tabbed Model Display */}
             <div className="flex-1">
-              {/* Model Tabs with Voting */}
-              <div className="flex gap-3 mb-6">
-                {folderNames.map((name, index) => (
-                  <div key={index} className="flex flex-col gap-1">
-                    <button
-                      onClick={() => setCurrentModelIndex(index)}
-                      className={`px-5 py-2.5 rounded-t-xl font-semibold text-sm transition-all ${
-                        currentModelIndex === index
-                          ? "bg-white text-gray-900 shadow-lg transform -translate-y-0.5"
-                          : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>{name}</span>
-                        <span className="text-xs opacity-70">({index + 1})</span>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => handleVote(currentComparisonIndex, index)}
-                      className={`px-5 py-2 rounded-b-xl text-sm font-medium transition-all ${
-                        outcomes[currentComparisonIndex] === index
-                          ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {outcomes[currentComparisonIndex] === index ? (
-                        <span className="flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Winner
-                        </span>
-                      ) : "Vote"}
-                    </button>
-                  </div>
-                ))}
-                <div className="flex flex-col gap-1">
-                  <div className="px-5 py-2.5 rounded-t-xl bg-gray-100"></div>
+              {/* Compact Model Tabs with Inline Voting */}
+              <div className="bg-white rounded-t-lg shadow-sm border-b border-gray-200">
+                <div className="flex items-center">
+                  {folderNames.map((name, index) => (
+                    <div key={index} className="flex-1 flex items-center">
+                      <button
+                        onClick={() => setCurrentModelIndex(index)}
+                        className={`flex-1 px-3 py-2 text-sm font-medium transition-all border-r border-gray-200 ${
+                          currentModelIndex === index
+                            ? "bg-blue-50 text-blue-700 border-b-2 border-b-blue-500"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {name} <span className="text-xs opacity-60">({index + 1})</span>
+                      </button>
+                      <button
+                        onClick={() => handleVote(currentComparisonIndex, index)}
+                        className={`px-3 py-2 text-xs font-medium transition-all border-r border-gray-200 ${
+                          outcomes[currentComparisonIndex] === index
+                            ? "bg-green-100 text-green-700"
+                            : "text-gray-500 hover:bg-gray-50"
+                        }`}
+                      >
+                        {outcomes[currentComparisonIndex] === index ? "✓" : "Vote"}
+                      </button>
+                    </div>
+                  ))}
                   <button
                     onClick={() => handleVote(currentComparisonIndex, "tie")}
-                    className={`px-5 py-2 rounded-b-xl text-sm font-medium transition-all ${
+                    className={`px-4 py-2 text-xs font-medium transition-all ${
                       outcomes[currentComparisonIndex] === "tie"
-                        ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "text-gray-500 hover:bg-gray-50"
                     }`}
                   >
-                    {outcomes[currentComparisonIndex] === "tie" ? (
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Tie
-                      </span>
-                    ) : "Tie (T)"}
+                    {outcomes[currentComparisonIndex] === "tie" ? "Tie ✓" : "Tie (T)"}
                   </button>
                 </div>
               </div>
 
               {/* Current Model Output */}
-              <div className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
-                outcomes[currentComparisonIndex] === currentModelIndex
-                  ? "ring-4 ring-green-500 ring-opacity-50"
-                  : ""
-              }`}>
-                <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                      </svg>
-                      {folderNames[currentModelIndex]} Output
-                      {outcomes[currentComparisonIndex] === currentModelIndex && (
-                        <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
-                          Winner
-                        </span>
-                      )}
-                    </h3>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button
-                          className="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
-                          onClick={() => setSelectedHtml(currentEval.outputs[currentModelIndex])}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                          </svg>
-                          Full Screen
-                        </button>
-                      </DialogTrigger>
+              <div className="bg-white shadow-lg overflow-hidden">
+                <div className="bg-gray-50 px-3 py-1.5 border-b border-gray-200 flex items-center justify-between">
+                  <span className="text-xs text-gray-600 font-medium">
+                    {folderNames[currentModelIndex]} Output
+                    {outcomes[currentComparisonIndex] === currentModelIndex && (
+                      <span className="ml-2 text-green-600">✓ Winner</span>
+                    )}
+                  </span>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button
+                        className="flex items-center gap-1 bg-gray-700 hover:bg-gray-800 text-white px-2 py-0.5 rounded text-xs transition-colors"
+                        onClick={() => setSelectedHtml(currentEval.outputs[currentModelIndex])}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        Full Screen
+                      </button>
+                    </DialogTrigger>
                       <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh] bg-gray-900">
                         <div className="absolute top-4 left-4 bg-black/80 backdrop-blur text-white px-3 py-2 rounded-lg z-10">
                           <span className="font-semibold">{folderNames[currentModelIndex]}</span>
@@ -672,14 +644,13 @@ function BestOfNEvalsPage() {
                       </DialogContent>
                     </Dialog>
                   </div>
-                </div>
                 <div className="relative bg-gray-50">
                   <iframe
                     ref={(el) => {
                       iframeRefs.current[currentModelIndex] = el;
                     }}
                     srcDoc={currentEval.outputs[currentModelIndex]}
-                    className="w-full h-[600px]"
+                    className="w-full h-[calc(100vh-200px)]"
                     style={{ colorScheme: 'light' }}
                   ></iframe>
                 </div>
