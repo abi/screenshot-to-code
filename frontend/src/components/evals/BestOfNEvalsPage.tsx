@@ -438,7 +438,7 @@ function BestOfNEvalsPage() {
           {/* Tabbed Interface Layout */}
           <div className="flex gap-4 w-full">
             {/* Fixed Reference Image */}
-            <div className="flex-shrink-0 p-1 border border-blue-300 w-[250px]">
+            <div className="flex-shrink-0 p-1 border border-blue-300 w-[400px]">
               <div className="relative">
                 <div className="absolute top-0 left-0 bg-blue-600 text-white px-2 py-1 z-10 font-semibold text-sm">
                   Reference
