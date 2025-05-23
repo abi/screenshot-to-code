@@ -337,19 +337,12 @@ async def stream_code(websocket: WebSocket):
                             await throw_error("Anthropic API key is missing.")
                             raise Exception("Anthropic API key is missing.")
 
-                        # For creation, use Claude Sonnet 3.7
-                        # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
-                        if params["generationType"] == "create":
-                            claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
-                        else:
-                            claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
-
                         tasks.append(
                             stream_claude_response(
                                 prompt_messages,
                                 api_key=anthropic_api_key,
                                 callback=lambda x, i=index: process_chunk(x, i),
-                                model_name=claude_model.value,
+                                model_name=model.value,
                             )
                         )
 
