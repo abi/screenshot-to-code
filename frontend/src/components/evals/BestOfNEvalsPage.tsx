@@ -16,6 +16,12 @@ interface BestOfNEvalsResponse {
   folder_names: string[];
 }
 
+interface OutputFolder {
+  name: string;
+  path: string;
+  modified_time: number;
+}
+
 function BestOfNEvalsPage() {
   const [evals, setEvals] = React.useState<Eval[]>([]);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
@@ -24,6 +30,9 @@ function BestOfNEvalsPage() {
   const [folderPaths, setFolderPaths] = useState<string[]>([""]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedHtml, setSelectedHtml] = useState<string>("");
+  
+  // Available folders from backend
+  const [availableFolders, setAvailableFolders] = useState<OutputFolder[]>([]);
   
   // Navigation state
   const [currentComparisonIndex, setCurrentComparisonIndex] = useState(0);
@@ -34,6 +43,20 @@ function BestOfNEvalsPage() {
   
   // Refs for synchronized scrolling
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
+
+  // Fetch available folders on mount
+  useEffect(() => {
+    const fetchFolders = async () => {
+      try {
+        const response = await fetch(`${HTTP_BACKEND_URL}/output_folders`);
+        const folders: OutputFolder[] = await response.json();
+        setAvailableFolders(folders);
+      } catch (error) {
+        console.error("Error fetching folders:", error);
+      }
+    };
+    fetchFolders();
+  }, []);
 
   // Synchronized scrolling effect
   useEffect(() => {
@@ -188,7 +211,7 @@ function BestOfNEvalsPage() {
 
   const loadEvals = async () => {
     if (folderPaths.some((path) => !path)) {
-      alert("Please enter all folder paths");
+      alert("Please select all folder paths");
       return;
     }
 
@@ -198,7 +221,7 @@ function BestOfNEvalsPage() {
       folderPaths.forEach((path, index) => {
         queryParams.append(
           `folder${index + 1}`,
-          `/Users/abi/Downloads/${path}`
+          path
         );
       });
 
@@ -234,6 +257,23 @@ function BestOfNEvalsPage() {
 
   const stats = calculateStats();
   const currentEval = evals[currentComparisonIndex];
+  
+  // Format time helper
+  const formatTimeAgo = (timestamp: number) => {
+    const now = Date.now() / 1000;
+    const diff = now - timestamp;
+    
+    if (diff < 3600) {
+      const minutes = Math.floor(diff / 60);
+      return `${minutes}m ago`;
+    } else if (diff < 86400) {
+      const hours = Math.floor(diff / 3600);
+      return `${hours}h ago`;
+    } else {
+      const days = Math.floor(diff / 86400);
+      return `${days}d ago`;
+    }
+  };
 
   // Copy results as CSV to clipboard
   const copyResultsAsCSV = async () => {
@@ -269,17 +309,42 @@ function BestOfNEvalsPage() {
         {evals.length === 0 ? (
           /* Setup Section */
           <div className="flex flex-col gap-4 max-w-5xl mx-auto px-6">
-            <h2 className="text-xl font-semibold text-gray-200 mb-2">Configure Model Comparison</h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold text-gray-200">Configure Model Comparison</h2>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`${HTTP_BACKEND_URL}/output_folders`);
+                    const folders: OutputFolder[] = await response.json();
+                    setAvailableFolders(folders);
+                  } catch (error) {
+                    console.error("Error fetching folders:", error);
+                  }
+                }}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2"
+                title="Refresh folder list"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {folderPaths.map((path, index) => (
                 <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
+                  <select
                     value={path}
                     onChange={(e) => updateFolderPath(index, e.target.value)}
-                    placeholder="Enter folder name in Downloads"
-                    className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:border-blue-500 focus:outline-none transition-colors text-sm"
-                  />
+                    className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                  >
+                    <option value="">Select a folder...</option>
+                    {availableFolders.map((folder) => (
+                      <option key={folder.path} value={folder.path}>
+                        {folder.name} ({formatTimeAgo(folder.modified_time)})
+                      </option>
+                    ))}
+                  </select>
                   {index > 0 && (
                     <button
                       onClick={() => removeFolderInput(index)}
