@@ -367,13 +367,6 @@ function BestOfNEvalsPage() {
                       </button>
                     )}
                   </div>
-                  {path && (
-                    <div className="mt-1 ml-20">
-                      <span className="text-xs text-gray-500">
-                        {availableFolders.find(f => f.path === path)?.name} • {formatTimeAgo(availableFolders.find(f => f.path === path)?.modified_time || 0)}
-                      </span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
