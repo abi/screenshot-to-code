@@ -138,6 +138,14 @@ function BestOfNEvalsPage() {
           e.preventDefault();
           setCurrentModelIndex(prev => (prev + 1) % folderNames.length);
           break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setCurrentModelIndex(prev => prev > 0 ? prev - 1 : folderNames.length - 1);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setCurrentModelIndex(prev => (prev + 1) % folderNames.length);
+          break;
       }
     };
 
@@ -227,6 +235,56 @@ function BestOfNEvalsPage() {
   const stats = calculateStats();
   const currentEval = evals[currentComparisonIndex];
 
+  // Copy results as CSV to clipboard
+  const copyResultsAsCSV = async () => {
+    const headers = ['Comparison', 'Winner', 'Model1', 'Model2', 'Model3', 'Model4', 'Model5'].slice(0, 2 + folderNames.length);
+    const rows = [headers.join(',')];
+    
+    evals.forEach((_, index) => {
+      const outcome = outcomes[index];
+      let winner = '';
+      if (outcome === 'tie') {
+        winner = 'Tie';
+      } else if (typeof outcome === 'number') {
+        winner = folderNames[outcome] || '';
+      } else {
+        winner = 'Not Voted';
+      }
+      
+      const row = [
+        `Comparison ${index + 1}`,
+        winner,
+        ...folderNames
+      ];
+      rows.push(row.join(','));
+    });
+    
+    // Add summary statistics
+    rows.push('');
+    rows.push('Summary Statistics');
+    rows.push('Model,Wins,Percentage');
+    stats.stats.forEach(stat => {
+      rows.push(`${stat.name},${stat.wins},${stat.percentage}%`);
+    });
+    if (stats.ties > 0) {
+      rows.push(`Ties,${stats.ties},${stats.tiePercentage}%`);
+    }
+    
+    const csvContent = rows.join('\n');
+    
+    try {
+      await navigator.clipboard.writeText(csvContent);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = csvContent;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  };
+
   return (
     <div className="mx-auto">
       <EvalNavigation />
@@ -277,6 +335,19 @@ function BestOfNEvalsPage() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               {/* Left: Navigation */}
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setEvals([]);
+                    setOutcomes([]);
+                    setFolderNames([]);
+                    setCurrentComparisonIndex(0);
+                    setCurrentModelIndex(0);
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                >
+                  ← Setup
+                </button>
+                
                 <button
                   onClick={goToPrevious}
                   disabled={currentComparisonIndex === 0}
@@ -337,7 +408,16 @@ function BestOfNEvalsPage() {
                 
                 {showResults && (
                   <div className="bg-gray-800 rounded overflow-hidden">
-                    <table className="text-xs">
+                    <div className="flex items-center justify-between p-2 bg-gray-700">
+                      <span className="text-xs text-gray-300 font-semibold">Results</span>
+                      <button
+                        onClick={copyResultsAsCSV}
+                        className="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
+                      >
+                        Copy CSV
+                      </button>
+                    </div>
+                    <table className="text-xs w-full">
                       <thead>
                         <tr className="bg-gray-700">
                           <th className="px-2 py-1 text-gray-300">Model</th>
@@ -368,7 +448,7 @@ function BestOfNEvalsPage() {
 
               {/* Right: Quick help */}
               <div className="text-xs text-gray-400">
-                ← → navigate | Tab switch models | 1-{folderNames.length} vote | T tie
+                ← → navigate | ↑ ↓ Tab switch models | 1-{folderNames.length} vote | T tie
               </div>
             </div>
           </div>
