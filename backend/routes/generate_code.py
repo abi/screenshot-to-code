@@ -192,6 +192,58 @@ class ModelSelectionStage:
         return variant_models
 
 
+class PromptCreationStage:
+    """Handles prompt assembly for code generation"""
+    
+    def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
+        self.throw_error = throw_error
+    
+    async def create_prompt(
+        self,
+        params: Dict[str, str],
+        stack: Stack,
+        input_mode: InputMode,
+    ) -> tuple[List[Dict[str, Any]], Dict[str, str]]:
+        """Create prompt messages and return image cache"""
+        try:
+            prompt_messages, image_cache = await create_prompt(params, stack, input_mode)
+            return prompt_messages, image_cache
+        except Exception as e:
+            await self.throw_error(
+                "Error assembling prompt. Contact support at support@picoapps.xyz"
+            )
+            raise
+
+
+class MockResponseStage:
+    """Handles mock AI responses for testing"""
+    
+    def __init__(
+        self,
+        send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
+    ):
+        self.send_message = send_message
+    
+    async def generate_mock_response(
+        self,
+        input_mode: InputMode,
+    ) -> List[str]:
+        """Generate mock response for testing"""
+        async def process_chunk(content: str, variantIndex: int):
+            await self.send_message("chunk", content, variantIndex)
+        
+        completion_results = [
+            await mock_completion(process_chunk, input_mode=input_mode)
+        ]
+        completions = [result["code"] for result in completion_results]
+        
+        # Send the complete variant back to the client
+        await self.send_message("setCode", completions[0], 0)
+        await self.send_message("variantComplete", "Variant generation complete", 0)
+        
+        return completions
+
+
 class ParallelGenerationStage:
     """Handles parallel variant generation with independent processing for each variant"""
 
@@ -457,18 +509,13 @@ async def stream_code(websocket: WebSocket):
         await send_message("status", "Generating code...", i)
 
     ### Prompt creation
-
-    # Image cache for updates so that we don't have to regenerate images
-    image_cache: Dict[str, str] = {}
-
-    try:
-        prompt_messages, image_cache = await create_prompt(params, stack, input_mode)
-    except:
-        await throw_error(
-            "Error assembling prompt. Contact support at support@picoapps.xyz"
-        )
-        raise
-
+    
+    # Use PromptCreationStage to create prompt
+    prompt_creator = PromptCreationStage(throw_error)
+    prompt_messages, image_cache = await prompt_creator.create_prompt(
+        params, stack, input_mode
+    )
+    
     # pprint_prompt(prompt_messages)  # type: ignore
 
     ### Code generation
@@ -477,14 +524,9 @@ async def stream_code(websocket: WebSocket):
         await send_message("chunk", content, variantIndex)
 
     if SHOULD_MOCK_AI_RESPONSE:
-        completion_results = [
-            await mock_completion(process_chunk, input_mode=input_mode)
-        ]
-        completions = [result["code"] for result in completion_results]
-
-        # Send the complete variant back to the client
-        await send_message("setCode", completions[0], 0)
-        await send_message("variantComplete", "Variant generation complete", 0)
+        # Use MockResponseStage for testing
+        mock_stage = MockResponseStage(send_message)
+        completions = await mock_stage.generate_mock_response(input_mode)
     else:
         try:
             if input_mode == "video":
