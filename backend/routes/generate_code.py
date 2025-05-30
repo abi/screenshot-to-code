@@ -16,10 +16,24 @@ from config import (
 )
 from custom_types import InputMode
 from llm import Completion, Llm
-from models import stream_claude_response, stream_claude_response_native, stream_openai_response, stream_gemini_response
+from models import (
+    stream_claude_response,
+    stream_claude_response_native,
+    stream_openai_response,
+    stream_gemini_response,
+)
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
-from typing import Any, Callable, Coroutine, Dict, List, Literal, cast, get_args
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    Dict,
+    List,
+    Literal,
+    cast,
+    get_args,
+)
 from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
@@ -164,7 +178,9 @@ async def stream_code(websocket: WebSocket):
         await websocket.close(APP_ERROR_WEB_SOCKET_CODE)
 
     async def send_message(
-        type: Literal["chunk", "status", "setCode", "error"],
+        type: Literal[
+            "chunk", "status", "setCode", "error", "variantComplete", "variantError"
+        ],
         value: str,
         variantIndex: int,
     ):
@@ -173,6 +189,10 @@ async def stream_code(websocket: WebSocket):
             print(f"Error (variant {variantIndex}): {value}")
         elif type == "status":
             print(f"Status (variant {variantIndex}): {value}")
+        elif type == "variantComplete":
+            print(f"Variant {variantIndex} complete")
+        elif type == "variantError":
+            print(f"Variant {variantIndex} error: {value}")
 
         await websocket.send_json(
             {"type": type, "value": value, "variantIndex": variantIndex}
@@ -223,6 +243,10 @@ async def stream_code(websocket: WebSocket):
             await mock_completion(process_chunk, input_mode=input_mode)
         ]
         completions = [result["code"] for result in completion_results]
+
+        # Send the complete variant back to the client
+        await send_message("setCode", completions[0], 0)
+        await send_message("variantComplete", "Variant generation complete", 0)
     else:
         try:
             if input_mode == "video":
@@ -243,6 +267,10 @@ async def stream_code(websocket: WebSocket):
                     )
                 ]
                 completions = [result["code"] for result in completion_results]
+
+                # Send the complete variant back to the client
+                await send_message("setCode", completions[0], 0)
+                await send_message("variantComplete", "Variant generation complete", 0)
             else:
 
                 # Depending on the presence and absence of various keys,
@@ -346,38 +374,81 @@ async def stream_code(websocket: WebSocket):
                             )
                         )
 
-                # Run the models in parallel and capture exceptions if any
-                completions = await asyncio.gather(*tasks, return_exceptions=True)
+                # Dictionary to track variant tasks and their status
+                variant_tasks: Dict[int, asyncio.Task[Completion]] = {}
+                variant_completions: Dict[int, str] = {}
 
-                # If all generations failed, throw an error
-                all_generations_failed = all(
-                    isinstance(completion, BaseException) for completion in completions
-                )
-                if all_generations_failed:
-                    await throw_error("Error generating code. Please contact support.")
+                # Process each variant independently
+                for index, task in enumerate(tasks):
+                    variant_task = asyncio.create_task(task)
+                    variant_tasks[index] = variant_task
 
-                    # Print the all the underlying exceptions for debugging
-                    for completion in completions:
-                        if isinstance(completion, BaseException):
-                            traceback.print_exception(completion)
-                    raise Exception("All generations failed")
+                # Function to process each variant completion
+                async def process_variant_completion(
+                    index: int, task: asyncio.Task[Completion]
+                ):
+                    try:
+                        completion = await task
 
-                # If some completions failed, replace them with empty strings
-                for index, completion in enumerate(completions):
-                    if isinstance(completion, BaseException):
-                        completions[index] = Completion(duration=0, code="")
-                        print("Generation failed for variant", index)
-                        print(completion)
-                    else:
                         print(
                             f"{variant_models[index].value} completion took {completion['duration']:.2f} seconds"
                         )
+                        variant_completions[index] = completion["code"]
 
-                completions = [
-                    result["code"]
-                    for result in completions
-                    if not isinstance(result, BaseException)
+                        try:
+                            # Process images for this variant
+                            processed_html = await perform_image_generation(
+                                completion["code"],
+                                should_generate_images,
+                                openai_api_key,
+                                openai_base_url,
+                                image_cache,
+                            )
+
+                            # Extract HTML content
+                            processed_html = extract_html_content(processed_html)
+
+                            # Send the complete variant back to the client
+                            await send_message("setCode", processed_html, index)
+                            await send_message(
+                                "variantComplete",
+                                "Variant generation complete",
+                                index,
+                            )
+                        except Exception as inner_e:
+                            # If websocket is closed or other error during post-processing
+                            print(
+                                f"Post-processing error for variant {index}: {inner_e}"
+                            )
+                            # We still keep the completion in variant_completions
+
+                    except Exception as e:
+                        # Handle any errors that occurred during generation
+                        print(f"Error in variant {index}: {e}")
+                        traceback.print_exception(type(e), e, e.__traceback__)
+
+                # Start processing all variants
+                variant_processors = [
+                    process_variant_completion(index, task)
+                    for index, task in variant_tasks.items()
                 ]
+
+                # Wait for all variants to complete
+                await asyncio.gather(*variant_processors, return_exceptions=True)
+
+                # Check if all variants failed
+                if len(variant_completions) == 0:
+                    await throw_error("Error generating code. Please contact support.")
+                    raise Exception("All generations failed")
+
+                # Prepare completions list for further processing
+                completions: list[str] = []
+                for i in range(len(tasks)):
+                    if i in variant_completions:
+                        completions.append(variant_completions[i])
+                    else:
+                        # Add empty string for cancelled/failed variants
+                        completions.append("")
 
         except openai.AuthenticationError as e:
             print("[GENERATE_CODE] Authentication failed", e)
@@ -416,32 +487,14 @@ async def stream_code(websocket: WebSocket):
 
     ## Post-processing
 
-    # Strip the completion of everything except the HTML content
-    completions = [extract_html_content(completion) for completion in completions]
+    # Only process non-empty completions
+    valid_completions = [comp for comp in completions if comp]
 
-    # Write the messages dict into a log so that we can debug later
-    write_logs(prompt_messages, completions[0])
+    # Write the first valid completion to logs for debugging
+    if valid_completions:
+        # Strip the completion of everything except the HTML content
+        html_content = extract_html_content(valid_completions[0])
+        write_logs(prompt_messages, html_content)
 
-    ## Image Generation
-
-    for index, _ in enumerate(completions):
-        await send_message("status", "Generating images...", index)
-
-    image_generation_tasks = [
-        perform_image_generation(
-            completion,
-            should_generate_images,
-            openai_api_key,
-            openai_base_url,
-            image_cache,
-        )
-        for completion in completions
-    ]
-
-    updated_completions = await asyncio.gather(*image_generation_tasks)
-
-    for index, updated_html in enumerate(updated_completions):
-        await send_message("setCode", updated_html, index)
-        await send_message("status", "Code generation complete.", index)
-
+    # Close the websocket connection
     await websocket.close()

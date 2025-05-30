@@ -3,7 +3,6 @@ import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import CodePreview from "../preview/CodePreview";
-import Spinner from "../core/Spinner";
 import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
 // import TipLink from "../messages/TipLink";
 import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeToggleButton";
@@ -30,30 +29,36 @@ function Sidebar({
 
   const { appState, updateInstruction, setUpdateInstruction } = useAppStore();
 
-  const { inputMode, referenceImages, executionConsoles, head, commits } =
-    useProjectStore();
+  const { inputMode, referenceImages, head, commits } = useProjectStore();
 
   const viewedCode =
     head && commits[head]
       ? commits[head].variants[commits[head].selectedVariantIndex].code
       : "";
 
-  const executionConsole =
-    (head && executionConsoles[commits[head].selectedVariantIndex]) || [];
+  // Check if the currently selected variant is complete
+  const isSelectedVariantComplete =
+    head &&
+    commits[head] &&
+    commits[head].variants[commits[head].selectedVariantIndex].status ===
+      "complete";
 
-  // When coding is complete, focus on the update instruction textarea
+  // Focus on the update instruction textarea when a variant is complete
   useEffect(() => {
-    if (appState === AppState.CODE_READY && textareaRef.current) {
+    if (
+      (appState === AppState.CODE_READY || isSelectedVariantComplete) &&
+      textareaRef.current
+    ) {
       textareaRef.current.focus();
     }
-  }, [appState]);
+  }, [appState, isSelectedVariantComplete]);
 
   return (
     <>
       <Variants />
 
-      {/* Show code preview only when coding */}
-      {appState === AppState.CODING && (
+      {/* Show code preview when coding and the selected variant is not complete */}
+      {appState === AppState.CODING && !isSelectedVariantComplete && (
         <div className="flex flex-col">
           {/* Speed disclaimer for video mode */}
           {inputMode === "video" && (
@@ -66,11 +71,6 @@ function Sidebar({
             </div>
           )}
 
-          <div className="flex items-center gap-x-1">
-            <Spinner />
-            {executionConsole.slice(-1)[0]}
-          </div>
-
           <CodePreview code={viewedCode} />
 
           <div className="flex w-full">
@@ -78,13 +78,14 @@ function Sidebar({
               onClick={cancelCodeGeneration}
               className="w-full dark:text-white dark:bg-gray-700"
             >
-              Cancel
+              Cancel All Generations
             </Button>
           </div>
         </div>
       )}
 
-      {appState === AppState.CODE_READY && (
+      {/* Show update UI when app state is ready OR the selected variant is complete */}
+      {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
         <div>
           <div className="grid w-full gap-2">
             <Textarea
@@ -151,24 +152,6 @@ function Sidebar({
             </div>
           </div>
         )}
-        <div className="bg-gray-400 px-4 py-2 rounded text-sm hidden">
-          <h2 className="text-lg mb-4 border-b border-gray-800">Console</h2>
-          {Object.entries(executionConsoles).map(([index, lines]) => (
-            <div key={index}>
-              {lines.map((line, lineIndex) => (
-                <div
-                  key={`${index}-${lineIndex}`}
-                  className="border-b border-gray-400 mb-2 text-gray-600 font-mono"
-                >
-                  <span className="font-bold mr-2">{`${index}:${
-                    lineIndex + 1
-                  }`}</span>
-                  {line}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
       </div>
 
       <HistoryDisplay shouldDisableReverts={appState === AppState.CODING} />

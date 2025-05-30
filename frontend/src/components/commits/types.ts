@@ -1,7 +1,10 @@
 export type CommitHash = string;
 
+export type VariantStatus = "generating" | "complete" | "cancelled";
+
 export type Variant = {
   code: string;
+  status?: VariantStatus;
 };
 
 export type BaseCommit = {

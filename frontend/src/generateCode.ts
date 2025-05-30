@@ -12,7 +12,13 @@ const ERROR_MESSAGE =
 const CANCEL_MESSAGE = "Code generation cancelled";
 
 type WebSocketResponse = {
-  type: "chunk" | "status" | "setCode" | "error";
+  type:
+    | "chunk"
+    | "status"
+    | "setCode"
+    | "error"
+    | "variantComplete"
+    | "variantError";
   value: string;
   variantIndex: number;
 };
@@ -23,6 +29,8 @@ export function generateCode(
   onChange: (chunk: string, variantIndex: number) => void,
   onSetCode: (code: string, variantIndex: number) => void,
   onStatusUpdate: (status: string, variantIndex: number) => void,
+  onVariantComplete: (variantIndex: number) => void,
+  onVariantError: (variantIndex: number, error: string) => void,
   onCancel: () => void,
   onComplete: () => void
 ) {
@@ -44,6 +52,10 @@ export function generateCode(
       onStatusUpdate(response.value, response.variantIndex);
     } else if (response.type === "setCode") {
       onSetCode(response.value, response.variantIndex);
+    } else if (response.type === "variantComplete") {
+      onVariantComplete(response.variantIndex);
+    } else if (response.type === "variantError") {
+      onVariantError(response.variantIndex, response.value);
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
       toast.error(response.value);
