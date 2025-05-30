@@ -136,6 +136,62 @@ class ParameterExtractionStage:
         return None
 
 
+class ModelSelectionStage:
+    """Handles selection of variant models based on available API keys and generation type"""
+    
+    def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
+        self.throw_error = throw_error
+    
+    async def select_models(
+        self,
+        generation_type: Literal["create", "update"],
+        openai_api_key: str | None,
+        anthropic_api_key: str | None,
+        gemini_api_key: str | None = None,
+    ) -> List[Llm]:
+        """Select appropriate models based on available API keys"""
+        variant_models = []
+        
+        # Determine Claude model based on generation type
+        # For creation, use Claude Sonnet 3.7
+        # For updates, use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
+        if generation_type == "create":
+            claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
+        else:
+            claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+        
+        # Select models based on available API keys
+        if openai_api_key and anthropic_api_key:
+            variant_models = [
+                claude_model,
+                Llm.GEMINI_2_5_FLASH_PREVIEW_05_20,
+            ]
+        elif openai_api_key:
+            variant_models = [
+                Llm.GPT_4O_2024_11_20,
+                Llm.GPT_4O_2024_11_20,
+            ]
+        elif anthropic_api_key:
+            variant_models = [
+                claude_model,
+                Llm.CLAUDE_3_5_SONNET_2024_06_20,
+            ]
+        else:
+            await self.throw_error(
+                "No OpenAI or Anthropic API key found. Please add the environment variable "
+                "OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. "
+                "If you add it to .env, make sure to restart the backend server."
+            )
+            raise Exception("No OpenAI or Anthropic key")
+        
+        # Print the variant models (one per line)
+        print("Variant models:")
+        for index, model in enumerate(variant_models):
+            print(f"Variant {index}: {model.value}")
+        
+        return variant_models
+
+
 class ParallelGenerationStage:
     """Handles parallel variant generation with independent processing for each variant"""
 
@@ -454,43 +510,14 @@ async def stream_code(websocket: WebSocket):
                 await send_message("setCode", completions[0], 0)
                 await send_message("variantComplete", "Variant generation complete", 0)
             else:
-
-                # Depending on the presence and absence of various keys,
-                # we decide which models to run
-                variant_models = []
-
-                # For creation, use Claude Sonnet 3.7
-                # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
-                if generation_type == "create":
-                    claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
-                else:
-                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
-
-                if openai_api_key and anthropic_api_key:
-                    variant_models = [
-                        claude_model,
-                        Llm.GEMINI_2_5_FLASH_PREVIEW_05_20,
-                    ]
-                elif openai_api_key:
-                    variant_models = [
-                        Llm.GPT_4O_2024_11_20,
-                        Llm.GPT_4O_2024_11_20,
-                    ]
-                elif anthropic_api_key:
-                    variant_models = [
-                        claude_model,
-                        Llm.CLAUDE_3_5_SONNET_2024_06_20,
-                    ]
-                else:
-                    await throw_error(
-                        "No OpenAI or Anthropic API key found. Please add the environment variable OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. If you add it to .env, make sure to restart the backend server."
-                    )
-                    raise Exception("No OpenAI or Anthropic key")
-
-                # Print the variant models (one per line)
-                print("Variant models:")
-                for index, model in enumerate(variant_models):
-                    print(f"Variant {index}: {model.value}")
+                # Use ModelSelectionStage to select variant models
+                model_selector = ModelSelectionStage(throw_error)
+                variant_models = await model_selector.select_models(
+                    generation_type=generation_type,
+                    openai_api_key=openai_api_key,
+                    anthropic_api_key=anthropic_api_key,
+                    gemini_api_key=GEMINI_API_KEY,
+                )
 
                 # Create and use the ParallelGenerationStage
                 generation_stage = ParallelGenerationStage(
