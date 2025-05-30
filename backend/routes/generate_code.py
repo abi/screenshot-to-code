@@ -368,6 +368,38 @@ class ParallelGenerationStage:
     async def _process_chunk(self, content: str, variant_index: int):
         """Process streaming chunks"""
         await self.send_message("chunk", content, variant_index)
+    
+    async def _perform_image_generation(
+        self,
+        completion: str,
+        image_cache: dict[str, str],
+    ):
+        """Generate images for the completion if needed"""
+        if not self.should_generate_images:
+            return completion
+
+        replicate_api_key = REPLICATE_API_KEY
+        if replicate_api_key:
+            image_generation_model = "flux"
+            api_key = replicate_api_key
+        else:
+            if not self.openai_api_key:
+                print(
+                    "No OpenAI API key and Replicate key found. Skipping image generation."
+                )
+                return completion
+            image_generation_model = "dalle3"
+            api_key = self.openai_api_key
+
+        print("Generating images with model: ", image_generation_model)
+
+        return await generate_images(
+            completion,
+            api_key=api_key,
+            base_url=self.openai_base_url,
+            image_cache=image_cache,
+            model=image_generation_model,
+        )
 
     async def _process_variant_completion(
         self,
@@ -386,11 +418,8 @@ class ParallelGenerationStage:
 
             try:
                 # Process images for this variant
-                processed_html = await perform_image_generation(
+                processed_html = await self._perform_image_generation(
                     completion["code"],
-                    self.should_generate_images,
-                    self.openai_api_key,
-                    self.openai_base_url,
                     image_cache,
                 )
 
@@ -415,39 +444,6 @@ class ParallelGenerationStage:
             traceback.print_exception(type(e), e, e.__traceback__)
 
 
-# Generate images, if needed
-async def perform_image_generation(
-    completion: str,
-    should_generate_images: bool,
-    openai_api_key: str | None,
-    openai_base_url: str | None,
-    image_cache: dict[str, str],
-):
-    replicate_api_key = REPLICATE_API_KEY
-    if not should_generate_images:
-        return completion
-
-    if replicate_api_key:
-        image_generation_model = "flux"
-        api_key = replicate_api_key
-    else:
-        if not openai_api_key:
-            print(
-                "No OpenAI API key and Replicate key found. Skipping image generation."
-            )
-            return completion
-        image_generation_model = "dalle3"
-        api_key = openai_api_key
-
-    print("Generating images with model: ", image_generation_model)
-
-    return await generate_images(
-        completion,
-        api_key=api_key,
-        base_url=openai_base_url,
-        image_cache=image_cache,
-        model=image_generation_model,
-    )
 
 
 @router.websocket("/generate-code")
