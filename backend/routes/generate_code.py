@@ -46,9 +46,99 @@ from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 router = APIRouter()
 
 
+@dataclass
+class ExtractedParams:
+    stack: Stack
+    input_mode: InputMode
+    should_generate_images: bool
+    openai_api_key: str | None
+    anthropic_api_key: str | None
+    openai_base_url: str | None
+    generation_type: Literal["create", "update"]
+
+
+class ParameterExtractionStage:
+    """Handles parameter extraction and validation from WebSocket requests"""
+
+    def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
+        self.throw_error = throw_error
+
+    async def extract_and_validate(self, params: Dict[str, str]) -> ExtractedParams:
+        """Extract and validate all parameters from the request"""
+        # Read the code config settings (stack) from the request.
+        generated_code_config = params.get("generatedCodeConfig", "")
+        if generated_code_config not in get_args(Stack):
+            await self.throw_error(
+                f"Invalid generated code config: {generated_code_config}"
+            )
+            raise ValueError(f"Invalid generated code config: {generated_code_config}")
+        validated_stack = cast(Stack, generated_code_config)
+
+        # Validate the input mode
+        input_mode = params.get("inputMode")
+        if input_mode not in get_args(InputMode):
+            await self.throw_error(f"Invalid input mode: {input_mode}")
+            raise ValueError(f"Invalid input mode: {input_mode}")
+        validated_input_mode = cast(InputMode, input_mode)
+
+        openai_api_key = self._get_from_settings_dialog_or_env(
+            params, "openAiApiKey", OPENAI_API_KEY
+        )
+
+        # If neither is provided, we throw an error later only if Claude is used.
+        anthropic_api_key = self._get_from_settings_dialog_or_env(
+            params, "anthropicApiKey", ANTHROPIC_API_KEY
+        )
+
+        # Base URL for OpenAI API
+        openai_base_url: str | None = None
+        # Disable user-specified OpenAI Base URL in prod
+        if not IS_PROD:
+            openai_base_url = self._get_from_settings_dialog_or_env(
+                params, "openAiBaseURL", OPENAI_BASE_URL
+            )
+        if not openai_base_url:
+            print("Using official OpenAI URL")
+
+        # Get the image generation flag from the request. Fall back to True if not provided.
+        should_generate_images = bool(params.get("isImageGenerationEnabled", True))
+
+        # Extract and validate generation type
+        generation_type = params.get("generationType", "create")
+        if generation_type not in ["create", "update"]:
+            await self.throw_error(f"Invalid generation type: {generation_type}")
+            raise ValueError(f"Invalid generation type: {generation_type}")
+        generation_type = cast(Literal["create", "update"], generation_type)
+
+        return ExtractedParams(
+            stack=validated_stack,
+            input_mode=validated_input_mode,
+            should_generate_images=should_generate_images,
+            openai_api_key=openai_api_key,
+            anthropic_api_key=anthropic_api_key,
+            openai_base_url=openai_base_url,
+            generation_type=generation_type,
+        )
+
+    def _get_from_settings_dialog_or_env(
+        self, params: dict[str, str], key: str, env_var: str | None
+    ) -> str | None:
+        """Get value from client settings or environment variable"""
+        value = params.get(key)
+        if value:
+            print(f"Using {key} from client-side settings dialog")
+            return value
+
+        if env_var:
+            print(f"Using {key} from environment variable")
+            return env_var
+
+        return None
+
+
 class ParallelGenerationStage:
     """Handles parallel variant generation with independent processing for each variant"""
-    
+
     def __init__(
         self,
         send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
@@ -62,7 +152,7 @@ class ParallelGenerationStage:
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
         self.should_generate_images = should_generate_images
-    
+
     async def process_variants(
         self,
         variant_models: List[Llm],
@@ -72,16 +162,16 @@ class ParallelGenerationStage:
     ) -> Dict[int, str]:
         """Process all variants in parallel and return completions"""
         tasks = self._create_generation_tasks(variant_models, prompt_messages, params)
-        
+
         # Dictionary to track variant tasks and their status
         variant_tasks: Dict[int, asyncio.Task[Completion]] = {}
         variant_completions: Dict[int, str] = {}
-        
+
         # Create tasks for each variant
         for index, task in enumerate(tasks):
             variant_task = asyncio.create_task(task)
             variant_tasks[index] = variant_task
-        
+
         # Process each variant independently
         variant_processors = [
             self._process_variant_completion(
@@ -89,12 +179,12 @@ class ParallelGenerationStage:
             )
             for index, task in variant_tasks.items()
         ]
-        
+
         # Wait for all variants to complete
         await asyncio.gather(*variant_processors, return_exceptions=True)
-        
+
         return variant_completions
-    
+
     def _create_generation_tasks(
         self,
         variant_models: List[Llm],
@@ -103,7 +193,7 @@ class ParallelGenerationStage:
     ) -> List[Coroutine[Any, Any, Completion]]:
         """Create generation tasks for each variant model"""
         tasks: List[Coroutine[Any, Any, Completion]] = []
-        
+
         for index, model in enumerate(variant_models):
             if (
                 model == Llm.GPT_4O_2024_11_20
@@ -116,7 +206,7 @@ class ParallelGenerationStage:
             ):
                 if self.openai_api_key is None:
                     raise Exception("OpenAI API key is missing.")
-                
+
                 tasks.append(
                     stream_openai_response(
                         prompt_messages,
@@ -148,14 +238,14 @@ class ParallelGenerationStage:
             ):
                 if self.anthropic_api_key is None:
                     raise Exception("Anthropic API key is missing.")
-                
+
                 # For creation, use Claude Sonnet 3.7
                 # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
                 if params["generationType"] == "create":
                     claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
                 else:
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
-                
+
                 tasks.append(
                     stream_claude_response(
                         prompt_messages,
@@ -164,13 +254,13 @@ class ParallelGenerationStage:
                         model_name=claude_model.value,
                     )
                 )
-        
+
         return tasks
-    
+
     async def _process_chunk(self, content: str, variant_index: int):
         """Process streaming chunks"""
         await self.send_message("chunk", content, variant_index)
-    
+
     async def _process_variant_completion(
         self,
         index: int,
@@ -182,10 +272,10 @@ class ParallelGenerationStage:
         """Process a single variant completion including image generation"""
         try:
             completion = await task
-            
+
             print(f"{model.value} completion took {completion['duration']:.2f} seconds")
             variant_completions[index] = completion["code"]
-            
+
             try:
                 # Process images for this variant
                 processed_html = await perform_image_generation(
@@ -195,10 +285,10 @@ class ParallelGenerationStage:
                     self.openai_base_url,
                     image_cache,
                 )
-                
+
                 # Extract HTML content
                 processed_html = extract_html_content(processed_html)
-                
+
                 # Send the complete variant back to the client
                 await self.send_message("setCode", processed_html, index)
                 await self.send_message(
@@ -210,7 +300,7 @@ class ParallelGenerationStage:
                 # If websocket is closed or other error during post-processing
                 print(f"Post-processing error for variant {index}: {inner_e}")
                 # We still keep the completion in variant_completions
-        
+
         except Exception as e:
             # Handle any errors that occurred during generation
             print(f"Error in variant {index}: {e}")
@@ -250,89 +340,6 @@ async def perform_image_generation(
         image_cache=image_cache,
         model=image_generation_model,
     )
-
-
-@dataclass
-class ExtractedParams:
-    stack: Stack
-    input_mode: InputMode
-    should_generate_images: bool
-    openai_api_key: str | None
-    anthropic_api_key: str | None
-    openai_base_url: str | None
-    generation_type: Literal["create", "update"]
-
-
-async def extract_params(
-    params: Dict[str, str], throw_error: Callable[[str], Coroutine[Any, Any, None]]
-) -> ExtractedParams:
-    # Read the code config settings (stack) from the request.
-    generated_code_config = params.get("generatedCodeConfig", "")
-    if generated_code_config not in get_args(Stack):
-        await throw_error(f"Invalid generated code config: {generated_code_config}")
-        raise ValueError(f"Invalid generated code config: {generated_code_config}")
-    validated_stack = cast(Stack, generated_code_config)
-
-    # Validate the input mode
-    input_mode = params.get("inputMode")
-    if input_mode not in get_args(InputMode):
-        await throw_error(f"Invalid input mode: {input_mode}")
-        raise ValueError(f"Invalid input mode: {input_mode}")
-    validated_input_mode = cast(InputMode, input_mode)
-
-    openai_api_key = get_from_settings_dialog_or_env(
-        params, "openAiApiKey", OPENAI_API_KEY
-    )
-
-    # If neither is provided, we throw an error later only if Claude is used.
-    anthropic_api_key = get_from_settings_dialog_or_env(
-        params, "anthropicApiKey", ANTHROPIC_API_KEY
-    )
-
-    # Base URL for OpenAI API
-    openai_base_url: str | None = None
-    # Disable user-specified OpenAI Base URL in prod
-    if not IS_PROD:
-        openai_base_url = get_from_settings_dialog_or_env(
-            params, "openAiBaseURL", OPENAI_BASE_URL
-        )
-    if not openai_base_url:
-        print("Using official OpenAI URL")
-
-    # Get the image generation flag from the request. Fall back to True if not provided.
-    should_generate_images = bool(params.get("isImageGenerationEnabled", True))
-
-    # Extract and validate generation type
-    generation_type = params.get("generationType", "create")
-    if generation_type not in ["create", "update"]:
-        await throw_error(f"Invalid generation type: {generation_type}")
-        raise ValueError(f"Invalid generation type: {generation_type}")
-    generation_type = cast(Literal["create", "update"], generation_type)
-
-    return ExtractedParams(
-        stack=validated_stack,
-        input_mode=validated_input_mode,
-        should_generate_images=should_generate_images,
-        openai_api_key=openai_api_key,
-        anthropic_api_key=anthropic_api_key,
-        openai_base_url=openai_base_url,
-        generation_type=generation_type,
-    )
-
-
-def get_from_settings_dialog_or_env(
-    params: dict[str, str], key: str, env_var: str | None
-) -> str | None:
-    value = params.get(key)
-    if value:
-        print(f"Using {key} from client-side settings dialog")
-        return value
-
-    if env_var:
-        print(f"Using {key} from environment variable")
-        return env_var
-
-    return None
 
 
 @router.websocket("/generate-code")
@@ -375,7 +382,11 @@ async def stream_code(websocket: WebSocket):
     params: dict[str, str] = await websocket.receive_json()
     print("Received params")
 
-    extracted_params = await extract_params(params, throw_error)
+    # Use ParameterExtractionStage to extract and validate parameters
+    param_extractor = ParameterExtractionStage(throw_error)
+    extracted_params = await param_extractor.extract_and_validate(params)
+
+    # Unpack for easier access
     stack = extracted_params.stack
     input_mode = extracted_params.input_mode
     openai_api_key = extracted_params.openai_api_key
@@ -489,7 +500,7 @@ async def stream_code(websocket: WebSocket):
                     anthropic_api_key=anthropic_api_key,
                     should_generate_images=should_generate_images,
                 )
-                
+
                 # Process all variants
                 variant_completions = await generation_stage.process_variants(
                     variant_models=variant_models,
@@ -497,7 +508,7 @@ async def stream_code(websocket: WebSocket):
                     image_cache=image_cache,
                     params=params,
                 )
-                
+
                 # Check if all variants failed
                 if len(variant_completions) == 0:
                     await throw_error("Error generating code. Please contact support.")
