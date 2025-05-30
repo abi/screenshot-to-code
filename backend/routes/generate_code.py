@@ -244,6 +244,32 @@ class MockResponseStage:
         return completions
 
 
+class PostProcessingStage:
+    """Handles post-processing after code generation completes"""
+    
+    def __init__(self):
+        pass
+    
+    async def process_completions(
+        self,
+        completions: List[str],
+        prompt_messages: List[Dict[str, Any]],
+        websocket: WebSocket,
+    ) -> None:
+        """Process completions and perform cleanup"""
+        # Only process non-empty completions
+        valid_completions = [comp for comp in completions if comp]
+        
+        # Write the first valid completion to logs for debugging
+        if valid_completions:
+            # Strip the completion of everything except the HTML content
+            html_content = extract_html_content(valid_completions[0])
+            write_logs(prompt_messages, html_content)
+        
+        # Close the websocket connection
+        await websocket.close()
+
+
 class ParallelGenerationStage:
     """Handles parallel variant generation with independent processing for each variant"""
 
@@ -624,15 +650,7 @@ async def stream_code(websocket: WebSocket):
             return await throw_error(error_message)
 
     ## Post-processing
-
-    # Only process non-empty completions
-    valid_completions = [comp for comp in completions if comp]
-
-    # Write the first valid completion to logs for debugging
-    if valid_completions:
-        # Strip the completion of everything except the HTML content
-        html_content = extract_html_content(valid_completions[0])
-        write_logs(prompt_messages, html_content)
-
-    # Close the websocket connection
-    await websocket.close()
+    
+    # Use PostProcessingStage to handle cleanup
+    post_processor = PostProcessingStage()
+    await post_processor.process_completions(completions, prompt_messages, websocket)
