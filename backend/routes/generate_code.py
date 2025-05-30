@@ -46,6 +46,177 @@ from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 router = APIRouter()
 
 
+class ParallelGenerationStage:
+    """Handles parallel variant generation with independent processing for each variant"""
+    
+    def __init__(
+        self,
+        send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
+        openai_api_key: str | None,
+        openai_base_url: str | None,
+        anthropic_api_key: str | None,
+        should_generate_images: bool,
+    ):
+        self.send_message = send_message
+        self.openai_api_key = openai_api_key
+        self.openai_base_url = openai_base_url
+        self.anthropic_api_key = anthropic_api_key
+        self.should_generate_images = should_generate_images
+    
+    async def process_variants(
+        self,
+        variant_models: List[Llm],
+        prompt_messages: List[Dict[str, Any]],
+        image_cache: Dict[str, str],
+        params: Dict[str, str],
+    ) -> Dict[int, str]:
+        """Process all variants in parallel and return completions"""
+        tasks = self._create_generation_tasks(variant_models, prompt_messages, params)
+        
+        # Dictionary to track variant tasks and their status
+        variant_tasks: Dict[int, asyncio.Task[Completion]] = {}
+        variant_completions: Dict[int, str] = {}
+        
+        # Create tasks for each variant
+        for index, task in enumerate(tasks):
+            variant_task = asyncio.create_task(task)
+            variant_tasks[index] = variant_task
+        
+        # Process each variant independently
+        variant_processors = [
+            self._process_variant_completion(
+                index, task, variant_models[index], image_cache, variant_completions
+            )
+            for index, task in variant_tasks.items()
+        ]
+        
+        # Wait for all variants to complete
+        await asyncio.gather(*variant_processors, return_exceptions=True)
+        
+        return variant_completions
+    
+    def _create_generation_tasks(
+        self,
+        variant_models: List[Llm],
+        prompt_messages: List[Dict[str, Any]],
+        params: Dict[str, str],
+    ) -> List[Coroutine[Any, Any, Completion]]:
+        """Create generation tasks for each variant model"""
+        tasks: List[Coroutine[Any, Any, Completion]] = []
+        
+        for index, model in enumerate(variant_models):
+            if (
+                model == Llm.GPT_4O_2024_11_20
+                or model == Llm.O1_2024_12_17
+                or model == Llm.O4_MINI_2025_04_16
+                or model == Llm.O3_2025_04_16
+                or model == Llm.GPT_4_1_2025_04_14
+                or model == Llm.GPT_4_1_MINI_2025_04_14
+                or model == Llm.GPT_4_1_NANO_2025_04_14
+            ):
+                if self.openai_api_key is None:
+                    raise Exception("OpenAI API key is missing.")
+                
+                tasks.append(
+                    stream_openai_response(
+                        prompt_messages,
+                        api_key=self.openai_api_key,
+                        base_url=self.openai_base_url,
+                        callback=lambda x, i=index: self._process_chunk(x, i),
+                        model_name=model.value,
+                    )
+                )
+            elif GEMINI_API_KEY and (
+                model == Llm.GEMINI_2_0_PRO_EXP
+                or model == Llm.GEMINI_2_0_FLASH_EXP
+                or model == Llm.GEMINI_2_0_FLASH
+                or model == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20
+                or model == Llm.GEMINI_2_5_PRO_PREVIEW_05_06
+            ):
+                tasks.append(
+                    stream_gemini_response(
+                        prompt_messages,
+                        api_key=GEMINI_API_KEY,
+                        callback=lambda x, i=index: self._process_chunk(x, i),
+                        model_name=model.value,
+                    )
+                )
+            elif (
+                model == Llm.CLAUDE_3_5_SONNET_2024_06_20
+                or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
+                or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
+            ):
+                if self.anthropic_api_key is None:
+                    raise Exception("Anthropic API key is missing.")
+                
+                # For creation, use Claude Sonnet 3.7
+                # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
+                if params["generationType"] == "create":
+                    claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
+                else:
+                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+                
+                tasks.append(
+                    stream_claude_response(
+                        prompt_messages,
+                        api_key=self.anthropic_api_key,
+                        callback=lambda x, i=index: self._process_chunk(x, i),
+                        model_name=claude_model.value,
+                    )
+                )
+        
+        return tasks
+    
+    async def _process_chunk(self, content: str, variant_index: int):
+        """Process streaming chunks"""
+        await self.send_message("chunk", content, variant_index)
+    
+    async def _process_variant_completion(
+        self,
+        index: int,
+        task: asyncio.Task[Completion],
+        model: Llm,
+        image_cache: Dict[str, str],
+        variant_completions: Dict[int, str],
+    ):
+        """Process a single variant completion including image generation"""
+        try:
+            completion = await task
+            
+            print(f"{model.value} completion took {completion['duration']:.2f} seconds")
+            variant_completions[index] = completion["code"]
+            
+            try:
+                # Process images for this variant
+                processed_html = await perform_image_generation(
+                    completion["code"],
+                    self.should_generate_images,
+                    self.openai_api_key,
+                    self.openai_base_url,
+                    image_cache,
+                )
+                
+                # Extract HTML content
+                processed_html = extract_html_content(processed_html)
+                
+                # Send the complete variant back to the client
+                await self.send_message("setCode", processed_html, index)
+                await self.send_message(
+                    "variantComplete",
+                    "Variant generation complete",
+                    index,
+                )
+            except Exception as inner_e:
+                # If websocket is closed or other error during post-processing
+                print(f"Post-processing error for variant {index}: {inner_e}")
+                # We still keep the completion in variant_completions
+        
+        except Exception as e:
+            # Handle any errors that occurred during generation
+            print(f"Error in variant {index}: {e}")
+            traceback.print_exception(type(e), e, e.__traceback__)
+
+
 # Generate images, if needed
 async def perform_image_generation(
     completion: str,
@@ -310,132 +481,23 @@ async def stream_code(websocket: WebSocket):
                 for index, model in enumerate(variant_models):
                     print(f"Variant {index}: {model.value}")
 
-                tasks: List[Coroutine[Any, Any, Completion]] = []
-                for index, model in enumerate(variant_models):
-                    if (
-                        model == Llm.GPT_4O_2024_11_20
-                        or model == Llm.O1_2024_12_17
-                        or model == Llm.O4_MINI_2025_04_16
-                        or model == Llm.O3_2025_04_16
-                        or model == Llm.GPT_4_1_2025_04_14
-                        or model == Llm.GPT_4_1_MINI_2025_04_14
-                        or model == Llm.GPT_4_1_NANO_2025_04_14
-                    ):
-                        if openai_api_key is None:
-                            await throw_error("OpenAI API key is missing.")
-                            raise Exception("OpenAI API key is missing.")
-
-                        tasks.append(
-                            stream_openai_response(
-                                prompt_messages,
-                                api_key=openai_api_key,
-                                base_url=openai_base_url,
-                                callback=lambda x, i=index: process_chunk(x, i),
-                                model_name=model.value,
-                            )
-                        )
-                    elif GEMINI_API_KEY and (
-                        model == Llm.GEMINI_2_0_PRO_EXP
-                        or model == Llm.GEMINI_2_0_FLASH_EXP
-                        or model == Llm.GEMINI_2_0_FLASH
-                        or model == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20
-                        or model == Llm.GEMINI_2_5_PRO_PREVIEW_05_06
-                    ):
-                        tasks.append(
-                            stream_gemini_response(
-                                prompt_messages,
-                                api_key=GEMINI_API_KEY,
-                                callback=lambda x, i=index: process_chunk(x, i),
-                                model_name=model.value,
-                            )
-                        )
-                    elif (
-                        model == Llm.CLAUDE_3_5_SONNET_2024_06_20
-                        or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
-                        or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
-                    ):
-                        if anthropic_api_key is None:
-                            await throw_error("Anthropic API key is missing.")
-                            raise Exception("Anthropic API key is missing.")
-
-                        # For creation, use Claude Sonnet 3.7
-                        # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
-                        if params["generationType"] == "create":
-                            claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
-                        else:
-                            claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
-
-                        tasks.append(
-                            stream_claude_response(
-                                prompt_messages,
-                                api_key=anthropic_api_key,
-                                callback=lambda x, i=index: process_chunk(x, i),
-                                model_name=claude_model.value,
-                            )
-                        )
-
-                # Dictionary to track variant tasks and their status
-                variant_tasks: Dict[int, asyncio.Task[Completion]] = {}
-                variant_completions: Dict[int, str] = {}
-
-                # Process each variant independently
-                for index, task in enumerate(tasks):
-                    variant_task = asyncio.create_task(task)
-                    variant_tasks[index] = variant_task
-
-                # Function to process each variant completion
-                async def process_variant_completion(
-                    index: int, task: asyncio.Task[Completion]
-                ):
-                    try:
-                        completion = await task
-
-                        print(
-                            f"{variant_models[index].value} completion took {completion['duration']:.2f} seconds"
-                        )
-                        variant_completions[index] = completion["code"]
-
-                        try:
-                            # Process images for this variant
-                            processed_html = await perform_image_generation(
-                                completion["code"],
-                                should_generate_images,
-                                openai_api_key,
-                                openai_base_url,
-                                image_cache,
-                            )
-
-                            # Extract HTML content
-                            processed_html = extract_html_content(processed_html)
-
-                            # Send the complete variant back to the client
-                            await send_message("setCode", processed_html, index)
-                            await send_message(
-                                "variantComplete",
-                                "Variant generation complete",
-                                index,
-                            )
-                        except Exception as inner_e:
-                            # If websocket is closed or other error during post-processing
-                            print(
-                                f"Post-processing error for variant {index}: {inner_e}"
-                            )
-                            # We still keep the completion in variant_completions
-
-                    except Exception as e:
-                        # Handle any errors that occurred during generation
-                        print(f"Error in variant {index}: {e}")
-                        traceback.print_exception(type(e), e, e.__traceback__)
-
-                # Start processing all variants
-                variant_processors = [
-                    process_variant_completion(index, task)
-                    for index, task in variant_tasks.items()
-                ]
-
-                # Wait for all variants to complete
-                await asyncio.gather(*variant_processors, return_exceptions=True)
-
+                # Create and use the ParallelGenerationStage
+                generation_stage = ParallelGenerationStage(
+                    send_message=send_message,
+                    openai_api_key=openai_api_key,
+                    openai_base_url=openai_base_url,
+                    anthropic_api_key=anthropic_api_key,
+                    should_generate_images=should_generate_images,
+                )
+                
+                # Process all variants
+                variant_completions = await generation_stage.process_variants(
+                    variant_models=variant_models,
+                    prompt_messages=prompt_messages,
+                    image_cache=image_cache,
+                    params=params,
+                )
+                
                 # Check if all variants failed
                 if len(variant_completions) == 0:
                     await throw_error("Error generating code. Please contact support.")
@@ -443,7 +505,7 @@ async def stream_code(websocket: WebSocket):
 
                 # Prepare completions list for further processing
                 completions: list[str] = []
-                for i in range(len(tasks)):
+                for i in range(len(variant_models)):
                     if i in variant_completions:
                         completions.append(variant_completions[i])
                     else:
