@@ -5,15 +5,6 @@ function Variants() {
   const { inputMode, head, commits, updateSelectedVariantIndex } =
     useProjectStore();
 
-  // TODO: Remove
-  // Force a re-render when the variants status changes
-  // const [, forceUpdate] = React.useState({});
-  // React.useEffect(() => {
-  //   // Trigger re-render every second to catch status changes
-  //   const timer = setInterval(() => forceUpdate({}), 1000);
-  //   return () => clearInterval(timer);
-  // }, []);
-
   // If there is no head, don't show the variants
   if (head === null) {
     return null;
