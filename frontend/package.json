@@ -46,7 +46,7 @@
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "thememirror": "^2.0.1",
-    "vite-plugin-checker": "^0.6.2",
+    "vite-plugin-checker": "^0.9.3",
     "webm-duration-fix": "^1.0.4",
     "zustand": "^4.5.2"
   },
