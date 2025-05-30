@@ -205,57 +205,30 @@ function App() {
     addCommit(commit);
     setHead(commit.hash);
 
-    generateCode(
-      wsRef,
-      updatedParams,
-      // On change
-      (token, variantIndex) => {
+    generateCode(wsRef, updatedParams, {
+      onChange: (token, variantIndex) => {
         appendCommitCode(commit.hash, variantIndex, token);
       },
-      // On set code
-      (code, variantIndex) => {
-        // When we receive the final code, also update status to complete
-        // This ensures status is set even if variantComplete event is missed
+      onSetCode: (code, variantIndex) => {
         setCommitCode(commit.hash, variantIndex, code);
-        // TODO: Remove
-        // updateVariantStatus(commit.hash, variantIndex, "complete");
       },
-      // On status update
-      (line, variantIndex) => appendExecutionConsole(variantIndex, line),
-      // On variant complete
-      (variantIndex) => {
+      onStatusUpdate: (line, variantIndex) => appendExecutionConsole(variantIndex, line),
+      onVariantComplete: (variantIndex) => {
         console.log(`Variant ${variantIndex} complete event received`);
-
-        // Update variant status to variantComplete
         updateVariantStatus(commit.hash, variantIndex, "complete");
-
-        // TODO: Remove
-        // // Force UI update by creating a small delay before state change
-        // setTimeout(() => {
-        //   // If this is the selected variant, immediately set app state to ready
-        //   if (commits[commit.hash].selectedVariantIndex === variantIndex) {
-        //     console.log(
-        //       `Selected variant ${variantIndex} complete, setting app state to ready`
-        //     );
-        //     setAppState(AppState.CODE_READY);
-        //   }
-        // }, 100);
       },
-      // On variant error
-      (variantIndex, error) => {
+      onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);
         updateVariantStatus(commit.hash, variantIndex, "cancelled");
         toast.error(`Error in option ${variantIndex + 1}: ${error}`);
       },
-      // On cancel
-      () => {
+      onCancel: () => {
         cancelCodeGenerationAndReset(commit);
       },
-      // On complete
-      () => {
+      onComplete: () => {
         setAppState(AppState.CODE_READY);
-      }
-    );
+      },
+    });
   }
 
   // Initial version creation
