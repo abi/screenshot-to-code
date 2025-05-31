@@ -48,15 +48,15 @@ router = APIRouter()
 
 class WebSocketCommunicator:
     """Handles WebSocket communication with consistent error handling"""
-    
+
     def __init__(self, websocket: WebSocket):
         self.websocket = websocket
-    
+
     async def accept(self) -> None:
         """Accept the WebSocket connection"""
         await self.websocket.accept()
         print("Incoming websocket connection...")
-    
+
     async def send_message(
         self,
         type: Literal[
@@ -79,19 +79,19 @@ class WebSocketCommunicator:
         await self.websocket.send_json(
             {"type": type, "value": value, "variantIndex": variantIndex}
         )
-    
+
     async def throw_error(self, message: str) -> None:
         """Send an error message and close the connection"""
         print(message)
         await self.websocket.send_json({"type": "error", "value": message})
         await self.websocket.close(APP_ERROR_WEB_SOCKET_CODE)
-    
+
     async def receive_params(self) -> Dict[str, str]:
         """Receive parameters from the client"""
         params: Dict[str, str] = await self.websocket.receive_json()
         print("Received params")
         return params
-    
+
     async def close(self) -> None:
         """Close the WebSocket connection"""
         await self.websocket.close()
@@ -189,10 +189,10 @@ class ParameterExtractionStage:
 
 class ModelSelectionStage:
     """Handles selection of variant models based on available API keys and generation type"""
-    
+
     def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
         self.throw_error = throw_error
-    
+
     async def select_models(
         self,
         generation_type: Literal["create", "update"],
@@ -202,7 +202,7 @@ class ModelSelectionStage:
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         variant_models = []
-        
+
         # Determine Claude model based on generation type
         # For creation, use Claude Sonnet 3.7
         # For updates, use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
@@ -210,12 +210,12 @@ class ModelSelectionStage:
             claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
         else:
             claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
-        
+
         # Select models based on available API keys
         if openai_api_key and anthropic_api_key:
             variant_models = [
                 claude_model,
-                Llm.GEMINI_2_5_FLASH_PREVIEW_05_20,
+                Llm.GPT_4_1_NANO_2025_04_14,
             ]
         elif openai_api_key:
             variant_models = [
@@ -234,21 +234,21 @@ class ModelSelectionStage:
                 "If you add it to .env, make sure to restart the backend server."
             )
             raise Exception("No OpenAI or Anthropic key")
-        
+
         # Print the variant models (one per line)
         print("Variant models:")
         for index, model in enumerate(variant_models):
             print(f"Variant {index}: {model.value}")
-        
+
         return variant_models
 
 
 class PromptCreationStage:
     """Handles prompt assembly for code generation"""
-    
+
     def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
         self.throw_error = throw_error
-    
+
     async def create_prompt(
         self,
         params: Dict[str, str],
@@ -257,7 +257,9 @@ class PromptCreationStage:
     ) -> tuple[List[Dict[str, Any]], Dict[str, str]]:
         """Create prompt messages and return image cache"""
         try:
-            prompt_messages, image_cache = await create_prompt(params, stack, input_mode)
+            prompt_messages, image_cache = await create_prompt(
+                params, stack, input_mode
+            )
             return prompt_messages, image_cache
         except Exception as e:
             await self.throw_error(
@@ -268,36 +270,37 @@ class PromptCreationStage:
 
 class MockResponseStage:
     """Handles mock AI responses for testing"""
-    
+
     def __init__(
         self,
         send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
     ):
         self.send_message = send_message
-    
+
     async def generate_mock_response(
         self,
         input_mode: InputMode,
     ) -> List[str]:
         """Generate mock response for testing"""
+
         async def process_chunk(content: str, variantIndex: int):
             await self.send_message("chunk", content, variantIndex)
-        
+
         completion_results = [
             await mock_completion(process_chunk, input_mode=input_mode)
         ]
         completions = [result["code"] for result in completion_results]
-        
+
         # Send the complete variant back to the client
         await self.send_message("setCode", completions[0], 0)
         await self.send_message("variantComplete", "Variant generation complete", 0)
-        
+
         return completions
 
 
 class VideoGenerationStage:
     """Handles video mode code generation using Claude 3 Opus"""
-    
+
     def __init__(
         self,
         send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
@@ -305,7 +308,7 @@ class VideoGenerationStage:
     ):
         self.send_message = send_message
         self.throw_error = throw_error
-    
+
     async def generate_video_code(
         self,
         prompt_messages: List[Dict[str, Any]],
@@ -319,10 +322,10 @@ class VideoGenerationStage:
                 "or in the settings dialog"
             )
             raise Exception("No Anthropic key")
-        
+
         async def process_chunk(content: str, variantIndex: int):
             await self.send_message("chunk", content, variantIndex)
-        
+
         completion_results = [
             await stream_claude_response_native(
                 system_prompt=VIDEO_PROMPT,
@@ -334,20 +337,20 @@ class VideoGenerationStage:
             )
         ]
         completions = [result["code"] for result in completion_results]
-        
+
         # Send the complete variant back to the client
         await self.send_message("setCode", completions[0], 0)
         await self.send_message("variantComplete", "Variant generation complete", 0)
-        
+
         return completions
 
 
 class PostProcessingStage:
     """Handles post-processing after code generation completes"""
-    
+
     def __init__(self):
         pass
-    
+
     async def process_completions(
         self,
         completions: List[str],
@@ -357,13 +360,13 @@ class PostProcessingStage:
         """Process completions and perform cleanup"""
         # Only process non-empty completions
         valid_completions = [comp for comp in completions if comp]
-        
+
         # Write the first valid completion to logs for debugging
         if valid_completions:
             # Strip the completion of everything except the HTML content
             html_content = extract_html_content(valid_completions[0])
             write_logs(prompt_messages, html_content)
-        
+
         # Note: WebSocket closing is handled by the caller
 
 
@@ -439,12 +442,10 @@ class ParallelGenerationStage:
                     raise Exception("OpenAI API key is missing.")
 
                 tasks.append(
-                    stream_openai_response(
+                    self._stream_openai_with_error_handling(
                         prompt_messages,
-                        api_key=self.openai_api_key,
-                        base_url=self.openai_base_url,
-                        callback=lambda x, i=index: self._process_chunk(x, i),
                         model_name=model.value,
+                        index=index,
                     )
                 )
             elif GEMINI_API_KEY and (
@@ -491,7 +492,63 @@ class ParallelGenerationStage:
     async def _process_chunk(self, content: str, variant_index: int):
         """Process streaming chunks"""
         await self.send_message("chunk", content, variant_index)
-    
+
+    async def _stream_openai_with_error_handling(
+        self,
+        prompt_messages: List[Dict[str, Any]],
+        model_name: str,
+        index: int,
+    ) -> Completion:
+        """Wrap OpenAI streaming with specific error handling"""
+        try:
+            return await stream_openai_response(
+                prompt_messages,
+                api_key=self.openai_api_key,
+                base_url=self.openai_base_url,
+                callback=lambda x: self._process_chunk(x, index),
+                model_name=model_name,
+            )
+        except openai.AuthenticationError as e:
+            print(f"[VARIANT {index}] OpenAI Authentication failed", e)
+            error_message = (
+                "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, "
+                "or create a new OpenAI API key on your OpenAI dashboard."
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
+            )
+            await self.send_message("variantError", error_message, index)
+            raise
+        except openai.NotFoundError as e:
+            print(f"[VARIANT {index}] OpenAI Model not found", e)
+            error_message = (
+                e.message
+                + ". Please make sure you have followed the instructions correctly to obtain "
+                "an OpenAI key with GPT vision access: "
+                "https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
+            )
+            await self.send_message("variantError", error_message, index)
+            raise
+        except openai.RateLimitError as e:
+            print(f"[VARIANT {index}] OpenAI Rate limit exceeded", e)
+            error_message = (
+                "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
+            )
+            await self.send_message("variantError", error_message, index)
+            raise
+
     async def _perform_image_generation(
         self,
         completion: str,
@@ -567,14 +624,12 @@ class ParallelGenerationStage:
             traceback.print_exception(type(e), e, e.__traceback__)
 
 
-
-
 @router.websocket("/generate-code")
 async def stream_code(websocket: WebSocket):
     # Use WebSocketCommunicator for all WebSocket operations
     ws_comm = WebSocketCommunicator(websocket)
     await ws_comm.accept()
-    
+
     # Create shortcuts for commonly used methods
     send_message = ws_comm.send_message
     throw_error = ws_comm.throw_error
@@ -603,13 +658,13 @@ async def stream_code(websocket: WebSocket):
         await send_message("status", "Generating code...", i)
 
     ### Prompt creation
-    
+
     # Use PromptCreationStage to create prompt
     prompt_creator = PromptCreationStage(throw_error)
     prompt_messages, image_cache = await prompt_creator.create_prompt(
         params, stack, input_mode
     )
-    
+
     # pprint_prompt(prompt_messages)  # type: ignore
 
     ### Code generation
@@ -670,46 +725,17 @@ async def stream_code(websocket: WebSocket):
                         # Add empty string for cancelled/failed variants
                         completions.append("")
 
-        except openai.AuthenticationError as e:
-            print("[GENERATE_CODE] Authentication failed", e)
-            error_message = (
-                "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, or create a new OpenAI API key on your OpenAI dashboard."
-                + (
-                    " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
-                    else ""
-                )
-            )
-            return await throw_error(error_message)
-        except openai.NotFoundError as e:
-            print("[GENERATE_CODE] Model not found", e)
-            error_message = (
-                e.message
-                + ". Please make sure you have followed the instructions correctly to obtain an OpenAI key with GPT vision access: https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
-                + (
-                    " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
-                    else ""
-                )
-            )
-            return await throw_error(error_message)
-        except openai.RateLimitError as e:
-            print("[GENERATE_CODE] Rate limit exceeded", e)
-            error_message = (
-                "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
-                + (
-                    " Alternatively, you can purchase code generation credits directly on this website."
-                    if IS_PROD
-                    else ""
-                )
-            )
-            return await throw_error(error_message)
+        except Exception as e:
+            # Handle any unexpected errors
+            print(f"[GENERATE_CODE] Unexpected error: {e}")
+            await throw_error(f"An unexpected error occurred: {str(e)}")
+            return
 
     ## Post-processing
-    
+
     # Use PostProcessingStage to handle cleanup
     post_processor = PostProcessingStage()
     await post_processor.process_completions(completions, prompt_messages, websocket)
-    
+
     # Close WebSocket connection
     await ws_comm.close()
