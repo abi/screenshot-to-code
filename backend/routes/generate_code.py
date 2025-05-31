@@ -46,6 +46,57 @@ from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 router = APIRouter()
 
 
+class WebSocketCommunicator:
+    """Handles WebSocket communication with consistent error handling"""
+    
+    def __init__(self, websocket: WebSocket):
+        self.websocket = websocket
+    
+    async def accept(self) -> None:
+        """Accept the WebSocket connection"""
+        await self.websocket.accept()
+        print("Incoming websocket connection...")
+    
+    async def send_message(
+        self,
+        type: Literal[
+            "chunk", "status", "setCode", "error", "variantComplete", "variantError"
+        ],
+        value: str,
+        variantIndex: int,
+    ) -> None:
+        """Send a message to the client with debug logging"""
+        # Print for debugging on the backend
+        if type == "error":
+            print(f"Error (variant {variantIndex}): {value}")
+        elif type == "status":
+            print(f"Status (variant {variantIndex}): {value}")
+        elif type == "variantComplete":
+            print(f"Variant {variantIndex} complete")
+        elif type == "variantError":
+            print(f"Variant {variantIndex} error: {value}")
+
+        await self.websocket.send_json(
+            {"type": type, "value": value, "variantIndex": variantIndex}
+        )
+    
+    async def throw_error(self, message: str) -> None:
+        """Send an error message and close the connection"""
+        print(message)
+        await self.websocket.send_json({"type": "error", "value": message})
+        await self.websocket.close(APP_ERROR_WEB_SOCKET_CODE)
+    
+    async def receive_params(self) -> Dict[str, str]:
+        """Receive parameters from the client"""
+        params: Dict[str, str] = await self.websocket.receive_json()
+        print("Received params")
+        return params
+    
+    async def close(self) -> None:
+        """Close the WebSocket connection"""
+        await self.websocket.close()
+
+
 @dataclass
 class ExtractedParams:
     stack: Stack
@@ -244,6 +295,53 @@ class MockResponseStage:
         return completions
 
 
+class VideoGenerationStage:
+    """Handles video mode code generation using Claude 3 Opus"""
+    
+    def __init__(
+        self,
+        send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
+        throw_error: Callable[[str], Coroutine[Any, Any, None]],
+    ):
+        self.send_message = send_message
+        self.throw_error = throw_error
+    
+    async def generate_video_code(
+        self,
+        prompt_messages: List[Dict[str, Any]],
+        anthropic_api_key: str | None,
+    ) -> List[str]:
+        """Generate code for video input mode"""
+        if not anthropic_api_key:
+            await self.throw_error(
+                "Video only works with Anthropic models. No Anthropic API key found. "
+                "Please add the environment variable ANTHROPIC_API_KEY to backend/.env "
+                "or in the settings dialog"
+            )
+            raise Exception("No Anthropic key")
+        
+        async def process_chunk(content: str, variantIndex: int):
+            await self.send_message("chunk", content, variantIndex)
+        
+        completion_results = [
+            await stream_claude_response_native(
+                system_prompt=VIDEO_PROMPT,
+                messages=prompt_messages,  # type: ignore
+                api_key=anthropic_api_key,
+                callback=lambda x: process_chunk(x, 0),
+                model_name=Llm.CLAUDE_3_OPUS.value,
+                include_thinking=True,
+            )
+        ]
+        completions = [result["code"] for result in completion_results]
+        
+        # Send the complete variant back to the client
+        await self.send_message("setCode", completions[0], 0)
+        await self.send_message("variantComplete", "Variant generation complete", 0)
+        
+        return completions
+
+
 class PostProcessingStage:
     """Handles post-processing after code generation completes"""
     
@@ -266,8 +364,7 @@ class PostProcessingStage:
             html_content = extract_html_content(valid_completions[0])
             write_logs(prompt_messages, html_content)
         
-        # Close the websocket connection
-        await websocket.close()
+        # Note: WebSocket closing is handled by the caller
 
 
 class ParallelGenerationStage:
@@ -474,43 +571,18 @@ class ParallelGenerationStage:
 
 @router.websocket("/generate-code")
 async def stream_code(websocket: WebSocket):
-    await websocket.accept()
-    print("Incoming websocket connection...")
-
-    ## Communication protocol setup
-    async def throw_error(
-        message: str,
-    ):
-        print(message)
-        await websocket.send_json({"type": "error", "value": message})
-        await websocket.close(APP_ERROR_WEB_SOCKET_CODE)
-
-    async def send_message(
-        type: Literal[
-            "chunk", "status", "setCode", "error", "variantComplete", "variantError"
-        ],
-        value: str,
-        variantIndex: int,
-    ):
-        # Print for debugging on the backend
-        if type == "error":
-            print(f"Error (variant {variantIndex}): {value}")
-        elif type == "status":
-            print(f"Status (variant {variantIndex}): {value}")
-        elif type == "variantComplete":
-            print(f"Variant {variantIndex} complete")
-        elif type == "variantError":
-            print(f"Variant {variantIndex} error: {value}")
-
-        await websocket.send_json(
-            {"type": type, "value": value, "variantIndex": variantIndex}
-        )
+    # Use WebSocketCommunicator for all WebSocket operations
+    ws_comm = WebSocketCommunicator(websocket)
+    await ws_comm.accept()
+    
+    # Create shortcuts for commonly used methods
+    send_message = ws_comm.send_message
+    throw_error = ws_comm.throw_error
 
     ## Parameter extract and validation
 
     # TODO: Are the values always strings?
-    params: dict[str, str] = await websocket.receive_json()
-    print("Received params")
+    params = await ws_comm.receive_params()
 
     # Use ParameterExtractionStage to extract and validate parameters
     param_extractor = ParameterExtractionStage(throw_error)
@@ -552,27 +624,11 @@ async def stream_code(websocket: WebSocket):
     else:
         try:
             if input_mode == "video":
-                if not anthropic_api_key:
-                    await throw_error(
-                        "Video only works with Anthropic models. No Anthropic API key found. Please add the environment variable ANTHROPIC_API_KEY to backend/.env or in the settings dialog"
-                    )
-                    raise Exception("No Anthropic key")
-
-                completion_results = [
-                    await stream_claude_response_native(
-                        system_prompt=VIDEO_PROMPT,
-                        messages=prompt_messages,  # type: ignore
-                        api_key=anthropic_api_key,
-                        callback=lambda x: process_chunk(x, 0),
-                        model_name=Llm.CLAUDE_3_OPUS.value,
-                        include_thinking=True,
-                    )
-                ]
-                completions = [result["code"] for result in completion_results]
-
-                # Send the complete variant back to the client
-                await send_message("setCode", completions[0], 0)
-                await send_message("variantComplete", "Variant generation complete", 0)
+                # Use VideoGenerationStage for video mode
+                video_stage = VideoGenerationStage(send_message, throw_error)
+                completions = await video_stage.generate_video_code(
+                    prompt_messages, anthropic_api_key
+                )
             else:
                 # Use ModelSelectionStage to select variant models
                 model_selector = ModelSelectionStage(throw_error)
@@ -654,3 +710,6 @@ async def stream_code(websocket: WebSocket):
     # Use PostProcessingStage to handle cleanup
     post_processor = PostProcessingStage()
     await post_processor.process_completions(completions, prompt_messages, websocket)
+    
+    # Close WebSocket connection
+    await ws_comm.close()
