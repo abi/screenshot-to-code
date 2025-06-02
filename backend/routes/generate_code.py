@@ -1,6 +1,8 @@
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
 import traceback
+from typing import Callable
 from fastapi import APIRouter, WebSocket
 import openai
 from codegen.utils import extract_html_content
@@ -44,6 +46,73 @@ from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 
 router = APIRouter()
+
+
+@dataclass
+class PipelineContext:
+    """Context object that carries state through the pipeline"""
+
+    websocket: WebSocket
+    ws_comm: "WebSocketCommunicator" = None
+    params: Dict[str, str] = field(default_factory=dict)
+    extracted_params: "ExtractedParams" = None
+    prompt_messages: List[Dict[str, Any]] = field(default_factory=list)
+    image_cache: Dict[str, str] = field(default_factory=dict)
+    variant_models: List[Llm] = field(default_factory=list)
+    completions: List[str] = field(default_factory=list)
+    variant_completions: Dict[int, str] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def send_message(self):
+        return self.ws_comm.send_message
+
+    @property
+    def throw_error(self):
+        return self.ws_comm.throw_error
+
+
+class Middleware(ABC):
+    """Base class for all pipeline middleware"""
+
+    @abstractmethod
+    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+        """Process the context and call the next middleware"""
+        pass
+
+
+class Pipeline:
+    """Pipeline for processing WebSocket code generation requests"""
+
+    def __init__(self):
+        self.middlewares: List[Middleware] = []
+
+    def use(self, middleware: Middleware) -> "Pipeline":
+        """Add a middleware to the pipeline"""
+        self.middlewares.append(middleware)
+        return self
+
+    async def execute(self, websocket: WebSocket) -> None:
+        """Execute the pipeline with the given WebSocket"""
+        context = PipelineContext(websocket=websocket)
+
+        # Build the middleware chain
+        async def start(ctx: PipelineContext):
+            pass  # End of pipeline
+
+        chain = start
+        for middleware in reversed(self.middlewares):
+            chain = self._wrap_middleware(middleware, chain)
+
+        await chain(context)
+
+    def _wrap_middleware(self, middleware: Middleware, next_func: Callable):
+        """Wrap a middleware with its next function"""
+
+        async def wrapped(context: PipelineContext):
+            await middleware.process(context, lambda: next_func(context))
+
+        return wrapped
 
 
 class WebSocketCommunicator:
@@ -624,100 +693,167 @@ class ParallelGenerationStage:
             traceback.print_exception(type(e), e, e.__traceback__)
 
 
+# Pipeline Middleware Implementations
+
+
+class WebSocketSetupMiddleware(Middleware):
+    """Handles WebSocket setup and teardown"""
+
+    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+        # Create and setup WebSocket communicator
+        context.ws_comm = WebSocketCommunicator(context.websocket)
+        await context.ws_comm.accept()
+
+        try:
+            await next_func()
+        finally:
+            # Always close the WebSocket
+            await context.ws_comm.close()
+
+
+class ParameterExtractionMiddleware(Middleware):
+    """Handles parameter extraction and validation"""
+
+    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+        # Receive parameters
+        context.params = await context.ws_comm.receive_params()
+
+        # Extract and validate
+        param_extractor = ParameterExtractionStage(context.throw_error)
+        context.extracted_params = await param_extractor.extract_and_validate(
+            context.params
+        )
+
+        # Log what we're generating
+        print(
+            f"Generating {context.extracted_params.stack} code in {context.extracted_params.input_mode} mode"
+        )
+
+        await next_func()
+
+
+class StatusBroadcastMiddleware(Middleware):
+    """Sends initial status messages to all variants"""
+
+    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+        for i in range(NUM_VARIANTS):
+            await context.send_message("status", "Generating code...", i)
+
+        await next_func()
+
+
+class PromptCreationMiddleware(Middleware):
+    """Handles prompt creation"""
+
+    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+        prompt_creator = PromptCreationStage(context.throw_error)
+        context.prompt_messages, context.image_cache = (
+            await prompt_creator.create_prompt(
+                context.params,
+                context.extracted_params.stack,
+                context.extracted_params.input_mode,
+            )
+        )
+
+        await next_func()
+
+
+class CodeGenerationMiddleware(Middleware):
+    """Handles the main code generation logic"""
+
+    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+        if SHOULD_MOCK_AI_RESPONSE:
+            # Use mock response for testing
+            mock_stage = MockResponseStage(context.send_message)
+            context.completions = await mock_stage.generate_mock_response(
+                context.extracted_params.input_mode
+            )
+        else:
+            try:
+                if context.extracted_params.input_mode == "video":
+                    # Use video generation for video mode
+                    video_stage = VideoGenerationStage(
+                        context.send_message, context.throw_error
+                    )
+                    context.completions = await video_stage.generate_video_code(
+                        context.prompt_messages,
+                        context.extracted_params.anthropic_api_key,
+                    )
+                else:
+                    # Select models
+                    model_selector = ModelSelectionStage(context.throw_error)
+                    context.variant_models = await model_selector.select_models(
+                        generation_type=context.extracted_params.generation_type,
+                        openai_api_key=context.extracted_params.openai_api_key,
+                        anthropic_api_key=context.extracted_params.anthropic_api_key,
+                        gemini_api_key=GEMINI_API_KEY,
+                    )
+
+                    # Generate code for all variants
+                    generation_stage = ParallelGenerationStage(
+                        send_message=context.send_message,
+                        openai_api_key=context.extracted_params.openai_api_key,
+                        openai_base_url=context.extracted_params.openai_base_url,
+                        anthropic_api_key=context.extracted_params.anthropic_api_key,
+                        should_generate_images=context.extracted_params.should_generate_images,
+                    )
+
+                    context.variant_completions = (
+                        await generation_stage.process_variants(
+                            variant_models=context.variant_models,
+                            prompt_messages=context.prompt_messages,
+                            image_cache=context.image_cache,
+                            params=context.params,
+                        )
+                    )
+
+                    # Check if all variants failed
+                    if len(context.variant_completions) == 0:
+                        await context.throw_error(
+                            "Error generating code. Please contact support."
+                        )
+                        raise Exception("All generations failed")
+
+                    # Convert to list format
+                    context.completions = []
+                    for i in range(len(context.variant_models)):
+                        if i in context.variant_completions:
+                            context.completions.append(context.variant_completions[i])
+                        else:
+                            context.completions.append("")
+
+            except Exception as e:
+                print(f"[GENERATE_CODE] Unexpected error: {e}")
+                await context.throw_error(f"An unexpected error occurred: {str(e)}")
+                return  # Don't continue the pipeline
+
+        await next_func()
+
+
+class PostProcessingMiddleware(Middleware):
+    """Handles post-processing and logging"""
+
+    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+        post_processor = PostProcessingStage()
+        await post_processor.process_completions(
+            context.completions, context.prompt_messages, context.websocket
+        )
+
+        await next_func()
+
+
 @router.websocket("/generate-code")
 async def stream_code(websocket: WebSocket):
-    ws_comm = WebSocketCommunicator(websocket)
-    await ws_comm.accept()
+    """Handle WebSocket code generation requests using a pipeline pattern"""
+    pipeline = Pipeline()
 
-    # Create shortcuts for commonly used methods
-    send_message = ws_comm.send_message
-    throw_error = ws_comm.throw_error
+    # Configure the pipeline
+    pipeline.use(WebSocketSetupMiddleware())
+    pipeline.use(ParameterExtractionMiddleware())
+    pipeline.use(StatusBroadcastMiddleware())
+    pipeline.use(PromptCreationMiddleware())
+    pipeline.use(CodeGenerationMiddleware())
+    pipeline.use(PostProcessingMiddleware())
 
-    # TODO: Are the values always strings?
-    params = await ws_comm.receive_params()
-
-    param_extractor = ParameterExtractionStage(throw_error)
-    extracted_params = await param_extractor.extract_and_validate(params)
-
-    # Unpack for easier access
-    stack = extracted_params.stack
-    input_mode = extracted_params.input_mode
-    openai_api_key = extracted_params.openai_api_key
-    openai_base_url = extracted_params.openai_base_url
-    anthropic_api_key = extracted_params.anthropic_api_key
-    should_generate_images = extracted_params.should_generate_images
-    generation_type = extracted_params.generation_type
-
-    print(f"Generating {stack} code in {input_mode} mode")
-
-    for i in range(NUM_VARIANTS):
-        await send_message("status", "Generating code...", i)
-
-    prompt_creator = PromptCreationStage(throw_error)
-    prompt_messages, image_cache = await prompt_creator.create_prompt(
-        params, stack, input_mode
-    )
-
-    if SHOULD_MOCK_AI_RESPONSE:
-        # Use MockResponseStage for testing
-        mock_stage = MockResponseStage(send_message)
-        completions = await mock_stage.generate_mock_response(input_mode)
-    else:
-        try:
-            if input_mode == "video":
-                # Use VideoGenerationStage for video mode
-                video_stage = VideoGenerationStage(send_message, throw_error)
-                completions = await video_stage.generate_video_code(
-                    prompt_messages, anthropic_api_key
-                )
-            else:
-                # Use ModelSelectionStage to select variant models
-                model_selector = ModelSelectionStage(throw_error)
-                variant_models = await model_selector.select_models(
-                    generation_type=generation_type,
-                    openai_api_key=openai_api_key,
-                    anthropic_api_key=anthropic_api_key,
-                    gemini_api_key=GEMINI_API_KEY,
-                )
-
-                # Create and use the ParallelGenerationStage
-                generation_stage = ParallelGenerationStage(
-                    send_message=send_message,
-                    openai_api_key=openai_api_key,
-                    openai_base_url=openai_base_url,
-                    anthropic_api_key=anthropic_api_key,
-                    should_generate_images=should_generate_images,
-                )
-
-                # Process all variants
-                variant_completions = await generation_stage.process_variants(
-                    variant_models=variant_models,
-                    prompt_messages=prompt_messages,
-                    image_cache=image_cache,
-                    params=params,
-                )
-
-                # Check if all variants failed
-                if len(variant_completions) == 0:
-                    await throw_error("Error generating code. Please contact support.")
-                    raise Exception("All generations failed")
-
-                # Prepare completions list for further processing
-                completions: list[str] = []
-                for i in range(len(variant_models)):
-                    if i in variant_completions:
-                        completions.append(variant_completions[i])
-                    else:
-                        # Add empty string for cancelled/failed variants
-                        completions.append("")
-
-        except Exception as e:
-            # Handle any unexpected errors
-            print(f"[GENERATE_CODE] Unexpected error: {e}")
-            await throw_error(f"An unexpected error occurred: {str(e)}")
-            return
-
-    post_processor = PostProcessingStage()
-    await post_processor.process_completions(completions, prompt_messages, websocket)
-
-    await ws_comm.close()
+    # Execute the pipeline
+    await pipeline.execute(websocket)
