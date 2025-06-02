@@ -36,6 +36,7 @@ from typing import (
     cast,
     get_args,
 )
+from openai.types.chat import ChatCompletionMessageParam
 from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
@@ -53,10 +54,10 @@ class PipelineContext:
     """Context object that carries state through the pipeline"""
 
     websocket: WebSocket
-    ws_comm: "WebSocketCommunicator" = None
+    ws_comm: "WebSocketCommunicator | None" = None
     params: Dict[str, str] = field(default_factory=dict)
-    extracted_params: "ExtractedParams" = None
-    prompt_messages: List[Dict[str, Any]] = field(default_factory=list)
+    extracted_params: "ExtractedParams | None" = None
+    prompt_messages: List[ChatCompletionMessageParam] = field(default_factory=list)
     image_cache: Dict[str, str] = field(default_factory=dict)
     variant_models: List[Llm] = field(default_factory=list)
     completions: List[str] = field(default_factory=list)
@@ -65,10 +66,12 @@ class PipelineContext:
 
     @property
     def send_message(self):
+        assert self.ws_comm is not None
         return self.ws_comm.send_message
 
     @property
     def throw_error(self):
+        assert self.ws_comm is not None
         return self.ws_comm.throw_error
 
 
@@ -323,14 +326,14 @@ class PromptCreationStage:
         params: Dict[str, str],
         stack: Stack,
         input_mode: InputMode,
-    ) -> tuple[List[Dict[str, Any]], Dict[str, str]]:
+    ) -> tuple[List[ChatCompletionMessageParam], Dict[str, str]]:
         """Create prompt messages and return image cache"""
         try:
             prompt_messages, image_cache = await create_prompt(
                 params, stack, input_mode
             )
             return prompt_messages, image_cache
-        except Exception as e:
+        except Exception:
             await self.throw_error(
                 "Error assembling prompt. Contact support at support@picoapps.xyz"
             )
@@ -342,7 +345,7 @@ class MockResponseStage:
 
     def __init__(
         self,
-        send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[[Literal["chunk", "status", "setCode", "error", "variantComplete", "variantError"], str, int], Coroutine[Any, Any, None]],
     ):
         self.send_message = send_message
 
@@ -372,7 +375,7 @@ class VideoGenerationStage:
 
     def __init__(
         self,
-        send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[[Literal["chunk", "status", "setCode", "error", "variantComplete", "variantError"], str, int], Coroutine[Any, Any, None]],
         throw_error: Callable[[str], Coroutine[Any, Any, None]],
     ):
         self.send_message = send_message
@@ -380,7 +383,7 @@ class VideoGenerationStage:
 
     async def generate_video_code(
         self,
-        prompt_messages: List[Dict[str, Any]],
+        prompt_messages: List[ChatCompletionMessageParam],
         anthropic_api_key: str | None,
     ) -> List[str]:
         """Generate code for video input mode"""
@@ -423,7 +426,7 @@ class PostProcessingStage:
     async def process_completions(
         self,
         completions: List[str],
-        prompt_messages: List[Dict[str, Any]],
+        prompt_messages: List[ChatCompletionMessageParam],
         websocket: WebSocket,
     ) -> None:
         """Process completions and perform cleanup"""
@@ -444,7 +447,7 @@ class ParallelGenerationStage:
 
     def __init__(
         self,
-        send_message: Callable[[str, str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[[Literal["chunk", "status", "setCode", "error", "variantComplete", "variantError"], str, int], Coroutine[Any, Any, None]],
         openai_api_key: str | None,
         openai_base_url: str | None,
         anthropic_api_key: str | None,
@@ -459,7 +462,7 @@ class ParallelGenerationStage:
     async def process_variants(
         self,
         variant_models: List[Llm],
-        prompt_messages: List[Dict[str, Any]],
+        prompt_messages: List[ChatCompletionMessageParam],
         image_cache: Dict[str, str],
         params: Dict[str, str],
     ) -> Dict[int, str]:
@@ -491,7 +494,7 @@ class ParallelGenerationStage:
     def _create_generation_tasks(
         self,
         variant_models: List[Llm],
-        prompt_messages: List[Dict[str, Any]],
+        prompt_messages: List[ChatCompletionMessageParam],
         params: Dict[str, str],
     ) -> List[Coroutine[Any, Any, Completion]]:
         """Create generation tasks for each variant model"""
@@ -564,12 +567,13 @@ class ParallelGenerationStage:
 
     async def _stream_openai_with_error_handling(
         self,
-        prompt_messages: List[Dict[str, Any]],
+        prompt_messages: List[ChatCompletionMessageParam],
         model_name: str,
         index: int,
     ) -> Completion:
         """Wrap OpenAI streaming with specific error handling"""
         try:
+            assert self.openai_api_key is not None
             return await stream_openai_response(
                 prompt_messages,
                 api_key=self.openai_api_key,
@@ -716,6 +720,7 @@ class ParameterExtractionMiddleware(Middleware):
 
     async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         # Receive parameters
+        assert context.ws_comm is not None
         context.params = await context.ws_comm.receive_params()
 
         # Extract and validate
@@ -747,6 +752,7 @@ class PromptCreationMiddleware(Middleware):
 
     async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         prompt_creator = PromptCreationStage(context.throw_error)
+        assert context.extracted_params is not None
         context.prompt_messages, context.image_cache = (
             await prompt_creator.create_prompt(
                 context.params,
@@ -765,11 +771,13 @@ class CodeGenerationMiddleware(Middleware):
         if SHOULD_MOCK_AI_RESPONSE:
             # Use mock response for testing
             mock_stage = MockResponseStage(context.send_message)
+            assert context.extracted_params is not None
             context.completions = await mock_stage.generate_mock_response(
                 context.extracted_params.input_mode
             )
         else:
             try:
+                assert context.extracted_params is not None
                 if context.extracted_params.input_mode == "video":
                     # Use video generation for video mode
                     video_stage = VideoGenerationStage(
