@@ -317,23 +317,6 @@ function BestOfNEvalsPage() {
   const stats = calculateStats();
   const currentEval = evals[currentComparisonIndex];
 
-  // Format time helper
-  const formatTimeAgo = (timestamp: number) => {
-    const now = Date.now() / 1000;
-    const diff = now - timestamp;
-
-    if (diff < 3600) {
-      const minutes = Math.floor(diff / 60);
-      return `${minutes}m ago`;
-    } else if (diff < 86400) {
-      const hours = Math.floor(diff / 3600);
-      return `${hours}h ago`;
-    } else {
-      const days = Math.floor(diff / 86400);
-      return `${days}d ago`;
-    }
-  };
-
   // Copy results as CSV to clipboard
   const copyResultsAsCSV = async () => {
     const rows: string[] = [];
