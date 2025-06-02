@@ -1,6 +1,10 @@
 from config import ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY
 from llm import Llm
-from models import stream_claude_response, stream_openai_response, stream_gemini_response
+from models import (
+    stream_claude_response,
+    stream_gemini_response,
+    stream_openai_response,
+)
 from prompts import assemble_prompt
 from prompts.types import Stack
 from openai.types.chat import ChatCompletionMessageParam
@@ -23,6 +27,8 @@ async def generate_code_core(
         or model == Llm.CLAUDE_3_5_SONNET_2024_06_20
         or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
         or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
+        or model == Llm.CLAUDE_4_SONNET_2025_05_14
+        or model == Llm.CLAUDE_4_OPUS_2025_05_14
     ):
         if not ANTHROPIC_API_KEY:
             raise Exception("Anthropic API key not found")

@@ -9,7 +9,6 @@ from typing import List, Dict
 from llm import Llm
 from prompts.types import Stack
 from pathlib import Path
-import base64
 
 router = APIRouter()
 
@@ -32,14 +31,16 @@ async def get_eval_input_files():
     """Get a list of all input files available for evaluations"""
     input_dir = os.path.join(EVALS_DIR, "inputs")
     try:
-        files = []
+        files: list[InputFile] = []
         for filename in os.listdir(input_dir):
             if filename.endswith(".png"):
                 file_path = os.path.join(input_dir, filename)
                 files.append(InputFile(name=filename, path=file_path))
         return sorted(files, key=lambda x: x.name)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading input files: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error reading input files: {str(e)}"
+        )
 
 
 @router.get("/evals", response_model=list[Eval])
@@ -185,9 +186,7 @@ async def run_evals(request: RunEvalsRequest) -> List[str]:
 
     for model in request.models:
         output_files = await run_image_evals(
-            model=model, 
-            stack=request.stack,
-            input_files=request.files
+            model=model, stack=request.stack, input_files=request.files
         )
         all_output_files.extend(output_files)
 
@@ -223,7 +222,7 @@ async def get_best_of_n_evals(request: Request):
     query_params = dict(request.query_params)
 
     # Extract all folder paths (folder1, folder2, folder3, etc.)
-    folders = []
+    folders: list[str] = []
     i = 1
     while f"folder{i}" in query_params:
         folders.append(query_params[f"folder{i}"])
@@ -277,9 +276,9 @@ async def get_best_of_n_evals(request: Request):
             input_image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
 
         # Get HTML contents from all folders
-        outputs = []
+        outputs: list[str] = []
         for folder_files in files_by_folder:
-            output_content = None
+            output_content: str | None = None
             for filename in folder_files.keys():
                 if filename.startswith(base_name):
                     with open(folder_files[filename], "r") as f:
@@ -294,3 +293,34 @@ async def get_best_of_n_evals(request: Request):
             evals.append(Eval(input=input_image, outputs=outputs))
 
     return BestOfNEvalsResponse(evals=evals, folder_names=folder_names)
+
+
+class OutputFolder(BaseModel):
+    name: str
+    path: str
+    modified_time: float
+
+
+@router.get("/output_folders", response_model=List[OutputFolder])
+async def get_output_folders():
+    """Get a list of all output folders available for evaluations, sorted by recently modified"""
+    output_dir = os.path.join(EVALS_DIR, "results")
+    try:
+        folders: list[OutputFolder] = []
+        for folder_name in os.listdir(output_dir):
+            folder_path = os.path.join(output_dir, folder_name)
+            if os.path.isdir(folder_path) and not folder_name.startswith("."):
+                # Get modification time
+                modified_time = os.path.getmtime(folder_path)
+                folders.append(
+                    OutputFolder(
+                        name=folder_name, path=folder_path, modified_time=modified_time
+                    )
+                )
+
+        # Sort by modified time, most recent first
+        return sorted(folders, key=lambda x: x.modified_time, reverse=True)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error reading output folders: {str(e)}"
+        )
