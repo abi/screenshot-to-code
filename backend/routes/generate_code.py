@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import traceback
-from typing import Callable
+from typing import Callable, Awaitable
 from fastapi import APIRouter, WebSocket
 import openai
 from codegen.utils import extract_html_content
@@ -76,7 +76,7 @@ class Middleware(ABC):
     """Base class for all pipeline middleware"""
 
     @abstractmethod
-    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         """Process the context and call the next middleware"""
         pass
 
@@ -106,10 +106,10 @@ class Pipeline:
 
         await chain(context)
 
-    def _wrap_middleware(self, middleware: Middleware, next_func: Callable):
+    def _wrap_middleware(self, middleware: Middleware, next_func: Callable[[PipelineContext], Awaitable[None]]) -> Callable[[PipelineContext], Awaitable[None]]:
         """Wrap a middleware with its next function"""
 
-        async def wrapped(context: PipelineContext):
+        async def wrapped(context: PipelineContext) -> None:
             await middleware.process(context, lambda: next_func(context))
 
         return wrapped
@@ -699,7 +699,7 @@ class ParallelGenerationStage:
 class WebSocketSetupMiddleware(Middleware):
     """Handles WebSocket setup and teardown"""
 
-    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         # Create and setup WebSocket communicator
         context.ws_comm = WebSocketCommunicator(context.websocket)
         await context.ws_comm.accept()
@@ -714,7 +714,7 @@ class WebSocketSetupMiddleware(Middleware):
 class ParameterExtractionMiddleware(Middleware):
     """Handles parameter extraction and validation"""
 
-    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         # Receive parameters
         context.params = await context.ws_comm.receive_params()
 
@@ -735,7 +735,7 @@ class ParameterExtractionMiddleware(Middleware):
 class StatusBroadcastMiddleware(Middleware):
     """Sends initial status messages to all variants"""
 
-    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         for i in range(NUM_VARIANTS):
             await context.send_message("status", "Generating code...", i)
 
@@ -745,7 +745,7 @@ class StatusBroadcastMiddleware(Middleware):
 class PromptCreationMiddleware(Middleware):
     """Handles prompt creation"""
 
-    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         prompt_creator = PromptCreationStage(context.throw_error)
         context.prompt_messages, context.image_cache = (
             await prompt_creator.create_prompt(
@@ -761,7 +761,7 @@ class PromptCreationMiddleware(Middleware):
 class CodeGenerationMiddleware(Middleware):
     """Handles the main code generation logic"""
 
-    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         if SHOULD_MOCK_AI_RESPONSE:
             # Use mock response for testing
             mock_stage = MockResponseStage(context.send_message)
@@ -833,7 +833,7 @@ class CodeGenerationMiddleware(Middleware):
 class PostProcessingMiddleware(Middleware):
     """Handles post-processing and logging"""
 
-    async def process(self, context: PipelineContext, next_func: Callable) -> None:
+    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
         post_processor = PostProcessingStage()
         await post_processor.process_completions(
             context.completions, context.prompt_messages, context.websocket
