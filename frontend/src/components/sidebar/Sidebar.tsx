@@ -43,6 +43,13 @@ function Sidebar({
     commits[head].variants[commits[head].selectedVariantIndex].status ===
       "complete";
 
+  // Check if the currently selected variant has an error
+  const isSelectedVariantError =
+    head &&
+    commits[head] &&
+    commits[head].variants[commits[head].selectedVariantIndex].status ===
+      "error";
+
   // Focus on the update instruction textarea when a variant is complete
   useEffect(() => {
     if (
@@ -84,42 +91,55 @@ function Sidebar({
         </div>
       )}
 
-      {/* Show update UI when app state is ready OR the selected variant is complete */}
-      {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
-        <div>
-          <div className="grid w-full gap-2">
-            <Textarea
-              ref={textareaRef}
-              placeholder="Tell the AI what to change..."
-              onChange={(e) => setUpdateInstruction(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  doUpdate(updateInstruction);
-                }
-              }}
-              value={updateInstruction}
-            />
-            <Button
-              onClick={() => doUpdate(updateInstruction)}
-              className="dark:text-white dark:bg-gray-700 update-btn"
-            >
-              Update <KeyboardShortcutBadge letter="enter" />
-            </Button>
+      {/* Show error message when selected option has an error */}
+      {isSelectedVariantError && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
+          <div className="text-red-800 text-sm">
+            <div className="font-medium mb-1">
+              This option failed to generate
+            </div>
+            <div>Switch to a working option above to make updates.</div>
           </div>
-          <div className="flex items-center justify-end gap-x-2 mt-2">
-            <Button
-              onClick={regenerate}
-              className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
-            >
-              🔄 Regenerate
-            </Button>
-            {showSelectAndEditFeature && <SelectAndEditModeToggleButton />}
-          </div>
-          {/* <div className="flex justify-end items-center mt-2">
-            <TipLink />
-          </div> */}
         </div>
       )}
+
+      {/* Show update UI when app state is ready OR the selected variant is complete (but not errored) */}
+      {(appState === AppState.CODE_READY || isSelectedVariantComplete) &&
+        !isSelectedVariantError && (
+          <div>
+            <div className="grid w-full gap-2">
+              <Textarea
+                ref={textareaRef}
+                placeholder="Tell the AI what to change..."
+                onChange={(e) => setUpdateInstruction(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    doUpdate(updateInstruction);
+                  }
+                }}
+                value={updateInstruction}
+              />
+              <Button
+                onClick={() => doUpdate(updateInstruction)}
+                className="dark:text-white dark:bg-gray-700 update-btn"
+              >
+                Update <KeyboardShortcutBadge letter="enter" />
+              </Button>
+            </div>
+            <div className="flex items-center justify-end gap-x-2 mt-2">
+              <Button
+                onClick={regenerate}
+                className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
+              >
+                🔄 Regenerate
+              </Button>
+              {showSelectAndEditFeature && <SelectAndEditModeToggleButton />}
+            </div>
+            {/* <div className="flex justify-end items-center mt-2">
+            <TipLink />
+          </div> */}
+          </div>
+        )}
 
       {/* Reference image display */}
       <div className="flex gap-x-2 mt-2">
