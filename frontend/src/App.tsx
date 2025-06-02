@@ -219,7 +219,7 @@ function App() {
       },
       onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);
-        updateVariantStatus(commit.hash, variantIndex, "error");
+        updateVariantStatus(commit.hash, variantIndex, "error", error);
       },
       onCancel: () => {
         cancelCodeGenerationAndReset(commit);

@@ -29,7 +29,8 @@ interface ProjectStore {
   updateVariantStatus: (
     hash: CommitHash,
     numVariant: number,
-    status: VariantStatus
+    status: VariantStatus,
+    errorMessage?: string
   ) => void;
 
   setHead: (hash: CommitHash) => void;
@@ -150,7 +151,8 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   updateVariantStatus: (
     hash: CommitHash,
     numVariant: number,
-    status: VariantStatus
+    status: VariantStatus,
+    errorMessage?: string
   ) =>
     set((state) => {
       const commit = state.commits[hash];
@@ -162,7 +164,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
           [hash]: {
             ...commit,
             variants: commit.variants.map((variant, index) =>
-              index === numVariant ? { ...variant, status } : variant
+              index === numVariant 
+                ? { ...variant, status, errorMessage: status === 'error' ? errorMessage : undefined } 
+                : variant
             ),
           },
         },

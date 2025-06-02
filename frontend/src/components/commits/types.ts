@@ -5,6 +5,7 @@ export type VariantStatus = "generating" | "complete" | "cancelled" | "error";
 export type Variant = {
   code: string;
   status?: VariantStatus;
+  errorMessage?: string;
 };
 
 export type BaseCommit = {

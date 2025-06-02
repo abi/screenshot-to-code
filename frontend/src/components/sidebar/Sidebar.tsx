@@ -8,7 +8,7 @@ import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
 import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeToggleButton";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import HistoryDisplay from "../history/HistoryDisplay";
 import Variants from "../variants/Variants";
 
@@ -26,6 +26,7 @@ function Sidebar({
   cancelCodeGeneration,
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isErrorExpanded, setIsErrorExpanded] = useState(false);
 
   const { appState, updateInstruction, setUpdateInstruction } = useAppStore();
 
@@ -50,6 +51,12 @@ function Sidebar({
     commits[head].variants[commits[head].selectedVariantIndex].status ===
       "error";
 
+  // Get the error message from the selected variant
+  const selectedVariantErrorMessage =
+    head &&
+    commits[head] &&
+    commits[head].variants[commits[head].selectedVariantIndex].errorMessage;
+
   // Focus on the update instruction textarea when a variant is complete
   useEffect(() => {
     if (
@@ -59,6 +66,11 @@ function Sidebar({
       textareaRef.current.focus();
     }
   }, [appState, isSelectedVariantComplete]);
+
+  // Reset error expanded state when variant changes
+  useEffect(() => {
+    setIsErrorExpanded(false);
+  }, [head, commits[head || ""]?.selectedVariantIndex]);
 
   return (
     <>
@@ -96,9 +108,26 @@ function Sidebar({
         <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
           <div className="text-red-800 text-sm">
             <div className="font-medium mb-1">
-              This option failed to generate
+              This option failed to generate because
             </div>
-            <div>Switch to a working option above to make updates.</div>
+            {selectedVariantErrorMessage && (
+              <div className="mb-2">
+                <div className="text-red-700 bg-red-100 border border-red-300 rounded px-2 py-1 text-xs font-mono break-words">
+                  {selectedVariantErrorMessage.length > 200 && !isErrorExpanded
+                    ? `${selectedVariantErrorMessage.slice(0, 200)}...`
+                    : selectedVariantErrorMessage}
+                </div>
+                {selectedVariantErrorMessage.length > 200 && (
+                  <button
+                    onClick={() => setIsErrorExpanded(!isErrorExpanded)}
+                    className="text-red-600 text-xs underline mt-1 hover:text-red-800"
+                  >
+                    {isErrorExpanded ? "Show less" : "Show more"}
+                  </button>
+                )}
+              </div>
+            )}
+            <div>Switch to another option above to make updates.</div>
           </div>
         </div>
       )}
