@@ -37,6 +37,9 @@ from typing import (
     get_args,
 )
 from openai.types.chat import ChatCompletionMessageParam
+
+# WebSocket message types
+MessageType = Literal["chunk", "status", "setCode", "error", "variantComplete", "variantError"]
 from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
@@ -131,9 +134,7 @@ class WebSocketCommunicator:
 
     async def send_message(
         self,
-        type: Literal[
-            "chunk", "status", "setCode", "error", "variantComplete", "variantError"
-        ],
+        type: MessageType,
         value: str,
         variantIndex: int,
     ) -> None:
@@ -345,7 +346,7 @@ class MockResponseStage:
 
     def __init__(
         self,
-        send_message: Callable[[Literal["chunk", "status", "setCode", "error", "variantComplete", "variantError"], str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
     ):
         self.send_message = send_message
 
@@ -375,7 +376,7 @@ class VideoGenerationStage:
 
     def __init__(
         self,
-        send_message: Callable[[Literal["chunk", "status", "setCode", "error", "variantComplete", "variantError"], str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
         throw_error: Callable[[str], Coroutine[Any, Any, None]],
     ):
         self.send_message = send_message
@@ -447,7 +448,7 @@ class ParallelGenerationStage:
 
     def __init__(
         self,
-        send_message: Callable[[Literal["chunk", "status", "setCode", "error", "variantComplete", "variantError"], str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
         openai_api_key: str | None,
         openai_base_url: str | None,
         anthropic_api_key: str | None,
