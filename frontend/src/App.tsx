@@ -219,8 +219,7 @@ function App() {
       },
       onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);
-        updateVariantStatus(commit.hash, variantIndex, "cancelled");
-        toast.error(`Error in option ${variantIndex + 1}: ${error}`);
+        updateVariantStatus(commit.hash, variantIndex, "error");
       },
       onCancel: () => {
         cancelCodeGenerationAndReset(commit);

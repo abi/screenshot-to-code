@@ -47,6 +47,13 @@ function Variants() {
                 title="Cancelled"
               ></span>
             );
+          } else if (variant.status === "error") {
+            statusIndicator = (
+              <span
+                className="inline-block w-2 h-2 bg-red-600 rounded-full ml-2"
+                title="Error"
+              ></span>
+            );
           }
 
           return (
@@ -73,6 +80,9 @@ function Variants() {
               <div className="text-xs mt-1 flex items-center">
                 {variant.status === "cancelled" && (
                   <span className="text-gray-500">Cancelled</span>
+                )}
+                {variant.status === "error" && (
+                  <span className="text-red-500">Error</span>
                 )}
               </div>
             </div>

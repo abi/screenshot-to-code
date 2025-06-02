@@ -1,6 +1,6 @@
 export type CommitHash = string;
 
-export type VariantStatus = "generating" | "complete" | "cancelled";
+export type VariantStatus = "generating" | "complete" | "cancelled" | "error";
 
 export type Variant = {
   code: string;
