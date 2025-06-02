@@ -626,7 +626,6 @@ class ParallelGenerationStage:
 
 @router.websocket("/generate-code")
 async def stream_code(websocket: WebSocket):
-    # Use WebSocketCommunicator for all WebSocket operations
     ws_comm = WebSocketCommunicator(websocket)
     await ws_comm.accept()
 
@@ -634,12 +633,9 @@ async def stream_code(websocket: WebSocket):
     send_message = ws_comm.send_message
     throw_error = ws_comm.throw_error
 
-    ## Parameter extract and validation
-
     # TODO: Are the values always strings?
     params = await ws_comm.receive_params()
 
-    # Use ParameterExtractionStage to extract and validate parameters
     param_extractor = ParameterExtractionStage(throw_error)
     extracted_params = await param_extractor.extract_and_validate(params)
 
@@ -657,20 +653,10 @@ async def stream_code(websocket: WebSocket):
     for i in range(NUM_VARIANTS):
         await send_message("status", "Generating code...", i)
 
-    ### Prompt creation
-
-    # Use PromptCreationStage to create prompt
     prompt_creator = PromptCreationStage(throw_error)
     prompt_messages, image_cache = await prompt_creator.create_prompt(
         params, stack, input_mode
     )
-
-    # pprint_prompt(prompt_messages)  # type: ignore
-
-    ### Code generation
-
-    async def process_chunk(content: str, variantIndex: int):
-        await send_message("chunk", content, variantIndex)
 
     if SHOULD_MOCK_AI_RESPONSE:
         # Use MockResponseStage for testing
@@ -731,11 +717,7 @@ async def stream_code(websocket: WebSocket):
             await throw_error(f"An unexpected error occurred: {str(e)}")
             return
 
-    ## Post-processing
-
-    # Use PostProcessingStage to handle cleanup
     post_processor = PostProcessingStage()
     await post_processor.process_completions(completions, prompt_messages, websocket)
 
-    # Close WebSocket connection
     await ws_comm.close()
