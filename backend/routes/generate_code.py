@@ -142,6 +142,7 @@ class WebSocketCommunicator:
 
     def __init__(self, websocket: WebSocket):
         self.websocket = websocket
+        self.is_closed = False
 
     async def accept(self) -> None:
         """Accept the WebSocket connection"""
@@ -172,8 +173,10 @@ class WebSocketCommunicator:
     async def throw_error(self, message: str) -> None:
         """Send an error message and close the connection"""
         print(message)
-        await self.websocket.send_json({"type": "error", "value": message})
-        await self.websocket.close(APP_ERROR_WEB_SOCKET_CODE)
+        if not self.is_closed:
+            await self.websocket.send_json({"type": "error", "value": message})
+            await self.websocket.close(APP_ERROR_WEB_SOCKET_CODE)
+            self.is_closed = True
 
     async def receive_params(self) -> Dict[str, str]:
         """Receive parameters from the client"""
@@ -183,7 +186,9 @@ class WebSocketCommunicator:
 
     async def close(self) -> None:
         """Close the WebSocket connection"""
-        await self.websocket.close()
+        if not self.is_closed:
+            await self.websocket.close()
+            self.is_closed = True
 
 
 @dataclass
@@ -851,7 +856,7 @@ class CodeGenerationMiddleware(Middleware):
                         await context.throw_error(
                             "Error generating code. Please contact support."
                         )
-                        raise Exception("All generations failed")
+                        return  # Don't continue the pipeline
 
                     # Convert to list format
                     context.completions = []
