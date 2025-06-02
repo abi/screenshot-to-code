@@ -561,6 +561,8 @@ class ParallelGenerationStage:
                 model == Llm.CLAUDE_3_5_SONNET_2024_06_20
                 or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
                 or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
+                or model == Llm.CLAUDE_4_SONNET_2025_05_14
+                or model == Llm.CLAUDE_4_OPUS_2025_05_14
             ):
                 if self.anthropic_api_key is None:
                     raise Exception("Anthropic API key is missing.")
