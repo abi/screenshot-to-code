@@ -39,7 +39,9 @@ from typing import (
 from openai.types.chat import ChatCompletionMessageParam
 
 # WebSocket message types
-MessageType = Literal["chunk", "status", "setCode", "error", "variantComplete", "variantError"]
+MessageType = Literal[
+    "chunk", "status", "setCode", "error", "variantComplete", "variantError"
+]
 from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
@@ -50,6 +52,14 @@ from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 
 router = APIRouter()
+
+
+class VariantErrorAlreadySent(Exception):
+    """Exception that indicates a variantError message has already been sent to frontend"""
+
+    def __init__(self, original_error: Exception):
+        self.original_error = original_error
+        super().__init__(str(original_error))
 
 
 @dataclass
@@ -82,7 +92,9 @@ class Middleware(ABC):
     """Base class for all pipeline middleware"""
 
     @abstractmethod
-    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
+    async def process(
+        self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
+    ) -> None:
         """Process the context and call the next middleware"""
         pass
 
@@ -112,7 +124,11 @@ class Pipeline:
 
         await chain(context)
 
-    def _wrap_middleware(self, middleware: Middleware, next_func: Callable[[PipelineContext], Awaitable[None]]) -> Callable[[PipelineContext], Awaitable[None]]:
+    def _wrap_middleware(
+        self,
+        middleware: Middleware,
+        next_func: Callable[[PipelineContext], Awaitable[None]],
+    ) -> Callable[[PipelineContext], Awaitable[None]]:
         """Wrap a middleware with its next function"""
 
         async def wrapped(context: PipelineContext) -> None:
@@ -594,7 +610,7 @@ class ParallelGenerationStage:
                 )
             )
             await self.send_message("variantError", error_message, index)
-            raise
+            raise VariantErrorAlreadySent(e)
         except openai.NotFoundError as e:
             print(f"[VARIANT {index}] OpenAI Model not found", e)
             error_message = (
@@ -609,7 +625,7 @@ class ParallelGenerationStage:
                 )
             )
             await self.send_message("variantError", error_message, index)
-            raise
+            raise VariantErrorAlreadySent(e)
         except openai.RateLimitError as e:
             print(f"[VARIANT {index}] OpenAI Rate limit exceeded", e)
             error_message = (
@@ -621,7 +637,7 @@ class ParallelGenerationStage:
                 )
             )
             await self.send_message("variantError", error_message, index)
-            raise
+            raise VariantErrorAlreadySent(e)
 
     async def _perform_image_generation(
         self,
@@ -697,6 +713,10 @@ class ParallelGenerationStage:
             print(f"Error in variant {index}: {e}")
             traceback.print_exception(type(e), e, e.__traceback__)
 
+            # Only send error message if it hasn't been sent already
+            if not isinstance(e, VariantErrorAlreadySent):
+                await self.send_message("variantError", str(e), index)
+
 
 # Pipeline Middleware Implementations
 
@@ -704,7 +724,9 @@ class ParallelGenerationStage:
 class WebSocketSetupMiddleware(Middleware):
     """Handles WebSocket setup and teardown"""
 
-    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
+    async def process(
+        self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
+    ) -> None:
         # Create and setup WebSocket communicator
         context.ws_comm = WebSocketCommunicator(context.websocket)
         await context.ws_comm.accept()
@@ -719,7 +741,9 @@ class WebSocketSetupMiddleware(Middleware):
 class ParameterExtractionMiddleware(Middleware):
     """Handles parameter extraction and validation"""
 
-    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
+    async def process(
+        self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
+    ) -> None:
         # Receive parameters
         assert context.ws_comm is not None
         context.params = await context.ws_comm.receive_params()
@@ -741,7 +765,9 @@ class ParameterExtractionMiddleware(Middleware):
 class StatusBroadcastMiddleware(Middleware):
     """Sends initial status messages to all variants"""
 
-    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
+    async def process(
+        self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
+    ) -> None:
         for i in range(NUM_VARIANTS):
             await context.send_message("status", "Generating code...", i)
 
@@ -751,7 +777,9 @@ class StatusBroadcastMiddleware(Middleware):
 class PromptCreationMiddleware(Middleware):
     """Handles prompt creation"""
 
-    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
+    async def process(
+        self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
+    ) -> None:
         prompt_creator = PromptCreationStage(context.throw_error)
         assert context.extracted_params is not None
         context.prompt_messages, context.image_cache = (
@@ -768,7 +796,9 @@ class PromptCreationMiddleware(Middleware):
 class CodeGenerationMiddleware(Middleware):
     """Handles the main code generation logic"""
 
-    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
+    async def process(
+        self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
+    ) -> None:
         if SHOULD_MOCK_AI_RESPONSE:
             # Use mock response for testing
             mock_stage = MockResponseStage(context.send_message)
@@ -842,7 +872,9 @@ class CodeGenerationMiddleware(Middleware):
 class PostProcessingMiddleware(Middleware):
     """Handles post-processing and logging"""
 
-    async def process(self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]) -> None:
+    async def process(
+        self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
+    ) -> None:
         post_processor = PostProcessingStage()
         await post_processor.process_completions(
             context.completions, context.prompt_messages, context.websocket
