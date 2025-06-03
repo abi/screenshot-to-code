@@ -303,7 +303,11 @@ class ModelSelectionStage:
         """Select appropriate models based on available API keys"""
         try:
             variant_models = self._get_variant_models(
-                generation_type, NUM_VARIANTS, openai_api_key, anthropic_api_key
+                generation_type,
+                NUM_VARIANTS,
+                openai_api_key,
+                anthropic_api_key,
+                gemini_api_key,
             )
 
             # Print the variant models (one per line)
@@ -326,6 +330,7 @@ class ModelSelectionStage:
         num_variants: int,
         openai_api_key: str | None,
         anthropic_api_key: str | None,
+        gemini_api_key: str | None,
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
@@ -336,12 +341,14 @@ class ModelSelectionStage:
             claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
         # Define model arrays to cycle through
-        if openai_api_key and anthropic_api_key:
-            models = [claude_model, Llm.GPT_4_1_NANO_2025_04_14]
+        if openai_api_key and anthropic_api_key and gemini_api_key:
+            models = [Llm.GPT_4_1_2025_04_14, claude_model, Llm.GEMINI_2_0_FLASH]
+        elif openai_api_key and anthropic_api_key:
+            models = [claude_model, Llm.GPT_4_1_2025_04_14]
         elif anthropic_api_key:
             models = [claude_model, Llm.CLAUDE_3_5_SONNET_2024_06_20]
         elif openai_api_key:
-            models = [Llm.GPT_4O_2024_11_20]
+            models = [Llm.GPT_4_1_2025_04_14, Llm.GPT_4O_2024_11_20]
         else:
             raise Exception("No OpenAI or Anthropic key")
 
