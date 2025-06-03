@@ -231,4 +231,4 @@ const baseCommitObject = {
 - [DONE] Let's set up a number of models that we want. And it will just cycle through those and repeat them. If models are [A, B], then if num = 5, it will be [A, B, A, B, A] and so on.
 
 1. [DONE] With 3 options, it looks too squished on the front-end.
-2. We need to change hotkey to Option + 1, 2, 3, etc because when focused on textbox, the 1, 2, 3 keys are captured by the textbox.
+2. [DONE] We need to change hotkey to Option + 1, 2, 3, etc because when focused on textbox, the 1, 2, 3 keys are captured by the textbox. Fixed using event.code for cross-platform compatibility.

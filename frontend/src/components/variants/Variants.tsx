@@ -31,28 +31,22 @@ function Variants() {
   // Add keyboard shortcuts for variant switching
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle number keys when not in an input field
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
-      ) {
-        return;
-      }
-
-      // Handle number keys 1-9
-      const key = event.key;
-      if (key >= "1" && key <= "9") {
-        const variantIndex = parseInt(key) - 1;
-        
-        // Only switch if the variant exists and component is visible
-        if (
-          variantIndex < variants.length &&
-          variants.length > 1 &&
-          !commit.isCommitted
-        ) {
-          event.preventDefault();
-          handleVariantClick(variantIndex);
+      // Handle Option + number keys 1-9 using key codes (works even when in input fields)
+      if (event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+        // Use event.code to get the physical key, not the character it produces
+        const code = event.code;
+        if (code >= "Digit1" && code <= "Digit9") {
+          const variantIndex = parseInt(code.replace("Digit", "")) - 1;
+          
+          // Only switch if the variant exists and component is visible
+          if (
+            variantIndex < variants.length &&
+            variants.length > 1 &&
+            !commit.isCommitted
+          ) {
+            event.preventDefault();
+            handleVariantClick(variantIndex);
+          }
         }
       }
     };
@@ -126,7 +120,7 @@ function Variants() {
                   {statusIndicator}
                 </h3>
                 <span className="text-xs text-gray-400 dark:text-gray-500 font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-                  {index + 1}
+                  ⌥{index + 1}
                 </span>
               </div>
               <div className="text-xs mt-1 flex items-center">
