@@ -66,7 +66,7 @@ function Variants() {
     if (variantCount <= 2) {
       return "grid grid-cols-2 gap-2";
     } else if (variantCount === 3) {
-      return "grid grid-cols-3 gap-2";
+      return "grid grid-cols-2 gap-2"; // 2 columns, 3rd variant wraps below
     } else if (variantCount === 4) {
       return "grid grid-cols-2 gap-2"; // 2x2 grid
     } else if (variantCount <= 6) {
