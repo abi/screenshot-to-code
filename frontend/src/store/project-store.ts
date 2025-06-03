@@ -32,6 +32,7 @@ interface ProjectStore {
     status: VariantStatus,
     errorMessage?: string
   ) => void;
+  resizeVariants: (hash: CommitHash, count: number) => void;
 
   setHead: (hash: CommitHash) => void;
   resetHead: () => void;
@@ -168,6 +169,28 @@ export const useProjectStore = create<ProjectStore>((set) => ({
                 ? { ...variant, status, errorMessage: status === 'error' ? errorMessage : undefined } 
                 : variant
             ),
+          },
+        },
+      };
+    }),
+  resizeVariants: (hash: CommitHash, count: number) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      if (!commit) return state; // No change if commit doesn't exist
+
+      // Resize variants array to match backend count
+      const currentVariants = commit.variants;
+      const newVariants = Array(count).fill(null).map((_, index) => 
+        currentVariants[index] || { code: "", status: "generating" as VariantStatus }
+      );
+
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: {
+            ...commit,
+            variants: newVariants,
+            selectedVariantIndex: Math.min(commit.selectedVariantIndex, count - 1),
           },
         },
       };

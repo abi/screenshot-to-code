@@ -40,7 +40,13 @@ from openai.types.chat import ChatCompletionMessageParam
 
 # WebSocket message types
 MessageType = Literal[
-    "chunk", "status", "setCode", "error", "variantComplete", "variantError"
+    "chunk",
+    "status",
+    "setCode",
+    "error",
+    "variantComplete",
+    "variantError",
+    "variantCount",
 ]
 from image_generation.core import generate_images
 from prompts import create_prompt
@@ -295,33 +301,18 @@ class ModelSelectionStage:
         gemini_api_key: str | None = None,
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
-        variant_models = []
+        try:
+            variant_models = self._get_variant_models(
+                generation_type, NUM_VARIANTS, openai_api_key, anthropic_api_key
+            )
 
-        # Determine Claude model based on generation type
-        # For creation, use Claude Sonnet 3.7
-        # For updates, use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
-        if generation_type == "create":
-            claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
-        else:
-            claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+            # Print the variant models (one per line)
+            print("Variant models:")
+            for index, model in enumerate(variant_models):
+                print(f"Variant {index}: {model.value}")
 
-        # Select models based on available API keys
-        if openai_api_key and anthropic_api_key:
-            variant_models = [
-                claude_model,
-                Llm.GPT_4_1_NANO_2025_04_14,
-            ]
-        elif openai_api_key:
-            variant_models = [
-                Llm.GPT_4O_2024_11_20,
-                Llm.GPT_4O_2024_11_20,
-            ]
-        elif anthropic_api_key:
-            variant_models = [
-                claude_model,
-                Llm.CLAUDE_3_5_SONNET_2024_06_20,
-            ]
-        else:
+            return variant_models
+        except Exception:
             await self.throw_error(
                 "No OpenAI or Anthropic API key found. Please add the environment variable "
                 "OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. "
@@ -329,12 +320,37 @@ class ModelSelectionStage:
             )
             raise Exception("No OpenAI or Anthropic key")
 
-        # Print the variant models (one per line)
-        print("Variant models:")
-        for index, model in enumerate(variant_models):
-            print(f"Variant {index}: {model.value}")
+    def _get_variant_models(
+        self,
+        generation_type: Literal["create", "update"],
+        num_variants: int,
+        openai_api_key: str | None,
+        anthropic_api_key: str | None,
+    ) -> List[Llm]:
+        """Simple model cycling that scales with num_variants"""
 
-        return variant_models
+        # Determine primary Claude model based on generation type
+        if generation_type == "create":
+            claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
+        else:
+            claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+
+        # Define model arrays to cycle through
+        if openai_api_key and anthropic_api_key:
+            models = [claude_model, Llm.GPT_4_1_NANO_2025_04_14]
+        elif anthropic_api_key:
+            models = [claude_model, Llm.CLAUDE_3_5_SONNET_2024_06_20]
+        elif openai_api_key:
+            models = [Llm.GPT_4O_2024_11_20]
+        else:
+            raise Exception("No OpenAI or Anthropic key")
+
+        # Cycle through models: [A, B] with num=5 becomes [A, B, A, B, A]
+        selected_models: List[Llm] = []
+        for i in range(num_variants):
+            selected_models.append(models[i % len(models)])
+
+        return selected_models
 
 
 class PromptCreationStage:
@@ -775,6 +791,9 @@ class StatusBroadcastMiddleware(Middleware):
     async def process(
         self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
     ) -> None:
+        # Tell frontend how many variants we're using
+        await context.send_message("variantCount", str(NUM_VARIANTS), 0)
+
         for i in range(NUM_VARIANTS):
             await context.send_message("status", "Generating code...", i)
 

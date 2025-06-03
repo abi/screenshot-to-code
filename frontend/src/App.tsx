@@ -44,6 +44,7 @@ function App() {
     resetCommits,
     resetHead,
     updateVariantStatus,
+    resizeVariants,
 
     // Outputs
     appendExecutionConsole,
@@ -177,8 +178,10 @@ function App() {
     // Merge settings with params
     const updatedParams = { ...params, ...settings };
 
+    // Create variants dynamically - start with 4 to handle most cases
+    // Backend will use however many it needs (typically 3)
     const baseCommitObject = {
-      variants: [{ code: "" }, { code: "" }],
+      variants: Array(4).fill(null).map(() => ({ code: "" })),
     };
 
     const commitInputObject =
@@ -220,6 +223,10 @@ function App() {
       onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);
         updateVariantStatus(commit.hash, variantIndex, "error", error);
+      },
+      onVariantCount: (count) => {
+        console.log(`Backend is using ${count} variants`);
+        resizeVariants(commit.hash, count);
       },
       onCancel: () => {
         cancelCodeGenerationAndReset(commit);

@@ -18,7 +18,8 @@ type WebSocketResponse = {
     | "setCode"
     | "error"
     | "variantComplete"
-    | "variantError";
+    | "variantError"
+    | "variantCount";
   value: string;
   variantIndex: number;
 };
@@ -29,6 +30,7 @@ interface CodeGenerationCallbacks {
   onStatusUpdate: (status: string, variantIndex: number) => void;
   onVariantComplete: (variantIndex: number) => void;
   onVariantError: (variantIndex: number, error: string) => void;
+  onVariantCount: (count: number) => void;
   onCancel: () => void;
   onComplete: () => void;
 }
@@ -60,6 +62,8 @@ export function generateCode(
       callbacks.onVariantComplete(response.variantIndex);
     } else if (response.type === "variantError") {
       callbacks.onVariantError(response.variantIndex, response.value);
+    } else if (response.type === "variantCount") {
+      callbacks.onVariantCount(parseInt(response.value));
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
       toast.error(response.value);

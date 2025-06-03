@@ -61,9 +61,24 @@ function Variants() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [variants.length, commit.isCommitted, selectedVariantIndex, head]);
 
+  // Dynamic grid layout based on variant count
+  const getGridClass = (variantCount: number) => {
+    if (variantCount <= 2) {
+      return "grid grid-cols-2 gap-2";
+    } else if (variantCount === 3) {
+      return "grid grid-cols-3 gap-2";
+    } else if (variantCount === 4) {
+      return "grid grid-cols-2 gap-2"; // 2x2 grid
+    } else if (variantCount <= 6) {
+      return "grid grid-cols-3 gap-2"; // 3x2 grid
+    } else {
+      return "grid grid-cols-4 gap-2"; // 4x? grid for larger counts
+    }
+  };
+
   return (
     <div className="mt-4 mb-4">
-      <div className="grid grid-cols-2 gap-2">
+      <div className={getGridClass(variants.length)}>
         {variants.map((variant, index) => {
           // Determine the status indicator
           let statusIndicator = null;
