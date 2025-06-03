@@ -340,9 +340,19 @@ class ModelSelectionStage:
         else:
             claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
-        # Define model arrays to cycle through
+        # Gemini only works for create right now
+        if generation_type == "create":
+            gemini_model = Llm.GEMINI_2_0_FLASH
+        else:
+            gemini_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
+
+        # Define models based on available API keys
         if openai_api_key and anthropic_api_key and gemini_api_key:
-            models = [Llm.GPT_4_1_2025_04_14, claude_model, Llm.GEMINI_2_0_FLASH]
+            models = [
+                Llm.GPT_4_1_2025_04_14,
+                claude_model,
+                gemini_model,
+            ]
         elif openai_api_key and anthropic_api_key:
             models = [claude_model, Llm.GPT_4_1_2025_04_14]
         elif anthropic_api_key:
