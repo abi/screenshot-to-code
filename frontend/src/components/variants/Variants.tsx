@@ -6,29 +6,20 @@ function Variants() {
   const { inputMode, head, commits, updateSelectedVariantIndex } =
     useProjectStore();
 
-  // If there is no head, don't show the variants
-  if (head === null) {
-    return null;
-  }
-
-  const commit = commits[head];
-  const variants = commit.variants;
-  const selectedVariantIndex = commit.selectedVariantIndex;
-
-  // If there is only one variant or the commit is already committed, don't show the variants
-  if (variants.length <= 1 || commit.isCommitted || inputMode === "video") {
-    return <div className="mt-2"></div>;
-  }
+  // Get commit data safely
+  const commit = head ? commits[head] : null;
+  const variants = commit?.variants || [];
+  const selectedVariantIndex = commit?.selectedVariantIndex || 0;
 
   const handleVariantClick = (index: number) => {
-    // Don't do anything if this is already the selected variant
-    if (index === selectedVariantIndex) return;
+    // Don't do anything if this is already the selected variant or no head
+    if (index === selectedVariantIndex || !head) return;
 
     // First update the UI to show we're switching variants
     updateSelectedVariantIndex(head, index);
   };
 
-  // Add keyboard shortcuts for variant switching
+  // Add keyboard shortcuts for variant switching - MUST be before any early returns
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Handle Option + number keys 1-9 using key codes (works even when in input fields)
@@ -40,6 +31,7 @@ function Variants() {
           
           // Only switch if the variant exists and component is visible
           if (
+            commit &&
             variantIndex < variants.length &&
             variants.length > 1 &&
             !commit.isCommitted
@@ -53,7 +45,18 @@ function Variants() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [variants.length, commit.isCommitted, selectedVariantIndex, head]);
+  }, [variants.length, commit?.isCommitted, selectedVariantIndex, head]);
+
+  // Early returns after all hooks
+  // If there is no head, don't show the variants
+  if (head === null || !commit) {
+    return null;
+  }
+
+  // If there is only one variant or the commit is already committed, don't show the variants
+  if (variants.length <= 1 || commit.isCommitted || inputMode === "video") {
+    return <div className="mt-2"></div>;
+  }
 
   // Dynamic grid layout based on variant count
   const getGridClass = (variantCount: number) => {
