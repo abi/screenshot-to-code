@@ -21,8 +21,10 @@ class PaymentMethod(Enum):
 async def send_to_saas_backend(
     user_id: str,
     prompt_messages: List[ChatCompletionMessageParam],
-    completions: list[Completion],
-    llm_versions: list[Llm],
+    completion: str,
+    duration: float,
+    llm_version: Llm,
+    generation_group_id: str,
     payment_method: PaymentMethod,
     stack: Stack,
     is_imported_from_code: bool,
@@ -37,9 +39,11 @@ async def send_to_saas_backend(
                 {
                     "user_id": user_id,
                     "prompt": json.dumps(prompt_messages),
-                    "completions": completions,
+                    "completion": completion,
+                    "duration": duration,
+                    "llm_version": llm_version.value,
+                    "generation_group_id": generation_group_id,
                     "payment_method": payment_method.value,
-                    "llm_versions": [llm_version.value for llm_version in llm_versions],
                     "stack": stack,
                     "is_imported_from_code": is_imported_from_code,
                     "includes_result_image": False,  # Deprecated

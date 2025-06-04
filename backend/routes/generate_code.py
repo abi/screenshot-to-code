@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import traceback
+from nanoid import generate
 from typing import Callable, Awaitable
 from fastapi import APIRouter, WebSocket
 import openai
@@ -85,6 +86,7 @@ class PipelineContext:
     completions: List[str] = field(default_factory=list)
     variant_completions: Dict[int, str] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    generation_group_id: str = field(default_factory=generate)
 
     @property
     def send_message(self):
@@ -587,6 +589,7 @@ class ParallelGenerationStage:
     input_mode: InputMode
     generation_type: Literal["create", "update"]
     is_imported_from_code: bool
+    generation_group_id: str
 
     def __init__(
         self,
@@ -603,6 +606,7 @@ class ParallelGenerationStage:
         input_mode: InputMode,
         generation_type: Literal["create", "update"],
         is_imported_from_code: bool,
+        generation_group_id: str,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -617,6 +621,7 @@ class ParallelGenerationStage:
         self.input_mode = input_mode
         self.generation_type = generation_type
         self.is_imported_from_code = is_imported_from_code
+        self.generation_group_id = generation_group_id
 
     async def process_variants(
         self,
@@ -859,9 +864,11 @@ class ParallelGenerationStage:
                         await send_to_saas_backend(
                             user_id=self.user_id,
                             prompt_messages=prompt_messages,
-                            completions=[completion],
+                            completion=completion["code"],
+                            duration=completion["duration"],
+                            llm_version=model,
+                            generation_group_id=self.generation_group_id,
                             payment_method=self.payment_method,
-                            llm_versions=[model],
                             stack=self.stack,
                             is_imported_from_code=self.is_imported_from_code,
                             input_mode=self.input_mode,
@@ -1024,6 +1031,7 @@ class CodeGenerationMiddleware(Middleware):
                         input_mode=context.extracted_params.input_mode,
                         generation_type=context.extracted_params.generation_type,
                         is_imported_from_code=context.extracted_params.is_imported_from_code,
+                        generation_group_id=context.generation_group_id,
                     )
 
                     context.variant_completions = (
