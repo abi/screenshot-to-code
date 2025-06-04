@@ -369,6 +369,7 @@ class ModelSelectionStage:
     async def select_models(
         self,
         generation_type: Literal["create", "update"],
+        input_mode: InputMode,
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
@@ -377,6 +378,7 @@ class ModelSelectionStage:
         try:
             variant_models = self._get_variant_models(
                 generation_type,
+                input_mode,
                 NUM_VARIANTS,
                 openai_api_key,
                 anthropic_api_key,
@@ -400,6 +402,7 @@ class ModelSelectionStage:
     def _get_variant_models(
         self,
         generation_type: Literal["create", "update"],
+        input_mode: InputMode,
         num_variants: int,
         openai_api_key: str | None,
         anthropic_api_key: str | None,
@@ -413,18 +416,23 @@ class ModelSelectionStage:
         else:
             claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
-        # Gemini only works for create right now
-        if generation_type == "create":
-            gemini_model = Llm.GEMINI_2_0_FLASH
+        # For text input mode, use Claude 4 Sonnet as third option
+        # For other input modes (image/video), use Gemini as third option
+        if input_mode == "text":
+            third_model = Llm.CLAUDE_4_SONNET_2025_05_14
         else:
-            gemini_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
+            # Gemini only works for create right now
+            if generation_type == "create":
+                third_model = Llm.GEMINI_2_0_FLASH
+            else:
+                third_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
 
         # Define models based on available API keys
-        if openai_api_key and anthropic_api_key and gemini_api_key:
+        if openai_api_key and anthropic_api_key and (gemini_api_key or input_mode == "text"):
             models = [
                 Llm.GPT_4_1_2025_04_14,
                 claude_model,
-                gemini_model,
+                third_model,
             ]
         elif openai_api_key and anthropic_api_key:
             models = [claude_model, Llm.GPT_4_1_2025_04_14]
@@ -1014,6 +1022,7 @@ class CodeGenerationMiddleware(Middleware):
                     model_selector = ModelSelectionStage(context.throw_error)
                     context.variant_models = await model_selector.select_models(
                         generation_type=context.extracted_params.generation_type,
+                        input_mode=context.extracted_params.input_mode,
                         openai_api_key=context.extracted_params.openai_api_key,
                         anthropic_api_key=context.extracted_params.anthropic_api_key,
                         gemini_api_key=context.extracted_params.gemini_api_key,
