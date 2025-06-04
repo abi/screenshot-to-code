@@ -574,6 +574,20 @@ class PostProcessingStage:
 class ParallelGenerationStage:
     """Handles parallel variant generation with independent processing for each variant"""
 
+    # Type annotations for class attributes
+    send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]]
+    openai_api_key: str | None
+    openai_base_url: str | None
+    anthropic_api_key: str | None
+    gemini_api_key: str | None
+    should_generate_images: bool
+    user_id: str
+    payment_method: PaymentMethod
+    stack: Stack
+    input_mode: InputMode
+    generation_type: Literal["create", "update"]
+    is_imported_from_code: bool
+
     def __init__(
         self,
         send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
