@@ -38,7 +38,7 @@ from typing import (
 )
 from openai.types.chat import ChatCompletionMessageParam
 
-from routes.logging_utils import PaymentMethod
+from routes.logging_utils import PaymentMethod, send_to_saas_backend
 from routes.saas_utils import does_user_have_subscription_credits
 
 # WebSocket message types
@@ -212,6 +212,7 @@ class ExtractedParams:
     openai_base_url: str | None
     payment_method: PaymentMethod
     generation_type: Literal["create", "update"]
+    is_imported_from_code: bool
 
 
 class ParameterExtractionStage:
@@ -324,6 +325,9 @@ class ParameterExtractionStage:
             raise ValueError(f"Invalid generation type: {generation_type}")
         generation_type = cast(Literal["create", "update"], generation_type)
 
+        # Extract is_imported_from_code flag
+        is_imported_from_code = bool(params.get("isImportedFromCode", False))
+
         return ExtractedParams(
             user_id=user_id,
             stack=validated_stack,
@@ -335,6 +339,7 @@ class ParameterExtractionStage:
             openai_base_url=openai_base_url,
             payment_method=payment_method,
             generation_type=generation_type,
+            is_imported_from_code=is_imported_from_code,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -577,6 +582,13 @@ class ParallelGenerationStage:
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
         should_generate_images: bool,
+        # SaaS logging parameters
+        user_id: str,
+        payment_method: PaymentMethod,
+        stack: Stack,
+        input_mode: InputMode,
+        generation_type: Literal["create", "update"],
+        is_imported_from_code: bool,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -584,6 +596,13 @@ class ParallelGenerationStage:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
+        # SaaS logging data
+        self.user_id = user_id
+        self.payment_method = payment_method
+        self.stack = stack
+        self.input_mode = input_mode
+        self.generation_type = generation_type
+        self.is_imported_from_code = is_imported_from_code
 
     async def process_variants(
         self,
@@ -607,7 +626,12 @@ class ParallelGenerationStage:
         # Process each variant independently
         variant_processors = [
             self._process_variant_completion(
-                index, task, variant_models[index], image_cache, variant_completions
+                index,
+                task,
+                variant_models[index],
+                image_cache,
+                variant_completions,
+                prompt_messages,
             )
             for index, task in variant_tasks.items()
         ]
@@ -788,6 +812,7 @@ class ParallelGenerationStage:
         model: Llm,
         image_cache: Dict[str, str],
         variant_completions: Dict[int, str],
+        prompt_messages: List[ChatCompletionMessageParam],
     ):
         """Process a single variant completion including image generation"""
         try:
@@ -813,6 +838,25 @@ class ParallelGenerationStage:
                     "Variant generation complete",
                     index,
                 )
+
+                # Log to SaaS backend in production
+                if IS_PROD:
+                    try:
+                        await send_to_saas_backend(
+                            user_id=self.user_id,
+                            prompt_messages=prompt_messages,
+                            completions=[completion],
+                            payment_method=self.payment_method,
+                            llm_versions=[model],
+                            stack=self.stack,
+                            is_imported_from_code=self.is_imported_from_code,
+                            includes_result_image=False,  # TODO: Remove this completely
+                            input_mode=self.input_mode,
+                            other_info={"generation_type": self.generation_type},
+                        )
+                    except Exception as e:
+                        print("Error sending to SaaS backend", e)
+                        sentry_sdk.capture_exception(e)
             except Exception as inner_e:
                 # If websocket is closed or other error during post-processing
                 print(f"Post-processing error for variant {index}: {inner_e}")
@@ -829,25 +873,6 @@ class ParallelGenerationStage:
 
 
 # Pipeline Middleware Implementations
-
-# if IS_PROD:
-# # Catch any errors from sending to SaaS backend and continue
-# try:
-#     await send_to_saas_backend(
-#         user_id,
-#         prompt_messages,
-#         completion_objs,
-#         payment_method=payment_method,
-#         llm_versions=variant_models,
-#         stack=stack,
-#         is_imported_from_code=bool(params.get("isImportedFromCode", False)),
-#         includes_result_image=bool(params.get("resultImage", False)),
-#         input_mode=input_mode,
-#         other_info={"generation_type": generation_type},
-#     )
-# except Exception as e:
-#     print("Error sending to SaaS backend", e)
-#     sentry_sdk.capture_exception(e)
 
 
 class WebSocketSetupMiddleware(Middleware):
@@ -885,7 +910,7 @@ class ParameterExtractionMiddleware(Middleware):
             )
         except Exception as e:
             await context.throw_error(f"An unexpected error occurred: {str(e)}")
-            return  # Don't continue the pipeline
+            raise e
 
         # Log what we're generating
         print(
@@ -979,6 +1004,13 @@ class CodeGenerationMiddleware(Middleware):
                         anthropic_api_key=context.extracted_params.anthropic_api_key,
                         gemini_api_key=context.extracted_params.gemini_api_key,
                         should_generate_images=context.extracted_params.should_generate_images,
+                        # SaaS logging parameters
+                        user_id=context.extracted_params.user_id,
+                        payment_method=context.extracted_params.payment_method,
+                        stack=context.extracted_params.stack,
+                        input_mode=context.extracted_params.input_mode,
+                        generation_type=context.extracted_params.generation_type,
+                        is_imported_from_code=context.extracted_params.is_imported_from_code,
                     )
 
                     context.variant_completions = (
