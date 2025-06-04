@@ -30,7 +30,7 @@ We also just added experimental support for taking a video/screen recording of a
 
 [Follow me on Twitter for updates](https://twitter.com/_abi_).
 
-## 🌍  Hosted Version
+## 🌍 Hosted Version
 
 [Try it live on the hosted version (paid)](https://screenshottocode.com).
 
@@ -45,7 +45,7 @@ Keys needed:
 
 If you'd like to run the app with Ollama open source models (not recommended due to poor quality results), [follow this comment](https://github.com/abi/screenshot-to-code/issues/354#issuecomment-2435479853).
 
-Run the backend (I use Poetry for package management - `pip install poetry` if you don't have it):
+Run the backend (I use Poetry for package management - `pip install --upgrade poetry` if you don't have it):
 
 ```bash
 cd backend
@@ -55,6 +55,7 @@ poetry install
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
 ```
+
 You can also set up the keys using the settings dialog on the front-end (click the gear icon after loading the frontend).
 
 Run the frontend:
