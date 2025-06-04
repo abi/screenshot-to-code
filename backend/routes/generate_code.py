@@ -562,6 +562,9 @@ class PostProcessingStage:
         websocket: WebSocket,
     ) -> None:
         """Process completions and perform cleanup"""
+        if IS_PROD:
+            return
+
         # Only process non-empty completions
         valid_completions = [comp for comp in completions if comp]
 
