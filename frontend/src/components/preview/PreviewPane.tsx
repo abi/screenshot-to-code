@@ -89,7 +89,11 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
           />
         </TabsContent>
         <TabsContent value="code">
-          <CodeTab code={previewCode} setCode={() => {}} settings={settings} />
+          <CodeTab 
+            code={previewCode} 
+            setCode={() => {}} 
+            settings={settings} 
+          />
         </TabsContent>
       </Tabs>
     </div>

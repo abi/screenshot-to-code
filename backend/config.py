@@ -3,7 +3,7 @@
 # TODO: Should only be set to true when value is 'True', not any abitrary truthy value
 import os
 
-NUM_VARIANTS = 2
+NUM_VARIANTS = 4
 
 # LLM-related
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)

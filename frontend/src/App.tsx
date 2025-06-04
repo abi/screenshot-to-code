@@ -63,6 +63,8 @@ function App({ navbarComponent }: Props) {
     setCommitCode,
     resetCommits,
     resetHead,
+    updateVariantStatus,
+    resizeVariants,
 
     // Outputs
     appendExecutionConsole,
@@ -199,7 +201,7 @@ function App({ navbarComponent }: Props) {
     // Reset the execution console
     resetExecutionConsoles();
 
-    // Set the app state
+    // Set the app state to coding during generation
     setAppState(AppState.CODING);
 
     // Merge settings with params
@@ -210,8 +212,12 @@ function App({ navbarComponent }: Props) {
       authToken: authToken || undefined,
     };
 
+    // Create variants dynamically - start with 4 to handle most cases
+    // Backend will use however many it needs (typically 3)
     const baseCommitObject = {
-      variants: [{ code: "" }, { code: "" }],
+      variants: Array(4)
+        .fill(null)
+        .map(() => ({ code: "" })),
     };
 
     const commitInputObject =
@@ -238,29 +244,35 @@ function App({ navbarComponent }: Props) {
     addCommit(commit);
     setHead(commit.hash);
 
-    generateCode(
-      wsRef,
-      updatedParams,
-      // On change
-      (token, variantIndex) => {
+    generateCode(wsRef, updatedParams, {
+      onChange: (token, variantIndex) => {
         appendCommitCode(commit.hash, variantIndex, token);
       },
-      // On set code
-      (code, variantIndex) => {
+      onSetCode: (code, variantIndex) => {
         setCommitCode(commit.hash, variantIndex, code);
       },
-      // On status update
-      (line, variantIndex) => appendExecutionConsole(variantIndex, line),
-      // On cancel
-      () => {
+      onStatusUpdate: (line, variantIndex) =>
+        appendExecutionConsole(variantIndex, line),
+      onVariantComplete: (variantIndex) => {
+        console.log(`Variant ${variantIndex} complete event received`);
+        updateVariantStatus(commit.hash, variantIndex, "complete");
+      },
+      onVariantError: (variantIndex, error) => {
+        console.error(`Error in variant ${variantIndex}:`, error);
+        updateVariantStatus(commit.hash, variantIndex, "error", error);
+      },
+      onVariantCount: (count) => {
+        console.log(`Backend is using ${count} variants`);
+        resizeVariants(commit.hash, count);
+      },
+      onCancel: () => {
         cancelCodeGenerationAndReset(commit);
       },
-      // On complete
-      () => {
+      onComplete: () => {
         addEvent("CreateSuccessful");
         setAppState(AppState.CODE_READY);
-      }
-    );
+      },
+    });
   }
 
   // Initial version creation

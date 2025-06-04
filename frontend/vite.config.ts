@@ -15,7 +15,9 @@ export default ({ mode }) => {
     },
     plugins: [
       react(),
-      checker({ typescript: true }),
+      checker({ 
+        typescript: true
+      }),
       createHtmlPlugin({
         inject: {
           data: {

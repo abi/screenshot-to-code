@@ -12,19 +12,33 @@ const ERROR_MESSAGE =
 const CANCEL_MESSAGE = "Code generation cancelled";
 
 type WebSocketResponse = {
-  type: "chunk" | "status" | "setCode" | "error";
+  type:
+    | "chunk"
+    | "status"
+    | "setCode"
+    | "error"
+    | "variantComplete"
+    | "variantError"
+    | "variantCount";
   value: string;
   variantIndex: number;
 };
 
+interface CodeGenerationCallbacks {
+  onChange: (chunk: string, variantIndex: number) => void;
+  onSetCode: (code: string, variantIndex: number) => void;
+  onStatusUpdate: (status: string, variantIndex: number) => void;
+  onVariantComplete: (variantIndex: number) => void;
+  onVariantError: (variantIndex: number, error: string) => void;
+  onVariantCount: (count: number) => void;
+  onCancel: () => void;
+  onComplete: () => void;
+}
+
 export function generateCode(
   wsRef: React.MutableRefObject<WebSocket | null>,
   params: FullGenerationSettings,
-  onChange: (chunk: string, variantIndex: number) => void,
-  onSetCode: (code: string, variantIndex: number) => void,
-  onStatusUpdate: (status: string, variantIndex: number) => void,
-  onCancel: () => void,
-  onComplete: () => void
+  callbacks: CodeGenerationCallbacks
 ) {
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
@@ -39,11 +53,17 @@ export function generateCode(
   ws.addEventListener("message", async (event: MessageEvent) => {
     const response = JSON.parse(event.data) as WebSocketResponse;
     if (response.type === "chunk") {
-      onChange(response.value, response.variantIndex);
+      callbacks.onChange(response.value, response.variantIndex);
     } else if (response.type === "status") {
-      onStatusUpdate(response.value, response.variantIndex);
+      callbacks.onStatusUpdate(response.value, response.variantIndex);
     } else if (response.type === "setCode") {
-      onSetCode(response.value, response.variantIndex);
+      callbacks.onSetCode(response.value, response.variantIndex);
+    } else if (response.type === "variantComplete") {
+      callbacks.onVariantComplete(response.variantIndex);
+    } else if (response.type === "variantError") {
+      callbacks.onVariantError(response.variantIndex, response.value);
+    } else if (response.type === "variantCount") {
+      callbacks.onVariantCount(parseInt(response.value));
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
       toast.error(response.value);
@@ -54,16 +74,16 @@ export function generateCode(
     console.log("Connection closed", event.code, event.reason);
     if (event.code === USER_CLOSE_WEB_SOCKET_CODE) {
       toast.success(CANCEL_MESSAGE);
-      onCancel();
+      callbacks.onCancel();
     } else if (event.code === APP_ERROR_WEB_SOCKET_CODE) {
       console.error("Known server error", event);
-      onCancel();
+      callbacks.onCancel();
     } else if (event.code !== 1000) {
       console.error("Unknown server or connection error", event);
       toast.error(ERROR_MESSAGE);
-      onCancel();
+      callbacks.onCancel();
     } else {
-      onComplete();
+      callbacks.onComplete();
     }
   });
 

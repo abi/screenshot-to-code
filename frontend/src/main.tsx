@@ -47,11 +47,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Router>
         <Routes>
           <Route path="/" element={<AppContainer />} />
-          <Route path="/all-evals" element={<AllEvalsPage />} />
-          <Route path="/evals" element={<EvalsPage />} />
-          <Route path="/pairwise-evals" element={<PairwiseEvalsPage />} />
-          <Route path="/best-of-n-evals" element={<BestOfNEvalsPage />} />
-          <Route path="/run-evals" element={<RunEvalsPage />} />
+          <Route path="/evals" element={<AllEvalsPage />} />
+          <Route path="/evals/single" element={<EvalsPage />} />
+          <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
+          <Route path="/evals/best-of-n" element={<BestOfNEvalsPage />} />
+          <Route path="/evals/run" element={<RunEvalsPage />} />
 
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/faqs" element={<FaqsPage />} />

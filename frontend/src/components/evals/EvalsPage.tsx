@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { HTTP_BACKEND_URL } from "../../config";
 import RatingPicker from "./RatingPicker";
+import EvalNavigation from "./EvalNavigation";
 
 interface Eval {
   input: string;
@@ -133,6 +134,7 @@ function EvalsPage() {
 
   return (
     <div className="mx-auto">
+      <EvalNavigation />
       <div className="flex flex-col items-center justify-center w-full py-4 bg-zinc-950 text-white">
         <div className="flex flex-col gap-4 mb-4 w-full max-w-2xl px-4">
           <input
