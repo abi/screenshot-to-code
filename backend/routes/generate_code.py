@@ -864,7 +864,6 @@ class ParallelGenerationStage:
                             llm_versions=[model],
                             stack=self.stack,
                             is_imported_from_code=self.is_imported_from_code,
-                            includes_result_image=False,  # TODO: Remove this completely
                             input_mode=self.input_mode,
                             other_info={"generation_type": self.generation_type},
                         )

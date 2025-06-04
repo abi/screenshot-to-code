@@ -26,7 +26,6 @@ async def send_to_saas_backend(
     payment_method: PaymentMethod,
     stack: Stack,
     is_imported_from_code: bool,
-    includes_result_image: bool,
     input_mode: InputMode,
     other_info: dict[str, str | bool] = {},
 ):
@@ -43,7 +42,7 @@ async def send_to_saas_backend(
                     "llm_versions": [llm_version.value for llm_version in llm_versions],
                     "stack": stack,
                     "is_imported_from_code": is_imported_from_code,
-                    "includes_result_image": includes_result_image,
+                    "includes_result_image": False,  # Deprecated
                     "input_mode": input_mode,
                     "other_info": other_info,
                 }
