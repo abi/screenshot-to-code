@@ -46,7 +46,7 @@
     "date-fns": "^4.1.0",
     "html2canvas": "^1.4.1",
     "nanoid": "^5.0.7",
-    "posthog-js": "^1.128.1",
+    "posthog-js": "^1.136.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
