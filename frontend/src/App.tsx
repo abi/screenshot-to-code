@@ -23,6 +23,7 @@ import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
+import GenerateFromText from "./components/generate-from-text/GenerateFromText";
 
 function App() {
   const {
@@ -33,6 +34,8 @@ function App() {
     setIsImportedFromCode,
     referenceImages,
     setReferenceImages,
+    initialPrompt,
+    setInitialPrompt,
 
     head,
     commits,
@@ -139,7 +142,12 @@ function App() {
     }
 
     // Re-run the create
-    doCreate(referenceImages, inputMode);
+    if (inputMode === "image" || inputMode === "video") {
+      doCreate(referenceImages, inputMode);
+    } else {
+      // TODO: Fix this
+      doCreateFromText(initialPrompt);
+    }
   };
 
   // Used when the user cancels the code generation
@@ -256,6 +264,19 @@ function App() {
     }
   }
 
+  function doCreateFromText(text: string) {
+    // Reset any existing state
+    reset();
+
+    setInputMode("text");
+    setInitialPrompt(text);
+    doGenerateCode({
+      generationType: "create",
+      inputMode: "text",
+      image: text,
+    });
+  }
+
   // Subsequent updates
   async function doUpdate(
     updateInstruction: string,
@@ -298,7 +319,7 @@ function App() {
     doGenerateCode({
       generationType: "update",
       inputMode,
-      image: referenceImages[0],
+      image: inputMode === "text" ? initialPrompt : referenceImages[0],
       history: updatedHistory,
       isImportedFromCode,
     });
@@ -371,6 +392,10 @@ function App() {
           {/* {appState !== AppState.CODE_READY && <TipLink />} */}
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
+
+          {appState === AppState.INITIAL && (
+            <GenerateFromText doCreateFromText={doCreateFromText} />
+          )}
 
           {/* Rest of the sidebar when we're not in the initial state */}
           {(appState === AppState.CODING ||

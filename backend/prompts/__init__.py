@@ -5,6 +5,7 @@ from custom_types import InputMode
 from image_generation.core import create_alt_url_mapping
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
+from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
 from prompts.types import Stack
 from video.utils import assemble_claude_prompt_video
 
@@ -42,12 +43,23 @@ async def create_prompt(
             prompt_messages.append(message)
     else:
         # Assemble the prompt for non-imported code
-        if params.get("resultImage"):
-            prompt_messages = assemble_prompt(
-                params["image"], stack, params["resultImage"]
-            )
+        if input_mode == "image":
+            if params.get("resultImage"):
+                prompt_messages = assemble_prompt(
+                    params["image"], stack, params["resultImage"]
+                )
+            else:
+                prompt_messages = assemble_prompt(params["image"], stack)
+        elif input_mode == "text":
+            prompt_messages = assemble_text_prompt(params["image"], stack)
         else:
-            prompt_messages = assemble_prompt(params["image"], stack)
+            # Default to image mode for backward compatibility
+            if params.get("resultImage"):
+                prompt_messages = assemble_prompt(
+                    params["image"], stack, params["resultImage"]
+                )
+            else:
+                prompt_messages = assemble_prompt(params["image"], stack)
 
         if params["generationType"] == "update":
             # Transform the history tree into message format
@@ -130,5 +142,24 @@ def assemble_prompt(
         {
             "role": "user",
             "content": user_content,
+        },
+    ]
+
+
+def assemble_text_prompt(
+    text_prompt: str,
+    stack: Stack,
+) -> list[ChatCompletionMessageParam]:
+
+    system_content = TEXT_SYSTEM_PROMPTS[stack]
+
+    return [
+        {
+            "role": "system",
+            "content": system_content,
+        },
+        {
+            "role": "user",
+            "content": "Generate UI for " + text_prompt,
         },
     ]
