@@ -27,94 +27,100 @@ In terms of libraries,
 - Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
 {LIBRARY_INSTRUCTIONS}
 
-{FORMAT_INSTRUCTIONS}"""
-
-REACT_TAILWIND_SYSTEM_PROMPT = f"""
-You are an expert React developer who specializes in Tailwind CSS and creating beautiful, modern web applications.
-
-{GENERAL_INSTRUCTIONS}
-
-In terms of libraries,
-
-- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
-{LIBRARY_INSTRUCTIONS}
-- For icons, use Lucide React: `import {{ IconName }} from "lucide-react"`
-
 {FORMAT_INSTRUCTIONS}
-
-Make sure to include "use client" if the component uses any React hooks."""
-
-BOOTSTRAP_SYSTEM_PROMPT = f"""
-You are an expert Bootstrap developer.
-
-{GENERAL_INSTRUCTIONS}
-
-In terms of libraries,
-
-- Use this link to include Bootstrap: <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-- Use this script to include Bootstrap JS: <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-{LIBRARY_INSTRUCTIONS}
-
-{FORMAT_INSTRUCTIONS}"""
-
-SVG_SYSTEM_PROMPT = f"""
-You are an expert SVG developer who creates beautiful, modern SVG graphics and icons.
-
-Create clean, scalable SVG graphics with proper structure.
-Use appropriate viewBox settings and ensure the SVG is responsive.
-Apply modern design principles with clean lines and appropriate colors.
-
-{FORMAT_INSTRUCTIONS}
-
-Return only the SVG code without any wrapper HTML."""
+"""
 
 HTML_CSS_SYSTEM_PROMPT = f"""
-You are an expert HTML and CSS developer.
+You are an expert HTML, CSS and JS developer.
 
 {GENERAL_INSTRUCTIONS}
 
 In terms of libraries,
-
 {LIBRARY_INSTRUCTIONS}
-
-{FORMAT_INSTRUCTIONS}"""
-
-VUE_TAILWIND_SYSTEM_PROMPT = f"""
-You are an expert Vue developer who specializes in Tailwind CSS and creating beautiful, modern web applications.
-
-{GENERAL_INSTRUCTIONS}
-
-In terms of libraries,
-
-- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
-{LIBRARY_INSTRUCTIONS}
-- For icons, use Lucide Vue: `import {{ IconName }} from "lucide-vue-next"`
 
 {FORMAT_INSTRUCTIONS}
+"""
 
-Make sure to use Vue 3 composition API syntax."""
+REACT_TAILWIND_SYSTEM_PROMPT = f"""
+You are an expert React/Tailwind developer.
+
+{GENERAL_INSTRUCTIONS}
+
+In terms of libraries,
+- Use these script to include React so that it can run on a standalone page:
+    <script src="https://cdn.jsdelivr.net/npm/react@18.0.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.0.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.js"></script>
+- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
+{LIBRARY_INSTRUCTIONS}
+
+{FORMAT_INSTRUCTIONS}
+"""
+
+BOOTSTRAP_SYSTEM_PROMPT = f"""
+You are an expert Bootstrap, HTML and JS developer.
+
+{GENERAL_INSTRUCTIONS}
+
+In terms of libraries,
+- Use this script to include Bootstrap: <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+{LIBRARY_INSTRUCTIONS}
+
+{FORMAT_INSTRUCTIONS}
+"""
 
 IONIC_TAILWIND_SYSTEM_PROMPT = f"""
-You are an expert Ionic developer who specializes in Tailwind CSS and creating beautiful, modern mobile applications.
+You are an expert Ionic/Tailwind developer.
 
 {GENERAL_INSTRUCTIONS}
 
 In terms of libraries,
-
+- Use these script to include Ionic so that it can run on a standalone page:
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
 - Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
-- Use Ionic components like ion-content, ion-header, ion-toolbar, ion-title, ion-button, etc.
+- You can use Google Fonts
+- ionicons for icons, add the following <script > tags near the end of the page, right before the closing </body> tag:
+    <script type="module">
+        import ionicons from 'https://cdn.jsdelivr.net/npm/ionicons/+esm'
+    </script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons/dist/esm/ionicons.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/ionicons/dist/collection/components/icon/icon.min.css" rel="stylesheet">
+
+{FORMAT_INSTRUCTIONS}
+"""
+
+VUE_TAILWIND_SYSTEM_PROMPT = f"""
+You are an expert Vue/Tailwind developer.
+
+{GENERAL_INSTRUCTIONS}
+
+In terms of libraries,
+- Use these script to include Vue so that it can run on a standalone page:
+  <script src="https://registry.npmmirror.com/vue/3.3.11/files/dist/vue.global.js"></script>
+- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
 {LIBRARY_INSTRUCTIONS}
 
 {FORMAT_INSTRUCTIONS}
+"""
 
-Make sure to wrap the content in ion-app, ion-content components as needed."""
+SVG_SYSTEM_PROMPT = f"""
+You are an expert at building SVGs.
 
-SYSTEM_PROMPTS: SystemPrompts = {
-    "html_css": HTML_CSS_SYSTEM_PROMPT,
-    "html_tailwind": HTML_TAILWIND_SYSTEM_PROMPT,
-    "react_tailwind": REACT_TAILWIND_SYSTEM_PROMPT,
-    "bootstrap": BOOTSTRAP_SYSTEM_PROMPT,
-    "ionic_tailwind": IONIC_TAILWIND_SYSTEM_PROMPT,
-    "vue_tailwind": VUE_TAILWIND_SYSTEM_PROMPT,
-    "svg": SVG_SYSTEM_PROMPT,
-}
+{GENERAL_INSTRUCTIONS}
+
+Return only the full code in <svg></svg> tags.
+Do not include markdown "```" or "```svg" at the start or end.
+"""
+
+
+SYSTEM_PROMPTS = SystemPrompts(
+    html_css=HTML_CSS_SYSTEM_PROMPT,
+    html_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
+    react_tailwind=REACT_TAILWIND_SYSTEM_PROMPT,
+    bootstrap=BOOTSTRAP_SYSTEM_PROMPT,
+    ionic_tailwind=IONIC_TAILWIND_SYSTEM_PROMPT,
+    vue_tailwind=VUE_TAILWIND_SYSTEM_PROMPT,
+    svg=SVG_SYSTEM_PROMPT,
+)
