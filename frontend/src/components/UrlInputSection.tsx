@@ -70,6 +70,11 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
         placeholder="Enter URL"
         onChange={(e) => setReferenceUrl(e.target.value)}
         value={referenceUrl}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !isLoading) {
+            takeScreenshot();
+          }
+        }}
       />
       <Button
         onClick={takeScreenshot}
