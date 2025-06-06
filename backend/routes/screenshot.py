@@ -17,13 +17,22 @@ def normalize_url(url: str) -> str:
     # Parse the URL
     parsed = urlparse(url)
     
-    # If no scheme (protocol) is provided, add https://
+    # Check if we have a scheme
     if not parsed.scheme:
-        # Handle cases like "example.com" or "www.example.com"
+        # No scheme, add https://
         url = f"https://{url}"
-    elif parsed.scheme not in ['http', 'https']:
-        # Only allow http and https protocols
-        raise ValueError(f"Unsupported protocol: {parsed.scheme}")
+    elif parsed.scheme in ['http', 'https']:
+        # Valid scheme, keep as is
+        pass
+    else:
+        # Check if this might be a domain with port (like example.com:8080)
+        # urlparse treats this as scheme:netloc, but we want to handle it as domain:port
+        if ':' in url and not url.startswith(('http://', 'https://', 'ftp://', 'file://')):
+            # Likely a domain:port without protocol
+            url = f"https://{url}"
+        else:
+            # Invalid protocol
+            raise ValueError(f"Unsupported protocol: {parsed.scheme}")
     
     return url
 
