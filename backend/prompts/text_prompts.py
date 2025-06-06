@@ -57,22 +57,6 @@ In terms of libraries,
 
 {FORMAT_INSTRUCTIONS}"""
 
-IONIC_REACT_SYSTEM_PROMPT = f"""
-You are an expert Ionic React developer who specializes in creating beautiful, modern mobile applications.
-
-{GENERAL_INSTRUCTIONS}
-
-In terms of libraries,
-
-- Use Ionic React components like IonContent, IonHeader, IonToolbar, IonTitle, IonButton, etc.
-- Use this CSS import: <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
-- Use this script import: <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
-{LIBRARY_INSTRUCTIONS}
-
-{FORMAT_INSTRUCTIONS}
-
-Make sure to wrap the content in IonApp, IonContent components as needed."""
-
 SVG_SYSTEM_PROMPT = f"""
 You are an expert SVG developer who creates beautiful, modern SVG graphics and icons.
 
@@ -131,7 +115,6 @@ SYSTEM_PROMPTS: SystemPrompts = {
     "react_tailwind": REACT_TAILWIND_SYSTEM_PROMPT,
     "bootstrap": BOOTSTRAP_SYSTEM_PROMPT,
     "ionic_tailwind": IONIC_TAILWIND_SYSTEM_PROMPT,
-    "ionic_react": IONIC_REACT_SYSTEM_PROMPT,
     "vue_tailwind": VUE_TAILWIND_SYSTEM_PROMPT,
     "svg": SVG_SYSTEM_PROMPT,
 }
