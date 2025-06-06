@@ -4,7 +4,6 @@ from typing import Literal, TypedDict
 class SystemPrompts(TypedDict):
     html_css: str
     html_tailwind: str
-    html_tailwind_thinking: str
     react_tailwind: str
     bootstrap: str
     ionic_tailwind: str

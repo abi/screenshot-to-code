@@ -29,29 +29,6 @@ In terms of libraries,
 
 {FORMAT_INSTRUCTIONS}"""
 
-HTML_TAILWIND_SYSTEM_PROMPT_WITH_THINKING = f"""
-<thinking>
-First, I need to understand what the user is asking for. They want me to create a UI based on their text description. I should think about:
-1. What type of UI component or page they're describing
-2. What layout would work best
-3. What interactive elements might be needed
-4. How to make it look modern and professional
-5. What colors, fonts, and spacing to use
-
-Then I'll create the HTML with Tailwind CSS classes following the guidelines.
-</thinking>
-
-You are an expert Tailwind developer.
-
-{GENERAL_INSTRUCTIONS}
-
-In terms of libraries,
-
-- Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
-{LIBRARY_INSTRUCTIONS}
-
-{FORMAT_INSTRUCTIONS}"""
-
 REACT_TAILWIND_SYSTEM_PROMPT = f"""
 You are an expert React developer who specializes in Tailwind CSS and creating beautiful, modern web applications.
 
@@ -151,7 +128,6 @@ Make sure to wrap the content in ion-app, ion-content components as needed."""
 SYSTEM_PROMPTS: SystemPrompts = {
     "html_css": HTML_CSS_SYSTEM_PROMPT,
     "html_tailwind": HTML_TAILWIND_SYSTEM_PROMPT,
-    "html_tailwind_thinking": HTML_TAILWIND_SYSTEM_PROMPT_WITH_THINKING,
     "react_tailwind": REACT_TAILWIND_SYSTEM_PROMPT,
     "bootstrap": BOOTSTRAP_SYSTEM_PROMPT,
     "ionic_tailwind": IONIC_TAILWIND_SYSTEM_PROMPT,
