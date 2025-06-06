@@ -1,0 +1,1 @@
+- enter should trigger generation in URL textbox
