@@ -204,7 +204,9 @@ function App() {
             ...baseCommitObject,
             type: "ai_edit" as const,
             parentHash: head,
-            inputs: params.prompt,
+            inputs: params.history
+              ? params.history[params.history.length - 1]
+              : { text: "", images: [] },
           };
 
     // Create a new commit and set it as the head
