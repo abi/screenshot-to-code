@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Any
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
 from custom_types import InputMode
@@ -6,7 +6,7 @@ from image_generation.core import create_alt_url_mapping
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
 from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
-from prompts.types import Stack
+from prompts.types import Stack, PromptContent
 from video.utils import assemble_claude_prompt_video
 
 
@@ -20,67 +20,59 @@ Generate code for a SVG that looks exactly like this.
 
 
 async def create_prompt(
-    params: dict[str, str], stack: Stack, input_mode: InputMode
+    params: dict[str, Any], stack: Stack, input_mode: InputMode
 ) -> tuple[list[ChatCompletionMessageParam], dict[str, str]]:
 
     image_cache: dict[str, str] = {}
 
     # If this generation started off with imported code, we need to assemble the prompt differently
     if params.get("isImportedFromCode"):
-        original_imported_code = params["history"][0]
+        original_imported_code = params["history"][0]["text"]
         prompt_messages = assemble_imported_code_prompt(original_imported_code, stack)
-        for index, text in enumerate(params["history"][1:]):
-            if index % 2 == 0:
-                message: ChatCompletionMessageParam = {
-                    "role": "user",
-                    "content": text,
-                }
-            else:
-                message: ChatCompletionMessageParam = {
-                    "role": "assistant",
-                    "content": text,
-                }
+        for index, item in enumerate(params["history"][1:]):
+            role = "user" if index % 2 == 0 else "assistant"
+            message: ChatCompletionMessageParam = {
+                "role": role,
+                "content": item["text"],
+            }
             prompt_messages.append(message)
     else:
         # Assemble the prompt for non-imported code
+        prompt: PromptContent = params["prompt"]
         if input_mode == "image":
+            image_url = prompt["images"][0]
             if params.get("resultImage"):
                 prompt_messages = assemble_prompt(
-                    params["image"], stack, params["resultImage"]
+                    image_url, stack, params["resultImage"]
                 )
             else:
-                prompt_messages = assemble_prompt(params["image"], stack)
+                prompt_messages = assemble_prompt(image_url, stack)
         elif input_mode == "text":
-            prompt_messages = assemble_text_prompt(params["image"], stack)
+            prompt_messages = assemble_text_prompt(prompt["text"], stack)
         else:
             # Default to image mode for backward compatibility
+            image_url = prompt["images"][0]
             if params.get("resultImage"):
                 prompt_messages = assemble_prompt(
-                    params["image"], stack, params["resultImage"]
+                    image_url, stack, params["resultImage"]
                 )
             else:
-                prompt_messages = assemble_prompt(params["image"], stack)
+                prompt_messages = assemble_prompt(image_url, stack)
 
         if params["generationType"] == "update":
             # Transform the history tree into message format
-            # TODO: Move this to frontend
-            for index, text in enumerate(params["history"]):
-                if index % 2 == 0:
-                    message: ChatCompletionMessageParam = {
-                        "role": "assistant",
-                        "content": text,
-                    }
-                else:
-                    message: ChatCompletionMessageParam = {
-                        "role": "user",
-                        "content": text,
-                    }
+            for index, item in enumerate(params["history"]):
+                role = "assistant" if index % 2 == 0 else "user"
+                message: ChatCompletionMessageParam = {
+                    "role": role,
+                    "content": item["text"],
+                }
                 prompt_messages.append(message)
 
-            image_cache = create_alt_url_mapping(params["history"][-2])
+            image_cache = create_alt_url_mapping(params["history"][-2]["text"])
 
     if input_mode == "video":
-        video_data_url = params["image"]
+        video_data_url = params["prompt"]["images"][0]
         prompt_messages = await assemble_claude_prompt_video(video_data_url)
 
     return prompt_messages, image_cache

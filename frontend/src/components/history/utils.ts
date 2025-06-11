@@ -1,21 +1,25 @@
 import { Commit, CommitHash, CommitType } from "../commits/types";
+import { PromptContent } from "../../types";
 
 export function extractHistory(
   hash: CommitHash,
   commits: Record<CommitHash, Commit>
-): string[] {
-  const flatHistory: string[] = [];
+): PromptContent[] {
+  const flatHistory: PromptContent[] = [];
 
   let currentCommitHash: CommitHash | null = hash;
   while (currentCommitHash !== null) {
     const commit: Commit | null = commits[currentCommitHash];
 
     if (commit) {
-      flatHistory.unshift(commit.variants[commit.selectedVariantIndex].code);
+      flatHistory.unshift({
+        text: commit.variants[commit.selectedVariantIndex].code,
+        images: [],
+      });
 
       // For edits, add the prompt to the history
       if (commit.type === "ai_edit") {
-        flatHistory.unshift(commit.inputs.prompt);
+        flatHistory.unshift(commit.inputs);
       }
 
       // Move to the parent of the current item
@@ -65,7 +69,7 @@ export function summarizeHistoryItem(commit: Commit) {
     case "ai_create":
       return "Create";
     case "ai_edit":
-      return commit.inputs.prompt;
+      return commit.inputs.text;
     case "code_create":
       return "Imported from code";
     default: {
