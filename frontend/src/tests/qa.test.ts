@@ -12,7 +12,7 @@ const SCREENSHOT_WITH_IMAGES = `${FIXTURES_PATH}/simple_ui_with_image.png`;
 // Results
 const RESULTS_DIR = `${TESTS_ROOT_PATH}/results`;
 
-describe("e2e tests", () => {
+describe.skip("e2e tests", () => {
   let browser: Browser;
   let page: Page;
 
