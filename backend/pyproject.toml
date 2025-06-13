@@ -27,6 +27,7 @@ google-genai = "^1.16.1"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
 pyright = "^1.1.352"
+pytest-asyncio = "^0.21"
 
 [build-system]
 requires = ["poetry-core"]
