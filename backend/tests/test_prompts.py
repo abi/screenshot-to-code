@@ -1,16 +1,23 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import sys
-from typing import Any
+from typing import Any, Dict, List, TypedDict
+from openai.types.chat import ChatCompletionMessageParam
 
 # Mock moviepy before importing prompts
 sys.modules["moviepy"] = MagicMock()
 sys.modules["moviepy.editor"] = MagicMock()
 
 from prompts import create_prompt
+from prompts.types import Stack
+
+# Type definitions for test structures
+class ExpectedResult(TypedDict):
+    messages: List[ChatCompletionMessageParam]
+    image_cache: Dict[str, str]
 
 
-def assert_structure_match(actual: Any, expected: Any, path: str = "") -> None:
+def assert_structure_match(actual: object, expected: object, path: str = "") -> None:
     """
     Compare actual and expected structures with special markers:
     - <ANY>: Matches any value
@@ -46,17 +53,21 @@ def assert_structure_match(actual: Any, expected: Any, path: str = "") -> None:
         assert isinstance(
             actual, dict
         ), f"At {path}: expected dict, got {type(actual).__name__}"
-        for key, value in expected.items():
-            assert key in actual, f"At {path}: key '{key}' not found in actual"
-            assert_structure_match(actual[key], value, f"{path}.{key}" if path else key)
+        expected_dict: Dict[str, object] = expected
+        actual_dict: Dict[str, object] = actual
+        for key, value in expected_dict.items():
+            assert key in actual_dict, f"At {path}: key '{key}' not found in actual"
+            assert_structure_match(actual_dict[key], value, f"{path}.{key}" if path else key)
     elif isinstance(expected, list):
         assert isinstance(
             actual, list
         ), f"At {path}: expected list, got {type(actual).__name__}"
-        assert len(actual) == len(
-            expected
-        ), f"At {path}: list length mismatch (expected {len(expected)}, got {len(actual)})"
-        for i, (a, e) in enumerate(zip(actual, expected)):
+        expected_list: List[object] = expected
+        actual_list: List[object] = actual
+        assert len(actual_list) == len(
+            expected_list
+        ), f"At {path}: list length mismatch (expected {len(expected_list)}, got {len(actual_list)})"
+        for i, (a, e) in enumerate(zip(actual_list, expected_list)):
             assert_structure_match(a, e, f"{path}[{i}]")
     else:
         # Direct comparison for other types
@@ -67,22 +78,22 @@ class TestCreatePrompt:
     """Test cases for create_prompt function."""
 
     # Test data constants
-    TEST_IMAGE_URL = "data:image/png;base64,test_image_data"
-    RESULT_IMAGE_URL = "data:image/png;base64,result_image_data"
-    MOCK_SYSTEM_PROMPT = "Mock HTML Tailwind system prompt"
-    TEST_STACK = "html_tailwind"
+    TEST_IMAGE_URL: str = "data:image/png;base64,test_image_data"
+    RESULT_IMAGE_URL: str = "data:image/png;base64,result_image_data"
+    MOCK_SYSTEM_PROMPT: str = "Mock HTML Tailwind system prompt"
+    TEST_STACK: Stack = "html_tailwind"
 
     @pytest.mark.asyncio
-    async def test_image_mode_create_single_image(self):
+    async def test_image_mode_create_single_image(self) -> None:
         """Test create generation with single image in image mode."""
         # Setup test data
-        params = {
+        params: Dict[str, Any] = {
             "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
             "generationType": "create",
         }
 
         # Mock the system prompts
-        mock_system_prompts = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
+        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
 
         with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
             # Call the function
@@ -91,7 +102,7 @@ class TestCreatePrompt:
             )
 
             # Define expected structure
-            expected = {
+            expected: ExpectedResult = {
                 "messages": [
                     {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
                     {
@@ -115,21 +126,21 @@ class TestCreatePrompt:
             }
 
             # Assert the structure matches
-            actual = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
-    async def test_image_mode_create_with_result_image(self):
+    async def test_image_mode_create_with_result_image(self) -> None:
         """Test create generation with before/after images in image mode."""
         # Setup test data
-        params = {
+        params: Dict[str, Any] = {
             "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
             "generationType": "create",
             "resultImage": self.RESULT_IMAGE_URL,
         }
 
         # Mock the system prompts
-        mock_system_prompts = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
+        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
 
         with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
             # Call the function
@@ -138,7 +149,7 @@ class TestCreatePrompt:
             )
 
             # Define expected structure
-            expected = {
+            expected: ExpectedResult = {
                 "messages": [
                     {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
                     {
@@ -169,14 +180,14 @@ class TestCreatePrompt:
             }
 
             # Assert the structure matches
-            actual = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
-    async def test_image_mode_update_with_history(self):
+    async def test_image_mode_update_with_history(self) -> None:
         """Test update generation with conversation history in image mode."""
         # Setup test data
-        params = {
+        params: Dict[str, Any] = {
             "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
             "generationType": "update",
             "history": [
@@ -199,7 +210,7 @@ class TestCreatePrompt:
             )
 
             # Define expected structure
-            expected = {
+            expected: ExpectedResult = {
                 "messages": [
                     {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
                     {
@@ -227,15 +238,15 @@ class TestCreatePrompt:
             }
 
             # Assert the structure matches
-            actual = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
-    async def test_text_mode_create_generation(self):
+    async def test_text_mode_create_generation(self) -> None:
         """Test create generation from text description in text mode."""
         # Setup test data
-        text_description = "a modern landing page with hero section"
-        params = {
+        text_description: str = "a modern landing page with hero section"
+        params: Dict[str, Any] = {
             "prompt": {
                 "text": text_description,
                 "images": []
@@ -244,7 +255,7 @@ class TestCreatePrompt:
         }
         
         # Mock the text system prompts
-        mock_text_system_prompts = {
+        mock_text_system_prompts: Dict[str, str] = {
             self.TEST_STACK: "Mock Text System Prompt"
         }
         
@@ -253,7 +264,7 @@ class TestCreatePrompt:
             messages, image_cache = await create_prompt(params, self.TEST_STACK, "text")
             
             # Define expected structure
-            expected = {
+            expected: ExpectedResult = {
                 "messages": [
                     {
                         "role": "system",
@@ -268,15 +279,15 @@ class TestCreatePrompt:
             }
             
             # Assert the structure matches
-            actual = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
-    async def test_text_mode_update_with_history(self):
+    async def test_text_mode_update_with_history(self) -> None:
         """Test update generation with conversation history in text mode."""
         # Setup test data
-        text_description = "a dashboard with charts"
-        params = {
+        text_description: str = "a dashboard with charts"
+        params: Dict[str, Any] = {
             "prompt": {
                 "text": text_description,
                 "images": []
@@ -291,7 +302,7 @@ class TestCreatePrompt:
         }
         
         # Mock the text system prompts and image cache function
-        mock_text_system_prompts = {
+        mock_text_system_prompts: Dict[str, str] = {
             self.TEST_STACK: "Mock Text System Prompt"
         }
         
@@ -301,7 +312,7 @@ class TestCreatePrompt:
             messages, image_cache = await create_prompt(params, self.TEST_STACK, "text")
             
             # Define expected structure
-            expected = {
+            expected: ExpectedResult = {
                 "messages": [
                     {
                         "role": "system",
@@ -332,15 +343,15 @@ class TestCreatePrompt:
             }
             
             # Assert the structure matches
-            actual = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
-    async def test_video_mode_basic_prompt_creation(self):
+    async def test_video_mode_basic_prompt_creation(self) -> None:
         """Test basic video prompt creation in video mode."""
         # Setup test data
-        video_data_url = "data:video/mp4;base64,test_video_data"
-        params = {
+        video_data_url: str = "data:video/mp4;base64,test_video_data"
+        params: Dict[str, Any] = {
             "prompt": {
                 "text": "",
                 "images": [video_data_url]
@@ -349,7 +360,7 @@ class TestCreatePrompt:
         }
         
         # Mock the video processing function
-        mock_video_messages = [
+        mock_video_messages: List[Dict[str, Any]] = [
             {
                 "role": "system",
                 "content": "Mock Video System Prompt"
@@ -384,7 +395,7 @@ class TestCreatePrompt:
             messages, image_cache = await create_prompt(params, self.TEST_STACK, "video")
             
             # Define expected structure
-            expected = {
+            expected: ExpectedResult = {
                 "messages": [
                     {
                         "role": "system",
@@ -418,5 +429,5 @@ class TestCreatePrompt:
             }
             
             # Assert the structure matches
-            actual = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
             assert_structure_match(actual, expected)
