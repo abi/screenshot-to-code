@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Union, Any, cast
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
 from custom_types import InputMode
@@ -31,10 +31,7 @@ async def create_prompt(
         prompt_messages = assemble_imported_code_prompt(original_imported_code, stack)
         for index, item in enumerate(params["history"][1:]):
             role = "user" if index % 2 == 0 else "assistant"
-            message: ChatCompletionMessageParam = {
-                "role": role,
-                "content": item["text"],
-            }
+            message = create_message_from_history_item(item, role)
             prompt_messages.append(message)
     else:
         # Assemble the prompt for non-imported code
@@ -63,10 +60,7 @@ async def create_prompt(
             # Transform the history tree into message format
             for index, item in enumerate(params["history"]):
                 role = "assistant" if index % 2 == 0 else "user"
-                message: ChatCompletionMessageParam = {
-                    "role": role,
-                    "content": item["text"],
-                }
+                message = create_message_from_history_item(item, role)
                 prompt_messages.append(message)
 
             image_cache = create_alt_url_mapping(params["history"][-2]["text"])
@@ -76,6 +70,43 @@ async def create_prompt(
         prompt_messages = await assemble_claude_prompt_video(video_data_url)
 
     return prompt_messages, image_cache
+
+
+def create_message_from_history_item(
+    item: dict[str, Any], role: str
+) -> ChatCompletionMessageParam:
+    """
+    Create a ChatCompletionMessageParam from a history item.
+    Handles both text-only and text+images content.
+    """
+    # Check if this is a user message with images
+    if role == "user" and item.get("images") and len(item["images"]) > 0:
+        # Create multipart content for user messages with images
+        user_content: list[ChatCompletionContentPartParam] = []
+        
+        # Add all images first
+        for image_url in item["images"]:
+            user_content.append({
+                "type": "image_url",
+                "image_url": {"url": image_url, "detail": "high"},
+            })
+        
+        # Add text content
+        user_content.append({
+            "type": "text",
+            "text": item["text"],
+        })
+        
+        return cast(ChatCompletionMessageParam, {
+            "role": role,
+            "content": user_content,
+        })
+    else:
+        # Regular text-only message
+        return cast(ChatCompletionMessageParam, {
+            "role": role,
+            "content": item["text"],
+        })
 
 
 def assemble_imported_code_prompt(
