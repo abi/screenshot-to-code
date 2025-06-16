@@ -8,6 +8,41 @@ def pprint_prompt(prompt_messages: List[ChatCompletionMessageParam]):
     print(json.dumps(truncate_data_strings(prompt_messages), indent=4))
 
 
+def format_prompt_summary(prompt_messages: List[ChatCompletionMessageParam]) -> str:
+    parts: list[str] = []
+    for message in prompt_messages:
+        role = message["role"]
+        content = message["content"]
+        text = ""
+        image_count = 0
+
+        if isinstance(content, list):
+            for item in content:
+                if item["type"] == "text":
+                    text += item["text"] + " "
+                elif item["type"] == "image_url":
+                    image_count += 1
+        else:
+            text = str(content)
+
+        text = text.strip()
+        if len(text) > 40:
+            text = text[:40] + "..."
+
+        img_part = f" + [{image_count} images]" if image_count else ""
+        parts.append(f"{role}: {text}{img_part}")
+
+    return " / ".join(parts)
+
+
+def print_prompt_summary(prompt_messages: List[ChatCompletionMessageParam]):
+    print("-" * 20)
+    print("Prompt summary:")
+    print(format_prompt_summary(prompt_messages))
+    print("-" * 20)
+    print("")
+
+
 def truncate_data_strings(data: List[ChatCompletionMessageParam]):  # type: ignore
     # Deep clone the data to avoid modifying the original object
     cloned_data = copy.deepcopy(data)
