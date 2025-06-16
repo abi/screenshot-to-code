@@ -80,3 +80,40 @@ def test_print_prompt_summary_long_content():
     assert "PROMPT SUMMARY" in output
     assert "SYSTEM:" in output
     assert "USER: short" in output
+
+
+def test_format_prompt_summary_no_truncate():
+    messages = [
+        {"role": "system", "content": "This is a very long message that would normally be truncated at 40 characters but should be shown in full"},
+    ]
+
+    # Test with truncation (default)
+    summary_truncated = format_prompt_summary(messages)
+    assert "..." in summary_truncated
+    assert len(summary_truncated.split(": ", 1)[1]) <= 50  # Role + truncated content
+
+    # Test without truncation
+    summary_full = format_prompt_summary(messages, truncate=False)
+    assert "..." not in summary_full
+    assert "shown in full" in summary_full
+
+
+def test_print_prompt_summary_no_truncate():
+    messages = [
+        {"role": "system", "content": "This is a very long message that would normally be truncated but should be shown in full when truncate=False"},
+    ]
+
+    # Capture stdout
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    
+    print_prompt_summary(messages, truncate=False)
+    
+    # Reset stdout
+    sys.stdout = sys.__stdout__
+    
+    output = captured_output.getvalue()
+    
+    # Check that full content is shown
+    assert "shown in full when truncate=False" in output
+    assert "..." not in output

@@ -402,7 +402,7 @@ class PromptCreationStage:
                 params, stack, input_mode
             )
 
-            print_prompt_summary(prompt_messages)
+            print_prompt_summary(prompt_messages, truncate=False)
 
             return prompt_messages, image_cache
         except Exception:

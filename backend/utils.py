@@ -8,7 +8,7 @@ def pprint_prompt(prompt_messages: List[ChatCompletionMessageParam]):
     print(json.dumps(truncate_data_strings(prompt_messages), indent=4))
 
 
-def format_prompt_summary(prompt_messages: List[ChatCompletionMessageParam]) -> str:
+def format_prompt_summary(prompt_messages: List[ChatCompletionMessageParam], truncate: bool = True) -> str:
     parts: list[str] = []
     for message in prompt_messages:
         role = message["role"]
@@ -26,7 +26,7 @@ def format_prompt_summary(prompt_messages: List[ChatCompletionMessageParam]) -> 
             text = str(content)
 
         text = text.strip()
-        if len(text) > 40:
+        if truncate and len(text) > 40:
             text = text[:40] + "..."
 
         img_part = f" + [{image_count} images]" if image_count else ""
@@ -35,13 +35,15 @@ def format_prompt_summary(prompt_messages: List[ChatCompletionMessageParam]) -> 
     return "\n".join(parts)
 
 
-def print_prompt_summary(prompt_messages: List[ChatCompletionMessageParam]):
-    summary = format_prompt_summary(prompt_messages)
+def print_prompt_summary(prompt_messages: List[ChatCompletionMessageParam], truncate: bool = True):
+    summary = format_prompt_summary(prompt_messages, truncate)
     lines = summary.split('\n')
     
-    # Find the maximum line length, with a minimum of 20 and maximum of 80
+    # Find the maximum line length, with a minimum of 20
+    # If truncating, max is 80, otherwise allow up to 120 for full content
+    max_allowed = 80 if truncate else 120
     max_length = max(len(line) for line in lines) if lines else 20
-    max_length = max(20, min(80, max_length))
+    max_length = max(20, min(max_allowed, max_length))
     
     # Ensure title fits
     title = "PROMPT SUMMARY"
