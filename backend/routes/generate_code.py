@@ -38,6 +38,8 @@ from typing import (
 )
 from openai.types.chat import ChatCompletionMessageParam
 
+from utils import print_prompt_summary
+
 # WebSocket message types
 MessageType = Literal[
     "chunk",
@@ -355,7 +357,11 @@ class ModelSelectionStage:
                 third_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
 
         # Define models based on available API keys
-        if openai_api_key and anthropic_api_key and (gemini_api_key or input_mode == "text"):
+        if (
+            openai_api_key
+            and anthropic_api_key
+            and (gemini_api_key or input_mode == "text")
+        ):
             models = [
                 Llm.GPT_4_1_2025_04_14,
                 claude_model,
@@ -395,6 +401,9 @@ class PromptCreationStage:
             prompt_messages, image_cache = await create_prompt(
                 params, stack, input_mode
             )
+
+            print_prompt_summary(prompt_messages)
+
             return prompt_messages, image_cache
         except Exception:
             await self.throw_error(

@@ -36,7 +36,11 @@ def format_prompt_summary(prompt_messages: List[ChatCompletionMessageParam]) -> 
 
 
 def print_prompt_summary(prompt_messages: List[ChatCompletionMessageParam]):
+    print("-" * 20)
+    print("Prompt summary:")
     print(format_prompt_summary(prompt_messages))
+    print("-" * 20)
+    print("")
 
 
 def truncate_data_strings(data: List[ChatCompletionMessageParam]):  # type: ignore
