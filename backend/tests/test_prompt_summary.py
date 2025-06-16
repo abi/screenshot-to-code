@@ -1,4 +1,3 @@
-import pytest
 from utils import format_prompt_summary
 
 
@@ -9,8 +8,14 @@ def test_format_prompt_summary():
             "role": "user",
             "content": [
                 {"type": "text", "text": "hello world"},
-                {"type": "image_url", "image_url": {"url": "data:image/png;base64,AAA"}},
-                {"type": "image_url", "image_url": {"url": "data:image/png;base64,BBB"}},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png;base64,AAA"},
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png;base64,BBB"},
+                },
             ],
         },
     ]

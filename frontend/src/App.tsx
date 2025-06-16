@@ -57,6 +57,8 @@ function App() {
   const {
     disableInSelectAndEditMode,
     setUpdateInstruction,
+    updateImage,
+    setUpdateImage,
     appState,
     setAppState,
   } = useAppStore();
@@ -314,7 +316,7 @@ function App() {
 
     const updatedHistory = [
       ...historyTree,
-      { text: modifiedUpdateInstruction, images: [] },
+      { text: modifiedUpdateInstruction, images: updateImage ? [updateImage] : [] },
     ];
 
     doGenerateCode({
@@ -329,6 +331,7 @@ function App() {
     });
 
     setUpdateInstruction("");
+    setUpdateImage(null);
   }
 
   const handleTermDialogOpenChange = (open: boolean) => {

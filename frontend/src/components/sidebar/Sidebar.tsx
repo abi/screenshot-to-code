@@ -11,6 +11,7 @@ import { Textarea } from "../ui/textarea";
 import { useEffect, useRef, useState } from "react";
 import HistoryDisplay from "../history/HistoryDisplay";
 import Variants from "../variants/Variants";
+import UpdateImageUpload from "../UpdateImageUpload";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -28,7 +29,7 @@ function Sidebar({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
 
-  const { appState, updateInstruction, setUpdateInstruction } = useAppStore();
+  const { appState, updateInstruction, setUpdateInstruction, updateImage, setUpdateImage } = useAppStore();
 
   const { inputMode, referenceImages, head, commits } = useProjectStore();
 
@@ -137,6 +138,10 @@ function Sidebar({
         !isSelectedVariantError && (
           <div>
             <div className="grid w-full gap-2">
+              <UpdateImageUpload 
+                updateImage={updateImage} 
+                setUpdateImage={setUpdateImage} 
+              />
               <Textarea
                 ref={textareaRef}
                 placeholder="Tell the AI what to change..."
