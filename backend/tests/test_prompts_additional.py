@@ -104,7 +104,15 @@ class TestCreatePromptImageSupport:
         with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), \
              patch("prompts.create_alt_url_mapping", return_value={"mock": "cache"}):
             # Call the function
-            messages, image_cache = await create_prompt(params, self.TEST_STACK, "image")
+            messages, image_cache = await create_prompt(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type=params["generationType"],
+                prompt=params["prompt"],
+                history=params.get("history", []),
+                is_imported_from_code=params.get("isImportedFromCode", False),
+                result_image=params.get("resultImage"),
+            )
 
             # Define expected structure
             expected: ExpectedResult = {
@@ -179,7 +187,15 @@ class TestCreatePromptImageSupport:
         with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), \
              patch("prompts.create_alt_url_mapping", return_value={}):
             # Call the function
-            messages, image_cache = await create_prompt(params, self.TEST_STACK, "image")
+            messages, image_cache = await create_prompt(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type=params["generationType"],
+                prompt=params["prompt"],
+                history=params.get("history", []),
+                is_imported_from_code=params.get("isImportedFromCode", False),
+                result_image=params.get("resultImage"),
+            )
 
             # Define expected structure - should be text-only messages
             expected: ExpectedResult = {
@@ -234,7 +250,15 @@ class TestCreatePromptImageSupport:
 
         with patch("prompts.IMPORTED_CODE_SYSTEM_PROMPTS", mock_imported_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(params, self.TEST_STACK, "image")
+            messages, image_cache = await create_prompt(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type=params["generationType"],
+                prompt=params.get("prompt", {"text": "", "images": []}),
+                history=params.get("history", []),
+                is_imported_from_code=params.get("isImportedFromCode", False),
+                result_image=params.get("resultImage"),
+            )
 
             # Define expected structure
             expected: ExpectedResult = {
