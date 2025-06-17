@@ -1,7 +1,6 @@
-import { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+import { useRef } from "react";
 import { toast } from "react-hot-toast";
-import { Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
+import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
 import { Button } from "./ui/button";
 
 // Helper function to convert file to data URL
@@ -19,13 +18,50 @@ interface Props {
   setUpdateImages: (images: string[]) => void;
 }
 
-function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
-  const [isDragActive, setIsDragActive] = useState(false);
+export function UpdateImagePreview({ updateImages, setUpdateImages }: Props) {
+  const removeImage = (index: number) => {
+    const newImages = updateImages.filter((_, i) => i !== index);
+    setUpdateImages(newImages);
+  };
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
+  if (updateImages.length === 0) return null;
+
+  return (
+    <div className="mb-2">
+      <div className="flex gap-2 overflow-x-auto py-2">
+        {updateImages.map((image, index) => (
+          <div key={index} className="relative flex-shrink-0 group">
+            <img
+              src={image}
+              alt={`Reference ${index + 1}`}
+              className="h-12 w-12 object-cover rounded border border-gray-200 dark:border-gray-600"
+            />
+            <button
+              onClick={() => removeImage(index)}
+              className="absolute -top-1 -right-1 h-4 w-4 bg-gray-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Cross2Icon className="h-2 w-2" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
       try {
-        const newImagePromises = acceptedFiles.map(file => fileToDataURL(file));
+        const newImagePromises = Array.from(files).map(file => fileToDataURL(file));
         const newImages = await Promise.all(newImagePromises);
         setUpdateImages([...updateImages, ...newImages]);
       } catch (error) {
@@ -33,94 +69,34 @@ function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
         console.error("Error reading files:", error);
       }
     }
-  }, [updateImages, setUpdateImages]);
-
-  const { getRootProps, getInputProps, isDragAccept, isDragReject } = useDropzone({
-    onDrop,
-    accept: {
-      "image/png": [".png"],
-      "image/jpeg": [".jpeg", ".jpg"],
-    },
-    multiple: true,
-    maxSize: 1024 * 1024 * 20, // 20MB
-    onDragEnter: () => setIsDragActive(true),
-    onDragLeave: () => setIsDragActive(false),
-    onDropRejected: (rejectedFiles) => {
-      setIsDragActive(false);
-      const errorMessages = rejectedFiles.map(file => file.errors[0].message).join(", ");
-      toast.error(errorMessages);
-    },
-  });
-
-  const removeImage = (index: number) => {
-    const newImages = updateImages.filter((_, i) => i !== index);
-    setUpdateImages(newImages);
-    setIsDragActive(false);
   };
-
-  const clearAllImages = () => {
-    setUpdateImages([]);
-    setIsDragActive(false);
-  };
-
-  if (updateImages.length > 0) {
-    return (
-      <div className="mb-2">
-        <div className="flex justify-between items-center mb-2">
-          <div className="text-gray-400 uppercase text-xs">
-            Reference Images ({updateImages.length})
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearAllImages}
-            className="h-6 text-xs px-2"
-          >
-            Clear All
-          </Button>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {updateImages.map((image, index) => (
-            <div key={index} className="relative">
-              <img
-                src={image}
-                alt={`Update reference ${index + 1}`}
-                className="w-full h-24 object-cover border border-gray-200 rounded-md"
-              />
-              <Button
-                variant="destructive"
-                size="sm"
-                className="absolute top-1 right-1 h-5 w-5 p-0"
-                onClick={() => removeImage(index)}
-              >
-                <Cross2Icon className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div
-      {...getRootProps()}
-      className={`
-        border-2 border-dashed rounded-md p-4 text-center cursor-pointer transition-colors mb-2
-        ${isDragAccept ? "border-green-400 bg-green-50" : ""}
-        ${isDragReject ? "border-red-400 bg-red-50" : ""}
-        ${isDragActive ? "border-blue-400 bg-blue-50" : "border-gray-300"}
-        hover:border-gray-400 hover:bg-gray-50
-      `}
-    >
-      <input {...getInputProps()} />
-      <UploadIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-      <p className="text-sm text-gray-600">
-        Add reference images (optional)
-      </p>
-      <p className="text-xs text-gray-400 mt-1">
-        PNG, JPG up to 20MB each • Multiple files supported
-      </p>
+    <div className="relative inline-block">
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/png,image/jpeg"
+        onChange={handleFileInputChange}
+        className="hidden"
+      />
+      
+      {/* Image button styled to match other buttons */}
+      <Button
+        type="button"
+        variant="outline"
+        size="default"
+        onClick={handleButtonClick}
+        className={`dark:text-white dark:bg-gray-700 h-10 px-3 ${updateImages.length > 0 ? 'border-blue-500' : ''} relative`}
+        title={updateImages.length > 0 ? "Add more images" : "Add reference images"}
+      >
+        <ImageIcon className="h-4 w-4" />
+        {updateImages.length > 0 && (
+          <span className="ml-2 text-sm">{updateImages.length}</span>
+        )}
+      </Button>
+      
     </div>
   );
 }
