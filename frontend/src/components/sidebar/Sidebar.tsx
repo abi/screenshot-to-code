@@ -29,7 +29,7 @@ function Sidebar({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
 
-  const { appState, updateInstruction, setUpdateInstruction, updateImage, setUpdateImage } = useAppStore();
+  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages } = useAppStore();
 
   const { inputMode, referenceImages, head, commits } = useProjectStore();
 
@@ -139,8 +139,8 @@ function Sidebar({
           <div>
             <div className="grid w-full gap-2">
               <UpdateImageUpload 
-                updateImage={updateImage} 
-                setUpdateImage={setUpdateImage} 
+                updateImages={updateImages} 
+                setUpdateImages={setUpdateImages} 
               />
               <Textarea
                 ref={textareaRef}

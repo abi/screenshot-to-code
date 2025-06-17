@@ -15,26 +15,25 @@ function fileToDataURL(file: File): Promise<string> {
 }
 
 interface Props {
-  updateImage: string | null;
-  setUpdateImage: (image: string | null) => void;
+  updateImages: string[];
+  setUpdateImages: (images: string[]) => void;
 }
 
-function UpdateImageUpload({ updateImage, setUpdateImage }: Props) {
+function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
   const [isDragActive, setIsDragActive] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      fileToDataURL(file)
-        .then((dataUrl) => {
-          setUpdateImage(dataUrl);
-        })
-        .catch((error) => {
-          toast.error("Error reading image file");
-          console.error("Error reading file:", error);
-        });
+      try {
+        const newImagePromises = acceptedFiles.map(file => fileToDataURL(file));
+        const newImages = await Promise.all(newImagePromises);
+        setUpdateImages([...updateImages, ...newImages]);
+      } catch (error) {
+        toast.error("Error reading image files");
+        console.error("Error reading files:", error);
+      }
     }
-  }, [setUpdateImage]);
+  }, [updateImages, setUpdateImages]);
 
   const { getRootProps, getInputProps, isDragAccept, isDragReject } = useDropzone({
     onDrop,
@@ -42,39 +41,62 @@ function UpdateImageUpload({ updateImage, setUpdateImage }: Props) {
       "image/png": [".png"],
       "image/jpeg": [".jpeg", ".jpg"],
     },
-    maxFiles: 1,
+    multiple: true,
     maxSize: 1024 * 1024 * 20, // 20MB
     onDragEnter: () => setIsDragActive(true),
     onDragLeave: () => setIsDragActive(false),
     onDropRejected: (rejectedFiles) => {
       setIsDragActive(false);
-      toast.error(rejectedFiles[0].errors[0].message);
+      const errorMessages = rejectedFiles.map(file => file.errors[0].message).join(", ");
+      toast.error(errorMessages);
     },
   });
 
-  const removeImage = () => {
-    setUpdateImage(null);
+  const removeImage = (index: number) => {
+    const newImages = updateImages.filter((_, i) => i !== index);
+    setUpdateImages(newImages);
     setIsDragActive(false);
   };
 
-  if (updateImage) {
+  const clearAllImages = () => {
+    setUpdateImages([]);
+    setIsDragActive(false);
+  };
+
+  if (updateImages.length > 0) {
     return (
-      <div className="relative mb-2">
-        <img
-          src={updateImage}
-          alt="Update reference"
-          className="w-full max-w-[300px] border border-gray-200 rounded-md"
-        />
-        <Button
-          variant="destructive"
-          size="sm"
-          className="absolute top-1 right-1 h-6 w-6 p-0"
-          onClick={removeImage}
-        >
-          <Cross2Icon className="h-3 w-3" />
-        </Button>
-        <div className="text-gray-400 uppercase text-xs text-center mt-1">
-          Reference Image
+      <div className="mb-2">
+        <div className="flex justify-between items-center mb-2">
+          <div className="text-gray-400 uppercase text-xs">
+            Reference Images ({updateImages.length})
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearAllImages}
+            className="h-6 text-xs px-2"
+          >
+            Clear All
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {updateImages.map((image, index) => (
+            <div key={index} className="relative">
+              <img
+                src={image}
+                alt={`Update reference ${index + 1}`}
+                className="w-full h-24 object-cover border border-gray-200 rounded-md"
+              />
+              <Button
+                variant="destructive"
+                size="sm"
+                className="absolute top-1 right-1 h-5 w-5 p-0"
+                onClick={() => removeImage(index)}
+              >
+                <Cross2Icon className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -94,10 +116,10 @@ function UpdateImageUpload({ updateImage, setUpdateImage }: Props) {
       <input {...getInputProps()} />
       <UploadIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
       <p className="text-sm text-gray-600">
-        Add reference image (optional)
+        Add reference images (optional)
       </p>
       <p className="text-xs text-gray-400 mt-1">
-        PNG, JPG up to 20MB
+        PNG, JPG up to 20MB each • Multiple files supported
       </p>
     </div>
   );

@@ -10,9 +10,9 @@ interface AppStore {
   updateInstruction: string;
   setUpdateInstruction: (instruction: string) => void;
 
-  // Update image support (restricted to single image)
-  updateImage: string | null;
-  setUpdateImage: (image: string | null) => void;
+  // Update images support (multiple images)
+  updateImages: string[];
+  setUpdateImages: (images: string[]) => void;
 
   inSelectAndEditMode: boolean;
   toggleInSelectAndEditMode: () => void;
@@ -28,9 +28,9 @@ export const useAppStore = create<AppStore>((set) => ({
   setUpdateInstruction: (instruction: string) =>
     set({ updateInstruction: instruction }),
 
-  // Update image support
-  updateImage: null,
-  setUpdateImage: (image: string | null) => set({ updateImage: image }),
+  // Update images support
+  updateImages: [],
+  setUpdateImages: (images: string[]) => set({ updateImages: images }),
 
   inSelectAndEditMode: false,
   toggleInSelectAndEditMode: () =>
