@@ -20,28 +20,31 @@ Generate code for a SVG that looks exactly like this.
 
 
 async def create_prompt(
-    params: dict[str, Any], stack: Stack, input_mode: InputMode
+    stack: Stack,
+    input_mode: InputMode,
+    generation_type: str,
+    prompt: PromptContent,
+    history: list[dict[str, Any]],
+    is_imported_from_code: bool,
+    result_image: str | None,
 ) -> tuple[list[ChatCompletionMessageParam], dict[str, str]]:
 
     image_cache: dict[str, str] = {}
 
     # If this generation started off with imported code, we need to assemble the prompt differently
-    if params.get("isImportedFromCode"):
-        original_imported_code = params["history"][0]["text"]
+    if is_imported_from_code:
+        original_imported_code = history[0]["text"]
         prompt_messages = assemble_imported_code_prompt(original_imported_code, stack)
-        for index, item in enumerate(params["history"][1:]):
+        for index, item in enumerate(history[1:]):
             role = "user" if index % 2 == 0 else "assistant"
             message = create_message_from_history_item(item, role)
             prompt_messages.append(message)
     else:
         # Assemble the prompt for non-imported code
-        prompt: PromptContent = params["prompt"]
         if input_mode == "image":
             image_url = prompt["images"][0]
-            if params.get("resultImage"):
-                prompt_messages = assemble_prompt(
-                    image_url, stack, params["resultImage"]
-                )
+            if result_image:
+                prompt_messages = assemble_prompt(image_url, stack, result_image)
             else:
                 prompt_messages = assemble_prompt(image_url, stack)
         elif input_mode == "text":
@@ -49,24 +52,22 @@ async def create_prompt(
         else:
             # Default to image mode for backward compatibility
             image_url = prompt["images"][0]
-            if params.get("resultImage"):
-                prompt_messages = assemble_prompt(
-                    image_url, stack, params["resultImage"]
-                )
+            if result_image:
+                prompt_messages = assemble_prompt(image_url, stack, result_image)
             else:
                 prompt_messages = assemble_prompt(image_url, stack)
 
-        if params["generationType"] == "update":
+        if generation_type == "update":
             # Transform the history tree into message format
-            for index, item in enumerate(params["history"]):
+            for index, item in enumerate(history):
                 role = "assistant" if index % 2 == 0 else "user"
                 message = create_message_from_history_item(item, role)
                 prompt_messages.append(message)
 
-            image_cache = create_alt_url_mapping(params["history"][-2]["text"])
+            image_cache = create_alt_url_mapping(history[-2]["text"])
 
     if input_mode == "video":
-        video_data_url = params["prompt"]["images"][0]
+        video_data_url = prompt["images"][0]
         prompt_messages = await assemble_claude_prompt_video(video_data_url)
 
     return prompt_messages, image_cache
@@ -83,30 +84,40 @@ def create_message_from_history_item(
     if role == "user" and item.get("images") and len(item["images"]) > 0:
         # Create multipart content for user messages with images
         user_content: list[ChatCompletionContentPartParam] = []
-        
+
         # Add all images first
         for image_url in item["images"]:
-            user_content.append({
-                "type": "image_url",
-                "image_url": {"url": image_url, "detail": "high"},
-            })
-        
+            user_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": image_url, "detail": "high"},
+                }
+            )
+
         # Add text content
-        user_content.append({
-            "type": "text",
-            "text": item["text"],
-        })
-        
-        return cast(ChatCompletionMessageParam, {
-            "role": role,
-            "content": user_content,
-        })
+        user_content.append(
+            {
+                "type": "text",
+                "text": item["text"],
+            }
+        )
+
+        return cast(
+            ChatCompletionMessageParam,
+            {
+                "role": role,
+                "content": user_content,
+            },
+        )
     else:
         # Regular text-only message
-        return cast(ChatCompletionMessageParam, {
-            "role": role,
-            "content": item["text"],
-        })
+        return cast(
+            ChatCompletionMessageParam,
+            {
+                "role": role,
+                "content": item["text"],
+            },
+        )
 
 
 def assemble_imported_code_prompt(
