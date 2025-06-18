@@ -32,3 +32,44 @@ class Llm(Enum):
 class Completion(TypedDict):
     duration: float
     code: str
+
+
+# Explicitly map each model to the provider backing it.  This keeps provider
+# groupings authoritative and avoids relying on name conventions when checking
+# models elsewhere in the codebase.
+MODEL_PROVIDER: dict[Llm, str] = {
+    # OpenAI models
+    Llm.GPT_4_VISION: "openai",
+    Llm.GPT_4_TURBO_2024_04_09: "openai",
+    Llm.GPT_4O_2024_05_13: "openai",
+    Llm.GPT_4O_2024_08_06: "openai",
+    Llm.GPT_4O_2024_11_20: "openai",
+    Llm.GPT_4_1_2025_04_14: "openai",
+    Llm.GPT_4_1_MINI_2025_04_14: "openai",
+    Llm.GPT_4_1_NANO_2025_04_14: "openai",
+    Llm.O1_2024_12_17: "openai",
+    Llm.O4_MINI_2025_04_16: "openai",
+    Llm.O3_2025_04_16: "openai",
+
+    # Anthropic models
+    Llm.CLAUDE_3_SONNET: "anthropic",
+    Llm.CLAUDE_3_OPUS: "anthropic",
+    Llm.CLAUDE_3_HAIKU: "anthropic",
+    Llm.CLAUDE_3_5_SONNET_2024_06_20: "anthropic",
+    Llm.CLAUDE_3_5_SONNET_2024_10_22: "anthropic",
+    Llm.CLAUDE_3_7_SONNET_2025_02_19: "anthropic",
+    Llm.CLAUDE_4_SONNET_2025_05_14: "anthropic",
+    Llm.CLAUDE_4_OPUS_2025_05_14: "anthropic",
+
+    # Gemini models
+    Llm.GEMINI_2_0_FLASH_EXP: "gemini",
+    Llm.GEMINI_2_0_FLASH: "gemini",
+    Llm.GEMINI_2_0_PRO_EXP: "gemini",
+    Llm.GEMINI_2_5_FLASH_PREVIEW_05_20: "gemini",
+    Llm.GEMINI_2_5_PRO_PREVIEW_05_06: "gemini",
+}
+
+# Convenience sets for membership checks
+OPENAI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "openai"}
+ANTHROPIC_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "anthropic"}
+GEMINI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "gemini"}

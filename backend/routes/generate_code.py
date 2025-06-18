@@ -17,7 +17,13 @@ from config import (
     SHOULD_MOCK_AI_RESPONSE,
 )
 from custom_types import InputMode
-from llm import Completion, Llm
+from llm import (
+    Completion,
+    Llm,
+    OPENAI_MODELS,
+    ANTHROPIC_MODELS,
+    GEMINI_MODELS,
+)
 from models import (
     stream_claude_response,
     stream_claude_response_native,
@@ -587,15 +593,7 @@ class ParallelGenerationStage:
         tasks: List[Coroutine[Any, Any, Completion]] = []
 
         for index, model in enumerate(variant_models):
-            if (
-                model == Llm.GPT_4O_2024_11_20
-                or model == Llm.O1_2024_12_17
-                or model == Llm.O4_MINI_2025_04_16
-                or model == Llm.O3_2025_04_16
-                or model == Llm.GPT_4_1_2025_04_14
-                or model == Llm.GPT_4_1_MINI_2025_04_14
-                or model == Llm.GPT_4_1_NANO_2025_04_14
-            ):
+            if model in OPENAI_MODELS:
                 if self.openai_api_key is None:
                     raise Exception("OpenAI API key is missing.")
 
@@ -606,12 +604,7 @@ class ParallelGenerationStage:
                         index=index,
                     )
                 )
-            elif GEMINI_API_KEY and (
-                model == Llm.GEMINI_2_0_PRO_EXP
-                or model == Llm.GEMINI_2_0_FLASH_EXP
-                or model == Llm.GEMINI_2_0_FLASH
-                or model == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20
-            ):
+            elif GEMINI_API_KEY and model in GEMINI_MODELS:
                 tasks.append(
                     stream_gemini_response(
                         prompt_messages,
@@ -620,13 +613,7 @@ class ParallelGenerationStage:
                         model_name=model.value,
                     )
                 )
-            elif (
-                model == Llm.CLAUDE_3_5_SONNET_2024_06_20
-                or model == Llm.CLAUDE_3_5_SONNET_2024_10_22
-                or model == Llm.CLAUDE_3_7_SONNET_2025_02_19
-                or model == Llm.CLAUDE_4_SONNET_2025_05_14
-                or model == Llm.CLAUDE_4_OPUS_2025_05_14
-            ):
+            elif model in ANTHROPIC_MODELS:
                 if self.anthropic_api_key is None:
                     raise Exception("Anthropic API key is missing.")
 
