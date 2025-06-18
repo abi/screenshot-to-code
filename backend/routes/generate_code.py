@@ -714,7 +714,9 @@ class ParallelGenerationStage:
                         index=index,
                     )
                 )
-            elif GEMINI_API_KEY and model in GEMINI_MODELS:
+            elif model in GEMINI_MODELS:
+                if self.gemini_api_key is None:
+                    raise Exception("Gemini API key is missing.")
                 tasks.append(
                     stream_gemini_response(
                         prompt_messages,
