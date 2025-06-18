@@ -166,13 +166,13 @@ class WebSocketCommunicator:
         """Send a message to the client with debug logging"""
         # Print for debugging on the backend
         if type == "error":
-            print(f"Error (variant {variantIndex}): {value}")
+            print(f"Error (variant {variantIndex + 1}): {value}")
         elif type == "status":
-            print(f"Status (variant {variantIndex}): {value}")
+            print(f"Status (variant {variantIndex + 1}): {value}")
         elif type == "variantComplete":
-            print(f"Variant {variantIndex} complete")
+            print(f"Variant {variantIndex + 1} complete")
         elif type == "variantError":
-            print(f"Variant {variantIndex} error: {value}")
+            print(f"Variant {variantIndex + 1} error: {value}")
 
         await self.websocket.send_json(
             {"type": type, "value": value, "variantIndex": variantIndex}
@@ -332,7 +332,7 @@ class ModelSelectionStage:
             # Print the variant models (one per line)
             print("Variant models:")
             for index, model in enumerate(variant_models):
-                print(f"Variant {index}: {model.value}")
+                print(f"Variant {index + 1}: {model.value}")
 
             return variant_models
         except Exception:
@@ -673,7 +673,7 @@ class ParallelGenerationStage:
                 model_name=model_name,
             )
         except openai.AuthenticationError as e:
-            print(f"[VARIANT {index}] OpenAI Authentication failed", e)
+            print(f"[VARIANT {index + 1}] OpenAI Authentication failed", e)
             error_message = (
                 "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, "
                 "or create a new OpenAI API key on your OpenAI dashboard."
@@ -686,7 +686,7 @@ class ParallelGenerationStage:
             await self.send_message("variantError", error_message, index)
             raise VariantErrorAlreadySent(e)
         except openai.NotFoundError as e:
-            print(f"[VARIANT {index}] OpenAI Model not found", e)
+            print(f"[VARIANT {index + 1}] OpenAI Model not found", e)
             error_message = (
                 e.message
                 + ". Please make sure you have followed the instructions correctly to obtain "
@@ -701,7 +701,7 @@ class ParallelGenerationStage:
             await self.send_message("variantError", error_message, index)
             raise VariantErrorAlreadySent(e)
         except openai.RateLimitError as e:
-            print(f"[VARIANT {index}] OpenAI Rate limit exceeded", e)
+            print(f"[VARIANT {index + 1}] OpenAI Rate limit exceeded", e)
             error_message = (
                 "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
                 + (
@@ -779,12 +779,12 @@ class ParallelGenerationStage:
                 )
             except Exception as inner_e:
                 # If websocket is closed or other error during post-processing
-                print(f"Post-processing error for variant {index}: {inner_e}")
+                print(f"Post-processing error for variant {index + 1}: {inner_e}")
                 # We still keep the completion in variant_completions
 
         except Exception as e:
             # Handle any errors that occurred during generation
-            print(f"Error in variant {index}: {e}")
+            print(f"Error in variant {index + 1}: {e}")
             traceback.print_exception(type(e), e, e.__traceback__)
 
             # Only send error message if it hasn't been sent already
