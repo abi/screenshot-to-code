@@ -10,6 +10,8 @@ interface ProjectStore {
   setIsImportedFromCode: (imported: boolean) => void;
   referenceImages: string[];
   setReferenceImages: (images: string[]) => void;
+  initialPrompt: string;
+  setInitialPrompt: (prompt: string) => void;
 
   // Outputs
   commits: Record<string, Commit>;
@@ -50,6 +52,8 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   setIsImportedFromCode: (imported) => set({ isImportedFromCode: imported }),
   referenceImages: [],
   setReferenceImages: (images) => set({ referenceImages: images }),
+  initialPrompt: "",
+  setInitialPrompt: (prompt) => set({ initialPrompt: prompt }),
 
   // Outputs
   commits: {},

@@ -35,8 +35,6 @@ interface Props {
 }
 
 function App({ navbarComponent }: Props) {
-  const [initialPrompt, setInitialPrompt] = useState<string>("");
-
   // Relevant for hosted version only
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
@@ -53,6 +51,8 @@ function App({ navbarComponent }: Props) {
     setIsImportedFromCode,
     referenceImages,
     setReferenceImages,
+    initialPrompt,
+    setInitialPrompt,
 
     head,
     commits,
@@ -448,6 +448,10 @@ function App({ navbarComponent }: Props) {
                 Your History
               </Button>
             </div>
+          )}
+
+          {appState === AppState.INITIAL && (
+            <GenerateFromText doCreateFromText={doCreateFromText} />
           )}
 
           {/* Rest of the sidebar when we're not in the initial state */}
