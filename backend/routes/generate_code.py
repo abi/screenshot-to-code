@@ -268,10 +268,10 @@ class ParameterExtractionStage:
 
         # Extract prompt content
         prompt = params.get("prompt", {"text": "", "images": []})
-        
+
         # Extract history (default to empty list)
         history = params.get("history", [])
-        
+
         # Extract imported code flag
         is_imported_from_code = params.get("isImportedFromCode", False)
 
@@ -354,11 +354,7 @@ class ModelSelectionStage:
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
-        # Determine primary Claude model based on generation type
-        if generation_type == "create":
-            claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
-        else:
-            claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+        claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
 
         # For text input mode, use Claude 4 Sonnet as third option
         # For other input modes (image/video), use Gemini as third option
@@ -369,7 +365,7 @@ class ModelSelectionStage:
             if generation_type == "create":
                 third_model = Llm.GEMINI_2_0_FLASH
             else:
-                third_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
+                third_model = claude_model
 
         # Define models based on available API keys
         if (
