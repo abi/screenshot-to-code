@@ -38,6 +38,8 @@ from typing import (
 )
 from openai.types.chat import ChatCompletionMessageParam
 
+from utils import print_prompt_summary
+
 # WebSocket message types
 MessageType = Literal[
     "chunk",
@@ -51,7 +53,7 @@ MessageType = Literal[
 from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import VIDEO_PROMPT
-from prompts.types import Stack
+from prompts.types import Stack, PromptContent
 
 # from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
@@ -206,6 +208,9 @@ class ExtractedParams:
     anthropic_api_key: str | None
     openai_base_url: str | None
     generation_type: Literal["create", "update"]
+    prompt: PromptContent
+    history: List[Dict[str, Any]]
+    is_imported_from_code: bool
 
 
 class ParameterExtractionStage:
@@ -261,6 +266,15 @@ class ParameterExtractionStage:
             raise ValueError(f"Invalid generation type: {generation_type}")
         generation_type = cast(Literal["create", "update"], generation_type)
 
+        # Extract prompt content
+        prompt = params.get("prompt", {"text": "", "images": []})
+        
+        # Extract history (default to empty list)
+        history = params.get("history", [])
+        
+        # Extract imported code flag
+        is_imported_from_code = params.get("isImportedFromCode", False)
+
         return ExtractedParams(
             stack=validated_stack,
             input_mode=validated_input_mode,
@@ -269,6 +283,9 @@ class ParameterExtractionStage:
             anthropic_api_key=anthropic_api_key,
             openai_base_url=openai_base_url,
             generation_type=generation_type,
+            prompt=prompt,
+            history=history,
+            is_imported_from_code=is_imported_from_code,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -355,7 +372,11 @@ class ModelSelectionStage:
                 third_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
 
         # Define models based on available API keys
-        if openai_api_key and anthropic_api_key and (gemini_api_key or input_mode == "text"):
+        if (
+            openai_api_key
+            and anthropic_api_key
+            and (gemini_api_key or input_mode == "text")
+        ):
             models = [
                 Llm.GPT_4_1_2025_04_14,
                 claude_model,
@@ -386,15 +407,21 @@ class PromptCreationStage:
 
     async def create_prompt(
         self,
-        params: Dict[str, str],
-        stack: Stack,
-        input_mode: InputMode,
+        extracted_params: ExtractedParams,
     ) -> tuple[List[ChatCompletionMessageParam], Dict[str, str]]:
         """Create prompt messages and return image cache"""
         try:
             prompt_messages, image_cache = await create_prompt(
-                params, stack, input_mode
+                stack=extracted_params.stack,
+                input_mode=extracted_params.input_mode,
+                generation_type=extracted_params.generation_type,
+                prompt=extracted_params.prompt,
+                history=extracted_params.history,
+                is_imported_from_code=extracted_params.is_imported_from_code,
             )
+
+            print_prompt_summary(prompt_messages, truncate=False)
+
             return prompt_messages, image_cache
         except Exception:
             await self.throw_error(
@@ -834,9 +861,7 @@ class PromptCreationMiddleware(Middleware):
         assert context.extracted_params is not None
         context.prompt_messages, context.image_cache = (
             await prompt_creator.create_prompt(
-                context.params,
-                context.extracted_params.stack,
-                context.extracted_params.input_mode,
+                context.extracted_params,
             )
         )
 

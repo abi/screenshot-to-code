@@ -57,6 +57,8 @@ function App() {
   const {
     disableInSelectAndEditMode,
     setUpdateInstruction,
+    updateImages,
+    setUpdateImages,
     appState,
     setAppState,
   } = useAppStore();
@@ -114,6 +116,7 @@ function App() {
   const reset = () => {
     setAppState(AppState.INITIAL);
     setUpdateInstruction("");
+    setUpdateImages([]);
     disableInSelectAndEditMode();
     resetExecutionConsoles();
 
@@ -198,17 +201,15 @@ function App() {
             ...baseCommitObject,
             type: "ai_create" as const,
             parentHash: null,
-            inputs: { image_url: referenceImages[0] },
+            inputs: params.prompt,
           }
         : {
             ...baseCommitObject,
             type: "ai_edit" as const,
             parentHash: head,
-            inputs: {
-              prompt: params.history
-                ? params.history[params.history.length - 1]
-                : "",
-            },
+            inputs: params.history
+              ? params.history[params.history.length - 1]
+              : { text: "", images: [] },
           };
 
     // Create a new commit and set it as the head
@@ -258,8 +259,8 @@ function App() {
     if (referenceImages.length > 0) {
       doGenerateCode({
         generationType: "create",
-        image: referenceImages[0],
         inputMode,
+        prompt: { text: "", images: [referenceImages[0]] },
       });
     }
   }
@@ -273,7 +274,7 @@ function App() {
     doGenerateCode({
       generationType: "create",
       inputMode: "text",
-      image: text,
+      prompt: { text, images: [] },
     });
   }
 
@@ -314,17 +315,24 @@ function App() {
         selectedElement.outerHTML;
     }
 
-    const updatedHistory = [...historyTree, modifiedUpdateInstruction];
+    const updatedHistory = [
+      ...historyTree,
+      { text: modifiedUpdateInstruction, images: updateImages },
+    ];
 
     doGenerateCode({
       generationType: "update",
       inputMode,
-      image: inputMode === "text" ? initialPrompt : referenceImages[0],
+      prompt:
+        inputMode === "text"
+          ? { text: initialPrompt, images: [] }
+          : { text: "", images: [referenceImages[0]] },
       history: updatedHistory,
       isImportedFromCode,
     });
 
     setUpdateInstruction("");
+    setUpdateImages([]);
   }
 
   const handleTermDialogOpenChange = (open: boolean) => {

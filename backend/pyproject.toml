@@ -23,10 +23,12 @@ types-pillow = "^10.2.0.20240520"
 aiohttp = "^3.9.5"
 pydantic = "^2.10"
 google-genai = "^1.16.1"
+langfuse = "^3.0.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
 pyright = "^1.1.352"
+pytest-asyncio = "^0.21"
 
 [build-system]
 requires = ["poetry-core"]
