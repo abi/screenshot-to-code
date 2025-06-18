@@ -104,7 +104,6 @@ class TestCreatePrompt:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure
@@ -135,65 +134,6 @@ class TestCreatePrompt:
             actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
             assert_structure_match(actual, expected)
 
-    @pytest.mark.asyncio
-    async def test_image_mode_create_with_result_image(self) -> None:
-        """Test create generation with before/after images in image mode."""
-        # Setup test data
-        params: Dict[str, Any] = {
-            "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
-            "generationType": "create",
-            "resultImage": self.RESULT_IMAGE_URL,
-        }
-
-        # Mock the system prompts
-        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
-
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
-            # Call the function
-            messages, image_cache = await create_prompt(
-                stack=self.TEST_STACK,
-                input_mode="image",
-                generation_type=params["generationType"],
-                prompt=params["prompt"],
-                history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
-            )
-
-            # Define expected structure
-            expected: ExpectedResult = {
-                "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": self.TEST_IMAGE_URL,
-                                    "detail": "high",
-                                },
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": self.RESULT_IMAGE_URL,
-                                    "detail": "high",
-                                },
-                            },
-                            {
-                                "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like this.>",
-                            },
-                        ],
-                    },
-                ],
-                "image_cache": {},
-            }
-
-            # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
-            assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
     async def test_image_mode_update_with_history(self) -> None:
@@ -224,7 +164,6 @@ class TestCreatePrompt:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure
@@ -286,7 +225,6 @@ class TestCreatePrompt:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
             
             # Define expected structure
@@ -342,7 +280,6 @@ class TestCreatePrompt:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
             
             # Define expected structure
@@ -433,7 +370,6 @@ class TestCreatePrompt:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
             
             # Define expected structure
@@ -503,7 +439,6 @@ class TestCreatePrompt:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure
@@ -581,7 +516,6 @@ class TestCreatePrompt:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure
@@ -664,7 +598,6 @@ class TestCreatePrompt:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure - should be text-only messages
@@ -727,7 +660,6 @@ class TestCreatePrompt:
                 prompt=params.get("prompt", {"text": "", "images": []}),
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure

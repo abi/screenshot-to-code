@@ -211,7 +211,6 @@ class ExtractedParams:
     prompt: PromptContent
     history: List[Dict[str, Any]]
     is_imported_from_code: bool
-    result_image: str | None
 
 
 class ParameterExtractionStage:
@@ -275,9 +274,6 @@ class ParameterExtractionStage:
         
         # Extract imported code flag
         is_imported_from_code = params.get("isImportedFromCode", False)
-        
-        # Extract result image
-        result_image = params.get("resultImage")
 
         return ExtractedParams(
             stack=validated_stack,
@@ -290,7 +286,6 @@ class ParameterExtractionStage:
             prompt=prompt,
             history=history,
             is_imported_from_code=is_imported_from_code,
-            result_image=result_image,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -423,7 +418,6 @@ class PromptCreationStage:
                 prompt=extracted_params.prompt,
                 history=extracted_params.history,
                 is_imported_from_code=extracted_params.is_imported_from_code,
-                result_image=extracted_params.result_image,
             )
 
             print_prompt_summary(prompt_messages, truncate=False)

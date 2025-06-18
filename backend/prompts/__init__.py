@@ -26,7 +26,6 @@ async def create_prompt(
     prompt: PromptContent,
     history: list[dict[str, Any]],
     is_imported_from_code: bool,
-    result_image: str | None,
 ) -> tuple[list[ChatCompletionMessageParam], dict[str, str]]:
 
     image_cache: dict[str, str] = {}
@@ -43,19 +42,13 @@ async def create_prompt(
         # Assemble the prompt for non-imported code
         if input_mode == "image":
             image_url = prompt["images"][0]
-            if result_image:
-                prompt_messages = assemble_prompt(image_url, stack, result_image)
-            else:
-                prompt_messages = assemble_prompt(image_url, stack)
+            prompt_messages = assemble_prompt(image_url, stack)
         elif input_mode == "text":
             prompt_messages = assemble_text_prompt(prompt["text"], stack)
         else:
             # Default to image mode for backward compatibility
             image_url = prompt["images"][0]
-            if result_image:
-                prompt_messages = assemble_prompt(image_url, stack, result_image)
-            else:
-                prompt_messages = assemble_prompt(image_url, stack)
+            prompt_messages = assemble_prompt(image_url, stack)
 
         if generation_type == "update":
             # Transform the history tree into message format
@@ -137,13 +130,11 @@ def assemble_imported_code_prompt(
             "content": system_content + "\n " + user_content,
         }
     ]
-    # TODO: Use result_image_data_url
 
 
 def assemble_prompt(
     image_data_url: str,
     stack: Stack,
-    result_image_data_url: Union[str, None] = None,
 ) -> list[ChatCompletionMessageParam]:
     system_content = SYSTEM_PROMPTS[stack]
     user_prompt = USER_PROMPT if stack != "svg" else SVG_USER_PROMPT
@@ -158,16 +149,6 @@ def assemble_prompt(
             "text": user_prompt,
         },
     ]
-
-    # Include the result image if it exists
-    if result_image_data_url:
-        user_content.insert(
-            1,
-            {
-                "type": "image_url",
-                "image_url": {"url": result_image_data_url, "detail": "high"},
-            },
-        )
     return [
         {
             "role": "system",

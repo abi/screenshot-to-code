@@ -111,7 +111,6 @@ class TestCreatePromptImageSupport:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure
@@ -194,7 +193,6 @@ class TestCreatePromptImageSupport:
                 prompt=params["prompt"],
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure - should be text-only messages
@@ -257,7 +255,6 @@ class TestCreatePromptImageSupport:
                 prompt=params.get("prompt", {"text": "", "images": []}),
                 history=params.get("history", []),
                 is_imported_from_code=params.get("isImportedFromCode", False),
-                result_image=params.get("resultImage"),
             )
 
             # Define expected structure

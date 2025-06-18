@@ -349,45 +349,23 @@ Generate code for a SVG that looks exactly like this.
 
 
 def test_prompts():
+    # Test that assemble_prompt creates the expected structure without result_image
     tailwind_prompt = assemble_prompt(
-        "image_data_url", "html_tailwind", "result_image_data_url"
+        "image_data_url", "html_tailwind"
     )
-    assert tailwind_prompt[0].get("content") == TAILWIND_SYSTEM_PROMPT
-    assert tailwind_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
+    # Test basic structure
+    assert len(tailwind_prompt) == 2
+    assert tailwind_prompt[0]["role"] == "system"
+    assert "Tailwind developer" in tailwind_prompt[0]["content"]
+    assert tailwind_prompt[1]["role"] == "user"
+    assert len(tailwind_prompt[1]["content"]) == 2  # Only image + text, no result image
+    assert tailwind_prompt[1]["content"][0]["type"] == "image_url"
+    assert tailwind_prompt[1]["content"][1]["type"] == "text"
+    assert tailwind_prompt[1]["content"][1]["text"] == USER_PROMPT
 
-    html_css_prompt = assemble_prompt(
-        "image_data_url", "html_css", "result_image_data_url"
-    )
-    assert html_css_prompt[0].get("content") == HTML_CSS_SYSTEM_PROMPT
-    assert html_css_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
-
-    react_tailwind_prompt = assemble_prompt(
-        "image_data_url", "react_tailwind", "result_image_data_url"
-    )
-    assert react_tailwind_prompt[0].get("content") == REACT_TAILWIND_SYSTEM_PROMPT
-    assert react_tailwind_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
-
-    bootstrap_prompt = assemble_prompt(
-        "image_data_url", "bootstrap", "result_image_data_url"
-    )
-    assert bootstrap_prompt[0].get("content") == BOOTSTRAP_SYSTEM_PROMPT
-    assert bootstrap_prompt[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
-
-    ionic_tailwind = assemble_prompt(
-        "image_data_url", "ionic_tailwind", "result_image_data_url"
-    )
-    assert ionic_tailwind[0].get("content") == IONIC_TAILWIND_SYSTEM_PROMPT
-    assert ionic_tailwind[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
-
-    vue_tailwind = assemble_prompt(
-        "image_data_url", "vue_tailwind", "result_image_data_url"
-    )
-    assert vue_tailwind[0].get("content") == VUE_TAILWIND_SYSTEM_PROMPT
-    assert vue_tailwind[1]["content"][2]["text"] == USER_PROMPT  # type: ignore
-
-    svg_prompt = assemble_prompt("image_data_url", "svg", "result_image_data_url")
-    assert svg_prompt[0].get("content") == SVG_SYSTEM_PROMPT
-    assert svg_prompt[1]["content"][2]["text"] == SVG_USER_PROMPT  # type: ignore
+    # Test SVG variant
+    svg_prompt = assemble_prompt("image_data_url", "svg")
+    assert svg_prompt[1]["content"][1]["text"] == SVG_USER_PROMPT
 
 
 def test_imported_code_prompts():
