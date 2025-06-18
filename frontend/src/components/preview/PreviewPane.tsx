@@ -54,7 +54,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                   variant="secondary"
                   className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
                 >
-                  <FaDownload /> Download
+                  <FaDownload /> Download Code
                 </Button>
               </>
             )}

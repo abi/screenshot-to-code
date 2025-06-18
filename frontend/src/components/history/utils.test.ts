@@ -10,9 +10,7 @@ const basicLinearHistory: Record<CommitHash, Commit> = {
     parentHash: null,
     variants: [{ code: "<html>1. create</html>" }],
     selectedVariantIndex: 0,
-    inputs: {
-      image_url: "",
-    },
+    inputs: { text: "", images: [""] },
   },
   "1": {
     hash: "1",
@@ -22,9 +20,7 @@ const basicLinearHistory: Record<CommitHash, Commit> = {
     parentHash: "0",
     variants: [{ code: "<html>2. edit with better icons</html>" }],
     selectedVariantIndex: 0,
-    inputs: {
-      prompt: "use better icons",
-    },
+    inputs: { text: "use better icons", images: [] },
   },
   "2": {
     hash: "2",
@@ -34,9 +30,7 @@ const basicLinearHistory: Record<CommitHash, Commit> = {
     parentHash: "1",
     variants: [{ code: "<html>3. edit with better icons and red text</html>" }],
     selectedVariantIndex: 0,
-    inputs: {
-      prompt: "make text red",
-    },
+    inputs: { text: "make text red", images: [] },
   },
 };
 
@@ -66,9 +60,7 @@ const basicBranchingHistory: Record<CommitHash, Commit> = {
       { code: "<html>4. edit with better icons and green text</html>" },
     ],
     selectedVariantIndex: 0,
-    inputs: {
-      prompt: "make text green",
-    },
+    inputs: { text: "make text green", images: [] },
   },
 };
 
@@ -84,9 +76,7 @@ const longerBranchingHistory: Record<CommitHash, Commit> = {
       { code: "<html>5. edit with better icons and green, bold text</html>" },
     ],
     selectedVariantIndex: 0,
-    inputs: {
-      prompt: "make text bold",
-    },
+    inputs: { text: "make text bold", images: [] },
   },
 };
 
@@ -99,9 +89,7 @@ const basicBadHistory: Record<CommitHash, Commit> = {
     parentHash: null,
     variants: [{ code: "<html>1. create</html>" }],
     selectedVariantIndex: 0,
-    inputs: {
-      image_url: "",
-    },
+    inputs: { text: "", images: [""] },
   },
   "1": {
     hash: "1",
@@ -111,51 +99,52 @@ const basicBadHistory: Record<CommitHash, Commit> = {
     parentHash: "2", // <- Bad parent hash
     variants: [{ code: "<html>2. edit with better icons</html>" }],
     selectedVariantIndex: 0,
-    inputs: {
-      prompt: "use better icons",
-    },
+    inputs: { text: "use better icons", images: [] },
   },
 };
 
 describe("History Utils", () => {
   test("should correctly extract the history tree", () => {
     expect(extractHistory("2", basicLinearHistory)).toEqual([
-      "<html>1. create</html>",
-      "use better icons",
-      "<html>2. edit with better icons</html>",
-      "make text red",
-      "<html>3. edit with better icons and red text</html>",
+      { text: "<html>1. create</html>", images: [] },
+      { text: "use better icons", images: [] },
+      { text: "<html>2. edit with better icons</html>", images: [] },
+      { text: "make text red", images: [] },
+      { text: "<html>3. edit with better icons and red text</html>", images: [] },
     ]);
 
     expect(extractHistory("0", basicLinearHistory)).toEqual([
-      "<html>1. create</html>",
+      { text: "<html>1. create</html>", images: [] },
     ]);
 
     // Test branching
     expect(extractHistory("3", basicBranchingHistory)).toEqual([
-      "<html>1. create</html>",
-      "use better icons",
-      "<html>2. edit with better icons</html>",
-      "make text green",
-      "<html>4. edit with better icons and green text</html>",
+      { text: "<html>1. create</html>", images: [] },
+      { text: "use better icons", images: [] },
+      { text: "<html>2. edit with better icons</html>", images: [] },
+      { text: "make text green", images: [] },
+      { text: "<html>4. edit with better icons and green text</html>", images: [] },
     ]);
 
     expect(extractHistory("4", longerBranchingHistory)).toEqual([
-      "<html>1. create</html>",
-      "use better icons",
-      "<html>2. edit with better icons</html>",
-      "make text green",
-      "<html>4. edit with better icons and green text</html>",
-      "make text bold",
-      "<html>5. edit with better icons and green, bold text</html>",
+      { text: "<html>1. create</html>", images: [] },
+      { text: "use better icons", images: [] },
+      { text: "<html>2. edit with better icons</html>", images: [] },
+      { text: "make text green", images: [] },
+      { text: "<html>4. edit with better icons and green text</html>", images: [] },
+      { text: "make text bold", images: [] },
+      {
+        text: "<html>5. edit with better icons and green, bold text</html>",
+        images: [],
+      },
     ]);
 
     expect(extractHistory("2", longerBranchingHistory)).toEqual([
-      "<html>1. create</html>",
-      "use better icons",
-      "<html>2. edit with better icons</html>",
-      "make text red",
-      "<html>3. edit with better icons and red text</html>",
+      { text: "<html>1. create</html>", images: [] },
+      { text: "use better icons", images: [] },
+      { text: "<html>2. edit with better icons</html>", images: [] },
+      { text: "make text red", images: [] },
+      { text: "<html>3. edit with better icons and red text</html>", images: [] },
     ]);
 
     // Errors

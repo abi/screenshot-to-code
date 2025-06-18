@@ -1,0 +1,15 @@
+{
+  "name": "screenshot-to-code",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && yarn test",
+    "test:backend": "cd backend && poetry run pytest"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}
