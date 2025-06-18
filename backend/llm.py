@@ -50,7 +50,6 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.O1_2024_12_17: "openai",
     Llm.O4_MINI_2025_04_16: "openai",
     Llm.O3_2025_04_16: "openai",
-
     # Anthropic models
     Llm.CLAUDE_3_SONNET: "anthropic",
     Llm.CLAUDE_3_OPUS: "anthropic",
@@ -60,13 +59,11 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.CLAUDE_3_7_SONNET_2025_02_19: "anthropic",
     Llm.CLAUDE_4_SONNET_2025_05_14: "anthropic",
     Llm.CLAUDE_4_OPUS_2025_05_14: "anthropic",
-
     # Gemini models
     Llm.GEMINI_2_0_FLASH_EXP: "gemini",
     Llm.GEMINI_2_0_FLASH: "gemini",
     Llm.GEMINI_2_0_PRO_EXP: "gemini",
     Llm.GEMINI_2_5_FLASH_PREVIEW_05_20: "gemini",
-    Llm.GEMINI_2_5_PRO_PREVIEW_05_06: "gemini",
 }
 
 # Convenience sets for membership checks
