@@ -44,7 +44,6 @@ async def generate_code_core(
         or model == Llm.GEMINI_2_0_PRO_EXP
         or model == Llm.GEMINI_2_0_FLASH
         or model == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20
-        or model == Llm.GEMINI_2_5_PRO_PREVIEW_05_06
     ):
         if not GEMINI_API_KEY:
             raise Exception("Gemini API key not found")

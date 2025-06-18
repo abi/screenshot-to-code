@@ -588,7 +588,6 @@ class ParallelGenerationStage:
                 or model == Llm.GEMINI_2_0_FLASH_EXP
                 or model == Llm.GEMINI_2_0_FLASH
                 or model == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20
-                or model == Llm.GEMINI_2_5_PRO_PREVIEW_05_06
             ):
                 tasks.append(
                     stream_gemini_response(

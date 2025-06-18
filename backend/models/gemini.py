@@ -59,12 +59,6 @@ async def stream_gemini_response(
                 thinking_budget=5000, include_thoughts=True
             ),
         )
-    elif model_name == Llm.GEMINI_2_5_PRO_PREVIEW_05_06.value:
-        config = types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=20000,
-            thinking_config=types.ThinkingConfig(include_thoughts=True),
-        )
     else:
         # TODO: Fix output tokens here
         config = types.GenerateContentConfig(
