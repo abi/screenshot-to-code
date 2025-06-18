@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { generateCode } from "./generateCode";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import SettingsDialog from "./components/settings/SettingsDialog";
@@ -456,10 +456,6 @@ function App({ navbarComponent }: Props) {
                 Your History
               </Button>
             </div>
-          )}
-
-          {appState === AppState.INITIAL && (
-            <GenerateFromText doCreateFromText={doCreateFromText} />
           )}
 
           {/* Rest of the sidebar when we're not in the initial state */}

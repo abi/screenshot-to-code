@@ -38,7 +38,7 @@ function GenerateFromText({ doCreateFromText }: GenerateFromTextProps) {
       {!isOpen ? (
         <div className="flex justify-center">
           <Button variant="secondary" onClick={() => setIsOpen(true)}>
-            Generate from text prompt [BETA]
+            Generate from text prompt
           </Button>
         </div>
       ) : (
