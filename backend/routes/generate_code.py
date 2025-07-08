@@ -343,11 +343,11 @@ class ModelSelectionStage:
             return variant_models
         except Exception:
             await self.throw_error(
-                "No OpenAI or Anthropic API key found. Please add the environment variable "
-                "OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. "
+                "No OpenAI, Anthropic, or Gemini API key found. Please add the environment variable "
+                "OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY to backend/.env or in the settings dialog. "
                 "If you add it to .env, make sure to restart the backend server."
             )
-            raise Exception("No OpenAI or Anthropic key")
+            raise Exception("No OpenAI, Anthropic, or Gemini key")
 
     def _get_variant_models(
         self,
@@ -390,8 +390,10 @@ class ModelSelectionStage:
             models = [claude_model, Llm.CLAUDE_3_5_SONNET_2024_06_20]
         elif openai_api_key:
             models = [Llm.GPT_4_1_2025_04_14, Llm.GPT_4O_2024_11_20]
+        elif gemini_api_key:
+            models = [Llm.GEMINI_2_0_FLASH, Llm.GEMINI_1_5_FLASH, Llm.GEMINI_2_0_FLASH, Llm.GEMINI_1_5_FLASH]
         else:
-            raise Exception("No OpenAI or Anthropic key")
+            raise Exception("No OpenAI, Anthropic, or Gemini key")
 
         # Cycle through models: [A, B] with num=5 becomes [A, B, A, B, A]
         selected_models: List[Llm] = []

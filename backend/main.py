@@ -24,3 +24,9 @@ app.include_router(generate_code.router)
 app.include_router(screenshot.router)
 app.include_router(home.router)
 app.include_router(evals.router)
+
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "message": "Image-to-Code backend is running"}

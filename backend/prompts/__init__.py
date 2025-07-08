@@ -41,12 +41,16 @@ async def create_prompt(
     else:
         # Assemble the prompt for non-imported code
         if input_mode == "image":
+            if not prompt.get("images") or len(prompt["images"]) == 0:
+                raise ValueError("No image provided for image mode")
             image_url = prompt["images"][0]
             prompt_messages = assemble_prompt(image_url, stack)
         elif input_mode == "text":
             prompt_messages = assemble_text_prompt(prompt["text"], stack)
         else:
             # Default to image mode for backward compatibility
+            if not prompt.get("images") or len(prompt["images"]) == 0:
+                raise ValueError("No image provided for image mode")
             image_url = prompt["images"][0]
             prompt_messages = assemble_prompt(image_url, stack)
 
