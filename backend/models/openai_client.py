@@ -35,7 +35,7 @@ async def stream_openai_response(
     ]:
         params["temperature"] = 0
         params["stream"] = True
-        params["max_tokens"] = 10000
+        params["max_tokens"] = 20000
 
     if model_name == "gpt-4o-2024-05-13":
         params["max_tokens"] = 4096

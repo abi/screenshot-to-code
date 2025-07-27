@@ -1,6 +1,6 @@
 FROM python:3.12.3-slim-bullseye
 
-ENV POETRY_VERSION 1.7.1
+ENV POETRY_VERSION 1.8.0
 
 # Install system dependencies
 RUN pip install "poetry==$POETRY_VERSION"
