@@ -4,6 +4,7 @@
 
 # Run logs
 backend/run_logs/*
+logs/
 
 # Weird Docker setup related files
 backend/backend/*
@@ -14,3 +15,5 @@ frontend/.env.local
 
 # Mac files
 .DS_Store
+node_modules
+yarn.lock
