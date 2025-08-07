@@ -3,7 +3,10 @@
 # TODO: Should only be set to true when value is 'True', not any abitrary truthy value
 import os
 
-NUM_VARIANTS = 4
+NUM_VARIANTS = int(os.environ.get("NUM_VARIANTS", 4))
+# Set to 1 if you only want Claude Code Pro CLI
+# Set to 2 for Claude CLI + backup model
+# Set to 4 for full comparison (requires API keys)
 
 # LLM-related
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)

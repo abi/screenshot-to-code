@@ -30,6 +30,10 @@ from models import (
     stream_openai_response,
     stream_gemini_response,
 )
+from models.claude_cli import (
+    stream_claude_cli_response,
+    stream_claude_cli_response_native,
+)
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
 from typing import (
@@ -324,30 +328,22 @@ class ModelSelectionStage:
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
     ) -> List[Llm]:
-        """Select appropriate models based on available API keys"""
-        try:
-            variant_models = self._get_variant_models(
-                generation_type,
-                input_mode,
-                NUM_VARIANTS,
-                openai_api_key,
-                anthropic_api_key,
-                gemini_api_key,
-            )
+        """Select appropriate models - Claude CLI is always available"""
+        variant_models = self._get_variant_models(
+            generation_type,
+            input_mode,
+            NUM_VARIANTS,
+            openai_api_key,
+            anthropic_api_key,
+            gemini_api_key,
+        )
 
-            # Print the variant models (one per line)
-            print("Variant models:")
-            for index, model in enumerate(variant_models):
-                print(f"Variant {index + 1}: {model.value}")
+        # Print the variant models (one per line)
+        print("Variant models:")
+        for index, model in enumerate(variant_models):
+            print(f"Variant {index + 1}: {model.value} {'(CLI)' if model in ANTHROPIC_MODELS else ''}")
 
-            return variant_models
-        except Exception:
-            await self.throw_error(
-                "No OpenAI or Anthropic API key found. Please add the environment variable "
-                "OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. "
-                "If you add it to .env, make sure to restart the backend server."
-            )
-            raise Exception("No OpenAI or Anthropic key")
+        return variant_models
 
     def _get_variant_models(
         self,
@@ -373,10 +369,11 @@ class ModelSelectionStage:
             else:
                 third_model = claude_model
 
-        # Define models based on available API keys
+        # Define models - Claude CLI is always available now
+        models = []
+        
         if (
             openai_api_key
-            and anthropic_api_key
             and (gemini_api_key or input_mode == "text")
         ):
             models = [
@@ -384,14 +381,11 @@ class ModelSelectionStage:
                 claude_model,
                 third_model,
             ]
-        elif openai_api_key and anthropic_api_key:
-            models = [claude_model, Llm.GPT_4_1_2025_04_14]
-        elif anthropic_api_key:
-            models = [claude_model, Llm.CLAUDE_3_5_SONNET_2024_06_20]
         elif openai_api_key:
-            models = [Llm.GPT_4_1_2025_04_14, Llm.GPT_4O_2024_11_20]
+            models = [claude_model, Llm.GPT_4_1_2025_04_14]
         else:
-            raise Exception("No OpenAI or Anthropic key")
+            # Use Claude CLI models (no API key needed)
+            models = [claude_model, Llm.CLAUDE_3_5_SONNET_2024_06_20]
 
         # Cycle through models: [A, B] with num=5 becomes [A, B, A, B, A]
         selected_models: List[Llm] = []
@@ -478,23 +472,19 @@ class VideoGenerationStage:
         prompt_messages: List[ChatCompletionMessageParam],
         anthropic_api_key: str | None,
     ) -> List[str]:
-        """Generate code for video input mode"""
-        if not anthropic_api_key:
-            await self.throw_error(
-                "Video only works with Anthropic models. No Anthropic API key found. "
-                "Please add the environment variable ANTHROPIC_API_KEY to backend/.env "
-                "or in the settings dialog"
-            )
-            raise Exception("No Anthropic key")
+        """Generate code for video input mode using Claude CLI"""
+        # No API key check needed for CLI - just check if Claude CLI is available
+        print("Video generation will use Claude Code CLI instead of API key")
 
         async def process_chunk(content: str, variantIndex: int):
             await self.send_message("chunk", content, variantIndex)
 
+        # Use Claude Code CLI for video generation
+        print("Using Claude Code CLI for video generation")
         completion_results = [
-            await stream_claude_response_native(
+            await stream_claude_cli_response_native(
                 system_prompt=VIDEO_PROMPT,
                 messages=prompt_messages,  # type: ignore
-                api_key=anthropic_api_key,
                 callback=lambda x: process_chunk(x, 0),
                 model_name=Llm.CLAUDE_3_OPUS.value,
                 include_thinking=True,
@@ -614,9 +604,9 @@ class ParallelGenerationStage:
                     )
                 )
             elif model in ANTHROPIC_MODELS:
-                if self.anthropic_api_key is None:
-                    raise Exception("Anthropic API key is missing.")
-
+                # Use Claude Code CLI (now supports images!)
+                print(f"Using Claude Code CLI for variant {index + 1}")
+                
                 # For creation, use Claude Sonnet 3.7
                 # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
                 if params["generationType"] == "create":
@@ -625,9 +615,8 @@ class ParallelGenerationStage:
                     claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
 
                 tasks.append(
-                    stream_claude_response(
+                    stream_claude_cli_response(
                         prompt_messages,
-                        api_key=self.anthropic_api_key,
                         callback=lambda x, i=index: self._process_chunk(x, i),
                         model_name=claude_model.value,
                     )

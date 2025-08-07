@@ -40,17 +40,34 @@ The app has a React/Vite frontend and a FastAPI backend.
 
 Keys needed:
 
-- [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md) or Anthropic key (optional)
-- Both are recommended so you can compare results from both Claude and GPT4o
+- [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md) (optional)
+- Anthropic API key (optional) - **OR** use Claude Code Pro CLI (no API key needed!)
+- If using Claude Code Pro: Make sure `claude` CLI is installed and authenticated with `claude auth login`
+
+**✅ Full Support:** Claude Code Pro CLI now supports image analysis!
+- **Screenshots & Images**: Works with Claude Code Pro CLI (no API key needed)
+- **Text prompts**: Works with Claude Code Pro CLI (no API key needed)
+- **Fallback**: Can still use Anthropic API key if preferred
 
 If you'd like to run the app with Ollama open source models (not recommended due to poor quality results), [follow this comment](https://github.com/abi/screenshot-to-code/issues/354#issuecomment-2435479853).
 
 Run the backend (I use Poetry for package management - `pip install --upgrade poetry` if you don't have it):
 
+**Option 1: With API keys**
 ```bash
 cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
 echo "ANTHROPIC_API_KEY=your-key" > .env
+poetry install
+poetry shell
+poetry run uvicorn main:app --reload --port 7001
+```
+
+**Option 2: With Claude Code Pro (no API key needed)**
+```bash
+cd backend
+# Make sure Claude CLI is authenticated
+claude auth login
 poetry install
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
@@ -67,6 +84,32 @@ yarn dev
 ```
 
 Open http://localhost:5173 to use the app.
+
+## 🚀 Quick Start Commands
+
+**Simple Commands (Recommended):**
+```bash
+./start.sh      # Start both servers
+./stop.sh       # Stop both servers  
+./restart.sh    # Restart both servers
+```
+
+**Development Helper:**
+```bash
+./dev.sh status     # Check server status
+./dev.sh backend    # Start backend only
+./dev.sh frontend   # Start frontend only
+./dev.sh install    # Install dependencies
+```
+
+**Manual Commands:**
+```bash
+# Backend
+cd backend && python -m uvicorn main:app --reload --port 7001
+
+# Frontend  
+cd frontend && yarn dev
+```
 
 If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL in `frontend/.env.local`
 

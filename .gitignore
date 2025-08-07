@@ -14,3 +14,4 @@ frontend/.env.local
 
 # Mac files
 .DS_Store
+node_modules
