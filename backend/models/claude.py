@@ -81,7 +81,7 @@ async def stream_claude_response(
     response = ""
 
     if (
-        model_name == Llm.CLAUDE_4_SONNET_2025_05_14.value
+        model_name == Llm.CLAUDE_4_5_SONNET_2025_09_29.value
         or model_name == Llm.CLAUDE_4_OPUS_2025_05_14.value
     ):
         print(f"Using {model_name} with thinking")

@@ -359,13 +359,12 @@ class ModelSelectionStage:
         gemini_api_key: str | None,
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
+        claude_model = Llm.CLAUDE_4_5_SONNET_2025_09_29
 
-        claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
-
-        # For text input mode, use Claude 4 Sonnet as third option
+        # For text input mode, use Claude 3.7 Sonnet as third option
         # For other input modes (image/video), use Gemini as third option
         if input_mode == "text":
-            third_model = Llm.CLAUDE_4_SONNET_2025_05_14
+            third_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
         else:
             # Gemini only works for create right now
             if generation_type == "create":
@@ -617,12 +616,11 @@ class ParallelGenerationStage:
                 if self.anthropic_api_key is None:
                     raise Exception("Anthropic API key is missing.")
 
-                # For creation, use Claude Sonnet 3.7
-                # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
+                # Use Sonnet 4.5 for both create and update tasks
                 if params["generationType"] == "create":
-                    claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
+                    claude_model = Llm.CLAUDE_4_5_SONNET_2025_09_29
                 else:
-                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+                    claude_model = Llm.CLAUDE_4_5_SONNET_2025_09_29
 
                 tasks.append(
                     stream_claude_response(
