@@ -80,6 +80,8 @@ async def stream_claude_response(
 
     response = ""
 
+    print("USING CLAUDE MODEL: ", model_name)
+
     if (
         model_name == Llm.CLAUDE_4_SONNET_2025_05_14.value
         or model_name == Llm.CLAUDE_4_OPUS_2025_05_14.value
