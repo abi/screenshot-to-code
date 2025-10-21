@@ -23,7 +23,7 @@ describe.skip("e2e tests", () => {
   const models = DEBUG
     ? [
         CodeGenerationModel.GPT_4O_2024_05_13,
-        // CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20,
+        // CodeGenerationModel.CLAUDE_4_5_SONNET_2025_09_29,
       ]
     : Object.values(CodeGenerationModel);
 

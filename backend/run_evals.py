@@ -29,7 +29,7 @@ async def main():
 #                 task = generate_code_for_text(
 #                     text=prompt,
 #                     stack=STACK,
-#                     model=Llm.CLAUDE_3_5_SONNET_2024_06_20,
+#                     model=Llm.CLAUDE_4_5_SONNET_2025_09_29,
 #                 )
 #             else:
 #                 task = generate_code_for_text(
