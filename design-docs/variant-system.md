@@ -19,7 +19,7 @@ Models cycle based on available API keys:
 models = [claude_model, Llm.GPT_4_1_NANO_2025_04_14]
 
 # Claude only  
-models = [claude_model, Llm.CLAUDE_3_5_SONNET_2024_06_20]
+models = [claude_model, Llm.CLAUDE_4_5_SONNET_2025_09_29]
 
 # OpenAI only
 models = [Llm.GPT_4O_2024_11_20]
@@ -29,7 +29,7 @@ models = [Llm.GPT_4O_2024_11_20]
 
 **Generation Type:**
 - **Create**: Primary model is Claude 3.7 Sonnet
-- **Update**: Primary model is Claude 3.5 Sonnet
+- **Update**: Primary model is Claude Sonnet 4.5
 
 ## Frontend
 

@@ -453,7 +453,7 @@ class ModelSelectionStage:
         elif openai_api_key and anthropic_api_key:
             models = [claude_model, Llm.GPT_4_1_2025_04_14]
         elif anthropic_api_key:
-            models = [claude_model, Llm.CLAUDE_3_5_SONNET_2024_06_20]
+            models = [claude_model, Llm.CLAUDE_4_5_SONNET_2025_09_29]
         elif openai_api_key:
             models = [Llm.GPT_4_1_2025_04_14, Llm.GPT_4O_2024_11_20]
         else:
@@ -729,11 +729,11 @@ class ParallelGenerationStage:
                 if self.anthropic_api_key is None:
                     raise Exception("Anthropic API key is missing.")
                 # For creation, use Claude Sonnet 3.7
-                # For updates, we use Claude Sonnet 3.5 until we have tested Claude Sonnet 3.7
+                # For updates, we use Claude Sonnet 4.5 until we have tested Claude Sonnet 3.7
                 if params["generationType"] == "create":
                     claude_model = Llm.CLAUDE_3_7_SONNET_2025_02_19
                 else:
-                    claude_model = Llm.CLAUDE_3_5_SONNET_2024_06_20
+                    claude_model = Llm.CLAUDE_4_5_SONNET_2025_09_29
 
                 tasks.append(
                     stream_claude_response(

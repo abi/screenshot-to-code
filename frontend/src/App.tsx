@@ -21,7 +21,6 @@ import { useAppStore } from "./store/app-store";
 import GenerateFromText from "./components/generate-from-text/GenerateFromText";
 import { useProjectStore } from "./store/project-store";
 import PreviewPane from "./components/preview/PreviewPane";
-import DeprecationMessage from "./components/messages/DeprecationMessage";
 import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import Sidebar from "./components/sidebar/Sidebar";
@@ -90,7 +89,7 @@ function App({ navbarComponent }: Props) {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
-      codeGenerationModel: CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20,
+      codeGenerationModel: CodeGenerationModel.CLAUDE_4_5_SONNET_2025_09_29,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
@@ -99,20 +98,9 @@ function App({ navbarComponent }: Props) {
 
   const wsRef = useRef<WebSocket>(null);
 
-  // Code generation model from local storage or the default value
-  const model =
-    settings.codeGenerationModel || CodeGenerationModel.GPT_4_VISION;
-
-  const showBetterModelMessage =
-    model !== CodeGenerationModel.GPT_4O_2024_05_13 &&
-    model !== CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20 &&
-    appState === AppState.INITIAL;
-
   const showSelectAndEditFeature =
-    (model === CodeGenerationModel.GPT_4O_2024_05_13 ||
-      model === CodeGenerationModel.CLAUDE_3_5_SONNET_2024_06_20) &&
-    (settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
-      settings.generatedCodeConfig === Stack.HTML_CSS);
+    settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
+    settings.generatedCodeConfig === Stack.HTML_CSS;
 
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
@@ -432,9 +420,6 @@ function App({ navbarComponent }: Props) {
 
           {/* Generation settings like stack and model */}
           <GenerationSettings settings={settings} setSettings={setSettings} />
-
-          {/* Show auto updated message when older models are choosen */}
-          {showBetterModelMessage && <DeprecationMessage />}
 
           {/* Show tip link until coding is complete */}
           {/* {appState !== AppState.CODE_READY && <TipLink />} */}
