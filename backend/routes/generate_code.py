@@ -363,7 +363,7 @@ class ModelSelectionStage:
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key:
             models = [
-                Llm.GEMINI_3_FLASH_PREVIEW if generation_type == "create" else Llm.CLAUDE_4_5_SONNET_2025_09_29,
+                Llm.GEMINI_3_FLASH_PREVIEW,
                 Llm.CLAUDE_4_5_SONNET_2025_09_29,
                 Llm.CLAUDE_4_5_OPUS_2025_11_01,
                 Llm.GEMINI_3_PRO_PREVIEW,
