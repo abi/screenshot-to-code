@@ -879,6 +879,7 @@ class ParallelGenerationStage:
             # Handle any errors that occurred during generation
             print(f"Error in variant {index + 1}: {e}")
             traceback.print_exception(type(e), e, e.__traceback__)
+            sentry_sdk.capture_exception(e)
 
             # Only send error message if it hasn't been sent already
             if not isinstance(e, VariantErrorAlreadySent):
