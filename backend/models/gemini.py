@@ -6,6 +6,9 @@ from google import genai
 from google.genai import types
 from llm import Completion, Llm
 
+# Set to True to print debug messages for Gemini requests
+DEBUG_GEMINI = False
+
 
 def extract_text_from_content(content: str | List[Dict[str, Any]]) -> str:
     """
@@ -53,6 +56,37 @@ def extract_image_from_content(content: str | List[Dict[str, Any]]) -> Dict[str,
     return None
 
 
+def convert_message_to_gemini_content(
+    message: ChatCompletionMessageParam,
+) -> types.Content:
+    """
+    Convert an OpenAI-style message to Gemini Content format.
+    """
+    role = message.get("role", "user")
+    content = message.get("content", "")
+
+    # Map roles: OpenAI uses "assistant", Gemini uses "model"
+    gemini_role = "model" if role == "assistant" else "user"
+
+    parts: List[types.Part | Dict[str, str]] = []
+
+    # Extract text and image from content
+    text = extract_text_from_content(content)  # type: ignore
+    image_data = extract_image_from_content(content)  # type: ignore
+
+    if text:
+        parts.append({"text": text})
+    if image_data and "data" in image_data:
+        parts.append(
+            types.Part.from_bytes(
+                data=base64.b64decode(image_data["data"]),
+                mime_type=image_data["mime_type"],
+            )
+        )
+
+    return types.Content(role=gemini_role, parts=parts)  # type: ignore
+
+
 async def stream_gemini_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
@@ -68,21 +102,35 @@ async def stream_gemini_response(
 
     This mirrors how Claude handles messages:
     - System prompt extracted from messages[0]
-    - User content (text + optional image) from messages[1:]
+    - All conversation history from messages[1:] is converted to Gemini format
     """
     start_time = time.time()
 
     # Extract system prompt from first message (same as Claude)
     system_prompt = str(messages[0].get("content", ""))
 
-    # Get user message content from the last user message (messages[1] typically)
-    # For simplicity, we look at the last message which should be the user message with content
-    user_message = messages[-1]
-    user_content = user_message.get("content", "")  # type: ignore
+    # Convert all messages after the system prompt to Gemini format
+    # This includes the full conversation history for edits
+    gemini_contents: List[types.Content] = []
+    for msg in messages[1:]:
+        gemini_contents.append(convert_message_to_gemini_content(msg))
 
-    # Extract text and image from user content
-    user_text = extract_text_from_content(user_content)  # type: ignore
-    image_data = extract_image_from_content(user_content)  # type: ignore
+    # Debug: print truncated message info
+    if DEBUG_GEMINI:
+        print(f"\n=== Gemini Request Debug ({model_name}) ===")
+        print(f"System prompt (first 200 chars): {system_prompt[:200]}...")
+        print(f"Number of conversation messages: {len(gemini_contents)}")
+        for i, content in enumerate(gemini_contents):
+            role = content.role
+            text_preview = ""
+            has_image = False
+            for part in content.parts:
+                if hasattr(part, "text") and part.text:
+                    text_preview = part.text[:100]
+                if hasattr(part, "inline_data") and part.inline_data:
+                    has_image = True
+            print(f"  [{i}] {role}: {text_preview}... (has_image={has_image})")
+        print("=" * 50)
 
     client = genai.Client(api_key=api_key)
     full_response = ""
@@ -120,21 +168,9 @@ async def stream_gemini_response(
             system_instruction=system_prompt,
         )
 
-    # Build content parts: text first, then image if present
-    parts: List[types.Part | Dict[str, str]] = []
-    if user_text:
-        parts.append({"text": user_text})
-    if image_data and "data" in image_data:
-        parts.append(
-            types.Part.from_bytes(
-                data=base64.b64decode(image_data["data"]),
-                mime_type=image_data["mime_type"],
-            )
-        )
-
     async for chunk in await client.aio.models.generate_content_stream(
         model=model_name,
-        contents={"parts": parts},
+        contents=gemini_contents,
         config=config,
     ):
         if chunk.candidates and len(chunk.candidates) > 0:
