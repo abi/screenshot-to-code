@@ -237,7 +237,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
               onClick={handleGenerate}
               className="w-full py-3 px-6 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
-              Generate Code
+              Generate
             </button>
             <p className="text-xs text-gray-400">
               Press Enter to generate
