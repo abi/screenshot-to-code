@@ -180,18 +180,18 @@ function ImageUpload({ setReferenceImages }: Props) {
           className="flex flex-col items-center gap-4 w-4/5 mx-auto p-6 border-2 border-gray-200 rounded-lg bg-gray-50"
         >
           {/* Image/Video Preview */}
-          <div className="relative w-full max-w-md">
+          <div className="relative w-full max-w-2xl">
             {uploadedInputMode === "video" ? (
               <video
                 src={files[0]?.preview}
-                className="w-full h-auto max-h-64 object-contain rounded-lg"
+                className="w-full h-auto max-h-[500px] object-contain rounded-lg"
                 controls
               />
             ) : (
               <img
                 src={files[0]?.preview}
                 alt="Uploaded screenshot"
-                className="w-full h-auto max-h-64 object-contain rounded-lg"
+                className="w-full h-auto max-h-[500px] object-contain rounded-lg"
               />
             )}
             <button
@@ -215,14 +215,14 @@ function ImageUpload({ setReferenceImages }: Props) {
           </div>
 
           {/* Text Prompt Input */}
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-2xl">
             <textarea
               ref={textInputRef}
               value={textPrompt}
               onChange={(e) => setTextPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Add instructions (optional) - e.g., 'Make sure the buttons are rounded'"
-              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 text-sm border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
               rows={2}
             />
           </div>
@@ -230,7 +230,7 @@ function ImageUpload({ setReferenceImages }: Props) {
           {/* Generate Button */}
           <button
             onClick={handleGenerate}
-            className="w-full max-w-md py-3 px-6 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full max-w-2xl py-4 px-6 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
             Generate Code
           </button>
