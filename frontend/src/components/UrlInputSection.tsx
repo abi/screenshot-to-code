@@ -8,7 +8,11 @@ import { useAuth } from "@clerk/clerk-react";
 
 interface Props {
   screenshotOneApiKey: string | null;
-  doCreate: (urls: string[], inputMode: "image" | "video") => void;
+  doCreate: (
+    urls: string[],
+    inputMode: "image" | "video",
+    textPrompt?: string
+  ) => void;
 }
 
 export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {

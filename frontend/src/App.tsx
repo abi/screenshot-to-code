@@ -267,7 +267,8 @@ function App({ navbarComponent }: Props) {
   // Initial version creation
   async function doCreate(
     referenceImages: string[],
-    inputMode: "image" | "video"
+    inputMode: "image" | "video",
+    textPrompt: string = ""
   ) {
     // Reset any existing state
     reset();
@@ -282,7 +283,7 @@ function App({ navbarComponent }: Props) {
       doGenerateCode({
         generationType: "create",
         inputMode,
-        prompt: { text: "", images: [referenceImages[0]] },
+        prompt: { text: textPrompt, images: [referenceImages[0]] },
       });
     }
   }
