@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import { URLS } from "../urls";
@@ -83,11 +83,28 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
     onUploadStateChange?.(hasUploadedFile);
   }, [hasUploadedFile, onUploadStateChange]);
 
-  const handleGenerate = () => {
+  const handleGenerate = useCallback(() => {
     if (uploadedDataUrls.length > 0) {
       setReferenceImages(uploadedDataUrls, uploadedInputMode, textPrompt);
     }
-  };
+  }, [uploadedDataUrls, uploadedInputMode, textPrompt, setReferenceImages]);
+
+  // Global Enter key listener for generating when image is uploaded
+  useEffect(() => {
+    if (!hasUploadedFile) return;
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        // Don't fire if textarea is focused (it has its own handler)
+        if (document.activeElement === textInputRef.current) return;
+        e.preventDefault();
+        handleGenerate();
+      }
+    };
+
+    document.addEventListener("keydown", handleGlobalKeyDown);
+    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [hasUploadedFile, handleGenerate]);
 
   const handleClear = () => {
     setUploadedDataUrls([]);
