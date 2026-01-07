@@ -1,7 +1,10 @@
 import { useProjectStore } from "../../store/project-store";
 import Spinner from "../core/Spinner";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useThrottle } from "../../hooks/useThrottle";
+
+const IFRAME_WIDTH = 1280;
+const IFRAME_HEIGHT = 800;
 
 interface VariantThumbnailProps {
   code: string;
@@ -9,9 +12,28 @@ interface VariantThumbnailProps {
 }
 
 function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [scale, setScale] = useState(0.1);
+
   // Selected variant updates every 300ms, non-selected every 2000ms
   const throttledCode = useThrottle(code, isSelected ? 300 : 2000);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateScale = () => {
+      const containerWidth = container.offsetWidth;
+      setScale(containerWidth / IFRAME_WIDTH);
+    };
+
+    updateScale();
+    const resizeObserver = new ResizeObserver(updateScale);
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -20,21 +42,25 @@ function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
     }
   }, [throttledCode]);
 
+  const scaledHeight = IFRAME_HEIGHT * scale;
+
   return (
-    <div className="w-full h-[80px] overflow-hidden rounded border border-gray-200 dark:border-gray-600 flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-      <div className="w-[128px] h-[80px] overflow-hidden bg-white dark:bg-gray-900">
-        <iframe
-          ref={iframeRef}
-          title="variant-preview"
-          className="pointer-events-none origin-top-left"
-          style={{
-            width: "1280px",
-            height: "800px",
-            transform: "scale(0.1)",
-          }}
-          sandbox="allow-scripts allow-same-origin"
-        />
-      </div>
+    <div
+      ref={containerRef}
+      className="w-full overflow-hidden rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900"
+      style={{ height: `${scaledHeight}px` }}
+    >
+      <iframe
+        ref={iframeRef}
+        title="variant-preview"
+        className="pointer-events-none origin-top-left"
+        style={{
+          width: `${IFRAME_WIDTH}px`,
+          height: `${IFRAME_HEIGHT}px`,
+          transform: `scale(${scale})`,
+        }}
+        sandbox="allow-scripts allow-same-origin"
+      />
     </div>
   );
 }
