@@ -225,7 +225,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
               value={textPrompt}
               onChange={(e) => setTextPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Add instructions (optional)"
+              placeholder="Optional additional instructions"
               className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
               rows={1}
             />
