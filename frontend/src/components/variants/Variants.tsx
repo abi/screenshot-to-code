@@ -29,7 +29,7 @@ function VariantThumbnail({ code }: VariantThumbnailProps) {
           height: "800px",
           transform: "scale(0.1)",
         }}
-        sandbox="allow-same-origin"
+        sandbox="allow-scripts allow-same-origin"
       />
     </div>
   );
