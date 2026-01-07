@@ -42,13 +42,15 @@ async def create_prompt(
         # Assemble the prompt for non-imported code
         if input_mode == "image":
             image_url = prompt["images"][0]
-            prompt_messages = assemble_prompt(image_url, stack)
+            text_prompt = prompt.get("text", "")
+            prompt_messages = assemble_prompt(image_url, stack, text_prompt)
         elif input_mode == "text":
             prompt_messages = assemble_text_prompt(prompt["text"], stack)
         else:
             # Default to image mode for backward compatibility
             image_url = prompt["images"][0]
-            prompt_messages = assemble_prompt(image_url, stack)
+            text_prompt = prompt.get("text", "")
+            prompt_messages = assemble_prompt(image_url, stack, text_prompt)
 
         if generation_type == "update":
             # Transform the history tree into message format
@@ -135,9 +137,14 @@ def assemble_imported_code_prompt(
 def assemble_prompt(
     image_data_url: str,
     stack: Stack,
+    text_prompt: str = "",
 ) -> list[ChatCompletionMessageParam]:
     system_content = SYSTEM_PROMPTS[stack]
     user_prompt = USER_PROMPT if stack != "svg" else SVG_USER_PROMPT
+
+    # Append optional text instructions if provided
+    if text_prompt.strip():
+        user_prompt = user_prompt.strip() + "\n\nAdditional instructions: " + text_prompt
 
     user_content: list[ChatCompletionContentPartParam] = [
         {
