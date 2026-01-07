@@ -6,7 +6,11 @@ import { Settings } from "../../types";
 import { Stack } from "../../lib/stacks";
 
 interface Props {
-  doCreate: (images: string[], inputMode: "image" | "video") => void;
+  doCreate: (
+    images: string[],
+    inputMode: "image" | "video",
+    textPrompt?: string
+  ) => void;
   importFromCode: (code: string, stack: Stack) => void;
   settings: Settings;
 }

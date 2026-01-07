@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import { URLS } from "../urls";
@@ -54,15 +54,44 @@ type FileWithPreview = {
 interface Props {
   setReferenceImages: (
     referenceImages: string[],
-    inputMode: "image" | "video"
+    inputMode: "image" | "video",
+    textPrompt?: string
   ) => void;
 }
 
 function ImageUpload({ setReferenceImages }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [uploadedDataUrls, setUploadedDataUrls] = useState<string[]>([]);
+  const [uploadedInputMode, setUploadedInputMode] = useState<
+    "image" | "video"
+  >("image");
+  const [textPrompt, setTextPrompt] = useState("");
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
+
   // TODO: Switch to Zustand
   const [screenRecorderState, setScreenRecorderState] =
     useState<ScreenRecorderState>(ScreenRecorderState.INITIAL);
+
+  const hasUploadedFile = uploadedDataUrls.length > 0;
+
+  const handleGenerate = () => {
+    if (uploadedDataUrls.length > 0) {
+      setReferenceImages(uploadedDataUrls, uploadedInputMode, textPrompt);
+    }
+  };
+
+  const handleClear = () => {
+    setUploadedDataUrls([]);
+    setFiles([]);
+    setTextPrompt("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleGenerate();
+    }
+  };
 
   const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
     useDropzone({
@@ -88,16 +117,17 @@ function ImageUpload({ setReferenceImages }: Props) {
           ) as FileWithPreview[]
         );
 
-        // Convert images to data URLs and set the prompt images state
+        // Convert images to data URLs and store them (don't trigger generation yet)
         Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
           .then((dataUrls) => {
             if (dataUrls.length > 0) {
-              setReferenceImages(
-                dataUrls.map((dataUrl) => dataUrl as string),
-                (dataUrls[0] as string).startsWith("data:video")
-                  ? "video"
-                  : "image"
-              );
+              const inputMode = (dataUrls[0] as string).startsWith("data:video")
+                ? "video"
+                : "image";
+              setUploadedDataUrls(dataUrls.map((dataUrl) => dataUrl as string));
+              setUploadedInputMode(inputMode);
+              // Focus the text input after upload
+              setTimeout(() => textInputRef.current?.focus(), 100);
             }
           })
           .catch((error) => {
@@ -110,43 +140,9 @@ function ImageUpload({ setReferenceImages }: Props) {
       },
     });
 
-  // const pasteEvent = useCallback(
-  //   (event: ClipboardEvent) => {
-  //     const clipboardData = event.clipboardData;
-  //     if (!clipboardData) return;
-
-  //     const items = clipboardData.items;
-  //     const files = [];
-  //     for (let i = 0; i < items.length; i++) {
-  //       const file = items[i].getAsFile();
-  //       if (file && file.type.startsWith("image/")) {
-  //         files.push(file);
-  //       }
-  //     }
-
-  //     // Convert images to data URLs and set the prompt images state
-  //     Promise.all(files.map((file) => fileToDataURL(file)))
-  //       .then((dataUrls) => {
-  //         if (dataUrls.length > 0) {
-  //           setReferenceImages(dataUrls.map((dataUrl) => dataUrl as string));
-  //         }
-  //       })
-  //       .catch((error) => {
-  //         // TODO: Display error to user
-  //         console.error("Error reading files:", error);
-  //       });
-  //   },
-  //   [setReferenceImages]
-  // );
-
-  // TODO: Make sure we don't listen to paste events in text input components
-  // useEffect(() => {
-  //   window.addEventListener("paste", pasteEvent);
-  // }, [pasteEvent]);
-
   useEffect(() => {
     return () => files.forEach((file) => URL.revokeObjectURL(file.preview));
-  }, [files]); // Added files as a dependency
+  }, [files]);
 
   const style = useMemo(
     () => ({
@@ -158,9 +154,17 @@ function ImageUpload({ setReferenceImages }: Props) {
     [isFocused, isDragAccept, isDragReject]
   );
 
+  // Screen recorder callback - wrap to include empty text prompt
+  const handleScreenRecorderGenerate = (
+    images: string[],
+    inputMode: "image" | "video"
+  ) => {
+    setReferenceImages(images, inputMode, "");
+  };
+
   return (
     <section className="container">
-      {screenRecorderState === ScreenRecorderState.INITIAL && (
+      {screenRecorderState === ScreenRecorderState.INITIAL && !hasUploadedFile && (
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         <div {...getRootProps({ style: style as any })}>
           <input {...getInputProps()} className="file-input" />
@@ -170,7 +174,73 @@ function ImageUpload({ setReferenceImages }: Props) {
           </p>
         </div>
       )}
-      {screenRecorderState === ScreenRecorderState.INITIAL && (
+
+      {hasUploadedFile && (
+        <div
+          className="flex flex-col items-center gap-4 w-4/5 mx-auto p-6 border-2 border-gray-200 rounded-lg bg-gray-50"
+        >
+          {/* Image/Video Preview */}
+          <div className="relative w-full max-w-md">
+            {uploadedInputMode === "video" ? (
+              <video
+                src={files[0]?.preview}
+                className="w-full h-auto max-h-64 object-contain rounded-lg"
+                controls
+              />
+            ) : (
+              <img
+                src={files[0]?.preview}
+                alt="Uploaded screenshot"
+                className="w-full h-auto max-h-64 object-contain rounded-lg"
+              />
+            )}
+            <button
+              onClick={handleClear}
+              className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
+              aria-label="Remove image"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-gray-600"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Text Prompt Input */}
+          <div className="w-full max-w-md">
+            <textarea
+              ref={textInputRef}
+              value={textPrompt}
+              onChange={(e) => setTextPrompt(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Add instructions (optional) - e.g., 'Make sure the buttons are rounded'"
+              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={2}
+            />
+          </div>
+
+          {/* Generate Button */}
+          <button
+            onClick={handleGenerate}
+            className="w-full max-w-md py-3 px-6 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Generate Code
+          </button>
+          <p className="text-sm text-gray-500">
+            Press Enter to generate
+          </p>
+        </div>
+      )}
+
+      {screenRecorderState === ScreenRecorderState.INITIAL && !hasUploadedFile && (
         <div className="text-center text-sm text-slate-800 mt-4">
           Upload a screen recording (.mp4, .mov) or record your screen to clone
           a whole app (experimental).{" "}
@@ -186,7 +256,7 @@ function ImageUpload({ setReferenceImages }: Props) {
       <ScreenRecorder
         screenRecorderState={screenRecorderState}
         setScreenRecorderState={setScreenRecorderState}
-        generateCode={setReferenceImages}
+        generateCode={handleScreenRecorderGenerate}
       />
     </section>
   );
