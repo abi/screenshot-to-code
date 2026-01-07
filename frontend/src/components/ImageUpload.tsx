@@ -182,9 +182,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
       )}
 
       {hasUploadedFile && (
-        <div
-          className="flex flex-col items-center gap-4 w-4/5 mx-auto p-6 border-2 border-gray-200 rounded-lg bg-gray-50"
-        >
+        <div className="flex flex-col items-center gap-4 w-4/5 mx-auto">
           {/* Image/Video Preview */}
           <div className="relative w-full max-w-2xl">
             {uploadedInputMode === "video" ? (
@@ -234,15 +232,17 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
           </div>
 
           {/* Generate Button */}
-          <button
-            onClick={handleGenerate}
-            className="w-full max-w-2xl py-4 px-6 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-          >
-            Generate Code
-          </button>
-          <p className="text-sm text-gray-500">
-            Press Enter to generate
-          </p>
+          <div className="flex flex-col items-center gap-1 w-full max-w-md">
+            <button
+              onClick={handleGenerate}
+              className="w-full py-3 px-6 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Generate Code
+            </button>
+            <p className="text-xs text-gray-400">
+              Press Enter to generate
+            </p>
+          </div>
         </div>
       )}
 
