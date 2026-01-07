@@ -1,6 +1,39 @@
 import { useProjectStore } from "../../store/project-store";
 import Spinner from "../core/Spinner";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useThrottle } from "../../hooks/useThrottle";
+
+interface VariantThumbnailProps {
+  code: string;
+}
+
+function VariantThumbnail({ code }: VariantThumbnailProps) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const throttledCode = useThrottle(code, 300);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (iframe) {
+      iframe.srcdoc = throttledCode;
+    }
+  }, [throttledCode]);
+
+  return (
+    <div className="w-full h-[80px] overflow-hidden rounded bg-white border border-gray-200 dark:border-gray-600">
+      <iframe
+        ref={iframeRef}
+        title="variant-preview"
+        className="pointer-events-none origin-top-left"
+        style={{
+          width: "1280px",
+          height: "800px",
+          transform: "scale(0.1)",
+        }}
+        sandbox="allow-same-origin"
+      />
+    </div>
+  );
+}
 
 function Variants() {
   const { inputMode, head, commits, updateSelectedVariantIndex } =
@@ -107,16 +140,16 @@ function Variants() {
               key={index}
               className={`p-2 border rounded-md cursor-pointer ${
                 index === selectedVariantIndex
-                  ? "bg-blue-100 dark:bg-blue-900"
+                  ? "bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-700"
                   : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
               onClick={() => handleVariantClick(index)}
             >
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium flex items-center">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-medium flex items-center text-sm">
                   Option {index + 1}
                   {variant.status === "generating" && (
-                    <div className="scale-75 ml-2">
+                    <div className="scale-75 ml-1">
                       <Spinner />
                     </div>
                   )}
@@ -126,14 +159,17 @@ function Variants() {
                   ⌥{index + 1}
                 </span>
               </div>
-              <div className="text-xs mt-1 flex items-center">
-                {variant.status === "cancelled" && (
-                  <span className="text-gray-500">Cancelled</span>
-                )}
-                {variant.status === "error" && (
-                  <span className="text-red-500">Error</span>
-                )}
-              </div>
+              <VariantThumbnail code={variant.code} />
+              {(variant.status === "cancelled" || variant.status === "error") && (
+                <div className="text-xs mt-1 flex items-center">
+                  {variant.status === "cancelled" && (
+                    <span className="text-gray-500">Cancelled</span>
+                  )}
+                  {variant.status === "error" && (
+                    <span className="text-red-500">Error</span>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
