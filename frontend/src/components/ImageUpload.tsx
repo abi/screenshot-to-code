@@ -229,7 +229,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
               }}
               className="text-sm text-gray-500 hover:text-gray-700 underline"
             >
-              + Add text instructions
+              (optional) add text prompt
             </button>
           ) : (
             <div className="w-full max-w-lg">
