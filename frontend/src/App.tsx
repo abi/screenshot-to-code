@@ -238,7 +238,11 @@ function App() {
   }
 
   // Initial version creation
-  function doCreate(referenceImages: string[], inputMode: "image" | "video") {
+  function doCreate(
+    referenceImages: string[],
+    inputMode: "image" | "video",
+    textPrompt: string = ""
+  ) {
     // Reset any existing state
     reset();
 
@@ -251,7 +255,7 @@ function App() {
       doGenerateCode({
         generationType: "create",
         inputMode,
-        prompt: { text: "", images: [referenceImages[0]] },
+        prompt: { text: textPrompt, images: [referenceImages[0]] },
       });
     }
   }
