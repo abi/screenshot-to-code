@@ -21,18 +21,20 @@ function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
   }, [throttledCode]);
 
   return (
-    <div className="w-full h-[80px] overflow-hidden rounded bg-white border border-gray-200 dark:border-gray-600">
-      <iframe
-        ref={iframeRef}
-        title="variant-preview"
-        className="pointer-events-none origin-top-left"
-        style={{
-          width: "1280px",
-          height: "800px",
-          transform: "scale(0.1)",
-        }}
-        sandbox="allow-scripts allow-same-origin"
-      />
+    <div className="w-full h-[80px] overflow-hidden rounded border border-gray-200 dark:border-gray-600 flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="w-[128px] h-[80px] overflow-hidden bg-white dark:bg-gray-900">
+        <iframe
+          ref={iframeRef}
+          title="variant-preview"
+          className="pointer-events-none origin-top-left"
+          style={{
+            width: "1280px",
+            height: "800px",
+            transform: "scale(0.1)",
+          }}
+          sandbox="allow-scripts allow-same-origin"
+        />
+      </div>
     </div>
   );
 }
