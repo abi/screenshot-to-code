@@ -67,6 +67,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
     "image" | "video"
   >("image");
   const [textPrompt, setTextPrompt] = useState("");
+  const [showTextPrompt, setShowTextPrompt] = useState(false);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
 
   // TODO: Switch to Zustand
@@ -90,6 +91,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
     setUploadedDataUrls([]);
     setFiles([]);
     setTextPrompt("");
+    setShowTextPrompt(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -218,18 +220,30 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
             </button>
           </div>
 
-          {/* Text Prompt Input */}
-          <div className="w-full max-w-md">
-            <textarea
-              ref={textInputRef}
-              value={textPrompt}
-              onChange={(e) => setTextPrompt(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Optional additional instructions"
-              className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
-              rows={1}
-            />
-          </div>
+          {/* Text Prompt Toggle/Input */}
+          {!showTextPrompt ? (
+            <button
+              onClick={() => {
+                setShowTextPrompt(true);
+                setTimeout(() => textInputRef.current?.focus(), 50);
+              }}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              + Add text instructions
+            </button>
+          ) : (
+            <div className="w-full max-w-lg">
+              <textarea
+                ref={textInputRef}
+                value={textPrompt}
+                onChange={(e) => setTextPrompt(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Describe any specific requirements or changes..."
+                className="w-full p-3 text-sm border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                rows={3}
+              />
+            </div>
+          )}
 
           {/* Generate Button */}
           <div className="flex flex-col items-center gap-1 w-full max-w-md">
