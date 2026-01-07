@@ -219,15 +219,15 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
           </div>
 
           {/* Text Prompt Input */}
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-md">
             <textarea
               ref={textInputRef}
               value={textPrompt}
               onChange={(e) => setTextPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Add instructions (optional) - e.g., 'Make sure the buttons are rounded'"
-              className="w-full p-3 text-sm border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
-              rows={2}
+              placeholder="Add instructions (optional)"
+              className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+              rows={1}
             />
           </div>
 
