@@ -365,7 +365,7 @@ function App() {
   }
 
   return (
-    <div className="mt-2 dark:bg-black dark:text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
@@ -373,11 +373,15 @@ function App() {
           onOpenChange={handleTermDialogOpenChange}
         />
       )}
-      <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
-        <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+
+      {/* Sidebar */}
+      <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-[400px] lg:flex-col">
+        <div className="flex grow flex-col gap-y-3 overflow-y-auto border-r border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl px-6 py-6 shadow-soft">
           {/* Header with access to settings */}
-          <div className="flex items-center justify-between mt-10 mb-2">
-            <h1 className="text-2xl ">Screenshot to Code</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              Screenshot to Code
+            </h1>
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
 
@@ -406,7 +410,8 @@ function App() {
         </div>
       </div>
 
-      <main className="py-2 lg:pl-96">
+      {/* Main Content */}
+      <main className="py-4 lg:pl-[400px]">
         {appState === AppState.INITIAL && (
           <StartPane
             doCreate={doCreate}

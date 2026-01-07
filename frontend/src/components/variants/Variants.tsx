@@ -28,7 +28,7 @@ function Variants() {
         const code = event.code;
         if (code >= "Digit1" && code <= "Digit9") {
           const variantIndex = parseInt(code.replace("Digit", "")) - 1;
-          
+
           // Only switch if the variant exists and component is visible
           if (
             commit &&
@@ -61,79 +61,102 @@ function Variants() {
   // Dynamic grid layout based on variant count
   const getGridClass = (variantCount: number) => {
     if (variantCount <= 2) {
-      return "grid grid-cols-2 gap-2";
+      return "grid grid-cols-2 gap-3";
     } else if (variantCount === 3) {
-      return "grid grid-cols-2 gap-2"; // 2 columns, 3rd variant wraps below
+      return "grid grid-cols-2 gap-3";
     } else if (variantCount === 4) {
-      return "grid grid-cols-2 gap-2"; // 2x2 grid
+      return "grid grid-cols-2 gap-3";
     } else if (variantCount <= 6) {
-      return "grid grid-cols-3 gap-2"; // 3x2 grid
+      return "grid grid-cols-3 gap-3";
     } else {
-      return "grid grid-cols-4 gap-2"; // 4x? grid for larger counts
+      return "grid grid-cols-4 gap-3";
     }
   };
 
   return (
     <div className="mt-4 mb-4">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Generated Options
+        </span>
+        <div className="flex-1 h-px bg-gradient-to-r from-slate-200 dark:from-slate-700 to-transparent"></div>
+      </div>
       <div className={getGridClass(variants.length)}>
         {variants.map((variant, index) => {
-          // Determine the status indicator
-          let statusIndicator = null;
-          if (variant.status === "complete") {
-            statusIndicator = (
-              <span
-                className="inline-block w-2 h-2 bg-green-500 rounded-full ml-2"
-                title="Complete"
-              ></span>
-            );
-          } else if (variant.status === "cancelled") {
-            statusIndicator = (
-              <span
-                className="inline-block w-2 h-2 bg-red-500 rounded-full ml-2"
-                title="Cancelled"
-              ></span>
-            );
-          } else if (variant.status === "error") {
-            statusIndicator = (
-              <span
-                className="inline-block w-2 h-2 bg-red-600 rounded-full ml-2"
-                title="Error"
-              ></span>
-            );
-          }
+          const isSelected = index === selectedVariantIndex;
+          const isComplete = variant.status === "complete";
+          const isError = variant.status === "error";
+          const isCancelled = variant.status === "cancelled";
+          const isGenerating = variant.status === "generating";
 
           return (
             <div
               key={index}
-              className={`p-2 border rounded-md cursor-pointer ${
-                index === selectedVariantIndex
-                  ? "bg-blue-100 dark:bg-blue-900"
-                  : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
+              className={`
+                relative p-3 rounded-xl cursor-pointer transition-all duration-200 ease-out
+                border-2
+                ${isSelected
+                  ? "bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/50 dark:to-violet-950/50 border-indigo-400 dark:border-indigo-500 shadow-md shadow-indigo-500/10"
+                  : "bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md"
+                }
+                ${isError ? "border-red-300 dark:border-red-700" : ""}
+              `}
               onClick={() => handleVariantClick(index)}
             >
               <div className="flex justify-between items-center">
-                <h3 className="font-medium flex items-center">
-                  Option {index + 1}
-                  {variant.status === "generating" && (
-                    <div className="scale-75 ml-2">
+                <h3 className="font-medium text-sm flex items-center gap-2">
+                  <span className={`
+                    ${isSelected ? "text-indigo-700 dark:text-indigo-300" : "text-slate-700 dark:text-slate-200"}
+                  `}>
+                    Option {index + 1}
+                  </span>
+                  {isGenerating && (
+                    <div className="scale-75">
                       <Spinner />
                     </div>
                   )}
-                  {statusIndicator}
+                  {isComplete && (
+                    <span className="flex items-center justify-center w-4 h-4 rounded-full bg-green-500 shadow-sm">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                  )}
+                  {isCancelled && (
+                    <span className="inline-block w-3 h-3 bg-slate-400 rounded-full" title="Cancelled"></span>
+                  )}
+                  {isError && (
+                    <span className="flex items-center justify-center w-4 h-4 rounded-full bg-red-500 shadow-sm">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </span>
+                  )}
                 </h3>
-                <span className="text-xs text-gray-400 dark:text-gray-500 font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-                  ⌥{index + 1}
+                <span className={`
+                  text-[10px] font-mono px-1.5 py-0.5 rounded-md transition-colors
+                  ${isSelected
+                    ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400"
+                    : "bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500"
+                  }
+                `}>
+                  {index + 1}
                 </span>
               </div>
-              <div className="text-xs mt-1 flex items-center">
-                {variant.status === "cancelled" && (
-                  <span className="text-gray-500">Cancelled</span>
-                )}
-                {variant.status === "error" && (
-                  <span className="text-red-500">Error</span>
-                )}
-              </div>
+              {(isCancelled || isError) && (
+                <div className="text-xs mt-1.5">
+                  {isCancelled && (
+                    <span className="text-slate-400 dark:text-slate-500">Cancelled</span>
+                  )}
+                  {isError && (
+                    <span className="text-red-500 dark:text-red-400">Error occurred</span>
+                  )}
+                </div>
+              )}
+              {/* Selection indicator */}
+              {isSelected && (
+                <div className="absolute -top-px -left-px -right-px h-1 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-t-xl"></div>
+              )}
             </div>
           );
         })}

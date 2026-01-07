@@ -4,7 +4,6 @@ import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import CodePreview from "../preview/CodePreview";
 import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
-// import TipLink from "../messages/TipLink";
 import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeToggleButton";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
@@ -32,7 +31,6 @@ function Sidebar({
 
   const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages } = useAppStore();
 
-  // Helper function to convert file to data URL
   const fileToDataURL = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -45,11 +43,11 @@ function Sidebar({
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
-    const files = Array.from(e.dataTransfer.files).filter(file => 
+
+    const files = Array.from(e.dataTransfer.files).filter(file =>
       file.type === 'image/png' || file.type === 'image/jpeg'
     );
-    
+
     if (files.length > 0) {
       try {
         const newImagePromises = files.map(file => fileToDataURL(file));
@@ -68,27 +66,23 @@ function Sidebar({
       ? commits[head].variants[commits[head].selectedVariantIndex].code
       : "";
 
-  // Check if the currently selected variant is complete
   const isSelectedVariantComplete =
     head &&
     commits[head] &&
     commits[head].variants[commits[head].selectedVariantIndex].status ===
       "complete";
 
-  // Check if the currently selected variant has an error
   const isSelectedVariantError =
     head &&
     commits[head] &&
     commits[head].variants[commits[head].selectedVariantIndex].status ===
       "error";
 
-  // Get the error message from the selected variant
   const selectedVariantErrorMessage =
     head &&
     commits[head] &&
     commits[head].variants[commits[head].selectedVariantIndex].errorMessage;
 
-  // Focus on the update instruction textarea when a variant is complete
   useEffect(() => {
     if (
       (appState === AppState.CODE_READY || isSelectedVariantComplete) &&
@@ -98,7 +92,6 @@ function Sidebar({
     }
   }, [appState, isSelectedVariantComplete]);
 
-  // Reset error expanded state when variant changes
   useEffect(() => {
     setIsErrorExpanded(false);
   }, [head, commits[head || ""]?.selectedVariantIndex]);
@@ -109,41 +102,46 @@ function Sidebar({
 
       {/* Show code preview when coding and the selected variant is not complete */}
       {appState === AppState.CODING && !isSelectedVariantComplete && (
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-3">
           {/* Speed disclaimer for video mode */}
           {inputMode === "video" && (
-            <div
-              className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700
-            p-2 text-xs mb-4 mt-1"
-            >
-              Code generation from videos can take 3-4 minutes. We do multiple
-              passes to get the best result. Please be patient.
+            <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-amber-800 dark:text-amber-200 text-xs">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>
+                  Code generation from videos can take 3-4 minutes. We do multiple passes to get the best result.
+                </span>
+              </div>
             </div>
           )}
 
           <CodePreview code={viewedCode} />
 
-          <div className="flex w-full">
-            <Button
-              onClick={cancelCodeGeneration}
-              className="w-full dark:text-white dark:bg-gray-700"
-            >
-              Cancel All Generations
-            </Button>
-          </div>
+          <Button
+            onClick={cancelCodeGeneration}
+            variant="outline"
+            className="w-full"
+          >
+            Cancel All Generations
+          </Button>
         </div>
       )}
 
       {/* Show error message when selected option has an error */}
       {isSelectedVariantError && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
-          <div className="text-red-800 text-sm">
-            <div className="font-medium mb-1">
-              This option failed to generate because
+        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-4">
+          <div className="text-red-800 dark:text-red-200 text-sm">
+            <div className="font-medium mb-2 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Generation failed
             </div>
             {selectedVariantErrorMessage && (
-              <div className="mb-2">
-                <div className="text-red-700 bg-red-100 border border-red-300 rounded px-2 py-1 text-xs font-mono break-words">
+              <div className="mb-3">
+                <div className="text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-xs font-mono break-words">
                   {selectedVariantErrorMessage.length > 200 && !isErrorExpanded
                     ? `${selectedVariantErrorMessage.slice(0, 200)}...`
                     : selectedVariantErrorMessage}
@@ -151,14 +149,16 @@ function Sidebar({
                 {selectedVariantErrorMessage.length > 200 && (
                   <button
                     onClick={() => setIsErrorExpanded(!isErrorExpanded)}
-                    className="text-red-600 text-xs underline mt-1 hover:text-red-800"
+                    className="text-red-600 dark:text-red-400 text-xs underline underline-offset-2 mt-2 hover:text-red-800 dark:hover:text-red-300 transition-colors"
                   >
                     {isErrorExpanded ? "Show less" : "Show more"}
                   </button>
                 )}
               </div>
             )}
-            <div>Switch to another option above to make updates.</div>
+            <div className="text-red-600 dark:text-red-400 text-xs">
+              Switch to another option above to continue.
+            </div>
           </div>
         </div>
       )}
@@ -169,7 +169,6 @@ function Sidebar({
           <div
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={(e) => {
-              // Only set to false if we're leaving the container entirely
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setIsDragging(false);
               }
@@ -177,10 +176,10 @@ function Sidebar({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
-            <div className="grid w-full gap-2 relative">
-              <UpdateImagePreview 
-                updateImages={updateImages} 
-                setUpdateImages={setUpdateImages} 
+            <div className="grid w-full gap-3 relative">
+              <UpdateImagePreview
+                updateImages={updateImages}
+                setUpdateImages={setUpdateImages}
               />
               <Textarea
                 ref={textareaRef}
@@ -192,46 +191,60 @@ function Sidebar({
                   }
                 }}
                 value={updateInstruction}
+                className="min-h-[100px]"
               />
               <div className="flex gap-2">
                 <Button
                   onClick={() => doUpdate(updateInstruction)}
-                  className="dark:text-white dark:bg-gray-700 update-btn flex-1"
+                  className="update-btn flex-1"
                 >
                   Update <KeyboardShortcutBadge letter="enter" />
                 </Button>
-                <UpdateImageUpload 
-                  updateImages={updateImages} 
-                  setUpdateImages={setUpdateImages} 
+                <UpdateImageUpload
+                  updateImages={updateImages}
+                  setUpdateImages={setUpdateImages}
                 />
               </div>
-              
-              {/* Drag overlay that covers the entire update area */}
+
+              {/* Drag overlay */}
               {isDragging && (
-                <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-md flex items-center justify-center pointer-events-none z-10">
-                  <p className="text-blue-600 dark:text-blue-400 font-medium">Drop images here</p>
+                <div className="absolute inset-0 bg-indigo-50/95 dark:bg-indigo-950/95 border-2 border-dashed border-indigo-400 dark:border-indigo-500 rounded-xl flex items-center justify-center pointer-events-none z-10 backdrop-blur-sm">
+                  <div className="flex flex-col items-center gap-2">
+                    <svg className="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-indigo-600 dark:text-indigo-400 font-medium text-sm">Drop images here</p>
+                  </div>
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-end gap-x-2 mt-2">
+            <div className="flex items-center justify-end gap-2 mt-3">
               <Button
                 onClick={regenerate}
-                className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
+                variant="outline"
+                size="sm"
+                className="regenerate-btn"
               >
-                🔄 Regenerate
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Regenerate
               </Button>
               {showSelectAndEditFeature && <SelectAndEditModeToggleButton />}
             </div>
-            {/* <div className="flex justify-end items-center mt-2">
-            <TipLink />
-          </div> */}
           </div>
         )}
 
       {/* Reference image display */}
-      <div className="flex gap-x-2 mt-2">
+      <div className="flex gap-x-2 mt-4">
         {referenceImages.length > 0 && (
-          <div className="flex flex-col">
+          <div className="flex flex-col w-full">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Reference
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-slate-200 dark:from-slate-700 to-transparent"></div>
+            </div>
             <div
               className={classNames({
                 "scanning relative": appState === AppState.CODING,
@@ -239,7 +252,7 @@ function Sidebar({
             >
               {inputMode === "image" && (
                 <img
-                  className="w-[340px] border border-gray-200 rounded-md"
+                  className="w-full border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm"
                   src={referenceImages[0]}
                   alt="Reference"
                 />
@@ -249,12 +262,12 @@ function Sidebar({
                   muted
                   autoPlay
                   loop
-                  className="w-[340px] border border-gray-200 rounded-md"
+                  className="w-full border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm"
                   src={referenceImages[0]}
                 />
               )}
             </div>
-            <div className="text-gray-400 uppercase text-sm text-center mt-1">
+            <div className="text-slate-400 dark:text-slate-500 text-xs text-center mt-2 font-medium">
               {inputMode === "video" ? "Original Video" : "Original Screenshot"}
             </div>
           </div>

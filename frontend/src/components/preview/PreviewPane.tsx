@@ -36,64 +36,74 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
       : currentCode;
 
   return (
-    <div className="ml-4">
+    <div className="mx-4">
       <Tabs defaultValue="desktop">
-        <div className="flex justify-between mr-8 mb-4">
-          <div className="flex items-center gap-x-2">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-3">
             {appState === AppState.CODE_READY && (
               <>
                 <Button
                   onClick={reset}
-                  className="flex items-center ml-4 gap-x-2 dark:text-white dark:bg-gray-700"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
                 >
-                  <FaUndo />
+                  <FaUndo className="w-3.5 h-3.5" />
                   Reset
                 </Button>
                 <Button
                   onClick={() => downloadCode(previewCode)}
                   variant="secondary"
-                  className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
+                  size="sm"
+                  className="gap-2 download-btn"
                 >
-                  <FaDownload /> Download Code
+                  <FaDownload className="w-3.5 h-3.5" />
+                  Download
                 </Button>
               </>
             )}
           </div>
-          <div className="flex items-center">
-            <TabsList>
-              <TabsTrigger value="desktop" className="flex gap-x-2">
-                <FaDesktop /> Desktop
-              </TabsTrigger>
-              <TabsTrigger value="mobile" className="flex gap-x-2">
-                <FaMobile /> Mobile
-              </TabsTrigger>
-              <TabsTrigger value="code" className="flex gap-x-2">
-                <FaCode />
-                Code
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList>
+            <TabsTrigger value="desktop" className="gap-2">
+              <FaDesktop className="w-3.5 h-3.5" />
+              Desktop
+            </TabsTrigger>
+            <TabsTrigger value="mobile" className="gap-2">
+              <FaMobile className="w-3.5 h-3.5" />
+              Mobile
+            </TabsTrigger>
+            <TabsTrigger value="code" className="gap-2">
+              <FaCode className="w-3.5 h-3.5" />
+              Code
+            </TabsTrigger>
+          </TabsList>
         </div>
         <TabsContent value="desktop">
-          <PreviewComponent
-            code={previewCode}
-            device="desktop"
-            doUpdate={doUpdate}
-          />
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft overflow-hidden">
+            <PreviewComponent
+              code={previewCode}
+              device="desktop"
+              doUpdate={doUpdate}
+            />
+          </div>
         </TabsContent>
         <TabsContent value="mobile">
-          <PreviewComponent
-            code={previewCode}
-            device="mobile"
-            doUpdate={doUpdate}
-          />
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft overflow-hidden">
+            <PreviewComponent
+              code={previewCode}
+              device="mobile"
+              doUpdate={doUpdate}
+            />
+          </div>
         </TabsContent>
         <TabsContent value="code">
-          <CodeTab 
-            code={previewCode} 
-            setCode={() => {}} 
-            settings={settings} 
-          />
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-900 shadow-soft overflow-hidden">
+            <CodeTab
+              code={previewCode}
+              setCode={() => {}}
+              settings={settings}
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
