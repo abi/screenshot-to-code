@@ -1,5 +1,8 @@
 .aider*
 
+# Dependencies
+node_modules/
+
 # Project-related files
 
 # Run logs
