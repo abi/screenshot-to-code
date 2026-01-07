@@ -57,9 +57,10 @@ interface Props {
     inputMode: "image" | "video",
     textPrompt?: string
   ) => void;
+  onUploadStateChange?: (hasUpload: boolean) => void;
 }
 
-function ImageUpload({ setReferenceImages }: Props) {
+function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadedDataUrls, setUploadedDataUrls] = useState<string[]>([]);
   const [uploadedInputMode, setUploadedInputMode] = useState<
@@ -73,6 +74,11 @@ function ImageUpload({ setReferenceImages }: Props) {
     useState<ScreenRecorderState>(ScreenRecorderState.INITIAL);
 
   const hasUploadedFile = uploadedDataUrls.length > 0;
+
+  // Notify parent of upload state changes
+  useEffect(() => {
+    onUploadStateChange?.(hasUploadedFile);
+  }, [hasUploadedFile, onUploadStateChange]);
 
   const handleGenerate = () => {
     if (uploadedDataUrls.length > 0) {
@@ -253,11 +259,13 @@ function ImageUpload({ setReferenceImages }: Props) {
           </a>
         </div>
       )}
-      <ScreenRecorder
-        screenRecorderState={screenRecorderState}
-        setScreenRecorderState={setScreenRecorderState}
-        generateCode={handleScreenRecorderGenerate}
-      />
+      {!hasUploadedFile && (
+        <ScreenRecorder
+          screenRecorderState={screenRecorderState}
+          setScreenRecorderState={setScreenRecorderState}
+          generateCode={handleScreenRecorderGenerate}
+        />
+      )}
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ImageUpload from "../ImageUpload";
 import { UrlInputSection } from "../UrlInputSection";
 import ImportCodeSection from "../ImportCodeSection";
@@ -16,14 +16,23 @@ interface Props {
 }
 
 const StartPane: React.FC<Props> = ({ doCreate, importFromCode, settings }) => {
+  const [hasImageUpload, setHasImageUpload] = useState(false);
+
   return (
     <div className="flex flex-col justify-center items-center gap-y-10">
-      <ImageUpload setReferenceImages={doCreate} />
-      <UrlInputSection
-        doCreate={doCreate}
-        screenshotOneApiKey={settings.screenshotOneApiKey}
+      <ImageUpload
+        setReferenceImages={doCreate}
+        onUploadStateChange={setHasImageUpload}
       />
-      <ImportCodeSection importFromCode={importFromCode} />
+      {!hasImageUpload && (
+        <>
+          <UrlInputSection
+            doCreate={doCreate}
+            screenshotOneApiKey={settings.screenshotOneApiKey}
+          />
+          <ImportCodeSection importFromCode={importFromCode} />
+        </>
+      )}
     </div>
   );
 };
