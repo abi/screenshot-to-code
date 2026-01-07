@@ -5,11 +5,13 @@ import { useThrottle } from "../../hooks/useThrottle";
 
 interface VariantThumbnailProps {
   code: string;
+  isSelected: boolean;
 }
 
-function VariantThumbnail({ code }: VariantThumbnailProps) {
+function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const throttledCode = useThrottle(code, 300);
+  // Selected variant updates every 300ms, non-selected every 2000ms
+  const throttledCode = useThrottle(code, isSelected ? 300 : 2000);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -159,7 +161,10 @@ function Variants() {
                   ⌥{index + 1}
                 </span>
               </div>
-              <VariantThumbnail code={variant.code} />
+              <VariantThumbnail
+                code={variant.code}
+                isSelected={index === selectedVariantIndex}
+              />
               {(variant.status === "cancelled" || variant.status === "error") && (
                 <div className="text-xs mt-1 flex items-center">
                   {variant.status === "cancelled" && (
