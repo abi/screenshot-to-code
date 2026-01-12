@@ -7,6 +7,7 @@ from typing import Callable, Awaitable
 from fastapi import APIRouter, WebSocket
 import openai
 import sentry_sdk
+from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from codegen.utils import extract_html_content
 from config import (
     IS_PROD,
@@ -173,6 +174,9 @@ class WebSocketCommunicator:
         variantIndex: int,
     ) -> None:
         """Send a message to the client with debug logging"""
+        if self.is_closed:
+            return
+
         # Print for debugging on the backend
         if type == "error":
             print(f"Error (variant {variantIndex + 1}): {value}")
@@ -183,16 +187,23 @@ class WebSocketCommunicator:
         elif type == "variantError":
             print(f"Variant {variantIndex + 1} error: {value}")
 
-        await self.websocket.send_json(
-            {"type": type, "value": value, "variantIndex": variantIndex}
-        )
+        try:
+            await self.websocket.send_json(
+                {"type": type, "value": value, "variantIndex": variantIndex}
+            )
+        except (ConnectionClosedOK, ConnectionClosedError):
+            print(f"WebSocket closed by client, skipping message: {type}")
+            self.is_closed = True
 
     async def throw_error(self, message: str) -> None:
         """Send an error message and close the connection"""
         print(message)
         if not self.is_closed:
-            await self.websocket.send_json({"type": "error", "value": message})
-            await self.websocket.close(APP_ERROR_WEB_SOCKET_CODE)
+            try:
+                await self.websocket.send_json({"type": "error", "value": message})
+                await self.websocket.close(APP_ERROR_WEB_SOCKET_CODE)
+            except (ConnectionClosedOK, ConnectionClosedError):
+                print("WebSocket already closed by client")
             self.is_closed = True
 
     async def receive_params(self) -> Dict[str, str]:
@@ -204,7 +215,10 @@ class WebSocketCommunicator:
     async def close(self) -> None:
         """Close the WebSocket connection"""
         if not self.is_closed:
-            await self.websocket.close()
+            try:
+                await self.websocket.close()
+            except (ConnectionClosedOK, ConnectionClosedError):
+                pass  # Already closed by client
             self.is_closed = True
 
 
