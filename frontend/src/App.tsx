@@ -42,6 +42,7 @@ function App() {
     removeCommit,
     setHead,
     appendCommitCode,
+    appendVariantThinking,
     setCommitCode,
     resetCommits,
     resetHead,
@@ -227,6 +228,9 @@ function App() {
       onVariantCount: (count) => {
         console.log(`Backend is using ${count} variants`);
         resizeVariants(commit.hash, count);
+      },
+      onThinking: (content, variantIndex) => {
+        appendVariantThinking(commit.hash, variantIndex, content);
       },
       onCancel: () => {
         cancelCodeGenerationAndReset(commit);

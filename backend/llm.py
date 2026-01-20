@@ -25,8 +25,10 @@ class Llm(Enum):
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_2_0_PRO_EXP = "gemini-2.0-pro-exp-02-05"
     GEMINI_2_5_FLASH_PREVIEW_05_20 = "gemini-2.5-flash-preview-05-20"
-    GEMINI_3_FLASH_PREVIEW = "gemini-3-flash-preview"
-    GEMINI_3_PRO_PREVIEW = "gemini-3-pro-preview"
+    GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)"
+    GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)"
+    GEMINI_3_PRO_PREVIEW_HIGH = "gemini-3-pro-preview (high thinking)"
+    GEMINI_3_PRO_PREVIEW_LOW = "gemini-3-pro-preview (low thinking)"
     O1_2024_12_17 = "o1-2024-12-17"
     O4_MINI_2025_04_16 = "o4-mini-2025-04-16"
     O3_2025_04_16 = "o3-2025-04-16"
@@ -68,8 +70,10 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GEMINI_2_0_FLASH: "gemini",
     Llm.GEMINI_2_0_PRO_EXP: "gemini",
     Llm.GEMINI_2_5_FLASH_PREVIEW_05_20: "gemini",
-    Llm.GEMINI_3_FLASH_PREVIEW: "gemini",
-    Llm.GEMINI_3_PRO_PREVIEW: "gemini",
+    Llm.GEMINI_3_FLASH_PREVIEW_HIGH: "gemini",
+    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL: "gemini",
+    Llm.GEMINI_3_PRO_PREVIEW_HIGH: "gemini",
+    Llm.GEMINI_3_PRO_PREVIEW_LOW: "gemini",
 }
 
 # Convenience sets for membership checks

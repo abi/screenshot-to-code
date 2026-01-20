@@ -24,10 +24,10 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GEMINI_3_FLASH_PREVIEW,
+            Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
             Llm.CLAUDE_4_5_SONNET_2025_09_29,
             Llm.CLAUDE_4_5_OPUS_2025_11_01,
-            Llm.GEMINI_3_PRO_PREVIEW,
+            Llm.GEMINI_3_PRO_PREVIEW_HIGH,
         ]
         assert models == expected
 
@@ -43,10 +43,10 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GEMINI_3_FLASH_PREVIEW,
+            Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
             Llm.CLAUDE_4_5_SONNET_2025_09_29,
             Llm.CLAUDE_4_5_OPUS_2025_11_01,
-            Llm.GEMINI_3_PRO_PREVIEW,
+            Llm.GEMINI_3_PRO_PREVIEW_HIGH,
         ]
         assert models == expected
 

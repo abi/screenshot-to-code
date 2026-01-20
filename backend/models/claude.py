@@ -61,6 +61,7 @@ async def stream_claude_response(
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
     model_name: str,
+    thinking_callback: Callable[[str], Awaitable[None]] | None = None,
 ) -> Completion:
     start_time = time.time()
     client = AsyncAnthropic(api_key=api_key)
@@ -80,11 +81,17 @@ async def stream_claude_response(
 
     response = ""
 
-    if (
-        model_name == Llm.CLAUDE_4_SONNET_2025_05_14.value
-        or model_name == Llm.CLAUDE_4_OPUS_2025_05_14.value
-    ):
+    # Models that support extended thinking
+    thinking_models = [
+        Llm.CLAUDE_4_SONNET_2025_05_14.value,
+        Llm.CLAUDE_4_OPUS_2025_05_14.value,
+        Llm.CLAUDE_4_5_SONNET_2025_09_29.value,
+        Llm.CLAUDE_4_5_OPUS_2025_11_01.value,
+    ]
+
+    if model_name in thinking_models:
         print(f"Using {model_name} with thinking")
+        thinking_started = False
         # Thinking is not compatible with temperature
         async with client.messages.stream(
             model=model_name,
@@ -94,13 +101,21 @@ async def stream_claude_response(
             messages=claude_messages,  # type: ignore
         ) as stream:
             async for event in stream:
-                if event.type == "content_block_delta":
+                if event.type == "content_block_start":
+                    if event.content_block.type == "thinking":
+                        thinking_started = False
+                elif event.type == "content_block_delta":
                     if event.delta.type == "thinking_delta":
-                        pass
-                        # print(event.delta.thinking, end="")
+                        if not thinking_started:
+                            thinking_started = True
+                        if thinking_callback:
+                            await thinking_callback(event.delta.thinking)
                     elif event.delta.type == "text_delta":
                         response += event.delta.text
                         await callback(event.delta.text)
+                elif event.type == "content_block_stop":
+                    if thinking_started:
+                        thinking_started = False
 
     else:
         # Stream Claude response

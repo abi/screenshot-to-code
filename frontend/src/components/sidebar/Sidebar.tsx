@@ -12,6 +12,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import HistoryDisplay from "../history/HistoryDisplay";
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
+import ThinkingIndicator from "../thinking/ThinkingIndicator";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -106,6 +107,8 @@ function Sidebar({
   return (
     <>
       <Variants />
+
+      <ThinkingIndicator />
 
       {/* Show code preview when coding and the selected variant is not complete */}
       {appState === AppState.CODING && !isSelectedVariantComplete && (
