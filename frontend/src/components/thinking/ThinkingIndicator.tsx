@@ -56,8 +56,49 @@ function ThinkingIndicator() {
 
   const previewText = thinking ? getLastSentence(thinking) : "";
 
+  const isActive = isWaiting || isThinkingInProgress;
+
   return (
-    <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md mb-2">
+    <div
+      className={`rounded-md mb-2 ${
+        isActive
+          ? "border-2 border-green-400 dark:border-green-500"
+          : "bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700"
+      }`}
+      style={
+        isActive
+          ? {
+              animation: "flash 1s ease-in-out infinite",
+            }
+          : undefined
+      }
+    >
+      <style>
+        {`
+          @keyframes flash {
+            0%, 100% {
+              background-color: rgb(240 253 244);
+              border-color: rgb(74 222 128);
+            }
+            50% {
+              background-color: rgb(187 247 208);
+              border-color: rgb(34 197 94);
+            }
+          }
+          @media (prefers-color-scheme: dark) {
+            @keyframes flash {
+              0%, 100% {
+                background-color: rgb(20 83 45 / 0.3);
+                border-color: rgb(34 197 94);
+              }
+              50% {
+                background-color: rgb(20 83 45 / 0.6);
+                border-color: rgb(74 222 128);
+              }
+            }
+          }
+        `}
+      </style>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors rounded-t-md"
