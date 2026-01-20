@@ -28,6 +28,11 @@ import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
 import { Button } from "./components/ui/button";
+import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
+import { FeedbackFAB } from "./components/feedback/FeedbackFAB";
+import { useFeedbackState } from "./hooks/useFeedbackState";
+
+const FEEDBACK_FORM_URL = "https://forms.gle/YOUR_FORM_ID";
 
 interface Props {
   navbarComponent?: JSX.Element;
@@ -78,6 +83,9 @@ function App({ navbarComponent }: Props) {
     appState,
     setAppState,
   } = useAppStore();
+
+  const { shouldShowBanner, incrementGenerations, dismissBanner } =
+    useFeedbackState();
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -260,6 +268,7 @@ function App({ navbarComponent }: Props) {
       onComplete: () => {
         addEvent("CreateSuccessful");
         setAppState(AppState.CODE_READY);
+        incrementGenerations();
       },
     });
   }
@@ -460,6 +469,15 @@ function App({ navbarComponent }: Props) {
       <main className="py-2 lg:pl-96">
         {!!navbarComponent && navbarComponent}
 
+        {shouldShowBanner && (
+          <div className="px-4 mb-2">
+            <FeedbackBanner
+              onDismiss={dismissBanner}
+              formUrl={FEEDBACK_FORM_URL}
+            />
+          </div>
+        )}
+
         {appState === AppState.INITIAL && (
           <StartPane
             doCreate={doCreate}
@@ -472,6 +490,8 @@ function App({ navbarComponent }: Props) {
           <PreviewPane doUpdate={doUpdate} reset={reset} settings={settings} />
         )}
       </main>
+
+      <FeedbackFAB formUrl={FEEDBACK_FORM_URL} />
     </div>
   );
 }
