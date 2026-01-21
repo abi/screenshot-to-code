@@ -10,7 +10,7 @@ export function FeedbackFAB({ formUrl }: FeedbackFABProps) {
       href={formUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-purple-600 p-3 rounded-full shadow-md hover:shadow-lg transition-all duration-200 group"
+      className="fixed bottom-20 right-6 z-[9999] bg-purple-100 hover:bg-purple-200 text-purple-600 hover:text-purple-700 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 group border border-purple-200"
       title="Get $100 for feedback"
     >
       <FaGift size={20} />

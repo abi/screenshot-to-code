@@ -32,7 +32,7 @@ import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
 import { FeedbackFAB } from "./components/feedback/FeedbackFAB";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 
-const FEEDBACK_FORM_URL = "https://forms.gle/YOUR_FORM_ID";
+const FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSet4G88pgVLaJ_lGyfkGqaHYEVG4RSOyvJttyfHHtcpkcYn6g/viewform";
 
 interface Props {
   navbarComponent?: JSX.Element;

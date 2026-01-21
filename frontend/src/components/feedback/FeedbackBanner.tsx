@@ -23,7 +23,7 @@ export function FeedbackBanner({ onDismiss, formUrl }: FeedbackBannerProps) {
             rel="noopener noreferrer"
             className="bg-white text-purple-700 px-3 py-1 rounded-md text-sm font-semibold hover:bg-purple-50 transition-colors"
           >
-            Join
+            Claim
           </a>
           <button
             onClick={onDismiss}
