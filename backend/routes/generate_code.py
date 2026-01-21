@@ -381,7 +381,7 @@ class ModelSelectionStage:
             models = [
                 Llm.GEMINI_3_FLASH_PREVIEW_HIGH,  # Flash HIGH thinking
                 Llm.GEMINI_3_PRO_PREVIEW_LOW,  # Pro LOW thinking
-                Llm.CLAUDE_4_5_SONNET_2025_09_29,  # Claude Sonnet 4.5 with thinking
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,  # Pro HIGH thinking
                 Llm.CLAUDE_4_5_OPUS_2025_11_01,  # Claude Opus 4.5 with thinking
             ]
         elif openai_api_key and anthropic_api_key:
