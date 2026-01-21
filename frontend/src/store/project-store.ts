@@ -16,6 +16,7 @@ interface ProjectStore {
   // Outputs
   commits: Record<string, Commit>;
   head: CommitHash | null;
+  latestCommitHash: CommitHash | null;
 
   addCommit: (commit: Commit) => void;
   removeCommit: (hash: CommitHash) => void;
@@ -63,6 +64,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   // Outputs
   commits: {},
   head: null,
+  latestCommitHash: null,
 
   addCommit: (commit: Commit) => {
     // Initialize variant statuses as 'generating' and start thinking timer
@@ -86,6 +88,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         ),
         [commitsWithStatus.hash]: commitsWithStatus,
       },
+      latestCommitHash: commitsWithStatus.hash,
     }));
   },
   removeCommit: (hash: CommitHash) => {
@@ -95,7 +98,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       return { commits: newCommits };
     });
   },
-  resetCommits: () => set({ commits: {} }),
+  resetCommits: () => set({ commits: {}, latestCommitHash: null }),
 
   appendCommitCode: (hash: CommitHash, numVariant: number, code: string) =>
     set((state) => {
