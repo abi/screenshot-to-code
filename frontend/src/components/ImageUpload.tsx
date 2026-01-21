@@ -9,8 +9,7 @@ import { addEvent } from "../lib/analytics";
 
 const baseStyle = {
   flex: 1,
-  width: "80%",
-  margin: "0 auto",
+  width: "100%",
   minHeight: "400px",
   display: "flex",
   flexDirection: "column",
@@ -18,13 +17,14 @@ const baseStyle = {
   justifyContent: "center",
   padding: "20px",
   borderWidth: 2,
-  borderRadius: 2,
-  borderColor: "#eeeeee",
+  borderRadius: 8,
+  borderColor: "#e2e8f0",
   borderStyle: "dashed",
-  backgroundColor: "#fafafa",
-  color: "#bdbdbd",
+  backgroundColor: "#f8fafc",
+  color: "#64748b",
   outline: "none",
-  transition: "border .24s ease-in-out",
+  transition: "all .24s ease-in-out",
+  cursor: "pointer",
 };
 
 const focusedStyle = {
