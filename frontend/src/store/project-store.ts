@@ -16,6 +16,7 @@ interface ProjectStore {
   // Outputs
   commits: Record<string, Commit>;
   head: CommitHash | null;
+  latestCommitHash: CommitHash | null;
 
   addCommit: (commit: Commit) => void;
   removeCommit: (hash: CommitHash) => void;
@@ -25,6 +26,11 @@ interface ProjectStore {
     hash: CommitHash,
     numVariant: number,
     code: string
+  ) => void;
+  appendVariantThinking: (
+    hash: CommitHash,
+    numVariant: number,
+    thinking: string
   ) => void;
   setCommitCode: (hash: CommitHash, numVariant: number, code: string) => void;
   updateSelectedVariantIndex: (hash: CommitHash, index: number) => void;
@@ -58,14 +64,16 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   // Outputs
   commits: {},
   head: null,
+  latestCommitHash: null,
 
   addCommit: (commit: Commit) => {
-    // Initialize variant statuses as 'generating'
+    // Initialize variant statuses as 'generating' and start thinking timer
     const commitsWithStatus = {
       ...commit,
       variants: commit.variants.map((variant) => ({
         ...variant,
         status: variant.status || ("generating" as VariantStatus),
+        thinkingStartTime: Date.now(),
       })),
     };
 
@@ -80,6 +88,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         ),
         [commitsWithStatus.hash]: commitsWithStatus,
       },
+      latestCommitHash: commitsWithStatus.hash,
     }));
   },
   removeCommit: (hash: CommitHash) => {
@@ -89,7 +98,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       return { commits: newCommits };
     });
   },
-  resetCommits: () => set({ commits: {} }),
+  resetCommits: () => set({ commits: {}, latestCommitHash: null }),
 
   appendCommitCode: (hash: CommitHash, numVariant: number, code: string) =>
     set((state) => {
@@ -98,15 +107,44 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       if (commit.isCommitted) {
         throw new Error("Attempted to append code to a committed commit");
       }
+      const variant = commit.variants[numVariant];
+      const isFirstCode = !variant.code && variant.thinkingStartTime;
+      const duration = isFirstCode
+        ? Math.round((Date.now() - variant.thinkingStartTime!) / 1000)
+        : variant.thinkingDuration;
       return {
         commits: {
           ...state.commits,
           [hash]: {
             ...commit,
-            variants: commit.variants.map((variant, index) =>
+            variants: commit.variants.map((v, index) =>
               index === numVariant
-                ? { ...variant, code: variant.code + code }
-                : variant
+                ? { ...v, code: v.code + code, thinkingDuration: duration }
+                : v
+            ),
+          },
+        },
+      };
+    }),
+  appendVariantThinking: (hash: CommitHash, numVariant: number, thinking: string) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      // Don't update if the commit is already committed
+      if (commit.isCommitted) {
+        throw new Error("Attempted to append thinking to a committed commit");
+      }
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: {
+            ...commit,
+            variants: commit.variants.map((v, index) =>
+              index === numVariant
+                ? {
+                    ...v,
+                    thinking: (v.thinking || "") + thinking,
+                  }
+                : v
             ),
           },
         },

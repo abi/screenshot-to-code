@@ -58,6 +58,7 @@ MessageType = Literal[
     "variantComplete",
     "variantError",
     "variantCount",
+    "thinking",
 ]
 from image_generation.core import generate_images
 from prompts import create_prompt
@@ -442,11 +443,12 @@ class ModelSelectionStage:
 
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key:
+            # Temporary: Compare thinking models
             models = [
-                Llm.GEMINI_3_FLASH_PREVIEW,
-                Llm.CLAUDE_4_5_SONNET_2025_09_29,
-                Llm.CLAUDE_4_5_OPUS_2025_11_01,
-                Llm.GEMINI_3_PRO_PREVIEW,
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,  # Flash HIGH thinking
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,  # Pro LOW thinking
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,  # Pro HIGH thinking
+                Llm.CLAUDE_4_5_OPUS_2025_11_01,  # Claude Opus 4.5 with thinking
             ]
         elif openai_api_key and anthropic_api_key:
             models = [Llm.CLAUDE_4_5_SONNET_2025_09_29, Llm.GPT_4_1_2025_04_14]
@@ -721,6 +723,7 @@ class ParallelGenerationStage:
                         api_key=self.gemini_api_key,
                         callback=lambda x, i=index: self._process_chunk(x, i),
                         model_name=model.value,
+                        thinking_callback=lambda x, i=index: self._process_thinking(x, i),
                     )
                 )
             elif model in ANTHROPIC_MODELS:
@@ -733,6 +736,7 @@ class ParallelGenerationStage:
                         api_key=self.anthropic_api_key,
                         callback=lambda x, i=index: self._process_chunk(x, i),
                         model_name=model.value,
+                        thinking_callback=lambda x, i=index: self._process_thinking(x, i),
                     )
                 )
 
@@ -741,6 +745,10 @@ class ParallelGenerationStage:
     async def _process_chunk(self, content: str, variant_index: int):
         """Process streaming chunks"""
         await self.send_message("chunk", content, variant_index)
+
+    async def _process_thinking(self, content: str, variant_index: int):
+        """Process thinking/reasoning content"""
+        await self.send_message("thinking", content, variant_index)
 
     async def _stream_openai_with_error_handling(
         self,

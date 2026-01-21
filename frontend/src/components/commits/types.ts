@@ -6,6 +6,9 @@ export type Variant = {
   code: string;
   status?: VariantStatus;
   errorMessage?: string;
+  thinking?: string;
+  thinkingStartTime?: number;
+  thinkingDuration?: number;
 };
 
 export type BaseCommit = {
