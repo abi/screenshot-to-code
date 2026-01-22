@@ -110,7 +110,7 @@ function LandingPage() {
       {/* Hero Section with Demo */}
       <header className="relative pt-28 pb-16 lg:pt-32 lg:pb-20 px-6 bg-grid noise-overlay overflow-hidden min-h-[calc(100vh-80px)]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8 lg:gap-12 items-center">
             {/* Left side - Text content */}
             <div>
               {/* Eyebrow */}
