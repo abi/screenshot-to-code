@@ -56,22 +56,6 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Animated text glow pulse */
-@keyframes glow-pulse {
-  0%, 100% {
-    color: var(--dark);
-    text-shadow: none;
-  }
-  50% {
-    color: var(--accent-warm);
-    text-shadow: 0 0 20px rgba(232, 93, 4, 0.4);
-  }
-}
-
-.text-glow-pulse {
-  animation: glow-pulse 2.5s ease-in-out infinite;
-}
-
 .text-accent-gradient {
   background: linear-gradient(135deg, var(--accent-warm) 0%, var(--accent-light) 100%);
   -webkit-background-clip: text;

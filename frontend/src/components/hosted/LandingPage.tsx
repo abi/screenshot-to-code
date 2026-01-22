@@ -128,7 +128,7 @@ function LandingPage() {
                 <br />
                 <span className="font-editorial not-italic">Interfaces</span>
                 <br />
-                <span className="text-glow-pulse">10x Faster</span>
+                10x Faster
               </h1>
 
               {/* Subheadline */}
