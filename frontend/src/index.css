@@ -233,6 +233,25 @@
   width: 100%;
 }
 
+/* Compact tweets */
+.compact-tweets [data-tweet-id] {
+  margin: 0 !important;
+}
+
+.compact-tweets .react-tweet-theme {
+  --tweet-container-margin: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.compact-tweets article {
+  padding: 12px !important;
+}
+
+.compact-tweets [data-tweet-id] > div {
+  margin: 0 !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

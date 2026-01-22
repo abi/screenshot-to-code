@@ -273,7 +273,7 @@ function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start [&_>_div]:min-w-0">
+          <div className="compact-tweets grid grid-cols-1 md:grid-cols-2 gap-4 items-start [&_>_div]:min-w-0">
             <Tweet id="1733865178905661940" />
             <Tweet id="1727105236811366669" />
             <Tweet id="1732032876739224028" />
