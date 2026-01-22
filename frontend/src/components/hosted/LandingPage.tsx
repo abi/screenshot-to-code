@@ -112,7 +112,7 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8 lg:gap-12 items-center">
             {/* Left side - Text content */}
-            <div className="px-4 sm:px-0">
+            <div className="px-4 sm:px-0 w-full">
               {/* Eyebrow */}
               <div className="flex items-center gap-3 mb-6 animate-fade-up">
                 <span className="stat-highlight text-sm text-[#E85D04]">
@@ -123,10 +123,8 @@ function LandingPage() {
               </div>
 
               {/* Main headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.95] mb-5 animate-fade-up delay-100">
-                Build User
-                <br />
-                Interfaces
+              <h1 className="text-[2.75rem] sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.95] mb-5 animate-fade-up delay-100">
+                Build User Interfaces
                 <br />
                 <span className="text-[#E85D04]">10x Faster</span>
               </h1>
