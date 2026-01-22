@@ -1,6 +1,5 @@
 import { FaGithub, FaArrowRight } from "react-icons/fa";
 import Footer from "./LandingPage/Footer";
-import { Button } from "../ui/button";
 import { SignUp } from "@clerk/clerk-react";
 import { useState } from "react";
 import { Dialog, DialogContent } from "../ui/dialog";
@@ -29,9 +28,9 @@ const FEATURES = [
   },
   {
     number: "04",
-    title: "Video to Prototype",
+    title: "Text to Code",
     description:
-      "Record your screen or upload a video. We'll extract the UI and turn it into functional code.",
+      "Describe the UI you want in plain English. Our AI understands your intent and generates matching code.",
   },
 ];
 
@@ -92,14 +91,6 @@ function LandingPage() {
               </span>
             </div>
             <div className="flex items-center gap-6">
-              <a
-                href="https://github.com/abi/screenshot-to-code"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-600 hover-line hidden sm:block"
-              >
-                GitHub
-              </a>
               <button
                 onClick={signIn}
                 className="text-sm text-gray-600 hover-line"
@@ -134,17 +125,16 @@ function LandingPage() {
 
               {/* Main headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.95] mb-5 animate-fade-up delay-100">
-                Turn any
+                Build User
                 <br />
-                <span className="font-editorial not-italic">screenshot</span>
+                <span className="font-editorial not-italic">Interfaces</span>
                 <br />
-                into{" "}
-                <span className="text-outline">code</span>
+                <span className="text-outline">10x</span> Faster
               </h1>
 
               {/* Subheadline */}
               <p className="text-lg sm:text-xl text-gray-600 max-w-md mb-8 leading-relaxed animate-fade-up delay-200">
-                AI-powered conversion from visual designs to clean, production-ready code.
+                AI-powered conversion from screenshots, mockups and designs to clean, production-ready code.
               </p>
 
               {/* CTAs */}
@@ -153,22 +143,24 @@ function LandingPage() {
                   onClick={signIn}
                   className="btn-primary px-6 py-3.5 text-base font-medium inline-flex items-center gap-2 group"
                 >
-                  <span>Start Building Free</span>
+                  <span>Start Building</span>
                   <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
                 </button>
-                <Button
-                  variant="outline"
+                <button
                   onClick={() =>
                     window.open(
                       "https://github.com/abi/screenshot-to-code",
                       "_blank"
                     )
                   }
-                  className="px-6 py-3.5 text-base border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors"
+                  className="px-6 py-3.5 text-base font-medium border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors inline-flex items-center justify-center gap-2"
                 >
-                  <FaGithub className="mr-2" />
-                  View Source
-                </Button>
+                  <FaGithub className="text-lg" />
+                  <span>Star on GitHub</span>
+                  <span className="bg-[#0D0D0D] text-white text-xs px-2 py-0.5 rounded-full font-mono">
+                    71.5k
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -176,7 +168,7 @@ function LandingPage() {
             <div className="relative animate-fade-up delay-200">
               <div className="video-frame">
                 <video
-                  src="/demos/youtube.mp4"
+                  src="/demos/instagram.mp4"
                   className="w-full"
                   autoPlay
                   loop
@@ -185,7 +177,7 @@ function LandingPage() {
                 />
               </div>
               <p className="text-sm text-gray-500 mt-4 text-center">
-                YouTube homepage → HTML/Tailwind in seconds
+                Screenshot → Code in seconds
               </p>
             </div>
           </div>
@@ -250,14 +242,17 @@ function LandingPage() {
       {/* Logo Wall */}
       <section className="py-16 px-6 border-y border-gray-200 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <p className="text-center text-sm text-gray-500 uppercase tracking-widest mb-12">
-            Trusted by teams at
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+            #1 tool used by developers and designers from leading companies.
+            <br className="hidden sm:block" />
+            {" "}Fully open source with{" "}
+            <span className="stat-highlight text-[#E85D04]">71,000+</span> stars on GitHub.
           </p>
-          <div className="flex gap-16 items-center justify-center flex-wrap">
+          <div className="flex gap-12 sm:gap-16 items-center justify-center flex-wrap">
             {LOGOS.map((companyName) => (
               <img
                 key={companyName}
-                className="h-6 w-auto object-contain grayscale opacity-40 hover:opacity-70 transition-opacity"
+                className="h-8 sm:h-10 w-auto object-contain grayscale opacity-50 hover:opacity-80 transition-opacity"
                 src={`https://picoapps.xyz/logos/${companyName}.png`}
                 alt={companyName}
               />
@@ -295,11 +290,6 @@ function LandingPage() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 mb-8">
-            <div className="w-2 h-2 bg-[#E85D04] rounded-full animate-pulse" />
-            <span className="text-gray-400 text-sm">Open source & free to use</span>
-          </div>
-
           <h2 className="text-4xl sm:text-6xl font-bold text-white tracking-tight mb-6">
             Ready to ship
             <br />
@@ -315,7 +305,7 @@ function LandingPage() {
               onClick={signIn}
               className="bg-white text-[#0D0D0D] px-8 py-4 text-base font-semibold hover:bg-[#E85D04] hover:text-white transition-colors inline-flex items-center justify-center gap-2"
             >
-              Get Started Free
+              Start Building
               <FaArrowRight className="text-sm" />
             </button>
             <button
