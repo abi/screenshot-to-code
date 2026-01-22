@@ -1,5 +1,3 @@
-import { FaGithub } from "react-icons/fa";
-
 const Footer = () => {
   return (
     <footer className="bg-[#FFFCF2] border-t border-gray-200">
@@ -7,25 +5,16 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           {/* Brand */}
           <div className="md:col-span-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-2 h-2 bg-[#E85D04] rounded-full" />
+            <div className="flex items-center gap-2 mb-4">
+              <img src="/favicon/main.png" alt="Logo" className="w-6 h-6" />
               <span className="text-lg font-semibold tracking-tight font-display">
                 Screenshot to Code
               </span>
             </div>
             <p className="text-gray-500 mb-6 max-w-sm leading-relaxed">
-              AI-powered conversion from visual designs to clean, production-ready
+              AI-powered conversion from screenshots and designs to clean, production-ready
               code. Open source with 71,000+ GitHub stars.
             </p>
-            <a
-              href="https://github.com/abi/screenshot-to-code"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-gray-600 hover-line"
-            >
-              <FaGithub />
-              View on GitHub
-            </a>
           </div>
 
           {/* Links */}
@@ -78,17 +67,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   className="text-sm text-gray-600 hover-line"
                 >
-                  Terms
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://a.picoapps.xyz/camera-write"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-gray-600 hover-line"
-                >
-                  Privacy
+                  Terms of Service
                 </a>
               </li>
             </ul>

@@ -18,7 +18,7 @@ const FEATURES = [
     number: "02",
     title: "Framework Agnostic",
     description:
-      "Generate code for React, Vue, HTML/Tailwind, Bootstrap, Ionic, and more. Choose your stack, get your code.",
+      "Generate code for HTML/CSS, React, Vue, HTML/Tailwind, Bootstrap, Ionic, and more. Choose your stack, get your code.",
   },
   {
     number: "03",
@@ -29,8 +29,7 @@ const FEATURES = [
   {
     number: "04",
     title: "Text to Code",
-    description:
-      "Describe the UI you want in plain English. Our AI understands your intent and generates matching code.",
+    description: "Describe any UI you want in plain English.",
   },
 ];
 
@@ -84,8 +83,8 @@ function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FFFCF2]/90 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-[#E85D04] rounded-full" />
+            <div className="flex items-center gap-2">
+              <img src="/favicon/main.png" alt="Logo" className="w-6 h-6" />
               <span className="text-lg font-semibold tracking-tight">
                 Screenshot to Code
               </span>
@@ -134,7 +133,7 @@ function LandingPage() {
 
               {/* Subheadline */}
               <p className="text-lg sm:text-xl text-gray-600 max-w-md mb-8 leading-relaxed animate-fade-up delay-200">
-                AI-powered conversion from screenshots, mockups and designs to clean, production-ready code.
+                AI-powered conversion from screenshots and designs to clean, production-ready code.
               </p>
 
               {/* CTAs */}
