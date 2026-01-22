@@ -1,6 +1,6 @@
 # screenshot-to-code
 
-A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. Now supporting Claude Sonnet 3.7!
+A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. Now supporting Claude 4.5 Sonnet!
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
@@ -16,8 +16,10 @@ Supported stacks:
 
 Supported AI models:
 
-- Claude Sonnet 3.7 - Best model!
-- GPT-4o - also recommended!
+- Claude 4.5 Sonnet and Opus - Best models! (Anthropic)
+- GPT-5.2, GPT-4.1, GPT-4o (OpenAI)
+- O3, O4-mini reasoning models (OpenAI)
+- Gemini 3 Flash and Pro with thinking modes (Google)
 - DALL-E 3 or Flux Schnell (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
@@ -40,8 +42,8 @@ The app has a React/Vite frontend and a FastAPI backend.
 
 Keys needed:
 
-- [OpenAI API key with access to GPT-4](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md) or Anthropic key (optional)
-- Both are recommended so you can compare results from both Claude and GPT4o
+- [OpenAI API key](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md), Anthropic key, or Google Gemini key
+- Multiple keys are recommended so you can compare results from different models
 
 If you'd like to run the app with Ollama open source models (not recommended due to poor quality results), [follow this comment](https://github.com/abi/screenshot-to-code/issues/354#issuecomment-2435479853).
 
@@ -50,7 +52,8 @@ Run the backend (I use Poetry for package management - `pip install --upgrade po
 ```bash
 cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
-echo "ANTHROPIC_API_KEY=your-key" > .env
+echo "ANTHROPIC_API_KEY=your-key" >> .env
+echo "GEMINI_API_KEY=your-key" >> .env
 poetry install
 poetry shell
 poetry run uvicorn main:app --reload --port 7001
