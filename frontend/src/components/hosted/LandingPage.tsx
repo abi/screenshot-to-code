@@ -261,7 +261,7 @@ function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 px-6 bg-[#FFFCF2]">
+      <section className="py-24 px-6 bg-[#FFFCF2] overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-sm text-[#E85D04] uppercase tracking-widest mb-4">
@@ -274,7 +274,7 @@ function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start [&_>_div]:min-w-0">
             <Tweet id="1733865178905661940" />
             <Tweet id="1727105236811366669" />
             <Tweet id="1732032876739224028" />
