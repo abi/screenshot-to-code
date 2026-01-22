@@ -1,4 +1,4 @@
-import { FaGithub, FaCode, FaBolt, FaMagic, FaLayerGroup } from "react-icons/fa";
+import { FaGithub, FaArrowRight } from "react-icons/fa";
 import Footer from "./LandingPage/Footer";
 import { Button } from "../ui/button";
 import { SignUp } from "@clerk/clerk-react";
@@ -10,28 +10,28 @@ const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
 const FEATURES = [
   {
-    icon: FaMagic,
-    title: "AI-Powered Conversion",
+    number: "01",
+    title: "Screenshot to Code",
     description:
-      "Upload any screenshot or design and get production-ready code instantly",
+      "Drop any screenshot, Figma design, or mockup. Our AI analyzes the visual structure and generates production-ready code.",
   },
   {
-    icon: FaCode,
-    title: "Multiple Frameworks",
+    number: "02",
+    title: "Framework Agnostic",
     description:
-      "Generate code for React, Vue, HTML/Tailwind, Bootstrap, and more",
+      "Generate code for React, Vue, HTML/Tailwind, Bootstrap, Ionic, and more. Choose your stack, get your code.",
   },
   {
-    icon: FaBolt,
-    title: "Instant Results",
+    number: "03",
+    title: "Iterate & Refine",
     description:
-      "Get pixel-perfect code in seconds, not hours of manual coding",
+      "Not perfect on the first try? Use follow-up prompts to refine colors, spacing, components, or functionality.",
   },
   {
-    icon: FaLayerGroup,
-    title: "Iterative Refinement",
+    number: "04",
+    title: "Video to Prototype",
     description:
-      "Refine and iterate on generated code with follow-up prompts",
+      "Record your screen or upload a video. We'll extract the UI and turn it into functional code.",
   },
 ];
 
@@ -43,13 +43,13 @@ function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#FFFCF2] font-display">
       {/* Auth dialog */}
       <Dialog
         open={isAuthPopupOpen}
         onOpenChange={(value) => setIsAuthPopupOpen(value)}
       >
-        <DialogContent className="flex justify-center">
+        <DialogContent className="flex justify-center bg-[#FFFCF2]">
           <SignUp
             fallbackRedirectUrl="/"
             appearance={{
@@ -82,106 +82,115 @@ function LandingPage() {
       </Dialog>
 
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FFFCF2]/90 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg hero-gradient animate-gradient flex items-center justify-center">
-                <FaCode className="text-white text-sm" />
-              </div>
-              <span className="text-xl font-bold">Screenshot to Code</span>
-            </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                className="text-gray-600 hover:text-gray-900"
-                onClick={() =>
-                  window.open(
-                    "https://github.com/abi/screenshot-to-code",
-                    "_blank"
-                  )
-                }
+              <div className="w-2 h-2 bg-[#E85D04] rounded-full" />
+              <span className="text-lg font-semibold tracking-tight">
+                Screenshot to Code
+              </span>
+            </div>
+            <div className="flex items-center gap-6">
+              <a
+                href="https://github.com/abi/screenshot-to-code"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-600 hover-line hidden sm:block"
               >
-                <FaGithub className="mr-2" />
                 GitHub
-              </Button>
-              <Button variant="outline" onClick={signIn}>
-                Sign in
-              </Button>
-              <Button
+              </a>
+              <button
                 onClick={signIn}
-                className="hero-gradient animate-gradient text-white border-0"
+                className="text-sm text-gray-600 hover-line"
               >
-                Get started
-              </Button>
+                Sign in
+              </button>
+              <button
+                onClick={signIn}
+                className="btn-primary px-5 py-2.5 text-sm font-medium"
+              >
+                <span>Get Started</span>
+              </button>
             </div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <header className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" />
-        <div
-          className="absolute top-40 right-10 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
-          style={{ animationDelay: "2s" }}
-        />
-
-        <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-24">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-medium mb-8">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+      <header className="relative pt-32 pb-20 px-6 bg-grid noise-overlay overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="max-w-4xl">
+            {/* Eyebrow */}
+            <div className="flex items-center gap-3 mb-8 animate-fade-up">
+              <span className="stat-highlight text-sm text-[#E85D04]">
+                71,502
               </span>
-              71,000+ stars on GitHub
+              <span className="text-sm text-gray-500">stars on GitHub</span>
+              <div className="h-px w-12 bg-gray-300" />
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-              Build UIs{" "}
-              <span className="text-gradient">10x Faster</span>
+            {/* Main headline */}
+            <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tight leading-[0.95] mb-6 animate-fade-up delay-100">
+              Turn any
+              <br />
+              <span className="font-editorial not-italic">screenshot</span>
+              <br />
+              into{" "}
+              <span className="text-outline">code</span>
             </h1>
 
-            <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Convert any screenshot or design into clean, production-ready code
-              with AI
+            {/* Subheadline */}
+            <p className="text-xl sm:text-2xl text-gray-600 max-w-xl mb-10 leading-relaxed animate-fade-up delay-200">
+              AI-powered conversion from visual designs to clean, production-ready code.
+              Supporting React, Vue, HTML, and more.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="hero-gradient animate-gradient text-white border-0 text-lg px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-4 animate-fade-up delay-300">
+              <button
                 onClick={signIn}
+                className="btn-primary px-8 py-4 text-base font-medium inline-flex items-center gap-2 group"
               >
-                Start Building Free
-              </Button>
+                <span>Start Building Free</span>
+                <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
+              </button>
               <Button
                 variant="outline"
-                size="lg"
                 onClick={() =>
                   window.open(
                     "https://github.com/abi/screenshot-to-code",
                     "_blank"
                   )
                 }
-                className="text-lg px-8 py-6 rounded-xl border-2 hover:bg-gray-50"
+                className="px-8 py-4 text-base border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors"
               >
-                <FaGithub className="mr-2" size={20} />
-                View on GitHub
-                <span className="ml-2 text-sm bg-gray-100 rounded-full px-3 py-1">
-                  71,502
-                </span>
+                <FaGithub className="mr-2" />
+                View Source
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-1/2 right-10 w-32 h-32 border-2 border-[#E85D04] opacity-20 rotate-12 hidden lg:block" />
+        <div className="absolute bottom-20 right-1/4 w-4 h-4 bg-[#E85D04] hidden lg:block" />
       </header>
 
       {/* Video Demo Section */}
-      <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl animate-pulse-glow">
+      <section className="py-20 px-6 bg-[#0D0D0D]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-gray-400 text-sm uppercase tracking-widest mb-4">
+              See it in action
+            </p>
+            <h2 className="text-white text-3xl sm:text-4xl font-bold">
+              From screenshot to code in{" "}
+              <span className="font-editorial text-[#E85D04]">seconds</span>
+            </h2>
+          </div>
+
+          <div className="video-frame">
             <video
               src="/demos/youtube.mp4"
               className="w-full"
@@ -190,80 +199,92 @@ function LandingPage() {
               muted
               playsInline
             />
-            <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10" />
           </div>
-          <p className="text-center text-gray-500 mt-6">
-            Watch Screenshot to Code convert a YouTube screenshot to HTML/Tailwind in seconds
-          </p>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Everything you need to ship faster
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              From screenshot to production code in seconds
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {FEATURES.map((feature, index) => (
-              <div
-                key={index}
-                className="feature-card p-8 rounded-2xl border border-gray-100 bg-white hover:border-indigo-100"
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+            {/* Left side - Section intro */}
+            <div className="lg:sticky lg:top-32">
+              <div className="accent-line w-16 mb-8" />
+              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+                Built for the way
+                <br />
+                <span className="font-editorial">you work</span>
+              </h2>
+              <p className="text-xl text-gray-600 mb-8 max-w-md">
+                No complex setup. No learning curve. Just paste, click, and ship.
+              </p>
+              <button
+                onClick={signIn}
+                className="btn-primary px-6 py-3 text-sm font-medium inline-flex items-center gap-2 group"
               >
-                <div className="w-12 h-12 rounded-xl hero-gradient animate-gradient flex items-center justify-center mb-5">
-                  <feature.icon className="text-white text-xl" />
+                <span>Try it now</span>
+                <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
+              </button>
+            </div>
+
+            {/* Right side - Feature cards */}
+            <div className="space-y-6">
+              {FEATURES.map((feature, index) => (
+                <div
+                  key={index}
+                  className="feature-card-unique p-8"
+                >
+                  <div className="flex items-start gap-6">
+                    <span className="stat-highlight text-3xl text-gray-200">
+                      {feature.number}
+                    </span>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-600 leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Logo Wall */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-6">
-          <p className="text-center text-gray-600 mb-12 text-lg">
-            Trusted by developers and designers at leading companies
+      <section className="py-16 px-6 border-y border-gray-200 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-center text-sm text-gray-500 uppercase tracking-widest mb-12">
+            Trusted by teams at
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 items-center">
+          <div className="flex gap-16 items-center justify-center flex-wrap">
             {LOGOS.map((companyName) => (
-              <div
+              <img
                 key={companyName}
-                className="flex items-center justify-center p-4"
-              >
-                <img
-                  className="max-h-8 w-auto object-contain grayscale opacity-60 hover:opacity-100 hover:grayscale-0 transition-all duration-300"
-                  src={`https://picoapps.xyz/logos/${companyName}.png`}
-                  alt={companyName}
-                  width={120}
-                  height={48}
-                />
-              </div>
+                className="h-6 w-auto object-contain grayscale opacity-40 hover:opacity-70 transition-opacity"
+                src={`https://picoapps.xyz/logos/${companyName}.png`}
+                alt={companyName}
+              />
             ))}
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="py-24 px-6 bg-[#FFFCF2]">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Loved by developers worldwide
-            </h2>
-            <p className="text-xl text-gray-600">
-              Join thousands of developers shipping faster with Screenshot to Code
+            <p className="text-sm text-[#E85D04] uppercase tracking-widest mb-4">
+              What people say
             </p>
+            <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
+              Developers{" "}
+              <span className="font-editorial">love</span>
+              {" "}it
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -276,41 +297,51 @@ function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 hero-gradient animate-gradient opacity-90" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRoLTJ2LTRoMnY0em0wLTZ2LTRoLTJ2NGgyek0zNCAyMGgydjRoLTJ2LTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-20" />
+      <section className="py-24 px-6 bg-[#0D0D0D] relative overflow-hidden">
+        {/* Decorative grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
 
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-            Ready to build faster?
+        <div className="relative max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 mb-8">
+            <div className="w-2 h-2 bg-[#E85D04] rounded-full animate-pulse" />
+            <span className="text-gray-400 text-sm">Open source & free to use</span>
+          </div>
+
+          <h2 className="text-4xl sm:text-6xl font-bold text-white tracking-tight mb-6">
+            Ready to ship
+            <br />
+            <span className="text-outline text-white">faster?</span>
           </h2>
-          <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto">
-            Join over 71,000 developers who are already shipping UIs faster with Screenshot to Code
+
+          <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">
+            Join 71,000+ developers building UIs at lightning speed
           </p>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
+            <button
               onClick={signIn}
-              className="bg-white text-indigo-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl font-semibold"
+              className="bg-white text-[#0D0D0D] px-8 py-4 text-base font-semibold hover:bg-[#E85D04] hover:text-white transition-colors inline-flex items-center justify-center gap-2"
             >
               Get Started Free
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
+              <FaArrowRight className="text-sm" />
+            </button>
+            <button
               onClick={() =>
                 window.open(
                   "https://github.com/abi/screenshot-to-code",
                   "_blank"
                 )
               }
-              className="border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-6 rounded-xl bg-transparent"
+              className="border border-white/20 text-white px-8 py-4 text-base font-medium hover:border-white/40 transition-colors inline-flex items-center justify-center gap-2"
             >
-              <FaGithub className="mr-2" size={20} />
+              <FaGithub />
               Star on GitHub
-            </Button>
+            </button>
           </div>
         </div>
+
+        {/* Corner decoration */}
+        <div className="absolute bottom-0 right-0 w-48 h-48 border-l border-t border-[#E85D04]/20" />
       </section>
 
       {/* Footer */}

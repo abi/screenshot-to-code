@@ -1,52 +1,45 @@
-import { FaGithub, FaEnvelope } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+    <footer className="bg-[#FFFCF2] border-t border-gray-200">
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           {/* Brand */}
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg hero-gradient animate-gradient flex items-center justify-center">
-                <span className="text-white text-sm font-bold">&lt;/&gt;</span>
-              </div>
-              <span className="text-xl font-bold">Screenshot to Code</span>
+          <div className="md:col-span-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-2 h-2 bg-[#E85D04] rounded-full" />
+              <span className="text-lg font-semibold tracking-tight font-display">
+                Screenshot to Code
+              </span>
             </div>
-            <p className="text-gray-400 mb-6 max-w-md">
-              Convert any screenshot or design into clean, production-ready code
-              with AI. Open source with 71,000+ stars on GitHub.
+            <p className="text-gray-500 mb-6 max-w-sm leading-relaxed">
+              AI-powered conversion from visual designs to clean, production-ready
+              code. Open source with 71,000+ GitHub stars.
             </p>
-            <div className="flex gap-4">
-              <a
-                href="https://github.com/abi/screenshot-to-code"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors"
-              >
-                <FaGithub className="text-lg" />
-              </a>
-              <a
-                href="mailto:support@picoapps.xyz"
-                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors"
-              >
-                <FaEnvelope className="text-lg" />
-              </a>
-            </div>
+            <a
+              href="https://github.com/abi/screenshot-to-code"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover-line"
+            >
+              <FaGithub />
+              View on GitHub
+            </a>
           </div>
 
           {/* Links */}
-          <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-400">
+          <div className="md:col-span-2 md:col-start-8">
+            <h4 className="text-xs uppercase tracking-widest text-gray-400 mb-6">
               Resources
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               <li>
                 <a
                   href="https://github.com/abi/screenshot-to-code"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 hover-line"
                 >
                   GitHub
                 </a>
@@ -56,7 +49,7 @@ const Footer = () => {
                   href="https://github.com/abi/screenshot-to-code#readme"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 hover-line"
                 >
                   Documentation
                 </a>
@@ -64,7 +57,7 @@ const Footer = () => {
               <li>
                 <a
                   href="mailto:support@picoapps.xyz"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 hover-line"
                 >
                   Contact
                 </a>
@@ -73,19 +66,19 @@ const Footer = () => {
           </div>
 
           {/* Legal */}
-          <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-400">
+          <div className="md:col-span-2">
+            <h4 className="text-xs uppercase tracking-widest text-gray-400 mb-6">
               Legal
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               <li>
                 <a
                   href="https://a.picoapps.xyz/camera-write"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 hover-line"
                 >
-                  Terms of Service
+                  Terms
                 </a>
               </li>
               <li>
@@ -93,9 +86,9 @@ const Footer = () => {
                   href="https://a.picoapps.xyz/camera-write"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 hover-line"
                 >
-                  Privacy Policy
+                  Privacy
                 </a>
               </li>
             </ul>
@@ -103,12 +96,12 @@ const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} WhimsyWorks, Inc. All rights reserved.
+        <div className="border-t border-gray-200 mt-16 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-400">
+            {new Date().getFullYear()} WhimsyWorks, Inc.
           </p>
-          <p className="text-gray-500 text-sm">
-            Made with care in NYC
+          <p className="text-sm text-gray-400 font-editorial italic">
+            Made in NYC
           </p>
         </div>
       </div>
