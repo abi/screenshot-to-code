@@ -18,14 +18,13 @@ Supported AI models:
 
 - Gemini 3 Flash and Pro with thinking modes - Best models! (Google)
 - Claude Opus 4.5 - Best model! (Anthropic)
-- Claude 4.5 Sonnet (Anthropic)
-- GPT-5.2, GPT-4.1, GPT-4o (OpenAI)
-- O3, O4-mini reasoning models (OpenAI)
+- GPT-5.2, GPT-4.1 (OpenAI)
+- Other models are available as well but we recommend using the above models.
 - DALL-E 3 or Flux Schnell (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
 
-We also just added experimental support for taking a video/screen recording of a website in action and turning that into a functional prototype.
+We have experimental support for taking a video/screen recording of a website in action and turning that into a functional prototype.
 
 ![google in app quick 3](https://github.com/abi/screenshot-to-code/assets/23818/8758ffa4-9483-4b9b-bb66-abd6d1594c33)
 
