@@ -111,7 +111,7 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 
 https://github.com/abi/screenshot-to-code/assets/23818/503eb86a-356e-4dfc-926a-dabdb1ac7ba1
 
-**Hacker News** but it gets the colors wrong at first so we nudge it
+**Hacker News**
 
 
 https://github.com/user-attachments/assets/205cb5c7-9c3c-438d-acd4-26dfe6e077e5
