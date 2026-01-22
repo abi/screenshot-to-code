@@ -108,11 +108,11 @@ function LandingPage() {
       </nav>
 
       {/* Hero Section with Demo */}
-      <header className="relative pt-24 pb-12 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-20 px-4 sm:px-6 bg-grid noise-overlay overflow-hidden">
+      <header className="relative pt-24 pb-12 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-20 px-0 sm:px-6 bg-grid noise-overlay overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8 lg:gap-12 items-center">
             {/* Left side - Text content */}
-            <div>
+            <div className="px-4 sm:px-0">
               {/* Eyebrow */}
               <div className="flex items-center gap-3 mb-6 animate-fade-up">
                 <span className="stat-highlight text-sm text-[#E85D04]">
