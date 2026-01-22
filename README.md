@@ -16,7 +16,7 @@ Supported stacks:
 
 Supported AI models:
 
-- Gemini 3 Flash and Pro with thinking modes - Best models! (Google)
+- Gemini 3 Flash and Pro - Best models! (Google)
 - Claude Opus 4.5 - Best model! (Anthropic)
 - GPT-5.2, GPT-4.1 (OpenAI)
 - Other models are available as well but we recommend using the above models.
