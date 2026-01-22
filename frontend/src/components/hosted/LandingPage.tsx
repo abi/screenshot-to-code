@@ -128,7 +128,7 @@ function LandingPage() {
                 <br />
                 Interfaces
                 <br />
-                <span className="font-editorial not-italic">10x Faster</span>
+                <span className="text-[#E85D04]">10x Faster</span>
               </h1>
 
               {/* Subheadline */}
