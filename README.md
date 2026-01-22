@@ -1,6 +1,6 @@
 # screenshot-to-code
 
-A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. Now supporting Claude 4.5 Sonnet!
+A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. Now supporting Gemini 3 and Claude Opus 4.5!
 
 https://github.com/abi/screenshot-to-code/assets/23818/6cebadae-2fe3-4986-ac6a-8fb9db030045
 
@@ -16,10 +16,11 @@ Supported stacks:
 
 Supported AI models:
 
-- Claude 4.5 Sonnet and Opus - Best models! (Anthropic)
+- Gemini 3 Flash and Pro with thinking modes - Best models! (Google)
+- Claude Opus 4.5 - Best model! (Anthropic)
+- Claude 4.5 Sonnet (Anthropic)
 - GPT-5.2, GPT-4.1, GPT-4o (OpenAI)
 - O3, O4-mini reasoning models (OpenAI)
-- Gemini 3 Flash and Pro with thinking modes (Google)
 - DALL-E 3 or Flux Schnell (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
