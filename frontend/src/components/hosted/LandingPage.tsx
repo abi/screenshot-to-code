@@ -184,7 +184,6 @@ function LandingPage() {
 
         {/* Decorative elements */}
         <div className="absolute top-1/4 right-4 w-24 h-24 border-2 border-[#E85D04] opacity-10 rotate-12 hidden xl:block" />
-        <div className="absolute bottom-32 left-8 w-3 h-3 bg-[#E85D04] hidden lg:block" />
       </header>
 
       {/* Features Section */}
