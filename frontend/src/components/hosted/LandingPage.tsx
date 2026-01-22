@@ -126,9 +126,9 @@ function LandingPage() {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.95] mb-5 animate-fade-up delay-100">
                 Build User
                 <br />
-                <span className="font-editorial not-italic">Interfaces</span>
+                Interfaces
                 <br />
-                10x Faster
+                <span className="font-editorial not-italic">10x Faster</span>
               </h1>
 
               {/* Subheadline */}
