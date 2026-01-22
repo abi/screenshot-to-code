@@ -56,30 +56,20 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Animated text shimmer */
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
+/* Animated text glow pulse */
+@keyframes glow-pulse {
+  0%, 100% {
+    color: var(--dark);
+    text-shadow: none;
   }
-  100% {
-    background-position: 200% center;
+  50% {
+    color: var(--accent-warm);
+    text-shadow: 0 0 20px rgba(232, 93, 4, 0.4);
   }
 }
 
-.text-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--dark) 0%,
-    var(--dark) 40%,
-    var(--accent-warm) 50%,
-    var(--dark) 60%,
-    var(--dark) 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s linear infinite;
+.text-glow-pulse {
+  animation: glow-pulse 2.5s ease-in-out infinite;
 }
 
 .text-accent-gradient {
