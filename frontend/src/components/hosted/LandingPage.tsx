@@ -128,7 +128,7 @@ function LandingPage() {
                 <br />
                 <span className="font-editorial not-italic">Interfaces</span>
                 <br />
-                <span className="text-outline">10x</span> Faster
+                <span className="text-shimmer">10x Faster</span>
               </h1>
 
               {/* Subheadline */}
