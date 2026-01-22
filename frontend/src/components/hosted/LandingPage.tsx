@@ -80,25 +80,25 @@ function LandingPage() {
       </Dialog>
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FFFCF2]/90 backdrop-blur-sm px-6">
-        <div className="max-w-7xl mx-auto py-5">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FFFCF2]/90 backdrop-blur-sm px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto py-4 sm:py-5">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <img src="/favicon/main.png" alt="Logo" className="w-6 h-6" />
-              <span className="text-lg font-semibold tracking-tight">
+              <span className="text-base sm:text-lg font-semibold tracking-tight">
                 Screenshot to Code
               </span>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 sm:gap-6">
               <button
                 onClick={signIn}
-                className="text-sm text-gray-600 hover-line"
+                className="text-sm text-gray-600 hover-line hidden sm:block"
               >
                 Sign in
               </button>
               <button
                 onClick={signIn}
-                className="btn-primary px-5 py-2.5 text-sm font-medium"
+                className="btn-primary px-4 sm:px-5 py-2 sm:py-2.5 text-sm font-medium"
               >
                 <span>Get Started</span>
               </button>
@@ -108,7 +108,7 @@ function LandingPage() {
       </nav>
 
       {/* Hero Section with Demo */}
-      <header className="relative pt-28 pb-16 lg:pt-32 lg:pb-20 px-6 bg-grid noise-overlay overflow-hidden min-h-[calc(100vh-80px)]">
+      <header className="relative pt-24 pb-12 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-20 px-4 sm:px-6 bg-grid noise-overlay overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8 lg:gap-12 items-center">
             {/* Left side - Text content */}
@@ -137,10 +137,10 @@ function LandingPage() {
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-300">
+              <div className="flex flex-wrap gap-3 animate-fade-up delay-300">
                 <button
                   onClick={signIn}
-                  className="btn-primary px-6 py-3.5 text-base font-medium inline-flex items-center gap-2 group"
+                  className="btn-primary px-5 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-medium inline-flex items-center gap-2 group"
                 >
                   <span>Start Building</span>
                   <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
@@ -152,10 +152,10 @@ function LandingPage() {
                       "_blank"
                     )
                   }
-                  className="px-6 py-3.5 text-base font-medium border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors inline-flex items-center justify-center gap-2"
+                  className="px-5 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-medium border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors inline-flex items-center gap-2"
                 >
                   <FaGithub className="text-lg" />
-                  <span>Star on GitHub</span>
+                  <span>GitHub</span>
                   <span className="bg-[#0D0D0D] text-white text-xs px-2 py-0.5 rounded-full font-mono">
                     71.5k
                   </span>
