@@ -115,7 +115,7 @@ function LandingPage() {
             <div className="px-4 sm:px-0 w-full">
               {/* Eyebrow */}
               <div className="flex items-center gap-3 mb-6 animate-fade-up">
-                <span className="stat-highlight text-sm text-[#0D9488]">
+                <span className="stat-highlight text-sm text-[#2563EB]">
                   71,502
                 </span>
                 <span className="text-sm text-gray-500">stars on GitHub</span>
@@ -126,7 +126,7 @@ function LandingPage() {
               <h1 className="text-[2.75rem] sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.95] mb-5 animate-fade-up delay-100">
                 Build User Interfaces
                 <br />
-                <span className="text-[#0D9488]">10x Faster</span>
+                <span className="text-[#2563EB]">10x Faster</span>
               </h1>
 
               {/* Subheadline */}
@@ -181,7 +181,7 @@ function LandingPage() {
         </div>
 
         {/* Decorative elements */}
-        <div className="absolute top-1/4 right-4 w-24 h-24 border-2 border-[#0D9488] opacity-10 rotate-12 hidden xl:block" />
+        <div className="absolute top-1/4 right-4 w-24 h-24 border-2 border-[#2563EB] opacity-10 rotate-12 hidden xl:block" />
       </header>
 
       {/* Features Section */}
@@ -242,7 +242,7 @@ function LandingPage() {
             #1 tool used by developers and designers from leading companies.
             <br className="hidden sm:block" />
             {" "}Fully open source with{" "}
-            <span className="stat-highlight text-[#0D9488]">71,000+</span> stars on GitHub.
+            <span className="stat-highlight text-[#2563EB]">71,000+</span> stars on GitHub.
           </p>
           <div className="flex gap-12 sm:gap-16 items-center justify-center flex-wrap">
             {LOGOS.map((companyName) => (
@@ -261,7 +261,7 @@ function LandingPage() {
       <section className="py-24 px-6 bg-[#FFFCF2] overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-sm text-[#0D9488] uppercase tracking-widest mb-4">
+            <p className="text-sm text-[#2563EB] uppercase tracking-widest mb-4">
               What people say
             </p>
             <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
@@ -299,7 +299,7 @@ function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={signIn}
-              className="bg-white text-[#0D0D0D] px-8 py-4 text-base font-semibold hover:bg-[#0D9488] hover:text-white transition-colors inline-flex items-center justify-center gap-2"
+              className="bg-white text-[#0D0D0D] px-8 py-4 text-base font-semibold hover:bg-[#2563EB] hover:text-white transition-colors inline-flex items-center justify-center gap-2"
             >
               Start Building
               <FaArrowRight className="text-sm" />
@@ -320,7 +320,7 @@ function LandingPage() {
         </div>
 
         {/* Corner decoration */}
-        <div className="absolute bottom-0 right-0 w-48 h-48 border-l border-t border-[#0D9488]/20" />
+        <div className="absolute bottom-0 right-0 w-48 h-48 border-l border-t border-[#2563EB]/20" />
       </section>
 
       {/* Footer */}
