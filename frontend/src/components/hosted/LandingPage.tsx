@@ -117,91 +117,84 @@ function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <header className="relative pt-32 pb-20 px-6 bg-grid noise-overlay overflow-hidden">
+      {/* Hero Section with Demo */}
+      <header className="relative pt-28 pb-16 lg:pt-32 lg:pb-20 px-6 bg-grid noise-overlay overflow-hidden min-h-[calc(100vh-80px)]">
         <div className="max-w-7xl mx-auto">
-          <div className="max-w-4xl">
-            {/* Eyebrow */}
-            <div className="flex items-center gap-3 mb-8 animate-fade-up">
-              <span className="stat-highlight text-sm text-[#E85D04]">
-                71,502
-              </span>
-              <span className="text-sm text-gray-500">stars on GitHub</span>
-              <div className="h-px w-12 bg-gray-300" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left side - Text content */}
+            <div>
+              {/* Eyebrow */}
+              <div className="flex items-center gap-3 mb-6 animate-fade-up">
+                <span className="stat-highlight text-sm text-[#E85D04]">
+                  71,502
+                </span>
+                <span className="text-sm text-gray-500">stars on GitHub</span>
+                <div className="h-px w-12 bg-gray-300" />
+              </div>
+
+              {/* Main headline */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.95] mb-5 animate-fade-up delay-100">
+                Turn any
+                <br />
+                <span className="font-editorial not-italic">screenshot</span>
+                <br />
+                into{" "}
+                <span className="text-outline">code</span>
+              </h1>
+
+              {/* Subheadline */}
+              <p className="text-lg sm:text-xl text-gray-600 max-w-md mb-8 leading-relaxed animate-fade-up delay-200">
+                AI-powered conversion from visual designs to clean, production-ready code.
+              </p>
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-300">
+                <button
+                  onClick={signIn}
+                  className="btn-primary px-6 py-3.5 text-base font-medium inline-flex items-center gap-2 group"
+                >
+                  <span>Start Building Free</span>
+                  <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
+                </button>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    window.open(
+                      "https://github.com/abi/screenshot-to-code",
+                      "_blank"
+                    )
+                  }
+                  className="px-6 py-3.5 text-base border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors"
+                >
+                  <FaGithub className="mr-2" />
+                  View Source
+                </Button>
+              </div>
             </div>
 
-            {/* Main headline */}
-            <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tight leading-[0.95] mb-6 animate-fade-up delay-100">
-              Turn any
-              <br />
-              <span className="font-editorial not-italic">screenshot</span>
-              <br />
-              into{" "}
-              <span className="text-outline">code</span>
-            </h1>
-
-            {/* Subheadline */}
-            <p className="text-xl sm:text-2xl text-gray-600 max-w-xl mb-10 leading-relaxed animate-fade-up delay-200">
-              AI-powered conversion from visual designs to clean, production-ready code.
-              Supporting React, Vue, HTML, and more.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 animate-fade-up delay-300">
-              <button
-                onClick={signIn}
-                className="btn-primary px-8 py-4 text-base font-medium inline-flex items-center gap-2 group"
-              >
-                <span>Start Building Free</span>
-                <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
-              </button>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  window.open(
-                    "https://github.com/abi/screenshot-to-code",
-                    "_blank"
-                  )
-                }
-                className="px-8 py-4 text-base border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors"
-              >
-                <FaGithub className="mr-2" />
-                View Source
-              </Button>
+            {/* Right side - Video demo */}
+            <div className="relative animate-fade-up delay-200">
+              <div className="video-frame">
+                <video
+                  src="/demos/youtube.mp4"
+                  className="w-full"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-4 text-center">
+                YouTube homepage → HTML/Tailwind in seconds
+              </p>
             </div>
           </div>
         </div>
 
         {/* Decorative elements */}
-        <div className="absolute top-1/2 right-10 w-32 h-32 border-2 border-[#E85D04] opacity-20 rotate-12 hidden lg:block" />
-        <div className="absolute bottom-20 right-1/4 w-4 h-4 bg-[#E85D04] hidden lg:block" />
+        <div className="absolute top-1/4 right-4 w-24 h-24 border-2 border-[#E85D04] opacity-10 rotate-12 hidden xl:block" />
+        <div className="absolute bottom-32 left-8 w-3 h-3 bg-[#E85D04] hidden lg:block" />
       </header>
-
-      {/* Video Demo Section */}
-      <section className="py-20 px-6 bg-[#0D0D0D]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-gray-400 text-sm uppercase tracking-widest mb-4">
-              See it in action
-            </p>
-            <h2 className="text-white text-3xl sm:text-4xl font-bold">
-              From screenshot to code in{" "}
-              <span className="font-editorial text-[#E85D04]">seconds</span>
-            </h2>
-          </div>
-
-          <div className="video-frame">
-            <video
-              src="/demos/youtube.mp4"
-              className="w-full"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
-          </div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section className="py-24 px-6 bg-white">
