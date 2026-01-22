@@ -113,4 +113,7 @@ https://github.com/abi/screenshot-to-code/assets/23818/503eb86a-356e-4dfc-926a-d
 
 **Hacker News** but it gets the colors wrong at first so we nudge it
 
-https://github.com/abi/screenshot-to-code/assets/23818/3fec0f77-44e8-4fb3-a769-ac7410315e5d
+
+https://github.com/user-attachments/assets/205cb5c7-9c3c-438d-acd4-26dfe6e077e5
+
+
