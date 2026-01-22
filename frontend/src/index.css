@@ -29,6 +29,229 @@
   }
 }
 
+/* Landing page - Distinctive Style */
+
+/* Unique accent color - warm coral/vermillion */
+:root {
+  --accent-warm: #E85D04;
+  --accent-light: #FAA307;
+  --dark: #0D0D0D;
+  --cream: #FFFCF2;
+}
+
+/* Typography styles */
+.font-display {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.font-editorial {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+}
+
+/* Distinctive text treatments */
+.text-outline {
+  -webkit-text-stroke: 1.5px currentColor;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-accent-gradient {
+  background: linear-gradient(135deg, var(--accent-warm) 0%, var(--accent-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Geometric accent shapes */
+.accent-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-warm);
+  border-radius: 50%;
+}
+
+.accent-line {
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-warm) 0%, transparent 100%);
+}
+
+/* Unique button style */
+.btn-primary {
+  background: var(--dark);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-warm);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary:hover::before {
+  transform: translateX(0);
+}
+
+.btn-primary span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Video container with unique border treatment */
+.video-frame {
+  position: relative;
+  border: 2px solid var(--dark);
+}
+
+.video-frame::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: -8px;
+  bottom: -8px;
+  border: 2px solid var(--accent-warm);
+  z-index: -1;
+}
+
+/* Feature card with corner accent */
+.feature-card-unique {
+  position: relative;
+  background: white;
+  border: 1px solid #e5e5e5;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature-card-unique::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: var(--accent-warm);
+  transition: width 0.3s ease;
+}
+
+.feature-card-unique:hover {
+  border-color: var(--dark);
+  transform: translateY(-2px);
+}
+
+.feature-card-unique:hover::before {
+  width: 100%;
+}
+
+/* Marquee animation for logo wall */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* Subtle entrance animations */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+/* Stagger delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+
+/* Grid pattern background */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Noise texture overlay */
+.noise-overlay {
+  position: relative;
+}
+
+.noise-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+/* Number/stat highlight */
+.stat-highlight {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+
+/* Hover underline effect */
+.hover-line {
+  position: relative;
+}
+
+.hover-line::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent-warm);
+  transition: width 0.3s ease;
+}
+
+.hover-line:hover::after {
+  width: 100%;
+}
+
+/* Compact tweets */
+.compact-tweets [data-tweet-id] {
+  margin: 0 !important;
+}
+
+.compact-tweets .react-tweet-theme {
+  --tweet-container-margin: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.compact-tweets article {
+  padding: 12px !important;
+}
+
+.compact-tweets [data-tweet-id] > div {
+  margin: 0 !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
