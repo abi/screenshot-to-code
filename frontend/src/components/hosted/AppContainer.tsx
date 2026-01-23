@@ -37,7 +37,7 @@ function AppContainer() {
 
       const user: UserResponse = await authenticatedFetch(
         SAAS_BACKEND_URL + "/users/create",
-        "POST"
+        "POST",
       );
 
       // If the user is not signed in, authenticatedFetch will return undefined
