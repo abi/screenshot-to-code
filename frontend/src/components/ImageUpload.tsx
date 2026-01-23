@@ -38,10 +38,24 @@ const rejectStyle = {
 };
 
 // TODO: Move to a separate file
-function fileToDataURL(file: File) {
+function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Check if the MIME type is correctly set in the data URL
+      // Some browsers return application/octet-stream for video files
+      if (result.startsWith("data:application/octet-stream") && file.type) {
+        // Replace with the correct MIME type from the file
+        const correctedResult = result.replace(
+          "data:application/octet-stream",
+          `data:${file.type}`
+        );
+        resolve(correctedResult);
+      } else {
+        resolve(result);
+      }
+    };
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
   });
@@ -142,14 +156,20 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
           ) as FileWithPreview[]
         );
 
+        // Determine input mode from file type (more reliable than checking data URL)
+        const firstFile = acceptedFiles[0];
+        const isVideo = firstFile?.type?.startsWith("video/") ||
+          [".mp4", ".mov", ".webm"].some(ext => firstFile?.name?.toLowerCase().endsWith(ext));
+
         // Convert images to data URLs and store them (don't trigger generation yet)
         Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
           .then((dataUrls) => {
             if (dataUrls.length > 0) {
-              const inputMode = (dataUrls[0] as string).startsWith("data:video")
+              // Use file type detection as primary, fall back to data URL check
+              const inputMode = isVideo || (dataUrls[0] as string).startsWith("data:video")
                 ? "video"
                 : "image";
-              setUploadedDataUrls(dataUrls.map((dataUrl) => dataUrl as string));
+              setUploadedDataUrls(dataUrls as string[]);
               setUploadedInputMode(inputMode);
               // Focus the text input after upload
               setTimeout(() => textInputRef.current?.focus(), 100);

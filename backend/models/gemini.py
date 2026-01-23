@@ -25,6 +25,38 @@ def extract_text_from_content(content: str | List[Dict[str, Any]]) -> str:
     return ""
 
 
+def detect_mime_type_from_base64(base64_data: str) -> str | None:
+    """
+    Detect MIME type from base64 data by checking magic bytes.
+    Returns detected MIME type or None if unknown.
+    """
+    try:
+        # Decode first few bytes to check magic numbers
+        decoded = base64.b64decode(base64_data[:32])
+
+        # Check for common image formats
+        if decoded[:8] == b'\x89PNG\r\n\x1a\n':
+            return "image/png"
+        if decoded[:2] == b'\xff\xd8':
+            return "image/jpeg"
+        if decoded[:6] in (b'GIF87a', b'GIF89a'):
+            return "image/gif"
+        if decoded[:4] == b'RIFF' and decoded[8:12] == b'WEBP':
+            return "image/webp"
+
+        # Check for video formats
+        if decoded[4:8] == b'ftyp':
+            # MP4/MOV file
+            return "video/mp4"
+        if decoded[:4] == b'\x1aE\xdf\xa3':
+            # WebM file
+            return "video/webm"
+    except Exception:
+        pass
+
+    return None
+
+
 def extract_image_from_content(content: str | List[Dict[str, Any]]) -> Dict[str, str] | None:
     """
     Extracts image data from message content.
@@ -47,6 +79,17 @@ def extract_image_from_content(content: str | List[Dict[str, Any]]) -> Dict[str,
                 # Extract base64 data and mime type for data URLs
                 mime_type = image_url.split(";")[0].split(":")[1]
                 base64_data = image_url.split(",")[1]
+
+                # If MIME type is generic, try to detect from data
+                if mime_type == "application/octet-stream":
+                    detected_mime = detect_mime_type_from_base64(base64_data)
+                    if detected_mime:
+                        mime_type = detected_mime
+                    else:
+                        # Skip this content if we can't determine the type
+                        print(f"Warning: Could not detect MIME type for data URL, skipping")
+                        continue
+
                 return {"mime_type": mime_type, "data": base64_data}
             else:
                 # Handle regular URLs
