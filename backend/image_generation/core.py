@@ -54,14 +54,12 @@ async def generate_image_dalle(
 
 async def generate_image_replicate(prompt: str, api_key: str) -> str:
 
-    # We use Flux Schnell
+    # We use Flux 2 Klein
     return await call_replicate(
         {
             "prompt": prompt,
-            "num_outputs": 1,
             "aspect_ratio": "1:1",
             "output_format": "png",
-            "output_quality": 100,
         },
         api_key,
     )
