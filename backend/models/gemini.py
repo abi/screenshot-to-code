@@ -281,11 +281,14 @@ async def stream_gemini_response_video(
     client = genai.Client(api_key=api_key)
     full_response = ""
 
-    # Create content with video inline data
+    # Create content with video inline data at 10fps for better fidelity
     contents = types.Content(
         role="user",
         parts=[
-            types.Part.from_bytes(data=video_bytes, mime_type=video_mime_type),
+            types.Part(
+                inline_data=types.Blob(data=video_bytes, mime_type=video_mime_type),
+                video_metadata=types.VideoMetadata(fps=10),
+            ),
             types.Part(text="Analyze this video and generate the code."),
         ],
     )
