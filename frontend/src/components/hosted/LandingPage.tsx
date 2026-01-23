@@ -41,13 +41,13 @@ function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFCF2] font-display">
+    <div className="min-h-screen bg-[#FFFCF2] dark:bg-[#0D0D0D] font-display dark:text-white">
       {/* Auth dialog */}
       <Dialog
         open={isAuthPopupOpen}
         onOpenChange={(value) => setIsAuthPopupOpen(value)}
       >
-        <DialogContent className="flex justify-center bg-[#FFFCF2]">
+        <DialogContent className="flex justify-center bg-[#FFFCF2] dark:bg-[#1a1a1a]">
           <SignUp
             fallbackRedirectUrl="/"
             appearance={{
@@ -80,7 +80,7 @@ function LandingPage() {
       </Dialog>
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FFFCF2]/90 backdrop-blur-sm px-4 sm:px-6">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FFFCF2]/90 dark:bg-[#0D0D0D]/90 backdrop-blur-sm px-4 sm:px-6">
         <div className="max-w-7xl mx-auto py-4 sm:py-5">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -92,7 +92,7 @@ function LandingPage() {
             <div className="flex items-center gap-3 sm:gap-6">
               <button
                 onClick={signIn}
-                className="text-sm text-gray-600 hover-line hidden sm:block"
+                className="text-sm text-gray-600 dark:text-gray-400 hover-line hidden sm:block"
               >
                 Sign in
               </button>
@@ -118,8 +118,8 @@ function LandingPage() {
                 <span className="stat-highlight text-sm text-[#2563EB]">
                   71,502
                 </span>
-                <span className="text-sm text-gray-500">stars on GitHub</span>
-                <div className="h-px w-12 bg-gray-300" />
+                <span className="text-sm text-gray-500 dark:text-gray-400">stars on GitHub</span>
+                <div className="h-px w-12 bg-gray-300 dark:bg-gray-700" />
               </div>
 
               {/* Main headline */}
@@ -132,7 +132,7 @@ function LandingPage() {
               </h1>
 
               {/* Subheadline */}
-              <p className="text-xl sm:text-xl text-gray-600 max-w-md mb-8 sm:mb-8 leading-relaxed animate-fade-up delay-200">
+              <p className="text-xl sm:text-xl text-gray-600 dark:text-gray-400 max-w-md mb-8 sm:mb-8 leading-relaxed animate-fade-up delay-200">
                 AI-powered conversion from screenshots and designs to clean, production-ready code.
               </p>
 
@@ -152,11 +152,11 @@ function LandingPage() {
                       "_blank"
                     )
                   }
-                  className="px-6 py-4 sm:px-6 sm:py-3.5 text-base sm:text-base font-medium border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors inline-flex items-center justify-center gap-2"
+                  className="px-6 py-4 sm:px-6 sm:py-3.5 text-base sm:text-base font-medium border-2 border-[#0D0D0D] dark:border-white bg-transparent hover:bg-[#0D0D0D] dark:hover:bg-white hover:text-white dark:hover:text-[#0D0D0D] transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <FaGithub className="text-lg" />
                   <span>GitHub</span>
-                  <span className="hidden sm:inline bg-[#0D0D0D] text-white text-xs px-2 py-0.5 rounded-full font-mono">
+                  <span className="hidden sm:inline bg-[#0D0D0D] dark:bg-white text-white dark:text-[#0D0D0D] text-xs px-2 py-0.5 rounded-full font-mono">
                     71.5k
                   </span>
                 </button>
@@ -175,7 +175,7 @@ function LandingPage() {
                   playsInline
                 />
               </div>
-              <p className="text-sm text-gray-500 mt-4 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 text-center">
                 Screenshot → Code in seconds
               </p>
             </div>
@@ -187,7 +187,7 @@ function LandingPage() {
       </header>
 
       {/* Features Section */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-24 px-6 bg-white dark:bg-[#111]">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             {/* Left side - Section intro */}
@@ -198,7 +198,7 @@ function LandingPage() {
                 <br />
                 <span className="font-editorial">you work</span>
               </h2>
-              <p className="text-xl text-gray-600 mb-8 max-w-md">
+              <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-md">
                 No complex setup. No learning curve. Just paste, click, and ship.
               </p>
               <button
@@ -218,14 +218,14 @@ function LandingPage() {
                   className="feature-card-unique p-8"
                 >
                   <div className="flex items-start gap-6">
-                    <span className="stat-highlight text-3xl text-gray-200">
+                    <span className="stat-highlight text-3xl text-gray-200 dark:text-gray-700">
                       {feature.number}
                     </span>
                     <div>
                       <h3 className="text-xl font-semibold mb-2">
                         {feature.title}
                       </h3>
-                      <p className="text-gray-600 leading-relaxed">
+                      <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                         {feature.description}
                       </p>
                     </div>
@@ -238,9 +238,9 @@ function LandingPage() {
       </section>
 
       {/* Logo Wall */}
-      <section className="py-16 px-6 border-y border-gray-200 overflow-hidden">
+      <section className="py-16 px-6 border-y border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
             #1 tool used by developers and designers from leading companies.
             <br className="hidden sm:block" />
             {" "}Fully open source with{" "}
@@ -250,7 +250,7 @@ function LandingPage() {
             {LOGOS.map((companyName) => (
               <img
                 key={companyName}
-                className="h-8 sm:h-10 w-auto object-contain grayscale opacity-50 hover:opacity-80 transition-opacity"
+                className="h-8 sm:h-10 w-auto object-contain grayscale opacity-50 hover:opacity-80 transition-opacity dark:invert"
                 src={`https://picoapps.xyz/logos/${companyName}.png`}
                 alt={companyName}
               />
@@ -260,7 +260,7 @@ function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 px-6 bg-[#FFFCF2] overflow-hidden">
+      <section className="py-24 px-6 bg-[#FFFCF2] dark:bg-[#0D0D0D] overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-sm text-[#2563EB] uppercase tracking-widest mb-4">

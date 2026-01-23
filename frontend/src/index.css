@@ -39,6 +39,13 @@
   --cream: #FFFCF2;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dark: #FFFCF2;
+    --cream: #0D0D0D;
+  }
+}
+
 /* Typography styles */
 .font-display {
   font-family: 'Space Grotesk', system-ui, sans-serif;
@@ -86,6 +93,13 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+@media (prefers-color-scheme: dark) {
+  .btn-primary {
+    background: white;
+    color: #0D0D0D;
+  }
+}
+
 .btn-primary::before {
   content: '';
   position: absolute;
@@ -110,6 +124,12 @@
   border: 2px solid var(--dark);
 }
 
+@media (prefers-color-scheme: dark) {
+  .video-frame {
+    border-color: #444;
+  }
+}
+
 .video-frame::before {
   content: '';
   position: absolute;
@@ -127,6 +147,13 @@
   background: white;
   border: 1px solid #e5e5e5;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .feature-card-unique {
+    background: #1a1a1a;
+    border-color: #333;
+  }
 }
 
 .feature-card-unique::before {
@@ -191,6 +218,14 @@
     linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
   background-size: 60px 60px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  }
 }
 
 /* Noise texture overlay */
