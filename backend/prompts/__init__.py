@@ -46,6 +46,21 @@ async def create_prompt(
             prompt_messages = assemble_prompt(image_url, stack, text_prompt)
         elif input_mode == "text":
             prompt_messages = assemble_text_prompt(prompt["text"], stack)
+        elif input_mode == "video":
+            # For video mode initial creation, extract screenshots from video
+            # For updates, we use the history which already contains the generated code
+            if generation_type == "create":
+                video_data_url = prompt["images"][0]
+                prompt_messages = await assemble_claude_prompt_video(video_data_url)
+            else:
+                # For video mode updates, use the screenshot system prompt
+                # since we're now working with the generated code, not the video
+                prompt_messages = [
+                    {
+                        "role": "system",
+                        "content": SYSTEM_PROMPTS[stack],
+                    }
+                ]
         else:
             # Default to image mode for backward compatibility
             image_url = prompt["images"][0]
@@ -60,10 +75,6 @@ async def create_prompt(
                 prompt_messages.append(message)
 
             image_cache = create_alt_url_mapping(history[-2]["text"])
-
-    if input_mode == "video":
-        video_data_url = prompt["images"][0]
-        prompt_messages = await assemble_claude_prompt_video(video_data_url)
 
     return prompt_messages, image_cache
 

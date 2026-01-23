@@ -923,8 +923,14 @@ class CodeGenerationMiddleware(Middleware):
         else:
             try:
                 assert context.extracted_params is not None
-                if context.extracted_params.input_mode == "video":
-                    # Use video generation for video mode
+                # Use video generation stage only for initial video creation
+                # For video updates, use the normal parallel generation path
+                is_video_create = (
+                    context.extracted_params.input_mode == "video" and
+                    context.extracted_params.generation_type == "create"
+                )
+                if is_video_create:
+                    # Use video generation for initial video mode creation
                     video_stage = VideoGenerationStage(
                         context.send_message, context.throw_error
                     )
