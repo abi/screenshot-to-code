@@ -8,7 +8,13 @@ import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
 import AvatarDropdown from "./AvatarDropdown";
 import { UserResponse } from "./types";
-import { POSTHOG_HOST, POSTHOG_KEY, SAAS_BACKEND_URL } from "../../config";
+import {
+  LOGROCKET_APP_ID,
+  POSTHOG_HOST,
+  POSTHOG_KEY,
+  SAAS_BACKEND_URL,
+} from "../../config";
+import LogRocket from "logrocket";
 import LandingPage from "./LandingPage";
 import Intercom from "@intercom/messenger-js-sdk";
 
@@ -69,6 +75,16 @@ function AppContainer() {
           first_name: user.first_name,
           last_name: user.last_name,
         });
+
+        // Initialize LogRocket only for paid users
+        if (LOGROCKET_APP_ID) {
+          LogRocket.init(LOGROCKET_APP_ID);
+          LogRocket.identify(user.email, {
+            name: `${user.first_name} ${user.last_name}`.trim(),
+            email: user.email,
+            subscriberTier: user.subscriber_tier || "free",
+          });
+        }
 
         setSubscriberTier(user.subscriber_tier);
       }

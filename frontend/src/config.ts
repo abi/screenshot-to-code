@@ -30,3 +30,6 @@ export const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || null;
 // PostHog
 export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || null;
 export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || null;
+
+// LogRocket
+export const LOGROCKET_APP_ID = import.meta.env.VITE_LOGROCKET_APP_ID || null;
