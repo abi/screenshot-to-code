@@ -72,7 +72,6 @@ In terms of libraries,
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
 - Use jQuery: <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-Before generating the code for the app, think step-by-step: first, about the user flow depicted in the video and then about how you would build it and how you would structure the code. Do the thinking within <thinking></thinking> tags. Then, provide your code within <html></html> tags.
 """
 
 
