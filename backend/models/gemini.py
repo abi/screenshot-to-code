@@ -222,3 +222,107 @@ async def stream_gemini_response(
 
     completion_time = time.time() - start_time
     return {"duration": completion_time, "code": full_response}
+
+
+async def stream_gemini_response_video(
+    video_bytes: bytes,
+    video_mime_type: str,
+    system_prompt: str,
+    api_key: str,
+    callback: Callable[[str], Awaitable[None]],
+    model_name: str,
+    thinking_callback: Callable[[str], Awaitable[None]] | None = None,
+) -> Completion:
+    start_time = time.time()
+
+    client = genai.Client(api_key=api_key)
+    full_response = ""
+
+    # Create content with video inline data
+    contents = types.Content(
+        role="user",
+        parts=[
+            types.Part.from_bytes(data=video_bytes, mime_type=video_mime_type),
+            types.Part(text="Analyze this video and generate the code."),
+        ],
+    )
+
+    # Configure based on model
+    if model_name in ["gemini-3-flash-preview (high thinking)", "gemini-3-flash-preview"]:
+        config = types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=30000,
+            system_instruction=system_prompt,
+            thinking_config=types.ThinkingConfig(
+                thinking_level="high", include_thoughts=True
+            ),
+        )
+        api_model_name = "gemini-3-flash-preview"
+    elif model_name == "gemini-3-flash-preview (minimal thinking)":
+        config = types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=30000,
+            system_instruction=system_prompt,
+            thinking_config=types.ThinkingConfig(
+                thinking_level="minimal", include_thoughts=True
+            ),
+        )
+        api_model_name = "gemini-3-flash-preview"
+    elif model_name in ["gemini-3-pro-preview (high thinking)", "gemini-3-pro-preview"]:
+        config = types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=30000,
+            system_instruction=system_prompt,
+            thinking_config=types.ThinkingConfig(
+                thinking_level="high", include_thoughts=True
+            ),
+        )
+        api_model_name = "gemini-3-pro-preview"
+    elif model_name == "gemini-3-pro-preview (low thinking)":
+        config = types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=30000,
+            system_instruction=system_prompt,
+            thinking_config=types.ThinkingConfig(
+                thinking_level="low", include_thoughts=True
+            ),
+        )
+        api_model_name = "gemini-3-pro-preview"
+    else:
+        # Default config for other models
+        config = types.GenerateContentConfig(
+            temperature=0,
+            max_output_tokens=20000,
+            system_instruction=system_prompt,
+        )
+        api_model_name = model_name
+
+    if DEBUG_GEMINI:
+        print(f"\n=== Gemini Video Request Debug ({api_model_name}) ===")
+        print(f"Video MIME type: {video_mime_type}")
+        print(f"Video size: {len(video_bytes)} bytes")
+        print(f"System prompt (first 200 chars): {system_prompt[:200]}...")
+        print("=" * 50)
+
+    async for chunk in await client.aio.models.generate_content_stream(
+        model=api_model_name,
+        contents=contents,
+        config=config,
+    ):
+        if chunk.candidates and len(chunk.candidates) > 0:
+            for part in chunk.candidates[0].content.parts:
+                if not part.text:
+                    continue
+                elif part.thought:
+                    if thinking_callback:
+                        await thinking_callback(part.text)
+                    else:
+                        print(f"\n=== Gemini Video Thinking Summary ({api_model_name}) ===")
+                        print(part.text)
+                        print("=" * 50)
+                else:
+                    full_response += part.text
+                    await callback(part.text)
+
+    completion_time = time.time() - start_time
+    return {"duration": completion_time, "code": full_response}
