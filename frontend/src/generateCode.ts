@@ -54,23 +54,28 @@ export function generateCode(
 
   ws.addEventListener("message", async (event: MessageEvent) => {
     const response = JSON.parse(event.data) as WebSocketResponse;
-    if (response.type === "chunk") {
-      callbacks.onChange(response.value, response.variantIndex);
-    } else if (response.type === "status") {
-      callbacks.onStatusUpdate(response.value, response.variantIndex);
-    } else if (response.type === "setCode") {
-      callbacks.onSetCode(response.value, response.variantIndex);
-    } else if (response.type === "variantComplete") {
-      callbacks.onVariantComplete(response.variantIndex);
-    } else if (response.type === "variantError") {
-      callbacks.onVariantError(response.variantIndex, response.value);
-    } else if (response.type === "variantCount") {
-      callbacks.onVariantCount(parseInt(response.value));
-    } else if (response.type === "thinking") {
-      callbacks.onThinking(response.value, response.variantIndex);
-    } else if (response.type === "error") {
-      console.error("Error generating code", response.value);
-      toast.error(response.value);
+    try {
+      if (response.type === "chunk") {
+        callbacks.onChange(response.value, response.variantIndex);
+      } else if (response.type === "status") {
+        callbacks.onStatusUpdate(response.value, response.variantIndex);
+      } else if (response.type === "setCode") {
+        console.log(`[WS] Received setCode for variant ${response.variantIndex}, code length: ${response.value.length}`);
+        callbacks.onSetCode(response.value, response.variantIndex);
+      } else if (response.type === "variantComplete") {
+        callbacks.onVariantComplete(response.variantIndex);
+      } else if (response.type === "variantError") {
+        callbacks.onVariantError(response.variantIndex, response.value);
+      } else if (response.type === "variantCount") {
+        callbacks.onVariantCount(parseInt(response.value));
+      } else if (response.type === "thinking") {
+        callbacks.onThinking(response.value, response.variantIndex);
+      } else if (response.type === "error") {
+        console.error("Error generating code", response.value);
+        toast.error(response.value);
+      }
+    } catch (error) {
+      console.error(`[WS] Error processing ${response.type} message:`, error);
     }
   });
 

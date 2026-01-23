@@ -797,6 +797,11 @@ class ParallelGenerationStage:
             completion = await task
 
             print(f"{model.value} completion took {completion['duration']:.2f} seconds")
+            print(f"[DEBUG] Completion code length: {len(completion['code'])} chars")
+            if len(completion['code']) < 200:
+                print(f"[DEBUG] Full completion: {completion['code']}")
+            else:
+                print(f"[DEBUG] First 200 chars: {completion['code'][:200]}")
             variant_completions[index] = completion["code"]
 
             try:
