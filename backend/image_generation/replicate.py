@@ -13,7 +13,7 @@ async def call_replicate(input: dict[str, str | int], api_token: str) -> str:
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
+                "https://api.replicate.com/v1/models/black-forest-labs/flux-2-klein-4b/predictions",
                 headers=headers,
                 json=data,
             )

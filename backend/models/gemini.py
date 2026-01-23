@@ -81,6 +81,7 @@ def convert_message_to_gemini_content(
             types.Part.from_bytes(
                 data=base64.b64decode(image_data["data"]),
                 mime_type=image_data["mime_type"],
+                media_resolution=types.PartMediaResolutionLevel.MEDIA_RESOLUTION_ULTRA_HIGH,
             )
         )
 
