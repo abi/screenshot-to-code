@@ -104,13 +104,11 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     set((state) => {
       const commit = state.commits[hash];
       if (!commit) {
-        console.error(`[Store] appendCommitCode: Commit not found for hash: ${hash}`);
         return state;
       }
       // Don't update if the commit is already committed
       if (commit.isCommitted) {
-        console.error(`[Store] appendCommitCode: Attempted to append code to a committed commit: ${hash}`);
-        return state; // Return unchanged state instead of throwing
+        return state;
       }
       const variant = commit.variants[numVariant];
       const isFirstCode = !variant.code && variant.thinkingStartTime;
@@ -158,17 +156,13 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   setCommitCode: (hash: CommitHash, numVariant: number, code: string) =>
     set((state) => {
       const commit = state.commits[hash];
-      console.log(`[Store] setCommitCode called for hash=${hash}, variant=${numVariant}, code length=${code.length}`);
       if (!commit) {
-        console.error(`[Store] Commit not found for hash: ${hash}`);
         return state;
       }
       // Don't update if the commit is already committed
       if (commit.isCommitted) {
-        console.error(`[Store] Attempted to set code of a committed commit: ${hash}`);
-        return state; // Return unchanged state instead of throwing
+        return state;
       }
-      console.log(`[Store] Setting code for variant ${numVariant}`);
       return {
         commits: {
           ...state.commits,

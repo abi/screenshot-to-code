@@ -11,20 +11,15 @@ def extract_html_content(text: str):
         r"(<!DOCTYPE\s+html[^>]*>.*?<html.*?>.*?</html>)", text, re.DOTALL | re.IGNORECASE
     )
     if match_with_doctype:
-        extracted = match_with_doctype.group(1)
-        print(f"[HTML Extraction] Successfully extracted {len(extracted)} chars of HTML (with DOCTYPE)")
-        return extracted
+        return match_with_doctype.group(1)
 
     # Fall back to just <html> tags
     match = re.search(r"(<html.*?>.*?</html>)", text, re.DOTALL)
     if match:
-        extracted = match.group(1)
-        print(f"[HTML Extraction] Successfully extracted {len(extracted)} chars of HTML")
-        return extracted
+        return match.group(1)
     else:
         # Otherwise, we just send the previous HTML over
         print(
-            "[HTML Extraction] No <html> tags found in the generated content (length: "
-            + str(len(text)) + " chars). First 500 chars: " + text[:500]
+            "[HTML Extraction] No <html> tags found in the generated content"
         )
         return text
