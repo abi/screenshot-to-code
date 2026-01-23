@@ -46,6 +46,96 @@
   }
 }
 
+/* Landing page backgrounds - auto dark mode */
+.landing-bg {
+  background-color: var(--cream);
+  color: var(--dark);
+}
+
+.landing-bg-white {
+  background-color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-bg-white {
+    background-color: #111;
+  }
+}
+
+.landing-bg-nav {
+  background-color: rgba(255, 252, 242, 0.9);
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-bg-nav {
+    background-color: rgba(13, 13, 13, 0.9);
+  }
+}
+
+.landing-text-muted {
+  color: #525252;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-text-muted {
+    color: #a3a3a3;
+  }
+}
+
+.landing-border {
+  border-color: #e5e5e5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-border {
+    border-color: #333;
+  }
+}
+
+.landing-github-btn {
+  border: 2px solid #0D0D0D;
+  background: transparent;
+}
+
+.landing-github-btn:hover {
+  background: #0D0D0D;
+  color: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-github-btn {
+    border-color: white;
+    color: white;
+  }
+
+  .landing-github-btn:hover {
+    background: white;
+    color: #0D0D0D;
+  }
+}
+
+.landing-github-badge {
+  background: #0D0D0D;
+  color: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-github-badge {
+    background: white;
+    color: #0D0D0D;
+  }
+}
+
+.logo-invert {
+  filter: grayscale(100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo-invert {
+    filter: grayscale(100%) invert(1);
+  }
+}
+
 /* Typography styles */
 .font-display {
   font-family: 'Space Grotesk', system-ui, sans-serif;
