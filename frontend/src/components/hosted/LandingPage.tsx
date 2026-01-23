@@ -108,13 +108,13 @@ function LandingPage() {
       </nav>
 
       {/* Hero Section with Demo */}
-      <header className="relative pt-24 pb-12 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-20 px-0 sm:px-6 bg-grid noise-overlay overflow-hidden">
+      <header className="relative pt-16 pb-0 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-20 px-0 sm:px-6 bg-grid noise-overlay overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8 lg:gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 sm:gap-8 lg:gap-12 items-center">
             {/* Left side - Text content */}
-            <div className="px-4 sm:px-0 w-full">
-              {/* Eyebrow */}
-              <div className="flex items-center gap-3 mb-6 animate-fade-up">
+            <div className="px-5 sm:px-0 w-full min-h-[calc(100svh-80px)] sm:min-h-0 flex flex-col justify-center">
+              {/* Eyebrow - hidden on mobile to reduce first screen density */}
+              <div className="hidden sm:flex items-center gap-3 mb-6 animate-fade-up">
                 <span className="stat-highlight text-sm text-[#2563EB]">
                   71,502
                 </span>
@@ -123,22 +123,24 @@ function LandingPage() {
               </div>
 
               {/* Main headline */}
-              <h1 className="text-[2.75rem] sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.95] mb-5 animate-fade-up delay-100">
-                Build User Interfaces
+              <h1 className="text-5xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.9] mb-5 sm:mb-5 animate-fade-up delay-100">
+                Build User
+                <br />
+                Interfaces
                 <br />
                 <span className="text-[#2563EB]">10x Faster</span>
               </h1>
 
               {/* Subheadline */}
-              <p className="text-lg sm:text-xl text-gray-600 max-w-md mb-8 leading-relaxed animate-fade-up delay-200">
+              <p className="text-xl sm:text-xl text-gray-600 max-w-md mb-8 sm:mb-8 leading-relaxed animate-fade-up delay-200">
                 AI-powered conversion from screenshots and designs to clean, production-ready code.
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-wrap gap-3 animate-fade-up delay-300">
+              <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-300">
                 <button
                   onClick={signIn}
-                  className="btn-primary px-5 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-medium inline-flex items-center gap-2 group"
+                  className="btn-primary px-6 py-4 sm:px-6 sm:py-3.5 text-base sm:text-base font-medium inline-flex items-center justify-center gap-2 group"
                 >
                   <span>Start Building</span>
                   <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
@@ -150,11 +152,11 @@ function LandingPage() {
                       "_blank"
                     )
                   }
-                  className="px-5 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-medium border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors inline-flex items-center gap-2"
+                  className="px-6 py-4 sm:px-6 sm:py-3.5 text-base sm:text-base font-medium border-2 border-[#0D0D0D] bg-transparent hover:bg-[#0D0D0D] hover:text-white transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <FaGithub className="text-lg" />
                   <span>GitHub</span>
-                  <span className="bg-[#0D0D0D] text-white text-xs px-2 py-0.5 rounded-full font-mono">
+                  <span className="hidden sm:inline bg-[#0D0D0D] text-white text-xs px-2 py-0.5 rounded-full font-mono">
                     71.5k
                   </span>
                 </button>
