@@ -49,7 +49,7 @@ function LandingPage() {
       >
         <DialogContent className="flex justify-center bg-[#FFFCF2]">
           <SignUp
-            fallbackRedirectUrl="/"
+            fallbackRedirectUrl="/app"
             appearance={{
               elements: {
                 cardBox: {

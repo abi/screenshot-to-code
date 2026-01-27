@@ -39,6 +39,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ClerkProvider
       publishableKey={CLERK_PUBLISHABLE_KEY}
+      afterSignInUrl="/app"
+      afterSignUpUrl="/app"
       localization={{
         footerPageLink__privacy:
           "By signing up, you accept our terms of service and consent to receiving occasional product updates via email.",
@@ -47,6 +49,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Router>
         <Routes>
           <Route path="/" element={<AppContainer />} />
+          <Route path="/app" element={<AppContainer />} />
           <Route path="/evals" element={<AllEvalsPage />} />
           <Route path="/evals/single" element={<EvalsPage />} />
           <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
