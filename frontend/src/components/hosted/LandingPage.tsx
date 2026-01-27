@@ -49,6 +49,9 @@ function LandingPage() {
       >
         <DialogContent className="flex justify-center bg-[#FFFCF2]">
           <SignUp
+            redirectUrl="/app"
+            afterSignInUrl="/app"
+            afterSignUpUrl="/app"
             fallbackRedirectUrl="/app"
             appearance={{
               elements: {
