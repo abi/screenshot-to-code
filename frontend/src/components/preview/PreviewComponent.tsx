@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import useThrottle from "../../hooks/useThrottle";
 import EditPopup from "../select-and-edit/EditPopup";
@@ -19,6 +19,9 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
   // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
   const [scale, setScale] = useState(1);
+  const handleIframeClick = useCallback((event: MouseEvent) => {
+    setClickEvent(event);
+  }, []);
 
   // Add scaling logic
   useEffect(() => {
@@ -48,16 +51,30 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
 
   useEffect(() => {
     const iframe = iframeRef.current;
-    if (iframe) {
-      iframe.srcdoc = throttledCode;
+    if (!iframe) return;
 
-      // Set up click handler for select and edit funtionality
-      iframe.addEventListener("load", function () {
-        iframe.contentWindow?.document.body.addEventListener(
-          "click",
-          setClickEvent
-        );
-      });
+    const handleLoad = () => {
+      const body = iframe.contentWindow?.document.body;
+      if (!body) return;
+      body.addEventListener("click", handleIframeClick);
+    };
+
+    iframe.addEventListener("load", handleLoad);
+
+    return () => {
+      iframe.removeEventListener("load", handleLoad);
+      const body = iframe.contentWindow?.document.body;
+      if (body) {
+        body.removeEventListener("click", handleIframeClick);
+      }
+    };
+  }, [handleIframeClick]);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    if (iframe.srcdoc !== throttledCode) {
+      iframe.srcdoc = throttledCode;
     }
   }, [throttledCode]);
 
