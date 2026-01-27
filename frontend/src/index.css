@@ -127,6 +127,13 @@
 }
 
 
+/* Company logos - invert in dark mode */
+@media (prefers-color-scheme: dark) {
+  .logo-dark-invert {
+    filter: grayscale(100%) invert(1);
+  }
+}
+
 /* Main app logo in navbar */
 .logo-dark-mode {
   /* no change in light mode */
