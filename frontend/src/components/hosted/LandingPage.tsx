@@ -250,7 +250,7 @@ function LandingPage() {
             {LOGOS.map((companyName) => (
               <img
                 key={companyName}
-                className="h-8 sm:h-10 w-auto object-contain grayscale opacity-50 hover:opacity-80 transition-opacity logo-invert"
+                className="h-8 sm:h-10 w-auto object-contain grayscale opacity-50 hover:opacity-80 transition-opacity"
                 src={`https://picoapps.xyz/logos/${companyName}.png`}
                 alt={companyName}
               />
