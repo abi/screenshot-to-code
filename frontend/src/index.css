@@ -39,6 +39,117 @@
   --cream: #FFFCF2;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dark: #FFFCF2;
+    --cream: #0D0D0D;
+  }
+}
+
+/* Landing page backgrounds - auto dark mode */
+.landing-bg {
+  background-color: var(--cream);
+  color: var(--dark);
+}
+
+.landing-bg-white {
+  background-color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-bg-white {
+    background-color: #111;
+  }
+}
+
+.landing-bg-nav {
+  background-color: rgba(255, 252, 242, 0.9);
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-bg-nav {
+    background-color: rgba(13, 13, 13, 0.9);
+  }
+}
+
+.landing-text-muted {
+  color: #525252;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-text-muted {
+    color: #a3a3a3;
+  }
+}
+
+.landing-border {
+  border-color: #e5e5e5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-border {
+    border-color: #333;
+  }
+}
+
+.landing-github-btn {
+  border: 2px solid #0D0D0D;
+  background: transparent;
+}
+
+.landing-github-btn:hover {
+  background: #0D0D0D;
+  color: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-github-btn {
+    border-color: white;
+    color: white;
+  }
+
+  .landing-github-btn:hover {
+    background: white;
+    color: #0D0D0D;
+  }
+}
+
+.landing-github-badge {
+  background: #0D0D0D;
+  color: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-github-badge {
+    background: white;
+    color: #0D0D0D;
+  }
+}
+
+
+/* Company logos - invert in dark mode */
+@media (prefers-color-scheme: dark) {
+  .logo-dark-invert {
+    filter: grayscale(100%) invert(1);
+  }
+}
+
+/* Main app logo in navbar */
+.logo-dark-mode {
+  /* no change in light mode */
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo-dark-mode {
+    filter: brightness(0) invert(1);
+  }
+
+  /* Fix dialog overlay in dark mode */
+  [data-radix-dialog-overlay] {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+}
+
 /* Typography styles */
 .font-display {
   font-family: 'Space Grotesk', system-ui, sans-serif;
@@ -86,6 +197,13 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+@media (prefers-color-scheme: dark) {
+  .btn-primary {
+    background: white;
+    color: #0D0D0D;
+  }
+}
+
 .btn-primary::before {
   content: '';
   position: absolute;
@@ -110,6 +228,12 @@
   border: 2px solid var(--dark);
 }
 
+@media (prefers-color-scheme: dark) {
+  .video-frame {
+    border-color: #444;
+  }
+}
+
 .video-frame::before {
   content: '';
   position: absolute;
@@ -127,6 +251,13 @@
   background: white;
   border: 1px solid #e5e5e5;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .feature-card-unique {
+    background: #1a1a1a;
+    border-color: #333;
+  }
 }
 
 .feature-card-unique::before {
@@ -191,6 +322,14 @@
     linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
   background-size: 60px 60px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  }
 }
 
 /* Noise texture overlay */
