@@ -22,6 +22,38 @@ interface Props {
 function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
+  const getChanges = (currentCode: string, nextCode: string) => {
+    if (currentCode === nextCode) {
+      return null;
+    }
+
+    let start = 0;
+    let currentEnd = currentCode.length;
+    let nextEnd = nextCode.length;
+
+    while (
+      start < currentEnd &&
+      start < nextEnd &&
+      currentCode[start] === nextCode[start]
+    ) {
+      start += 1;
+    }
+
+    while (
+      currentEnd > start &&
+      nextEnd > start &&
+      currentCode[currentEnd - 1] === nextCode[nextEnd - 1]
+    ) {
+      currentEnd -= 1;
+      nextEnd -= 1;
+    }
+
+    return {
+      from: start,
+      to: currentEnd,
+      insert: nextCode.slice(start, nextEnd),
+    };
+  };
   const editorState = useMemo(
     () =>
       EditorState.create({
@@ -39,7 +71,13 @@ function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
           editorTheme === EditorTheme.ESPRESSO ? espresso : cobalt,
           EditorView.lineWrapping,
           EditorView.updateListener.of((update: ViewUpdate) => {
-            if (update.docChanged) {
+            const hasUserInput = update.transactions.some(
+              (transaction) =>
+                transaction.isUserEvent("input") ||
+                transaction.isUserEvent("delete") ||
+                transaction.isUserEvent("paste")
+            );
+            if (update.docChanged && hasUserInput) {
               const updatedCode = update.state.doc.toString();
               onCodeChange(updatedCode);
             }
@@ -63,10 +101,13 @@ function CodeMirror({ code, editorTheme, onCodeChange }: Props) {
   }, []);
 
   useEffect(() => {
-    if (view.current && view.current.state.doc.toString() !== code) {
-      view.current.dispatch({
-        changes: { from: 0, to: view.current.state.doc.length, insert: code },
-      });
+    if (view.current) {
+      const currentCode = view.current.state.doc.toString();
+      const changes = getChanges(currentCode, code);
+      if (!changes) {
+        return;
+      }
+      view.current.dispatch({ changes });
     }
   }, [code]);
 
