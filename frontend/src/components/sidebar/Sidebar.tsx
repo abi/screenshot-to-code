@@ -8,11 +8,12 @@ import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
 import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeToggleButton";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, memo } from "react";
 import HistoryDisplay from "../history/HistoryDisplay";
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import ThinkingIndicator from "../thinking/ThinkingIndicator";
+import { useShallow } from "zustand/react/shallow";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -62,32 +63,32 @@ function Sidebar({
     }
   }, [updateImages, setUpdateImages]);
 
-  const { inputMode, referenceImages, head, commits } = useProjectStore();
-
-  const viewedCode =
-    head && commits[head]
-      ? commits[head].variants[commits[head].selectedVariantIndex].code
-      : "";
-
-  // Check if the currently selected variant is complete
-  const isSelectedVariantComplete =
-    head &&
-    commits[head] &&
-    commits[head].variants[commits[head].selectedVariantIndex].status ===
-      "complete";
-
-  // Check if the currently selected variant has an error
-  const isSelectedVariantError =
-    head &&
-    commits[head] &&
-    commits[head].variants[commits[head].selectedVariantIndex].status ===
-      "error";
-
-  // Get the error message from the selected variant
-  const selectedVariantErrorMessage =
-    head &&
-    commits[head] &&
-    commits[head].variants[commits[head].selectedVariantIndex].errorMessage;
+  // Use shallow comparison to only re-render when specific derived values change
+  const {
+    inputMode,
+    referenceImages,
+    head,
+    viewedCode,
+    isSelectedVariantComplete,
+    isSelectedVariantError,
+    selectedVariantErrorMessage,
+    selectedVariantIndex,
+  } = useProjectStore(
+    useShallow((state) => {
+      const commit = state.head && state.commits[state.head] ? state.commits[state.head] : null;
+      const variant = commit?.variants[commit.selectedVariantIndex];
+      return {
+        inputMode: state.inputMode,
+        referenceImages: state.referenceImages,
+        head: state.head,
+        viewedCode: variant?.code || "",
+        isSelectedVariantComplete: variant?.status === "complete",
+        isSelectedVariantError: variant?.status === "error",
+        selectedVariantErrorMessage: variant?.errorMessage,
+        selectedVariantIndex: commit?.selectedVariantIndex,
+      };
+    })
+  );
 
   // Focus on the update instruction textarea when a variant is complete
   useEffect(() => {
@@ -102,7 +103,7 @@ function Sidebar({
   // Reset error expanded state when variant changes
   useEffect(() => {
     setIsErrorExpanded(false);
-  }, [head, commits[head || ""]?.selectedVariantIndex]);
+  }, [head, selectedVariantIndex]);
 
   return (
     <>
@@ -269,4 +270,4 @@ function Sidebar({
   );
 }
 
-export default Sidebar;
+export default memo(Sidebar);

@@ -1,7 +1,8 @@
 import { useProjectStore } from "../../store/project-store";
 import Spinner from "../core/Spinner";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { useThrottle } from "../../hooks/useThrottle";
+import { useShallow } from "zustand/react/shallow";
 
 const IFRAME_WIDTH = 1280;
 const IFRAME_HEIGHT = 800;
@@ -11,7 +12,7 @@ interface VariantThumbnailProps {
   isSelected: boolean;
 }
 
-function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
+const VariantThumbnail = memo(function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [scale, setScale] = useState(0.1);
@@ -63,16 +64,27 @@ function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
       />
     </div>
   );
-}
+});
 
 function Variants() {
-  const { inputMode, head, commits, updateSelectedVariantIndex } =
-    useProjectStore();
+  const updateSelectedVariantIndex = useProjectStore((state) => state.updateSelectedVariantIndex);
 
-  // Get commit data safely
-  const commit = head ? commits[head] : null;
-  const variants = commit?.variants || [];
-  const selectedVariantIndex = commit?.selectedVariantIndex || 0;
+  // Use shallow comparison for the data we need
+  const { inputMode, head, variants, selectedVariantIndex, isCommitted } = useProjectStore(
+    useShallow((state) => {
+      const commit = state.head && state.commits[state.head] ? state.commits[state.head] : null;
+      return {
+        inputMode: state.inputMode,
+        head: state.head,
+        variants: commit?.variants || [],
+        selectedVariantIndex: commit?.selectedVariantIndex || 0,
+        isCommitted: commit?.isCommitted || false,
+      };
+    })
+  );
+
+  // Get commit data safely - now derived from selector
+  const commit = head ? { variants, selectedVariantIndex, isCommitted } : null;
 
   const handleVariantClick = (index: number) => {
     // Don't do anything if this is already the selected variant or no head
@@ -108,7 +120,7 @@ function Variants() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [variants.length, commit?.isCommitted, selectedVariantIndex, head]);
+  }, [variants.length, isCommitted, selectedVariantIndex, head]);
 
   // Early returns after all hooks
   // If there is no head, don't show the variants
@@ -211,4 +223,4 @@ function Variants() {
   );
 }
 
-export default Variants;
+export default memo(Variants);

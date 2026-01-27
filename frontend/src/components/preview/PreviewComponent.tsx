@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import classNames from "classnames";
 import useThrottle from "../../hooks/useThrottle";
 import EditPopup from "../select-and-edit/EditPopup";
@@ -90,4 +90,4 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
   );
 }
 
-export default PreviewComponent;
+export default memo(PreviewComponent);

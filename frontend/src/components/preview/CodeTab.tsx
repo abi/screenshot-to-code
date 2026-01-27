@@ -3,7 +3,7 @@ import CodeMirror from "./CodeMirror";
 import { Button } from "../ui/button";
 import { Settings } from "../../types";
 import copy from "copy-to-clipboard";
-import { useCallback } from "react";
+import { useCallback, memo } from "react";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -84,4 +84,4 @@ function CodeTab({ code, setCode, settings }: Props) {
   );
 }
 
-export default CodeTab;
+export default memo(CodeTab);

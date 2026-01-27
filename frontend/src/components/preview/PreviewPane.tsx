@@ -14,6 +14,8 @@ import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
+import { memo, useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 interface Props {
   doUpdate: (instruction: string) => void;
@@ -23,17 +25,26 @@ interface Props {
 
 function PreviewPane({ doUpdate, reset, settings }: Props) {
   const { appState } = useAppStore();
-  const { inputMode, head, commits } = useProjectStore();
 
-  const currentCommit = head && commits[head] ? commits[head] : "";
-  const currentCode = currentCommit
-    ? currentCommit.variants[currentCommit.selectedVariantIndex].code
-    : "";
+  // Use shallow comparison to only re-render when specific values change
+  const { inputMode, currentCode } = useProjectStore(
+    useShallow((state) => {
+      const commit = state.head && state.commits[state.head] ? state.commits[state.head] : null;
+      const code = commit
+        ? commit.variants[commit.selectedVariantIndex]?.code || ""
+        : "";
+      return {
+        inputMode: state.inputMode,
+        currentCode: code,
+      };
+    })
+  );
 
-  const previewCode =
-    inputMode === "video" && appState === AppState.CODING
+  const previewCode = useMemo(() => {
+    return inputMode === "video" && appState === AppState.CODING
       ? extractHtml(currentCode)
       : currentCode;
+  }, [inputMode, appState, currentCode]);
 
   return (
     <div className="ml-4">
@@ -100,4 +111,4 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
   );
 }
 
-export default PreviewPane;
+export default memo(PreviewPane);
