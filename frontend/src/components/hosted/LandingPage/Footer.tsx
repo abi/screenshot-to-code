@@ -6,7 +6,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="max-w-sm">
             <div className="flex items-center gap-2 mb-4">
-              <img src="/favicon/main.png" alt="Logo" className="w-6 h-6" />
+              <img src="/favicon/main.png" alt="Logo" className="w-6 h-6 logo-dark-mode" />
               <span className="text-lg font-semibold tracking-tight font-display">
                 Screenshot to Code
               </span>

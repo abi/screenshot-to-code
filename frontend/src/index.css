@@ -128,12 +128,13 @@
 
 .logo-invert {
   filter: grayscale(100%);
+  opacity: 0.5;
 }
 
 @media (prefers-color-scheme: dark) {
   .logo-invert {
-    filter: brightness(0) invert(1);
-    opacity: 0.6;
+    filter: grayscale(100%) brightness(10);
+    opacity: 0.5;
   }
 }
 
@@ -145,6 +146,11 @@
 @media (prefers-color-scheme: dark) {
   .logo-dark-mode {
     filter: brightness(0) invert(1);
+  }
+
+  /* Fix dialog overlay in dark mode */
+  [data-radix-dialog-overlay] {
+    background-color: rgba(0, 0, 0, 0.8) !important;
   }
 }
 

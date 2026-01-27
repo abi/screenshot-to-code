@@ -47,7 +47,7 @@ function LandingPage() {
         open={isAuthPopupOpen}
         onOpenChange={(value) => setIsAuthPopupOpen(value)}
       >
-        <DialogContent className="flex justify-center landing-bg border-0 shadow-2xl">
+        <DialogContent className="flex justify-center bg-[#FFFCF2] border-0 shadow-2xl">
           <SignUp
             fallbackRedirectUrl="/"
             appearance={{
