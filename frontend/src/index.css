@@ -132,7 +132,19 @@
 
 @media (prefers-color-scheme: dark) {
   .logo-invert {
-    filter: grayscale(100%) invert(1);
+    filter: brightness(0) invert(1);
+    opacity: 0.6;
+  }
+}
+
+/* Main app logo in navbar */
+.logo-dark-mode {
+  /* no change in light mode */
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo-dark-mode {
+    filter: brightness(0) invert(1);
   }
 }
 

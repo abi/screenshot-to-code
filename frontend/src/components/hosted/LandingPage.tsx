@@ -47,7 +47,7 @@ function LandingPage() {
         open={isAuthPopupOpen}
         onOpenChange={(value) => setIsAuthPopupOpen(value)}
       >
-        <DialogContent className="flex justify-center landing-bg">
+        <DialogContent className="flex justify-center landing-bg border-0 shadow-2xl">
           <SignUp
             fallbackRedirectUrl="/"
             appearance={{
@@ -84,7 +84,7 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto py-4 sm:py-5">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <img src="/favicon/main.png" alt="Logo" className="w-6 h-6" />
+              <img src="/favicon/main.png" alt="Logo" className="w-6 h-6 logo-dark-mode" />
               <span className="text-base sm:text-lg font-semibold tracking-tight">
                 Screenshot to Code
               </span>
