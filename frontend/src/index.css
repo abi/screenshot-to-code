@@ -44,6 +44,9 @@
     --dark: #FFFCF2;
     --cream: #0D0D0D;
   }
+  html {
+    background-color: #0D0D0D;
+  }
 }
 
 /* Landing page backgrounds - auto dark mode */
@@ -307,6 +310,7 @@
 }
 
 .animate-fade-up {
+  opacity: 0;
   animation: fade-up 0.6s ease-out forwards;
 }
 
