@@ -517,7 +517,7 @@ class VideoGenerationStage:
                 system_prompt=GEMINI_VIDEO_PROMPT,
                 api_key=gemini_api_key,
                 callback=lambda x: process_chunk(x, 0),
-                model=Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                model=Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
                 thinking_callback=lambda x: process_thinking(x, 0),
             )
         ]
