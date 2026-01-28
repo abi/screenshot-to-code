@@ -34,9 +34,6 @@ VIDEO_TOKENS_PER_FRAME = {
     MediaResolution.HIGH: 280,
 }
 
-# Audio tokens per second
-AUDIO_TOKENS_PER_SECOND = 32
-
 # Prompt overhead (system prompt + user text)
 PROMPT_TOKENS_ESTIMATE = 1200
 
@@ -81,11 +78,8 @@ def estimate_video_input_tokens(
     tokens_per_frame = VIDEO_TOKENS_PER_FRAME[media_resolution]
     frame_tokens = int(total_frames * tokens_per_frame)
 
-    # Audio tokens
-    audio_tokens = int(video_duration_seconds * AUDIO_TOKENS_PER_SECOND)
-
     # Add prompt overhead (system prompt + user text)
-    total_tokens = frame_tokens + audio_tokens + PROMPT_TOKENS_ESTIMATE
+    total_tokens = frame_tokens + PROMPT_TOKENS_ESTIMATE
 
     return total_tokens
 
@@ -177,8 +171,7 @@ def format_detailed_input_estimate(
     total_frames = video_duration_seconds * fps
     tokens_per_frame = VIDEO_TOKENS_PER_FRAME[media_resolution]
     frame_tokens = int(total_frames * tokens_per_frame)
-    audio_tokens = int(video_duration_seconds * AUDIO_TOKENS_PER_SECOND)
-    total_input_tokens = frame_tokens + audio_tokens + PROMPT_TOKENS_ESTIMATE
+    total_input_tokens = frame_tokens + PROMPT_TOKENS_ESTIMATE
 
     model_name = get_model_api_name(model)
     pricing = GEMINI_PRICING.get(model_name, GEMINI_PRICING["gemini-3-flash-preview"])
@@ -188,7 +181,6 @@ def format_detailed_input_estimate(
         f"Input Token Calculation:\n"
         f"  Frames: {video_duration_seconds:.2f}s × {fps} fps = {total_frames:.1f} frames\n"
         f"  Frame tokens: {total_frames:.1f} × {tokens_per_frame} tokens/frame = {frame_tokens:,} tokens\n"
-        f"  Audio tokens: {video_duration_seconds:.2f}s × {AUDIO_TOKENS_PER_SECOND} tokens/s = {audio_tokens:,} tokens\n"
         f"  Prompt overhead: {PROMPT_TOKENS_ESTIMATE:,} tokens\n"
         f"  Total input: {total_input_tokens:,} tokens\n"
         f"  Cost: {total_input_tokens:,} ÷ 1M × ${pricing['input_per_million']:.2f} = ${input_cost:.4f}"

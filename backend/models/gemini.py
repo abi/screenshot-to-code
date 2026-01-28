@@ -305,22 +305,19 @@ async def stream_gemini_response_video(
     VIDEO_FPS = 10
     MAX_OUTPUT_TOKENS = 50000
 
-    # Get video duration and estimate cost
+    # Get video duration and estimate input tokens
     video_duration = get_video_duration_from_bytes(video_bytes)
+    estimated_input_tokens = None
     if video_duration:
-        thinking_level = get_thinking_level_for_model(model)
         estimated_cost = estimate_video_generation_cost(
             video_duration_seconds=video_duration,
             model=model,
             fps=VIDEO_FPS,
             media_resolution=MediaResolution.HIGH,
-            max_output_tokens=MAX_OUTPUT_TOKENS,
-            thinking_level=thinking_level,
         )
-        print(f"\n=== Video Generation Cost Estimate ({model.value}) ===")
+        estimated_input_tokens = estimated_cost.input_tokens
+        print(f"\n=== Video Generation Input Estimate ({model.value}) ===")
         print(format_detailed_input_estimate(video_duration, VIDEO_FPS, MediaResolution.HIGH, model))
-        print(f"Output tokens (est): {estimated_cost.output_tokens:,} (${estimated_cost.output_cost:.4f})")
-        print(f"Total estimated cost: ${estimated_cost.total_cost:.4f}")
         print("=" * 50)
     else:
         print("Warning: Could not determine video duration for cost estimation")
@@ -369,7 +366,7 @@ async def stream_gemini_response_video(
             thinking_config=types.ThinkingConfig(
                 thinking_level="high", include_thoughts=True
             ),
-            media_resolution=types.MediaResolution.MEDIA_RESOLUTION_HIGH,
+            # media_resolution=types.MediaResolution.MEDIA_RESOLUTION_HIGH,
         )
     elif model == Llm.GEMINI_3_PRO_PREVIEW_LOW:
         config = types.GenerateContentConfig(
@@ -434,6 +431,7 @@ async def stream_gemini_response_video(
         thinking_tokens = usage_metadata.thoughts_token_count or 0
         output_tokens = usage_metadata.candidates_token_count or 0
         total_tokens = usage_metadata.total_token_count or 0
+        cached_tokens = getattr(usage_metadata, 'cached_content_token_count', 0) or 0
 
         # Thinking tokens are billed at the same rate as output tokens
         billable_output_tokens = thinking_tokens + output_tokens
@@ -441,6 +439,10 @@ async def stream_gemini_response_video(
 
         print(f"\n=== Video Generation Actual Usage ({model.value}) ===")
         print(f"Input tokens:    {input_tokens:,} (${actual_cost.input_cost:.4f})")
+        print(f"Cached tokens:   {cached_tokens:,}")
+        if estimated_input_tokens:
+            diff_pct = ((input_tokens - estimated_input_tokens) / estimated_input_tokens) * 100
+            print(f"Est vs Actual:   {estimated_input_tokens:,} → {input_tokens:,} ({diff_pct:+.1f}%)")
         print(f"Thinking tokens: {thinking_tokens:,}")
         print(f"Output tokens:   {output_tokens:,}")
         print(f"Billable output: {billable_output_tokens:,} (${actual_cost.output_cost:.4f})")
