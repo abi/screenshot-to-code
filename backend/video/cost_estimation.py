@@ -26,22 +26,18 @@ class CostEstimate:
     output_tokens: int
 
 
-# Gemini 3 video token rates per second (from documentation)
-# https://ai.google.dev/gemini-api/docs/media-resolution#token-counts
-# Note: Based on observed actual token counts, billing appears to use ~1 FPS
-# even when higher fps is requested. This may vary - adjust if actuals differ.
+# Gemini 3 video token rates per second (calibrated from actual usage)
+# Docs say 280 tokens/frame at HIGH + 32 audio = 312/sec, but actual usage
+# shows ~556 tokens/sec. This suggests ~2 FPS effective sampling or different rates.
 VIDEO_TOKENS_PER_SECOND = {
-    MediaResolution.LOW: 70,
-    MediaResolution.MEDIUM: 70,  # Same as LOW for video
-    MediaResolution.HIGH: 280,
+    MediaResolution.LOW: 140,   # ~2x the documented 70
+    MediaResolution.MEDIUM: 140,
+    MediaResolution.HIGH: 556,  # Calibrated from actual: (7375-1846)/(11.17-1.22)
 }
 
-# Audio tokens per second
-AUDIO_TOKENS_PER_SECOND = 32
-
-# System prompt + user text tokens (approximate)
-# Based on actual usage: ~1400-1500 tokens for typical prompts
-PROMPT_TOKENS_ESTIMATE = 1500
+# Prompt overhead (system prompt + user text)
+# Calibrated from actual usage: tokens - (duration * video_rate)
+PROMPT_TOKENS_ESTIMATE = 1200
 
 # Pricing per million tokens (USD)
 # https://ai.google.dev/gemini-api/docs/pricing
@@ -77,18 +73,13 @@ def get_model_api_name(model: Llm) -> str:
 def estimate_video_input_tokens(
     video_duration_seconds: float,
     media_resolution: MediaResolution = MediaResolution.HIGH,
-    include_audio: bool = True,
 ) -> int:
-    # Estimate based on observed actual token counts (appears to bill at ~1 FPS)
+    # Calibrated from actual usage data (includes video frames + audio)
     tokens_per_second = VIDEO_TOKENS_PER_SECOND[media_resolution]
-    visual_tokens = int(video_duration_seconds * tokens_per_second)
+    video_tokens = int(video_duration_seconds * tokens_per_second)
 
-    audio_tokens = 0
-    if include_audio:
-        audio_tokens = int(video_duration_seconds * AUDIO_TOKENS_PER_SECOND)
-
-    # Add prompt tokens (system + user text)
-    total_tokens = visual_tokens + audio_tokens + PROMPT_TOKENS_ESTIMATE
+    # Add prompt overhead (system prompt + user text)
+    total_tokens = video_tokens + PROMPT_TOKENS_ESTIMATE
 
     return total_tokens
 
@@ -146,7 +137,6 @@ def estimate_video_generation_cost(
     input_tokens = estimate_video_input_tokens(
         video_duration_seconds=video_duration_seconds,
         media_resolution=media_resolution,
-        include_audio=True,
     )
 
     output_tokens = estimate_output_tokens(
