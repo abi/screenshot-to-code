@@ -359,6 +359,7 @@ async def stream_gemini_response_video(
             thinking_config=types.ThinkingConfig(
                 thinking_level="minimal", include_thoughts=True
             ),
+            media_resolution=types.MediaResolution.MEDIA_RESOLUTION_HIGH,
         )
     elif model == Llm.GEMINI_3_PRO_PREVIEW_HIGH:
         config = types.GenerateContentConfig(
@@ -368,6 +369,7 @@ async def stream_gemini_response_video(
             thinking_config=types.ThinkingConfig(
                 thinking_level="high", include_thoughts=True
             ),
+            media_resolution=types.MediaResolution.MEDIA_RESOLUTION_HIGH,
         )
     elif model == Llm.GEMINI_3_PRO_PREVIEW_LOW:
         config = types.GenerateContentConfig(
@@ -377,6 +379,7 @@ async def stream_gemini_response_video(
             thinking_config=types.ThinkingConfig(
                 thinking_level="low", include_thoughts=True
             ),
+            media_resolution=types.MediaResolution.MEDIA_RESOLUTION_HIGH,
         )
     else:
         # Default config for other models
