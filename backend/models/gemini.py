@@ -301,7 +301,7 @@ async def stream_gemini_response_video(
     start_time = time.time()
 
     # Video generation settings
-    VIDEO_FPS = 20
+    VIDEO_FPS = 10
     MAX_OUTPUT_TOKENS = 50000
 
     # Get video duration and estimate cost
