@@ -515,45 +515,41 @@ async def stream_gemini_response_video_with_tools(
     print(f"  Tools enabled: generate_image")
     print(f"{'='*60}")
 
-    # Function calling loop - use non-streaming for function calls
+    # Function calling loop with streaming
     max_iterations = 20  # Safety limit to prevent infinite loops
     iteration = 0
 
     while iteration < max_iterations:
         iteration += 1
 
-        print(f"\n[ITERATION {iteration}/{max_iterations}] Making API call...")
+        print(f"\n[ITERATION {iteration}/{max_iterations}] Making streaming API call...")
 
-        # Make the API call (non-streaming to handle function calls properly)
-        response = await client.aio.models.generate_content(
+        # Collect function calls and model content during streaming
+        function_calls = []
+        collected_parts: List[types.Part] = []
+
+        # Stream the response - thoughts and text are streamed in real-time
+        async for chunk in await client.aio.models.generate_content_stream(
             model=api_model_name,
             contents=contents,
             config=config,
-        )
-
-        if not response.candidates or len(response.candidates) == 0:
-            print("No candidates in response")
-            break
-
-        candidate = response.candidates[0]
-
-        # Check if there are function calls
-        function_calls = []
-        text_parts = []
-
-        for part in candidate.content.parts:
-            if hasattr(part, "function_call") and part.function_call:
-                function_calls.append(part.function_call)
-            elif hasattr(part, "thought") and part.thought and part.text:
-                # Handle thinking content
-                if thinking_callback:
-                    await thinking_callback(part.text)
-                else:
-                    print(f"\n=== Gemini Video Thinking ({api_model_name}) ===")
-                    print(part.text[:500] + "..." if len(part.text) > 500 else part.text)
-                    print("=" * 50)
-            elif hasattr(part, "text") and part.text:
-                text_parts.append(part.text)
+        ):
+            if chunk.candidates and len(chunk.candidates) > 0:
+                for part in chunk.candidates[0].content.parts:
+                    # Check for function calls
+                    if hasattr(part, "function_call") and part.function_call:
+                        function_calls.append(part.function_call)
+                        collected_parts.append(part)
+                    # Stream thinking content immediately
+                    elif hasattr(part, "thought") and part.thought and part.text:
+                        if thinking_callback:
+                            await thinking_callback(part.text)
+                        collected_parts.append(part)
+                    # Stream text content immediately
+                    elif hasattr(part, "text") and part.text:
+                        full_response += part.text
+                        await callback(part.text)
+                        collected_parts.append(part)
 
         # If there are function calls, execute them and continue
         if function_calls:
@@ -561,8 +557,9 @@ async def stream_gemini_response_video_with_tools(
             print(f"[TOOL CALL] Processing {len(function_calls)} function call(s)...")
             print(f"{'='*60}")
 
-            # Append the model's response to contents
-            contents.append(candidate.content)
+            # Append the model's response to contents (reconstruct from collected parts)
+            model_content = types.Content(role="model", parts=collected_parts)
+            contents.append(model_content)
 
             # Process each function call and collect responses
             function_response_parts = []
@@ -616,16 +613,16 @@ async def stream_gemini_response_video_with_tools(
                 types.Content(role="user", parts=function_response_parts)
             )
 
+            # Reset full_response for next iteration (we'll get new code after tool results)
+            full_response = ""
+
             # Continue the loop to get the next response
             continue
 
-        # No function calls - we have the final text response
-        if text_parts:
-            full_response = "".join(text_parts)
-            print(f"\n[FINAL RESPONSE] Received {len(full_response)} characters of HTML code")
-            # Stream the response to the callback
-            await callback(full_response)
-            break
+        # No function calls - streaming is complete
+        if full_response:
+            print(f"\n[FINAL RESPONSE] Streamed {len(full_response)} characters of HTML code")
+        break
 
     if iteration >= max_iterations:
         print(f"Warning: Reached max iterations ({max_iterations})")
