@@ -200,9 +200,6 @@ async def get_models():
         for model in Llm
         if model != Llm.GPT_4_TURBO_2024_04_09
         and model != Llm.GPT_4_VISION
-        and model != Llm.CLAUDE_3_SONNET
-        and model != Llm.CLAUDE_3_OPUS
-        and model != Llm.CLAUDE_3_HAIKU
     ]
 
     # Import Stack type from prompts.types and get all literal values

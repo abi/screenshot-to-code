@@ -319,7 +319,12 @@ class TestCreatePrompt:
 
     @pytest.mark.asyncio
     async def test_video_mode_basic_prompt_creation(self) -> None:
-        """Test basic video prompt creation in video mode."""
+        """Test basic video prompt creation in video mode.
+
+        For video mode with generation_type="create", the prompt is empty
+        because the actual generation is handled by VideoGenerationStage
+        which sends the video directly to Gemini.
+        """
         # Setup test data
         video_data_url: str = "data:video/mp4;base64,test_video_data"
         params: Dict[str, Any] = {
@@ -329,86 +334,26 @@ class TestCreatePrompt:
             },
             "generationType": "create"
         }
-        
-        # Mock the video processing function
-        mock_video_messages: List[Dict[str, Any]] = [
-            {
-                "role": "system",
-                "content": "Mock Video System Prompt"
-            },
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": "data:image/png;base64,frame1",
-                            "detail": "high"
-                        }
-                    },
-                    {
-                        "type": "image_url", 
-                        "image_url": {
-                            "url": "data:image/png;base64,frame2",
-                            "detail": "high"
-                        }
-                    },
-                    {
-                        "type": "text",
-                        "text": "Create a functional web app from these video frames"
-                    }
-                ]
-            }
-        ]
-        
-        with patch('prompts.assemble_claude_prompt_video', return_value=mock_video_messages):
-            # Call the function
-            messages, image_cache = await create_prompt(
-                stack=self.TEST_STACK,
-                input_mode="video",
-                generation_type=params["generationType"],
-                prompt=params["prompt"],
-                history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
-            )
-            
-            # Define expected structure
-            expected: ExpectedResult = {
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "Mock Video System Prompt"
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": "data:image/png;base64,frame1",
-                                    "detail": "high"
-                                }
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": "data:image/png;base64,frame2", 
-                                    "detail": "high"
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "text": "Create a functional web app from these video frames"
-                            }
-                        ]
-                    }
-                ],
-                "image_cache": {}
-            }
-            
-            # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
-            assert_structure_match(actual, expected)
+
+        # Call the function
+        messages, image_cache = await create_prompt(
+            stack=self.TEST_STACK,
+            input_mode="video",
+            generation_type=params["generationType"],
+            prompt=params["prompt"],
+            history=params.get("history", []),
+            is_imported_from_code=params.get("isImportedFromCode", False),
+        )
+
+        # For video create mode, prompt is empty - actual generation handled by VideoGenerationStage
+        expected: ExpectedResult = {
+            "messages": [],
+            "image_cache": {}
+        }
+
+        # Assert the structure matches
+        actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+        assert_structure_match(actual, expected)
 
 
     @pytest.mark.asyncio

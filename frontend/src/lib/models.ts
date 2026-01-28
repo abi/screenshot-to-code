@@ -5,7 +5,6 @@ export enum CodeGenerationModel {
   GPT_4O_2024_05_13 = "gpt-4o-2024-05-13",
   GPT_4_TURBO_2024_04_09 = "gpt-4-turbo-2024-04-09",
   GPT_4_VISION = "gpt_4_vision",
-  CLAUDE_3_SONNET = "claude_3_sonnet",
 }
 
 // Will generate a static error if a model in the enum above is not in the descriptions
@@ -16,5 +15,4 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   "claude-sonnet-4-5-20250929": { name: "Claude Sonnet 4.5", inBeta: false },
   "gpt-4-turbo-2024-04-09": { name: "GPT-4 Turbo (deprecated)", inBeta: false },
   gpt_4_vision: { name: "GPT-4 Vision (deprecated)", inBeta: false },
-  claude_3_sonnet: { name: "Claude 3 (deprecated)", inBeta: false },
 };

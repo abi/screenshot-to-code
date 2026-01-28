@@ -27,7 +27,6 @@ from llm import (
 )
 from models import (
     stream_claude_response,
-    stream_claude_response_native,
     stream_openai_response,
     stream_gemini_response,
     stream_gemini_response_video,
@@ -61,7 +60,7 @@ MessageType = Literal[
 ]
 from image_generation.core import generate_images
 from prompts import create_prompt
-from prompts.claude_prompts import VIDEO_PROMPT, GEMINI_VIDEO_PROMPT
+from prompts.claude_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
 from video.utils import get_video_bytes_and_mime_type
 
@@ -465,7 +464,7 @@ class MockResponseStage:
 
 
 class VideoGenerationStage:
-    """Handles video mode code generation using Claude 3 Opus or Gemini 3"""
+    """Handles video mode code generation using Gemini 3"""
 
     def __init__(
         self,
@@ -477,28 +476,22 @@ class VideoGenerationStage:
 
     async def generate_video_code(
         self,
-        prompt_messages: List[ChatCompletionMessageParam],
-        anthropic_api_key: str | None,
-        gemini_api_key: str | None = None,
+        gemini_api_key: str | None,
         video_data_url: str | None = None,
     ) -> List[str]:
-        """Generate code for video input mode using Claude or Gemini"""
-        # Prefer Gemini if API key is available and video data URL is provided
-        if gemini_api_key and video_data_url:
-            return await self._generate_with_gemini(
-                video_data_url, gemini_api_key
-            )
-
-        # Fall back to Claude
-        if not anthropic_api_key:
+        """Generate code for video input mode using Gemini"""
+        if not gemini_api_key:
             await self.throw_error(
-                "Video mode requires either a Gemini API key or an Anthropic API key. "
-                "Please add GEMINI_API_KEY or ANTHROPIC_API_KEY to backend/.env "
-                "or in the settings dialog"
+                "Video mode requires a Gemini API key. "
+                "Please add GEMINI_API_KEY to backend/.env or in the settings dialog"
             )
-            raise Exception("No API key for video generation")
+            raise Exception("No Gemini API key for video generation")
 
-        return await self._generate_with_claude(prompt_messages, anthropic_api_key)
+        if not video_data_url:
+            await self.throw_error("Video mode requires a video to be provided")
+            raise Exception("No video data URL provided")
+
+        return await self._generate_with_gemini(video_data_url, gemini_api_key)
 
     async def _generate_with_gemini(
         self,
@@ -526,35 +519,6 @@ class VideoGenerationStage:
                 callback=lambda x: process_chunk(x, 0),
                 model=Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
                 thinking_callback=lambda x: process_thinking(x, 0),
-            )
-        ]
-        completions = [result["code"] for result in completion_results]
-
-        # Send the complete variant back to the client
-        await self.send_message("setCode", completions[0], 0)
-        await self.send_message("variantComplete", "Variant generation complete", 0)
-
-        return completions
-
-    async def _generate_with_claude(
-        self,
-        prompt_messages: List[ChatCompletionMessageParam],
-        anthropic_api_key: str,
-    ) -> List[str]:
-        """Generate code using Claude 3 Opus with screenshots extracted from video"""
-        async def process_chunk(content: str, variantIndex: int = 0):
-            await self.send_message("chunk", content, variantIndex)
-
-        print("Using Claude 3 Opus for video generation (screenshot-based)")
-
-        completion_results = [
-            await stream_claude_response_native(
-                system_prompt=VIDEO_PROMPT,
-                messages=prompt_messages,  # type: ignore
-                api_key=anthropic_api_key,
-                callback=lambda x: process_chunk(x, 0),
-                model_name=Llm.CLAUDE_3_OPUS.value,
-                include_thinking=True,
             )
         ]
         completions = [result["code"] for result in completion_results]
@@ -937,8 +901,6 @@ class CodeGenerationMiddleware(Middleware):
                     # Get the video data URL from the prompt
                     video_data_url = context.extracted_params.prompt.get("images", [None])[0]
                     context.completions = await video_stage.generate_video_code(
-                        context.prompt_messages,
-                        context.extracted_params.anthropic_api_key,
                         gemini_api_key=GEMINI_API_KEY,
                         video_data_url=video_data_url,
                     )
