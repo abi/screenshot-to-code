@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import time
 from typing import Any, Awaitable, Callable, Dict, List
@@ -554,15 +555,17 @@ async def stream_gemini_response_video_with_tools(
         # If there are function calls, execute them and continue
         if function_calls:
             print(f"\n{'='*60}")
-            print(f"[TOOL CALL] Processing {len(function_calls)} function call(s)...")
+            print(f"[TOOL CALL] Processing {len(function_calls)} function call(s) in parallel...")
             print(f"{'='*60}")
 
             # Append the model's response to contents (reconstruct from collected parts)
             model_content = types.Content(role="model", parts=collected_parts)
             contents.append(model_content)
 
-            # Process each function call and collect responses
-            function_response_parts = []
+            # Collect image generation tasks for parallel execution
+            image_tasks = []
+            task_info = []  # Store (index, fc) to match results back
+
             for i, fc in enumerate(function_calls):
                 print(f"\n[TOOL CALL {i+1}/{len(function_calls)}]")
                 print(f"  Function: {fc.name}")
@@ -576,21 +579,50 @@ async def stream_gemini_response_video_with_tools(
                     print(f"  Image ID: {image_id}")
                     print(f"  Prompt: {prompt[:100]}{'...' if len(prompt) > 100 else ''}")
 
-                    # Execute image generation
-                    result = await execute_image_generation(
+                    # Create task for parallel execution
+                    task = execute_image_generation(
                         prompt=prompt,
                         image_id=image_id,
                         replicate_api_key=replicate_api_key,
                     )
+                    image_tasks.append(task)
+                    task_info.append((i, fc, image_id))
+                else:
+                    print(f"  [SKIP] Unknown function: {fc.name}")
+                    task_info.append((i, fc, None))
+
+            # Execute all image generation tasks in parallel
+            if image_tasks:
+                print(f"\n[PARALLEL] Executing {len(image_tasks)} image generation task(s)...")
+                results = await asyncio.gather(*image_tasks, return_exceptions=True)
+            else:
+                results = []
+
+            # Process results and create function response parts
+            function_response_parts = []
+            result_idx = 0
+
+            for i, fc, image_id in task_info:
+                if fc.name == "generate_image":
+                    result = results[result_idx]
+                    result_idx += 1
+
+                    # Handle exceptions from gather
+                    if isinstance(result, Exception):
+                        result = {
+                            "status": "error",
+                            "image_id": image_id,
+                            "error": str(result),
+                            "fallback_url": f"https://placehold.co/800x600?text={image_id}",
+                        }
 
                     # Track generated images
                     if result["status"] == "success":
                         generated_images[image_id] = result["url"]
-                        print(f"  [SUCCESS] Generated URL: {result['url']}")
+                        print(f"  [{image_id}] SUCCESS: {result['url']}")
                     else:
                         generated_images[image_id] = result.get("fallback_url", "")
-                        print(f"  [ERROR] {result.get('error', 'Unknown error')}")
-                        print(f"  [FALLBACK] Using: {result.get('fallback_url', 'N/A')}")
+                        print(f"  [{image_id}] ERROR: {result.get('error', 'Unknown error')}")
 
                     # Create function response part
                     function_response_parts.append(
@@ -600,7 +632,6 @@ async def stream_gemini_response_video_with_tools(
                         )
                     )
                 else:
-                    print(f"Unknown function: {fc.name}")
                     function_response_parts.append(
                         types.Part.from_function_response(
                             name=fc.name,
