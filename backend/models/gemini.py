@@ -6,6 +6,7 @@ from google import genai
 from google.genai import types
 from llm import Completion, Llm
 from video.cost_estimation import (
+    calculate_cost,
     estimate_video_generation_cost,
     format_cost_estimate,
     get_video_duration_from_bytes,
@@ -393,20 +394,17 @@ async def stream_gemini_response_video(
         print("=" * 50)
 
     # Track actual token usage from the response
-    actual_input_tokens = 0
-    actual_output_tokens = 0
+    # usage_metadata fields: prompt_token_count, candidates_token_count, total_token_count
+    usage_metadata = None
 
     async for chunk in await client.aio.models.generate_content_stream(
         model=api_model_name,
         contents=contents,
         config=config,
     ):
-        # Capture usage metadata when available
-        if hasattr(chunk, "usage_metadata") and chunk.usage_metadata:
-            if hasattr(chunk.usage_metadata, "prompt_token_count"):
-                actual_input_tokens = chunk.usage_metadata.prompt_token_count or 0
-            if hasattr(chunk.usage_metadata, "candidates_token_count"):
-                actual_output_tokens = chunk.usage_metadata.candidates_token_count or 0
+        # Capture usage metadata (available in final chunks)
+        if chunk.usage_metadata:
+            usage_metadata = chunk.usage_metadata
 
         if chunk.candidates and len(chunk.candidates) > 0:
             for part in chunk.candidates[0].content.parts:
@@ -426,12 +424,16 @@ async def stream_gemini_response_video(
     completion_time = time.time() - start_time
 
     # Log actual token usage and cost
-    if actual_input_tokens > 0 or actual_output_tokens > 0:
-        from video.cost_estimation import calculate_cost
-        actual_cost = calculate_cost(actual_input_tokens, actual_output_tokens, model)
+    if usage_metadata:
+        input_tokens = usage_metadata.prompt_token_count or 0
+        output_tokens = usage_metadata.candidates_token_count or 0
+        total_tokens = usage_metadata.total_token_count or 0
+
+        actual_cost = calculate_cost(input_tokens, output_tokens, model)
         print(f"\n=== Video Generation Actual Usage ({model.value}) ===")
-        print(f"Input tokens: {actual_input_tokens:,} (${actual_cost.input_cost:.4f})")
-        print(f"Output tokens: {actual_output_tokens:,} (${actual_cost.output_cost:.4f})")
+        print(f"Input tokens: {input_tokens:,} (${actual_cost.input_cost:.4f})")
+        print(f"Output tokens: {output_tokens:,} (${actual_cost.output_cost:.4f})")
+        print(f"Total tokens: {total_tokens:,}")
         print(f"Total actual cost: ${actual_cost.total_cost:.4f}")
         print(f"Generation time: {completion_time:.2f} seconds")
         print("=" * 50)
