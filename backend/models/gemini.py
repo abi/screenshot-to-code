@@ -170,7 +170,7 @@ async def stream_gemini_response(
 
     # Debug: print truncated message info
     if DEBUG_GEMINI:
-        print(f"\n=== Gemini Request Debug ({model_name}) ===")
+        print(f"\n=== Gemini Request Debug ({model.value}) ===")
         print(f"System prompt (first 200 chars): {system_prompt[:200]}...")
         print(f"Number of conversation messages: {len(gemini_contents)}")
         for i, content in enumerate(gemini_contents):
@@ -188,7 +188,7 @@ async def stream_gemini_response(
     client = genai.Client(api_key=api_key)
     full_response = ""
 
-    if model_name == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20.value:
+    if model == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20:
         # Gemini 2.5 Flash supports thinking budgets
         config = types.GenerateContentConfig(
             temperature=0,
