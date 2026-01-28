@@ -301,8 +301,8 @@ async def stream_gemini_response_video(
     # Configure based on model
     if model == Llm.GEMINI_3_FLASH_PREVIEW_HIGH:
         config = types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=30000,
+            temperature=1.0,
+            max_output_tokens=50000,
             system_instruction=system_prompt,
             thinking_config=types.ThinkingConfig(
                 thinking_level="high", include_thoughts=True
@@ -310,8 +310,8 @@ async def stream_gemini_response_video(
         )
     elif model == Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL:
         config = types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=30000,
+            temperature=1.0,
+            max_output_tokens=50000,
             system_instruction=system_prompt,
             thinking_config=types.ThinkingConfig(
                 thinking_level="minimal", include_thoughts=True
@@ -328,8 +328,8 @@ async def stream_gemini_response_video(
         )
     elif model == Llm.GEMINI_3_PRO_PREVIEW_LOW:
         config = types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=30000,
+            temperature=1.0,
+            max_output_tokens=50000,
             system_instruction=system_prompt,
             thinking_config=types.ThinkingConfig(
                 thinking_level="low", include_thoughts=True
@@ -338,8 +338,8 @@ async def stream_gemini_response_video(
     else:
         # Default config for other models
         config = types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=20000,
+            temperature=1.0,
+            max_output_tokens=50000,
             system_instruction=system_prompt,
         )
 
