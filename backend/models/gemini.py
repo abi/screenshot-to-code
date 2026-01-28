@@ -5,6 +5,12 @@ from openai.types.chat import ChatCompletionMessageParam
 from google import genai
 from google.genai import types
 from llm import Completion, Llm
+from video.cost_estimation import (
+    estimate_video_generation_cost,
+    format_cost_estimate,
+    get_video_duration_from_bytes,
+    MediaResolution,
+)
 
 # Set to True to print debug messages for Gemini requests
 DEBUG_GEMINI = False
@@ -16,6 +22,16 @@ def get_gemini_api_model_name(model: Llm) -> str:
     elif model in [Llm.GEMINI_3_PRO_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_LOW]:
         return "gemini-3-pro-preview"
     return model.value
+
+
+def get_thinking_level_for_model(model: Llm) -> str:
+    if model in [Llm.GEMINI_3_FLASH_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_HIGH]:
+        return "high"
+    elif model == Llm.GEMINI_3_PRO_PREVIEW_LOW:
+        return "low"
+    elif model == Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL:
+        return "minimal"
+    return "high"
 
 
 def extract_text_from_content(content: str | List[Dict[str, Any]]) -> str:
@@ -283,16 +299,39 @@ async def stream_gemini_response_video(
 ) -> Completion:
     start_time = time.time()
 
+    # Video generation settings
+    VIDEO_FPS = 20
+    MAX_OUTPUT_TOKENS = 50000
+
+    # Get video duration and estimate cost
+    video_duration = get_video_duration_from_bytes(video_bytes)
+    if video_duration:
+        thinking_level = get_thinking_level_for_model(model)
+        estimated_cost = estimate_video_generation_cost(
+            video_duration_seconds=video_duration,
+            model=model,
+            fps=VIDEO_FPS,
+            media_resolution=MediaResolution.HIGH,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
+            thinking_level=thinking_level,
+        )
+        print(f"\n=== Video Generation Cost Estimate ({model.value}) ===")
+        print(f"Video duration: {video_duration:.2f} seconds")
+        print(format_cost_estimate(estimated_cost))
+        print("=" * 50)
+    else:
+        print("Warning: Could not determine video duration for cost estimation")
+
     client = genai.Client(api_key=api_key)
     full_response = ""
 
-    # Create content with video inline data at 10fps for better fidelity
+    # Create content with video inline data at specified FPS for better fidelity
     contents = types.Content(
         role="user",
         parts=[
             types.Part(
                 inline_data=types.Blob(data=video_bytes, mime_type=video_mime_type),
-                video_metadata=types.VideoMetadata(fps=20),
+                video_metadata=types.VideoMetadata(fps=VIDEO_FPS),
                 media_resolution=types.PartMediaResolutionLevel.MEDIA_RESOLUTION_HIGH
             ),
             types.Part(text="Analyze this video and generate the code."),
@@ -303,7 +342,7 @@ async def stream_gemini_response_video(
     if model == Llm.GEMINI_3_FLASH_PREVIEW_HIGH:
         config = types.GenerateContentConfig(
             temperature=1.0,
-            max_output_tokens=50000,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
             system_instruction=system_prompt,
             thinking_config=types.ThinkingConfig(
                 thinking_level="high", include_thoughts=True
@@ -312,7 +351,7 @@ async def stream_gemini_response_video(
     elif model == Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL:
         config = types.GenerateContentConfig(
             temperature=1.0,
-            max_output_tokens=50000,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
             system_instruction=system_prompt,
             thinking_config=types.ThinkingConfig(
                 thinking_level="minimal", include_thoughts=True
@@ -321,7 +360,7 @@ async def stream_gemini_response_video(
     elif model == Llm.GEMINI_3_PRO_PREVIEW_HIGH:
         config = types.GenerateContentConfig(
             temperature=1.0,
-            max_output_tokens=50000,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
             system_instruction=system_prompt,
             thinking_config=types.ThinkingConfig(
                 thinking_level="high", include_thoughts=True
@@ -330,7 +369,7 @@ async def stream_gemini_response_video(
     elif model == Llm.GEMINI_3_PRO_PREVIEW_LOW:
         config = types.GenerateContentConfig(
             temperature=1.0,
-            max_output_tokens=50000,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
             system_instruction=system_prompt,
             thinking_config=types.ThinkingConfig(
                 thinking_level="low", include_thoughts=True
@@ -340,7 +379,7 @@ async def stream_gemini_response_video(
         # Default config for other models
         config = types.GenerateContentConfig(
             temperature=1.0,
-            max_output_tokens=50000,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
             system_instruction=system_prompt,
         )
 
@@ -353,11 +392,22 @@ async def stream_gemini_response_video(
         print(f"System prompt (first 200 chars): {system_prompt[:200]}...")
         print("=" * 50)
 
+    # Track actual token usage from the response
+    actual_input_tokens = 0
+    actual_output_tokens = 0
+
     async for chunk in await client.aio.models.generate_content_stream(
         model=api_model_name,
         contents=contents,
         config=config,
     ):
+        # Capture usage metadata when available
+        if hasattr(chunk, "usage_metadata") and chunk.usage_metadata:
+            if hasattr(chunk.usage_metadata, "prompt_token_count"):
+                actual_input_tokens = chunk.usage_metadata.prompt_token_count or 0
+            if hasattr(chunk.usage_metadata, "candidates_token_count"):
+                actual_output_tokens = chunk.usage_metadata.candidates_token_count or 0
+
         if chunk.candidates and len(chunk.candidates) > 0:
             for part in chunk.candidates[0].content.parts:
                 if not part.text:
@@ -374,4 +424,16 @@ async def stream_gemini_response_video(
                     await callback(part.text)
 
     completion_time = time.time() - start_time
+
+    # Log actual token usage and cost
+    if actual_input_tokens > 0 or actual_output_tokens > 0:
+        from video.cost_estimation import calculate_cost
+        actual_cost = calculate_cost(actual_input_tokens, actual_output_tokens, model)
+        print(f"\n=== Video Generation Actual Usage ({model.value}) ===")
+        print(f"Input tokens: {actual_input_tokens:,} (${actual_cost.input_cost:.4f})")
+        print(f"Output tokens: {actual_output_tokens:,} (${actual_cost.output_cost:.4f})")
+        print(f"Total actual cost: ${actual_cost.total_cost:.4f}")
+        print(f"Generation time: {completion_time:.2f} seconds")
+        print("=" * 50)
+
     return {"duration": completion_time, "code": full_response}
