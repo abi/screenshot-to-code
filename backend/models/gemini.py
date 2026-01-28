@@ -426,15 +426,21 @@ async def stream_gemini_response_video(
     # Log actual token usage and cost
     if usage_metadata:
         input_tokens = usage_metadata.prompt_token_count or 0
+        thinking_tokens = usage_metadata.thoughts_token_count or 0
         output_tokens = usage_metadata.candidates_token_count or 0
         total_tokens = usage_metadata.total_token_count or 0
 
-        actual_cost = calculate_cost(input_tokens, output_tokens, model)
+        # Thinking tokens are billed at the same rate as output tokens
+        billable_output_tokens = thinking_tokens + output_tokens
+        actual_cost = calculate_cost(input_tokens, billable_output_tokens, model)
+
         print(f"\n=== Video Generation Actual Usage ({model.value}) ===")
-        print(f"Input tokens: {input_tokens:,} (${actual_cost.input_cost:.4f})")
-        print(f"Output tokens: {output_tokens:,} (${actual_cost.output_cost:.4f})")
-        print(f"Total tokens: {total_tokens:,}")
-        print(f"Total actual cost: ${actual_cost.total_cost:.4f}")
+        print(f"Input tokens:    {input_tokens:,} (${actual_cost.input_cost:.4f})")
+        print(f"Thinking tokens: {thinking_tokens:,}")
+        print(f"Output tokens:   {output_tokens:,}")
+        print(f"Billable output: {billable_output_tokens:,} (${actual_cost.output_cost:.4f})")
+        print(f"Total tokens:    {total_tokens:,}")
+        print(f"Total cost:      ${actual_cost.total_cost:.4f}")
         print(f"Generation time: {completion_time:.2f} seconds")
         print("=" * 50)
 
