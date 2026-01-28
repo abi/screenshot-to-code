@@ -41,16 +41,16 @@ async def create_prompt(
     else:
         # Assemble the prompt for non-imported code
         if input_mode == "image":
-            image_url = prompt["images"][0]
+            image_urls = prompt["images"]
             text_prompt = prompt.get("text", "")
-            prompt_messages = assemble_prompt(image_url, stack, text_prompt)
+            prompt_messages = assemble_prompt(image_urls, stack, text_prompt)
         elif input_mode == "text":
             prompt_messages = assemble_text_prompt(prompt["text"], stack)
         else:
             # Default to image mode for backward compatibility
-            image_url = prompt["images"][0]
+            image_urls = prompt["images"]
             text_prompt = prompt.get("text", "")
-            prompt_messages = assemble_prompt(image_url, stack, text_prompt)
+            prompt_messages = assemble_prompt(image_urls, stack, text_prompt)
 
         if generation_type == "update":
             # Transform the history tree into message format
@@ -135,27 +135,46 @@ def assemble_imported_code_prompt(
 
 
 def assemble_prompt(
-    image_data_url: str,
+    image_data_urls: list[str],
     stack: Stack,
     text_prompt: str = "",
 ) -> list[ChatCompletionMessageParam]:
     system_content = SYSTEM_PROMPTS[stack]
     user_prompt = USER_PROMPT if stack != "svg" else SVG_USER_PROMPT
 
+    # Customize prompt for multiple images
+    if len(image_data_urls) > 1:
+        user_prompt = f"""
+Generate code for a web page that includes all {len(image_data_urls)} screens/sections shown in the images.
+Combine them into a single cohesive page or app layout.
+"""
+        if stack == "svg":
+            user_prompt = f"""
+Generate code for SVGs that look exactly like the {len(image_data_urls)} images provided.
+"""
+
     # Append optional text instructions if provided
     if text_prompt.strip():
         user_prompt = user_prompt.strip() + "\n\nAdditional instructions: " + text_prompt
 
-    user_content: list[ChatCompletionContentPartParam] = [
-        {
-            "type": "image_url",
-            "image_url": {"url": image_data_url, "detail": "high"},
-        },
+    # Add all images to the user content
+    user_content: list[ChatCompletionContentPartParam] = []
+    for image_data_url in image_data_urls:
+        user_content.append(
+            {
+                "type": "image_url",
+                "image_url": {"url": image_data_url, "detail": "high"},
+            }
+        )
+
+    # Add the text prompt after all images
+    user_content.append(
         {
             "type": "text",
             "text": user_prompt,
-        },
-    ]
+        }
+    )
+
     return [
         {
             "role": "system",

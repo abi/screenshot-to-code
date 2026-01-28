@@ -111,6 +111,12 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
     setShowTextPrompt(false);
   };
 
+  const handleRemoveImage = (index: number) => {
+    URL.revokeObjectURL(files[index].preview);
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadedDataUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -120,27 +126,44 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
 
   const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
     useDropzone({
-      maxFiles: 1,
-      maxSize: 1024 * 1024 * 20, // 20 MB
+      maxFiles: 10,
+      maxSize: 1024 * 1024 * 20, // 20 MB per file
       accept: {
         // Image formats
         "image/png": [".png"],
         "image/jpeg": [".jpeg"],
         "image/jpg": [".jpg"],
-        // Video formats
+        // Video formats (only allow single video)
         "video/quicktime": [".mov"],
         "video/mp4": [".mp4"],
         "video/webm": [".webm"],
       },
       onDrop: (acceptedFiles) => {
-        // Set up the preview thumbnail images
-        setFiles(
-          acceptedFiles.map((file: File) =>
-            Object.assign(file, {
-              preview: URL.createObjectURL(file),
-            })
-          ) as FileWithPreview[]
+        // Check if any file is a video - videos must be uploaded alone
+        const hasVideo = acceptedFiles.some((file) =>
+          file.type.startsWith("video/")
         );
+        if (hasVideo && acceptedFiles.length > 1) {
+          toast.error("Videos must be uploaded individually, not with other files");
+          return;
+        }
+
+        // For images, append to existing files (up to 10 total)
+        const isVideo = hasVideo;
+        if (!isVideo && files.length > 0 && uploadedInputMode === "image") {
+          const totalFiles = files.length + acceptedFiles.length;
+          if (totalFiles > 10) {
+            toast.error("Maximum 10 images allowed");
+            acceptedFiles = acceptedFiles.slice(0, 10 - files.length);
+          }
+        }
+
+        // Set up the preview thumbnail images
+        const newFiles = acceptedFiles.map((file: File) =>
+          Object.assign(file, {
+            preview: URL.createObjectURL(file),
+          })
+        ) as FileWithPreview[];
 
         // Convert images to data URLs and store them (don't trigger generation yet)
         Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
@@ -149,7 +172,16 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
               const inputMode = (dataUrls[0] as string).startsWith("data:video")
                 ? "video"
                 : "image";
-              setUploadedDataUrls(dataUrls.map((dataUrl) => dataUrl as string));
+
+              if (inputMode === "video" || uploadedInputMode === "video" || files.length === 0) {
+                // For videos or first upload, replace all files
+                setFiles(newFiles);
+                setUploadedDataUrls(dataUrls.map((dataUrl) => dataUrl as string));
+              } else {
+                // For additional images, append to existing
+                setFiles((prev) => [...prev, ...newFiles]);
+                setUploadedDataUrls((prev) => [...prev, ...dataUrls.map((dataUrl) => dataUrl as string)]);
+              }
               setUploadedInputMode(inputMode);
               // Focus the text input after upload
               setTimeout(() => textInputRef.current?.focus(), 100);
@@ -194,8 +226,8 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
         <div {...getRootProps({ style: style as any })}>
           <input {...getInputProps()} className="file-input" />
           <p className="text-slate-700 text-lg">
-            Drag & drop a screenshot here, <br />
-            or click to upload
+            Drag & drop screenshots here, <br />
+            or click to upload (up to 10 images)
           </p>
         </div>
       )}
@@ -203,39 +235,102 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
       {hasUploadedFile && (
         <div className="flex flex-col items-center gap-4 w-4/5 mx-auto">
           {/* Image/Video Preview */}
-          <div className="relative w-full max-w-2xl">
-            {uploadedInputMode === "video" ? (
+          {uploadedInputMode === "video" ? (
+            <div className="relative w-full max-w-2xl">
               <video
                 src={files[0]?.preview}
                 className="w-full h-auto max-h-[500px] object-contain rounded-lg"
                 controls
               />
-            ) : (
-              <img
-                src={files[0]?.preview}
-                alt="Uploaded screenshot"
-                className="w-full h-auto max-h-[500px] object-contain rounded-lg"
-              />
-            )}
-            <button
-              onClick={handleClear}
-              className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
-              aria-label="Remove image"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-600"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+              <button
+                onClick={handleClear}
+                className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
+                aria-label="Remove video"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-gray-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <div className="w-full max-w-4xl">
+              {/* Multi-image grid */}
+              <div className={`grid gap-3 ${files.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto' : files.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+                {files.map((file, index) => (
+                  <div key={file.preview} className="relative group">
+                    <img
+                      src={file.preview}
+                      alt={`Screenshot ${index + 1}`}
+                      className="w-full h-auto max-h-[300px] object-contain rounded-lg bg-gray-100"
+                    />
+                    <button
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Remove image ${index + 1}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-600"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                    {files.length > 1 && (
+                      <span className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                        {index + 1}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* Add more images button */}
+              {files.length < 10 && (
+                <div className="mt-3 flex justify-center gap-2">
+                  <div {...getRootProps({ className: 'cursor-pointer' })}>
+                    <input {...getInputProps()} />
+                    <button
+                      type="button"
+                      className="text-sm text-gray-500 hover:text-gray-700 underline"
+                    >
+                      + Add more screenshots ({files.length}/10)
+                    </button>
+                  </div>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    onClick={handleClear}
+                    className="text-sm text-red-500 hover:text-red-700 underline"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              )}
+              {files.length >= 10 && (
+                <div className="mt-3 flex justify-center">
+                  <button
+                    onClick={handleClear}
+                    className="text-sm text-red-500 hover:text-red-700 underline"
+                  >
+                    Clear all images
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Text Prompt Toggle/Input */}
           {!showTextPrompt ? (
