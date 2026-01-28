@@ -26,9 +26,10 @@ class CostEstimate:
     output_tokens: int
 
 
-# Gemini 3 video token rates per frame at 1 FPS (from documentation)
+# Gemini 3 video token rates per second (from documentation)
 # https://ai.google.dev/gemini-api/docs/media-resolution#token-counts
-# Note: The API always samples at 1 FPS for tokenization, regardless of fps setting
+# Note: Based on observed actual token counts, billing appears to use ~1 FPS
+# even when higher fps is requested. This may vary - adjust if actuals differ.
 VIDEO_TOKENS_PER_SECOND = {
     MediaResolution.LOW: 70,
     MediaResolution.MEDIUM: 70,  # Same as LOW for video
@@ -78,7 +79,7 @@ def estimate_video_input_tokens(
     media_resolution: MediaResolution = MediaResolution.HIGH,
     include_audio: bool = True,
 ) -> int:
-    # API samples at 1 FPS for tokenization regardless of fps setting
+    # Estimate based on observed actual token counts (appears to bill at ~1 FPS)
     tokens_per_second = VIDEO_TOKENS_PER_SECOND[media_resolution]
     visual_tokens = int(video_duration_seconds * tokens_per_second)
 
