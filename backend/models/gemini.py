@@ -507,13 +507,13 @@ async def stream_gemini_response_video_with_tools(
 
     api_model_name = get_gemini_api_model_name(model)
 
-    if DEBUG_GEMINI:
-        print(f"\n=== Gemini Video Request with Tools Debug ({api_model_name}) ===")
-        print(f"Video MIME type: {video_mime_type}")
-        print(f"Video size: {len(video_bytes)} bytes")
-        print(f"System prompt (first 200 chars): {system_prompt[:200]}...")
-        print(f"Tools enabled: generate_image")
-        print("=" * 50)
+    print(f"\n{'='*60}")
+    print(f"[GEMINI VIDEO WITH TOOLS] Starting generation")
+    print(f"  Model: {api_model_name}")
+    print(f"  Video MIME type: {video_mime_type}")
+    print(f"  Video size: {len(video_bytes)} bytes")
+    print(f"  Tools enabled: generate_image")
+    print(f"{'='*60}")
 
     # Function calling loop - use non-streaming for function calls
     max_iterations = 20  # Safety limit to prevent infinite loops
@@ -522,9 +522,7 @@ async def stream_gemini_response_video_with_tools(
     while iteration < max_iterations:
         iteration += 1
 
-        if DEBUG_GEMINI:
-            print(f"\n--- Iteration {iteration} ---")
-            print(f"Contents count: {len(contents)}")
+        print(f"\n[ITERATION {iteration}/{max_iterations}] Making API call...")
 
         # Make the API call (non-streaming to handle function calls properly)
         response = await client.aio.models.generate_content(
@@ -559,18 +557,27 @@ async def stream_gemini_response_video_with_tools(
 
         # If there are function calls, execute them and continue
         if function_calls:
-            print(f"Processing {len(function_calls)} function call(s)...")
+            print(f"\n{'='*60}")
+            print(f"[TOOL CALL] Processing {len(function_calls)} function call(s)...")
+            print(f"{'='*60}")
 
             # Append the model's response to contents
             contents.append(candidate.content)
 
             # Process each function call and collect responses
             function_response_parts = []
-            for fc in function_calls:
+            for i, fc in enumerate(function_calls):
+                print(f"\n[TOOL CALL {i+1}/{len(function_calls)}]")
+                print(f"  Function: {fc.name}")
+                print(f"  Args: {fc.args}")
+
                 if fc.name == "generate_image":
                     args = fc.args
                     prompt = args.get("prompt", "")
                     image_id = args.get("image_id", f"image-{len(generated_images)}")
+
+                    print(f"  Image ID: {image_id}")
+                    print(f"  Prompt: {prompt[:100]}{'...' if len(prompt) > 100 else ''}")
 
                     # Execute image generation
                     result = await execute_image_generation(
@@ -582,8 +589,11 @@ async def stream_gemini_response_video_with_tools(
                     # Track generated images
                     if result["status"] == "success":
                         generated_images[image_id] = result["url"]
+                        print(f"  [SUCCESS] Generated URL: {result['url']}")
                     else:
                         generated_images[image_id] = result.get("fallback_url", "")
+                        print(f"  [ERROR] {result.get('error', 'Unknown error')}")
+                        print(f"  [FALLBACK] Using: {result.get('fallback_url', 'N/A')}")
 
                     # Create function response part
                     function_response_parts.append(
@@ -612,6 +622,7 @@ async def stream_gemini_response_video_with_tools(
         # No function calls - we have the final text response
         if text_parts:
             full_response = "".join(text_parts)
+            print(f"\n[FINAL RESPONSE] Received {len(full_response)} characters of HTML code")
             # Stream the response to the callback
             await callback(full_response)
             break
@@ -619,13 +630,13 @@ async def stream_gemini_response_video_with_tools(
     if iteration >= max_iterations:
         print(f"Warning: Reached max iterations ({max_iterations})")
 
-    if DEBUG_GEMINI:
-        print(f"\n=== Generation Complete ===")
-        print(f"Total iterations: {iteration}")
-        print(f"Images generated: {len(generated_images)}")
-        for img_id, url in generated_images.items():
-            print(f"  - {img_id}: {url[:80]}...")
-        print("=" * 50)
+    print(f"\n{'='*60}")
+    print(f"[GEMINI VIDEO WITH TOOLS] Generation Complete")
+    print(f"  Total iterations: {iteration}")
+    print(f"  Images generated: {len(generated_images)}")
+    for img_id, url in generated_images.items():
+        print(f"    - {img_id}: {url[:80]}{'...' if len(url) > 80 else ''}")
+    print(f"{'='*60}")
 
     completion_time = time.time() - start_time
     return {"duration": completion_time, "code": full_response}
