@@ -26,17 +26,18 @@ class CostEstimate:
     output_tokens: int
 
 
-# Gemini 3 video token rates per second (calibrated from actual usage)
-# Docs say 280 tokens/frame at HIGH + 32 audio = 312/sec, but actual usage
-# shows ~556 tokens/sec. This suggests ~2 FPS effective sampling or different rates.
-VIDEO_TOKENS_PER_SECOND = {
-    MediaResolution.LOW: 140,   # ~2x the documented 70
-    MediaResolution.MEDIUM: 140,
-    MediaResolution.HIGH: 556,  # Calibrated from actual: (7375-1846)/(11.17-1.22)
+# Gemini 3 video token rates per frame (from documentation)
+# https://ai.google.dev/gemini-api/docs/media-resolution#token-counts
+VIDEO_TOKENS_PER_FRAME = {
+    MediaResolution.LOW: 70,
+    MediaResolution.MEDIUM: 70,
+    MediaResolution.HIGH: 280,
 }
 
+# Audio tokens per second
+AUDIO_TOKENS_PER_SECOND = 32
+
 # Prompt overhead (system prompt + user text)
-# Calibrated from actual usage: tokens - (duration * video_rate)
 PROMPT_TOKENS_ESTIMATE = 1200
 
 # Pricing per million tokens (USD)
@@ -72,14 +73,19 @@ def get_model_api_name(model: Llm) -> str:
 
 def estimate_video_input_tokens(
     video_duration_seconds: float,
+    fps: float = 1.0,
     media_resolution: MediaResolution = MediaResolution.HIGH,
 ) -> int:
-    # Calibrated from actual usage data (includes video frames + audio)
-    tokens_per_second = VIDEO_TOKENS_PER_SECOND[media_resolution]
-    video_tokens = int(video_duration_seconds * tokens_per_second)
+    # Calculate frames based on fps
+    total_frames = video_duration_seconds * fps
+    tokens_per_frame = VIDEO_TOKENS_PER_FRAME[media_resolution]
+    frame_tokens = int(total_frames * tokens_per_frame)
+
+    # Audio tokens
+    audio_tokens = int(video_duration_seconds * AUDIO_TOKENS_PER_SECOND)
 
     # Add prompt overhead (system prompt + user text)
-    total_tokens = video_tokens + PROMPT_TOKENS_ESTIMATE
+    total_tokens = frame_tokens + audio_tokens + PROMPT_TOKENS_ESTIMATE
 
     return total_tokens
 
@@ -130,12 +136,14 @@ def calculate_cost(
 def estimate_video_generation_cost(
     video_duration_seconds: float,
     model: Llm,
+    fps: float = 1.0,
     media_resolution: MediaResolution = MediaResolution.HIGH,
     max_output_tokens: int = 50000,
     thinking_level: str = "high",
 ) -> CostEstimate:
     input_tokens = estimate_video_input_tokens(
         video_duration_seconds=video_duration_seconds,
+        fps=fps,
         media_resolution=media_resolution,
     )
 
@@ -162,12 +170,15 @@ def format_cost_estimate(cost: CostEstimate) -> str:
 
 def format_detailed_input_estimate(
     video_duration_seconds: float,
+    fps: float,
     media_resolution: MediaResolution,
     model: Llm,
 ) -> str:
-    tokens_per_second = VIDEO_TOKENS_PER_SECOND[media_resolution]
-    video_tokens = int(video_duration_seconds * tokens_per_second)
-    total_input_tokens = video_tokens + PROMPT_TOKENS_ESTIMATE
+    total_frames = video_duration_seconds * fps
+    tokens_per_frame = VIDEO_TOKENS_PER_FRAME[media_resolution]
+    frame_tokens = int(total_frames * tokens_per_frame)
+    audio_tokens = int(video_duration_seconds * AUDIO_TOKENS_PER_SECOND)
+    total_input_tokens = frame_tokens + audio_tokens + PROMPT_TOKENS_ESTIMATE
 
     model_name = get_model_api_name(model)
     pricing = GEMINI_PRICING.get(model_name, GEMINI_PRICING["gemini-3-flash-preview"])
@@ -175,7 +186,9 @@ def format_detailed_input_estimate(
 
     return (
         f"Input Token Calculation:\n"
-        f"  Video: {video_duration_seconds:.2f}s × {tokens_per_second} tokens/s = {video_tokens:,} tokens\n"
+        f"  Frames: {video_duration_seconds:.2f}s × {fps} fps = {total_frames:.1f} frames\n"
+        f"  Frame tokens: {total_frames:.1f} × {tokens_per_frame} tokens/frame = {frame_tokens:,} tokens\n"
+        f"  Audio tokens: {video_duration_seconds:.2f}s × {AUDIO_TOKENS_PER_SECOND} tokens/s = {audio_tokens:,} tokens\n"
         f"  Prompt overhead: {PROMPT_TOKENS_ESTIMATE:,} tokens\n"
         f"  Total input: {total_input_tokens:,} tokens\n"
         f"  Cost: {total_input_tokens:,} ÷ 1M × ${pricing['input_per_million']:.2f} = ${input_cost:.4f}"

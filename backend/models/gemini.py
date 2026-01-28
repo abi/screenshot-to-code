@@ -312,12 +312,13 @@ async def stream_gemini_response_video(
         estimated_cost = estimate_video_generation_cost(
             video_duration_seconds=video_duration,
             model=model,
+            fps=VIDEO_FPS,
             media_resolution=MediaResolution.HIGH,
             max_output_tokens=MAX_OUTPUT_TOKENS,
             thinking_level=thinking_level,
         )
         print(f"\n=== Video Generation Cost Estimate ({model.value}) ===")
-        print(format_detailed_input_estimate(video_duration, MediaResolution.HIGH, model))
+        print(format_detailed_input_estimate(video_duration, VIDEO_FPS, MediaResolution.HIGH, model))
         print(f"Output tokens (est): {estimated_cost.output_tokens:,} (${estimated_cost.output_cost:.4f})")
         print(f"Total estimated cost: ${estimated_cost.total_cost:.4f}")
         print("=" * 50)
