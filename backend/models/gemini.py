@@ -311,7 +311,6 @@ async def stream_gemini_response_video(
         estimated_cost = estimate_video_generation_cost(
             video_duration_seconds=video_duration,
             model=model,
-            fps=VIDEO_FPS,
             media_resolution=MediaResolution.HIGH,
             max_output_tokens=MAX_OUTPUT_TOKENS,
             thinking_level=thinking_level,

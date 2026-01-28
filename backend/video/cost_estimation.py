@@ -26,9 +26,10 @@ class CostEstimate:
     output_tokens: int
 
 
-# Gemini 3 video token rates per frame (from documentation)
+# Gemini 3 video token rates per frame at 1 FPS (from documentation)
 # https://ai.google.dev/gemini-api/docs/media-resolution#token-counts
-VIDEO_TOKENS_PER_FRAME = {
+# Note: The API always samples at 1 FPS for tokenization, regardless of fps setting
+VIDEO_TOKENS_PER_SECOND = {
     MediaResolution.LOW: 70,
     MediaResolution.MEDIUM: 70,  # Same as LOW for video
     MediaResolution.HIGH: 280,
@@ -37,8 +38,9 @@ VIDEO_TOKENS_PER_FRAME = {
 # Audio tokens per second
 AUDIO_TOKENS_PER_SECOND = 32
 
-# System prompt tokens (approximate, varies by prompt length)
-SYSTEM_PROMPT_TOKENS_ESTIMATE = 2000
+# System prompt + user text tokens (approximate)
+# Based on actual usage: ~1400-1500 tokens for typical prompts
+PROMPT_TOKENS_ESTIMATE = 1500
 
 # Pricing per million tokens (USD)
 # https://ai.google.dev/gemini-api/docs/pricing
@@ -73,20 +75,19 @@ def get_model_api_name(model: Llm) -> str:
 
 def estimate_video_input_tokens(
     video_duration_seconds: float,
-    fps: int = 20,
     media_resolution: MediaResolution = MediaResolution.HIGH,
     include_audio: bool = True,
 ) -> int:
-    tokens_per_frame = VIDEO_TOKENS_PER_FRAME[media_resolution]
-    total_frames = int(video_duration_seconds * fps)
-    visual_tokens = total_frames * tokens_per_frame
+    # API samples at 1 FPS for tokenization regardless of fps setting
+    tokens_per_second = VIDEO_TOKENS_PER_SECOND[media_resolution]
+    visual_tokens = int(video_duration_seconds * tokens_per_second)
 
     audio_tokens = 0
     if include_audio:
         audio_tokens = int(video_duration_seconds * AUDIO_TOKENS_PER_SECOND)
 
-    # Add system prompt tokens
-    total_tokens = visual_tokens + audio_tokens + SYSTEM_PROMPT_TOKENS_ESTIMATE
+    # Add prompt tokens (system + user text)
+    total_tokens = visual_tokens + audio_tokens + PROMPT_TOKENS_ESTIMATE
 
     return total_tokens
 
@@ -137,14 +138,12 @@ def calculate_cost(
 def estimate_video_generation_cost(
     video_duration_seconds: float,
     model: Llm,
-    fps: int = 20,
     media_resolution: MediaResolution = MediaResolution.HIGH,
     max_output_tokens: int = 50000,
     thinking_level: str = "high",
 ) -> CostEstimate:
     input_tokens = estimate_video_input_tokens(
         video_duration_seconds=video_duration_seconds,
-        fps=fps,
         media_resolution=media_resolution,
         include_audio=True,
     )
