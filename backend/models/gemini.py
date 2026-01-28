@@ -10,6 +10,14 @@ from llm import Completion, Llm
 DEBUG_GEMINI = False
 
 
+def get_gemini_api_model_name(model: Llm) -> str:
+    if model in [Llm.GEMINI_3_FLASH_PREVIEW_HIGH, Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL]:
+        return "gemini-3-flash-preview"
+    elif model in [Llm.GEMINI_3_PRO_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_LOW]:
+        return "gemini-3-pro-preview"
+    return model.value
+
+
 def extract_text_from_content(content: str | List[Dict[str, Any]]) -> str:
     """
     Extracts text from message content, handling both string and list formats.
@@ -134,7 +142,7 @@ async def stream_gemini_response(
     messages: List[ChatCompletionMessageParam],
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
-    model_name: str,
+    model: Llm,
     thinking_callback: Callable[[str], Awaitable[None]] | None = None,
 ) -> Completion:
     """
@@ -189,7 +197,7 @@ async def stream_gemini_response(
                 thinking_budget=5000, include_thoughts=True
             ),
         )
-    elif model_name == Llm.GEMINI_3_FLASH_PREVIEW_HIGH.value:
+    elif model == Llm.GEMINI_3_FLASH_PREVIEW_HIGH:
         # Gemini 3 Flash with HIGH thinking
         config = types.GenerateContentConfig(
             temperature=0,
@@ -199,7 +207,7 @@ async def stream_gemini_response(
                 thinking_level="high", include_thoughts=True
             ),
         )
-    elif model_name == Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL.value:
+    elif model == Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL:
         # Gemini 3 Flash with MINIMAL thinking
         config = types.GenerateContentConfig(
             temperature=0,
@@ -209,7 +217,7 @@ async def stream_gemini_response(
                 thinking_level="minimal", include_thoughts=True
             ),
         )
-    elif model_name == Llm.GEMINI_3_PRO_PREVIEW_HIGH.value:
+    elif model == Llm.GEMINI_3_PRO_PREVIEW_HIGH:
         # Gemini 3 Pro with HIGH thinking
         config = types.GenerateContentConfig(
             temperature=0,
@@ -219,7 +227,7 @@ async def stream_gemini_response(
                 thinking_level="high", include_thoughts=True
             ),
         )
-    elif model_name == Llm.GEMINI_3_PRO_PREVIEW_LOW.value:
+    elif model == Llm.GEMINI_3_PRO_PREVIEW_LOW:
         # Gemini 3 Pro with LOW thinking
         config = types.GenerateContentConfig(
             temperature=0,
@@ -237,11 +245,7 @@ async def stream_gemini_response(
         )
 
     # Map variant model names to actual API model names
-    api_model_name = model_name
-    if model_name in [Llm.GEMINI_3_FLASH_PREVIEW_HIGH.value, Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL.value]:
-        api_model_name = "gemini-3-flash-preview"
-    elif model_name in [Llm.GEMINI_3_PRO_PREVIEW_HIGH.value, Llm.GEMINI_3_PRO_PREVIEW_LOW.value]:
-        api_model_name = "gemini-3-pro-preview"
+    api_model_name = get_gemini_api_model_name(model)
 
     async for chunk in await client.aio.models.generate_content_stream(
         model=api_model_name,
@@ -256,7 +260,7 @@ async def stream_gemini_response(
                     if thinking_callback:
                         await thinking_callback(part.text)
                     else:
-                        print(f"\n=== Gemini Thinking Summary ({model_name}) ===")
+                        print(f"\n=== Gemini Thinking Summary ({model.value}) ===")
                         print(part.text)
                         print("=" * 50)
                 else:
@@ -273,7 +277,7 @@ async def stream_gemini_response_video(
     system_prompt: str,
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
-    model_name: str,
+    model: Llm,
     thinking_callback: Callable[[str], Awaitable[None]] | None = None,
 ) -> Completion:
     start_time = time.time()
@@ -295,7 +299,7 @@ async def stream_gemini_response_video(
     )
 
     # Configure based on model
-    if model_name in ["gemini-3-flash-preview (high thinking)", "gemini-3-flash-preview"]:
+    if model == Llm.GEMINI_3_FLASH_PREVIEW_HIGH:
         config = types.GenerateContentConfig(
             temperature=0,
             max_output_tokens=30000,
@@ -304,8 +308,7 @@ async def stream_gemini_response_video(
                 thinking_level="high", include_thoughts=True
             ),
         )
-        api_model_name = "gemini-3-flash-preview"
-    elif model_name == "gemini-3-flash-preview (minimal thinking)":
+    elif model == Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL:
         config = types.GenerateContentConfig(
             temperature=0,
             max_output_tokens=30000,
@@ -314,8 +317,7 @@ async def stream_gemini_response_video(
                 thinking_level="minimal", include_thoughts=True
             ),
         )
-        api_model_name = "gemini-3-flash-preview"
-    elif model_name in ["gemini-3-pro-preview (high thinking)", "gemini-3-pro-preview"]:
+    elif model == Llm.GEMINI_3_PRO_PREVIEW_HIGH:
         config = types.GenerateContentConfig(
             temperature=1.0,
             max_output_tokens=50000,
@@ -324,8 +326,7 @@ async def stream_gemini_response_video(
                 thinking_level="high", include_thoughts=True
             ),
         )
-        api_model_name = "gemini-3-pro-preview"
-    elif model_name == "gemini-3-pro-preview (low thinking)":
+    elif model == Llm.GEMINI_3_PRO_PREVIEW_LOW:
         config = types.GenerateContentConfig(
             temperature=0,
             max_output_tokens=30000,
@@ -334,7 +335,6 @@ async def stream_gemini_response_video(
                 thinking_level="low", include_thoughts=True
             ),
         )
-        api_model_name = "gemini-3-pro-preview"
     else:
         # Default config for other models
         config = types.GenerateContentConfig(
@@ -342,7 +342,8 @@ async def stream_gemini_response_video(
             max_output_tokens=20000,
             system_instruction=system_prompt,
         )
-        api_model_name = model_name
+
+    api_model_name = get_gemini_api_model_name(model)
 
     if DEBUG_GEMINI:
         print(f"\n=== Gemini Video Request Debug ({api_model_name}) ===")

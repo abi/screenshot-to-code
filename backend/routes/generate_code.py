@@ -524,7 +524,7 @@ class VideoGenerationStage:
                 system_prompt=GEMINI_VIDEO_PROMPT,
                 api_key=gemini_api_key,
                 callback=lambda x: process_chunk(x, 0),
-                model_name="gemini-3-pro-preview (high thinking)",
+                model=Llm.GEMINI_3_PRO_PREVIEW_HIGH,
                 thinking_callback=lambda x: process_thinking(x, 0),
             )
         ]
@@ -667,7 +667,7 @@ class ParallelGenerationStage:
                         prompt_messages,
                         api_key=GEMINI_API_KEY,
                         callback=lambda x, i=index: self._process_chunk(x, i),
-                        model_name=model.value,
+                        model=model,
                         thinking_callback=lambda x, i=index: self._process_thinking(x, i),
                     )
                 )
