@@ -12,6 +12,7 @@ from config import (
     GEMINI_API_KEY,
     IS_PROD,
     NUM_VARIANTS,
+    NUM_VIDEO_VARIANTS,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
     REPLICATE_API_KEY,
@@ -505,34 +506,62 @@ class VideoGenerationStage:
         video_data_url: str,
         gemini_api_key: str,
     ) -> List[str]:
-        """Generate code using Gemini 3 with direct video input"""
-        async def process_chunk(content: str, variantIndex: int = 0):
-            await self.send_message("chunk", content, variantIndex)
-
-        async def process_thinking(content: str, variantIndex: int = 0):
-            await self.send_message("thinking", content, variantIndex)
-
+        """Generate code using Gemini 3 with direct video input - 2 parallel variants"""
         # Get video bytes and mime type
         video_bytes, video_mime_type = get_video_bytes_and_mime_type(video_data_url)
 
         print(f"Using Gemini 3 for video generation (video size: {len(video_bytes)} bytes)")
 
-        completion_results = [
-            await stream_gemini_response_video(
+        # Define the models for each variant
+        variant_models = [
+            Llm.GEMINI_3_PRO_PREVIEW_HIGH,  # Variant 0: Pro High thinking
+            Llm.GEMINI_3_PRO_PREVIEW_LOW,   # Variant 1: Pro Low thinking
+        ]
+
+        print("Video variant models:")
+        for index, model in enumerate(variant_models):
+            print(f"Variant {index + 1}: {model.value}")
+
+        async def generate_variant(variant_index: int, model: Llm) -> Completion:
+            async def process_chunk(content: str):
+                await self.send_message("chunk", content, variant_index)
+
+            async def process_thinking(content: str):
+                await self.send_message("thinking", content, variant_index)
+
+            return await stream_gemini_response_video(
                 video_bytes=video_bytes,
                 video_mime_type=video_mime_type,
                 system_prompt=GEMINI_VIDEO_PROMPT,
                 api_key=gemini_api_key,
-                callback=lambda x: process_chunk(x, 0),
-                model=Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                thinking_callback=lambda x: process_thinking(x, 0),
+                callback=process_chunk,
+                model=model,
+                thinking_callback=process_thinking,
             )
-        ]
-        completions = [result["code"] for result in completion_results]
 
-        # Send the complete variant back to the client
-        await self.send_message("setCode", completions[0], 0)
-        await self.send_message("variantComplete", "Variant generation complete", 0)
+        # Create tasks for parallel execution
+        tasks = [
+            generate_variant(index, model)
+            for index, model in enumerate(variant_models)
+        ]
+
+        # Run all variants in parallel
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        completions: List[str] = []
+        for index, result in enumerate(results):
+            if isinstance(result, Exception):
+                print(f"Error in video variant {index + 1}: {result}")
+                await self.send_message("variantError", str(result), index)
+                completions.append("")
+            else:
+                code = result["code"]
+                completions.append(code)
+                # Extract HTML content
+                processed_html = extract_html_content(code)
+                # Send the complete variant back to the client
+                await self.send_message("setCode", processed_html, index)
+                await self.send_message("variantComplete", "Variant generation complete", index)
 
         return completions
 
@@ -881,10 +910,18 @@ class StatusBroadcastMiddleware(Middleware):
     async def process(
         self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
     ) -> None:
-        # Tell frontend how many variants we're using
-        await context.send_message("variantCount", str(NUM_VARIANTS), 0)
+        # Determine variant count based on input mode
+        assert context.extracted_params is not None
+        is_video_create = (
+            context.extracted_params.input_mode == "video" and
+            context.extracted_params.generation_type == "create"
+        )
+        variant_count = NUM_VIDEO_VARIANTS if is_video_create else NUM_VARIANTS
 
-        for i in range(NUM_VARIANTS):
+        # Tell frontend how many variants we're using
+        await context.send_message("variantCount", str(variant_count), 0)
+
+        for i in range(variant_count):
             await context.send_message("status", "Generating code...", i)
 
         await next_func()

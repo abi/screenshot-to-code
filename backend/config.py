@@ -4,6 +4,7 @@
 import os
 
 NUM_VARIANTS = 4
+NUM_VIDEO_VARIANTS = 2
 
 # LLM-related
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
