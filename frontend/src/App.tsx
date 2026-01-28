@@ -11,7 +11,7 @@ import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import { extractHistory } from "./components/history/utils";
 import toast from "react-hot-toast";
 import { Stack } from "./lib/stacks";
-import { CodeGenerationModel } from "./lib/models";
+import { CodeGenerationModel, VideoModel } from "./lib/models";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 // import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
@@ -74,6 +74,7 @@ function App() {
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
       codeGenerationModel: CodeGenerationModel.CLAUDE_4_5_SONNET_2025_09_29,
+      videoModel: VideoModel.GEMINI_3_PRO_HIGH,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
@@ -99,7 +100,13 @@ function App() {
         generatedCodeConfig: Stack.HTML_TAILWIND,
       }));
     }
-  }, [settings.generatedCodeConfig, setSettings]);
+    if (!settings.videoModel) {
+      setSettings((prev) => ({
+        ...prev,
+        videoModel: VideoModel.GEMINI_3_PRO_HIGH,
+      }));
+    }
+  }, [settings.generatedCodeConfig, settings.videoModel, setSettings]);
 
   // Functions
   const reset = () => {

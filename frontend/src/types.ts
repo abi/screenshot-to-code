@@ -1,5 +1,5 @@
 import { Stack } from "./lib/stacks";
-import { CodeGenerationModel } from "./lib/models";
+import { CodeGenerationModel, VideoModel } from "./lib/models";
 
 export enum EditorTheme {
   ESPRESSO = "espresso",
@@ -14,6 +14,7 @@ export interface Settings {
   editorTheme: EditorTheme;
   generatedCodeConfig: Stack;
   codeGenerationModel: CodeGenerationModel;
+  videoModel: VideoModel;
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
   anthropicApiKey: string | null; // Added property for anthropic API key

@@ -1,8 +1,11 @@
 import React from "react";
 import { useAppStore } from "../../store/app-store";
+import { useProjectStore } from "../../store/project-store";
 import { AppState, Settings } from "../../types";
 import OutputSettingsSection from "./OutputSettingsSection";
+import VideoModelSettingsSection from "./VideoModelSettingsSection";
 import { Stack } from "../../lib/stacks";
+import { VideoModel } from "../../lib/models";
 
 interface GenerationSettingsProps {
   settings: Settings;
@@ -14,11 +17,19 @@ export const GenerationSettings: React.FC<GenerationSettingsProps> = ({
   setSettings,
 }) => {
   const { appState } = useAppStore();
+  const { inputMode } = useProjectStore();
 
   function setStack(stack: Stack) {
     setSettings((prev: Settings) => ({
       ...prev,
       generatedCodeConfig: stack,
+    }));
+  }
+
+  function setVideoModel(videoModel: VideoModel) {
+    setSettings((prev: Settings) => ({
+      ...prev,
+      videoModel,
     }));
   }
 
@@ -32,6 +43,13 @@ export const GenerationSettings: React.FC<GenerationSettingsProps> = ({
         setStack={setStack}
         shouldDisableUpdates={shouldDisableUpdates}
       />
+      {inputMode === "video" && (
+        <VideoModelSettingsSection
+          videoModel={settings.videoModel}
+          setVideoModel={setVideoModel}
+          shouldDisableUpdates={shouldDisableUpdates}
+        />
+      )}
     </div>
   );
 };

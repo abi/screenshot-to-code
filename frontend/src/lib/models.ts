@@ -8,6 +8,12 @@ export enum CodeGenerationModel {
   CLAUDE_3_SONNET = "claude_3_sonnet",
 }
 
+// Video model options for video-to-code generation
+export enum VideoModel {
+  GEMINI_3_PRO_HIGH = "gemini-3-pro-preview (high thinking)",
+  GEMINI_3_PRO_LOW = "gemini-3-pro-preview (low thinking)",
+}
+
 // Will generate a static error if a model in the enum above is not in the descriptions
 export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   [key in CodeGenerationModel]: { name: string; inBeta: boolean };
@@ -17,4 +23,17 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   "gpt-4-turbo-2024-04-09": { name: "GPT-4 Turbo (deprecated)", inBeta: false },
   gpt_4_vision: { name: "GPT-4 Vision (deprecated)", inBeta: false },
   claude_3_sonnet: { name: "Claude 3 (deprecated)", inBeta: false },
+};
+
+export const VIDEO_MODEL_DESCRIPTIONS: {
+  [key in VideoModel]: { name: string; inBeta: boolean };
+} = {
+  "gemini-3-pro-preview (high thinking)": {
+    name: "Gemini 3 Pro (High)",
+    inBeta: true,
+  },
+  "gemini-3-pro-preview (low thinking)": {
+    name: "Gemini 3 Pro (Low)",
+    inBeta: true,
+  },
 };

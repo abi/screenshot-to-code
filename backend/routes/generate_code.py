@@ -234,6 +234,13 @@ class ExtractedParams:
     prompt: PromptContent
     history: List[Dict[str, Any]]
     is_imported_from_code: bool
+    video_model: Llm | None
+
+
+VIDEO_MODEL_MAPPING: Dict[str, Llm] = {
+    "gemini-3-pro-preview (high thinking)": Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+    "gemini-3-pro-preview (low thinking)": Llm.GEMINI_3_PRO_PREVIEW_LOW,
+}
 
 
 class ParameterExtractionStage:
@@ -298,6 +305,10 @@ class ParameterExtractionStage:
         # Extract imported code flag
         is_imported_from_code = params.get("isImportedFromCode", False)
 
+        # Extract video model (for video-to-code generation)
+        video_model_str = params.get("videoModel")
+        video_model = VIDEO_MODEL_MAPPING.get(video_model_str) if video_model_str else None
+
         return ExtractedParams(
             stack=validated_stack,
             input_mode=validated_input_mode,
@@ -309,6 +320,7 @@ class ParameterExtractionStage:
             prompt=prompt,
             history=history,
             is_imported_from_code=is_imported_from_code,
+            video_model=video_model,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -481,12 +493,13 @@ class VideoGenerationStage:
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
         video_data_url: str | None = None,
+        video_model: Llm | None = None,
     ) -> List[str]:
         """Generate code for video input mode using Claude or Gemini"""
         # Prefer Gemini if API key is available and video data URL is provided
         if gemini_api_key and video_data_url:
             return await self._generate_with_gemini(
-                video_data_url, gemini_api_key
+                video_data_url, gemini_api_key, video_model
             )
 
         # Fall back to Claude
@@ -504,6 +517,7 @@ class VideoGenerationStage:
         self,
         video_data_url: str,
         gemini_api_key: str,
+        video_model: Llm | None = None,
     ) -> List[str]:
         """Generate code using Gemini 3 with direct video input"""
         async def process_chunk(content: str, variantIndex: int = 0):
@@ -515,7 +529,10 @@ class VideoGenerationStage:
         # Get video bytes and mime type
         video_bytes, video_mime_type = get_video_bytes_and_mime_type(video_data_url)
 
-        print(f"Using Gemini 3 for video generation (video size: {len(video_bytes)} bytes)")
+        # Use the selected video model or default to GEMINI_3_PRO_PREVIEW_HIGH
+        selected_model = video_model or Llm.GEMINI_3_PRO_PREVIEW_HIGH
+
+        print(f"Using {selected_model.value} for video generation (video size: {len(video_bytes)} bytes)")
 
         completion_results = [
             await stream_gemini_response_video(
@@ -524,7 +541,7 @@ class VideoGenerationStage:
                 system_prompt=GEMINI_VIDEO_PROMPT,
                 api_key=gemini_api_key,
                 callback=lambda x: process_chunk(x, 0),
-                model=Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                model=selected_model,
                 thinking_callback=lambda x: process_thinking(x, 0),
             )
         ]
@@ -941,6 +958,7 @@ class CodeGenerationMiddleware(Middleware):
                         context.extracted_params.anthropic_api_key,
                         gemini_api_key=GEMINI_API_KEY,
                         video_data_url=video_data_url,
+                        video_model=context.extracted_params.video_model,
                     )
                 else:
                     # Select models
