@@ -287,7 +287,8 @@ async def stream_gemini_response_video(
         parts=[
             types.Part(
                 inline_data=types.Blob(data=video_bytes, mime_type=video_mime_type),
-                video_metadata=types.VideoMetadata(fps=10),
+                video_metadata=types.VideoMetadata(fps=20),
+                media_resolution=types.PartMediaResolutionLevel.MEDIA_RESOLUTION_HIGH
             ),
             types.Part(text="Analyze this video and generate the code."),
         ],
@@ -316,8 +317,8 @@ async def stream_gemini_response_video(
         api_model_name = "gemini-3-flash-preview"
     elif model_name in ["gemini-3-pro-preview (high thinking)", "gemini-3-pro-preview"]:
         config = types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=30000,
+            temperature=1.0,
+            max_output_tokens=50000,
             system_instruction=system_prompt,
             thinking_config=types.ThinkingConfig(
                 thinking_level="high", include_thoughts=True
