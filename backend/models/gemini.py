@@ -9,6 +9,7 @@ from video.cost_estimation import (
     calculate_cost,
     estimate_video_generation_cost,
     format_cost_estimate,
+    format_detailed_input_estimate,
     get_video_duration_from_bytes,
     MediaResolution,
 )
@@ -316,8 +317,9 @@ async def stream_gemini_response_video(
             thinking_level=thinking_level,
         )
         print(f"\n=== Video Generation Cost Estimate ({model.value}) ===")
-        print(f"Video duration: {video_duration:.2f} seconds")
-        print(format_cost_estimate(estimated_cost))
+        print(format_detailed_input_estimate(video_duration, MediaResolution.HIGH, model))
+        print(f"Output tokens (est): {estimated_cost.output_tokens:,} (${estimated_cost.output_cost:.4f})")
+        print(f"Total estimated cost: ${estimated_cost.total_cost:.4f}")
         print("=" * 50)
     else:
         print("Warning: Could not determine video duration for cost estimation")

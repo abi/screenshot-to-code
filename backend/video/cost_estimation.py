@@ -160,6 +160,28 @@ def format_cost_estimate(cost: CostEstimate) -> str:
     )
 
 
+def format_detailed_input_estimate(
+    video_duration_seconds: float,
+    media_resolution: MediaResolution,
+    model: Llm,
+) -> str:
+    tokens_per_second = VIDEO_TOKENS_PER_SECOND[media_resolution]
+    video_tokens = int(video_duration_seconds * tokens_per_second)
+    total_input_tokens = video_tokens + PROMPT_TOKENS_ESTIMATE
+
+    model_name = get_model_api_name(model)
+    pricing = GEMINI_PRICING.get(model_name, GEMINI_PRICING["gemini-3-flash-preview"])
+    input_cost = (total_input_tokens / 1_000_000) * pricing["input_per_million"]
+
+    return (
+        f"Input Token Calculation:\n"
+        f"  Video: {video_duration_seconds:.2f}s × {tokens_per_second} tokens/s = {video_tokens:,} tokens\n"
+        f"  Prompt overhead: {PROMPT_TOKENS_ESTIMATE:,} tokens\n"
+        f"  Total input: {total_input_tokens:,} tokens\n"
+        f"  Cost: {total_input_tokens:,} ÷ 1M × ${pricing['input_per_million']:.2f} = ${input_cost:.4f}"
+    )
+
+
 def get_video_duration_from_bytes(video_bytes: bytes) -> float | None:
     try:
         import tempfile
