@@ -31,6 +31,7 @@ from models import (
     stream_openai_response,
     stream_gemini_response,
     stream_gemini_response_video,
+    stream_gemini_response_video_with_tools,
 )
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
@@ -61,7 +62,7 @@ MessageType = Literal[
 ]
 from image_generation.core import generate_images
 from prompts import create_prompt
-from prompts.claude_prompts import VIDEO_PROMPT, GEMINI_VIDEO_PROMPT
+from prompts.claude_prompts import VIDEO_PROMPT, GEMINI_VIDEO_PROMPT, GEMINI_VIDEO_PROMPT_WITH_TOOLS
 from prompts.types import Stack, PromptContent
 from video.utils import get_video_bytes_and_mime_type
 
@@ -515,19 +516,36 @@ class VideoGenerationStage:
         # Get video bytes and mime type
         video_bytes, video_mime_type = get_video_bytes_and_mime_type(video_data_url)
 
-        print(f"Using Gemini 3 for video generation (video size: {len(video_bytes)} bytes)")
+        # Check if we should use tool-enabled generation with image generation
+        if REPLICATE_API_KEY:
+            print(f"Using Gemini 3 for video generation with image generation tools (video size: {len(video_bytes)} bytes)")
 
-        completion_results = [
-            await stream_gemini_response_video(
-                video_bytes=video_bytes,
-                video_mime_type=video_mime_type,
-                system_prompt=GEMINI_VIDEO_PROMPT,
-                api_key=gemini_api_key,
-                callback=lambda x: process_chunk(x, 0),
-                model=Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-                thinking_callback=lambda x: process_thinking(x, 0),
-            )
-        ]
+            completion_results = [
+                await stream_gemini_response_video_with_tools(
+                    video_bytes=video_bytes,
+                    video_mime_type=video_mime_type,
+                    system_prompt=GEMINI_VIDEO_PROMPT_WITH_TOOLS,
+                    api_key=gemini_api_key,
+                    replicate_api_key=REPLICATE_API_KEY,
+                    callback=lambda x: process_chunk(x, 0),
+                    model=Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                    thinking_callback=lambda x: process_thinking(x, 0),
+                )
+            ]
+        else:
+            print(f"Using Gemini 3 for video generation (video size: {len(video_bytes)} bytes)")
+
+            completion_results = [
+                await stream_gemini_response_video(
+                    video_bytes=video_bytes,
+                    video_mime_type=video_mime_type,
+                    system_prompt=GEMINI_VIDEO_PROMPT,
+                    api_key=gemini_api_key,
+                    callback=lambda x: process_chunk(x, 0),
+                    model=Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                    thinking_callback=lambda x: process_thinking(x, 0),
+                )
+            ]
         completions = [result["code"] for result in completion_results]
 
         # Send the complete variant back to the client

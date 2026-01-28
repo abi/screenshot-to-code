@@ -1,6 +1,10 @@
 from .claude import stream_claude_response, stream_claude_response_native
 from .openai_client import stream_openai_response
-from .gemini import stream_gemini_response, stream_gemini_response_video
+from .gemini import (
+    stream_gemini_response,
+    stream_gemini_response_video,
+    stream_gemini_response_video_with_tools,
+)
 from llm import Completion
 
 # Re-export the functions for backward compatibility
@@ -10,5 +14,6 @@ __all__ = [
     "stream_openai_response",
     "stream_gemini_response",
     "stream_gemini_response_video",
+    "stream_gemini_response_video_with_tools",
     "Completion",
 ]
