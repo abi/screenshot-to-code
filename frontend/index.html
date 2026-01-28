@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background-color: #FFFCF2;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon/main.png" />
@@ -32,6 +32,13 @@
     </script>
 
     <title>Screenshot to Code</title>
+
+    <!-- Prevent white flash on initial load in dark mode -->
+    <style>
+      @media (prefers-color-scheme: dark) {
+        html { background-color: #0D0D0D !important; }
+      }
+    </style>
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Screenshot to Code" />

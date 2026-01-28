@@ -114,7 +114,7 @@ function LandingPage() {
             {/* Left side - Text content */}
             <div className="px-5 sm:px-0 w-full min-h-[calc(100svh-80px)] sm:min-h-0 flex flex-col justify-center">
               {/* Eyebrow - hidden on mobile to reduce first screen density */}
-              <div className="hidden sm:flex items-center gap-3 mb-6 animate-fade-up">
+              <div className="hidden sm:flex items-center gap-3 mb-6">
                 <span className="stat-highlight text-sm text-[#2563EB]">
                   71,502
                 </span>
@@ -123,7 +123,7 @@ function LandingPage() {
               </div>
 
               {/* Main headline */}
-              <h1 className="text-5xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.9] mb-5 sm:mb-5 animate-fade-up delay-100">
+              <h1 className="text-5xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[0.9] mb-5 sm:mb-5">
                 Build User
                 <br />
                 Interfaces
@@ -132,12 +132,12 @@ function LandingPage() {
               </h1>
 
               {/* Subheadline */}
-              <p className="text-xl sm:text-xl landing-text-muted max-w-md mb-8 sm:mb-8 leading-relaxed animate-fade-up delay-200">
+              <p className="text-xl sm:text-xl landing-text-muted max-w-md mb-8 sm:mb-8 leading-relaxed">
                 AI-powered conversion from screenshots and designs to clean, production-ready code.
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-300">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={signIn}
                   className="btn-primary px-6 py-4 sm:px-6 sm:py-3.5 text-base sm:text-base font-medium inline-flex items-center justify-center gap-2 group"
@@ -164,7 +164,7 @@ function LandingPage() {
             </div>
 
             {/* Right side - Video demo */}
-            <div className="relative animate-fade-up delay-200">
+            <div className="relative">
               <div className="video-frame">
                 <video
                   src="/demos/instagram.mp4"
