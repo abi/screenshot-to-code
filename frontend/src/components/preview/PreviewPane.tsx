@@ -5,8 +5,8 @@ import {
   FaDesktop,
   FaMobile,
   FaCode,
-  FaExternalLinkAlt,
 } from "react-icons/fa";
+import { LuExternalLink } from "react-icons/lu";
 import { AppState, Settings } from "../../types";
 import CodeTab from "./CodeTab";
 import { Button } from "../ui/button";
@@ -86,7 +86,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
               onClick={() => openInNewTab(previewCode)}
               className="flex items-center gap-x-2 ml-2 dark:text-white dark:bg-gray-700"
             >
-              <FaExternalLinkAlt /> New Tab
+              <LuExternalLink /> New Tab
             </Button>
           </div>
         </div>
