@@ -39,6 +39,10 @@
   --cream: #FFFCF2;
 }
 
+html {
+  background-color: white;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --dark: #FFFCF2;
