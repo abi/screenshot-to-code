@@ -1,4 +1,4 @@
-import { FaCopy, FaExternalLinkAlt } from "react-icons/fa";
+import { FaCopy } from "react-icons/fa";
 import CodeMirror from "./CodeMirror";
 import { Button } from "../ui/button";
 import { Settings } from "../../types";
@@ -16,15 +16,6 @@ function CodeTab({ code, setCode, settings }: Props) {
   const copyCode = useCallback(() => {
     copy(code);
     toast.success("Copied to clipboard");
-  }, [code]);
-
-  const openInNewTab = useCallback(() => {
-    const newWindow = window.open("", "_blank");
-    if (newWindow) {
-      newWindow.document.open();
-      newWindow.document.write(code);
-      newWindow.document.close();
-    }
   }, [code]);
 
   const doOpenInCodepenio = useCallback(async () => {
@@ -82,12 +73,6 @@ function CodeTab({ code, setCode, settings }: Props) {
             alt="codepen.io"
             className="h-4 ml-1"
           />
-        </Button>
-        <Button
-          onClick={openInNewTab}
-          className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
-        >
-          Preview in New Tab <FaExternalLinkAlt className="ml-2" />
         </Button>
       </div>
       <CodeMirror

@@ -5,6 +5,7 @@ import {
   FaDesktop,
   FaMobile,
   FaCode,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
 import { AppState, Settings } from "../../types";
 import CodeTab from "./CodeTab";
@@ -14,6 +15,15 @@ import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
+
+function openInNewTab(code: string) {
+  const newWindow = window.open("", "_blank");
+  if (newWindow) {
+    newWindow.document.open();
+    newWindow.document.write(code);
+    newWindow.document.close();
+  }
+}
 
 interface Props {
   doUpdate: (instruction: string) => void;
@@ -72,6 +82,12 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                 Code
               </TabsTrigger>
             </TabsList>
+            <Button
+              onClick={() => openInNewTab(previewCode)}
+              className="flex items-center gap-x-2 ml-2 dark:text-white dark:bg-gray-700"
+            >
+              <FaExternalLinkAlt /> New Tab
+            </Button>
           </div>
         </div>
         <TabsContent value="desktop">
