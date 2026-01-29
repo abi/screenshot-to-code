@@ -1,6 +1,12 @@
-// Not robust enough to support <html lang='en'> for instance
+// Extract HTML content, supporting <html> tags with attributes like <html lang="en">
 export function extractHtml(code: string): string {
-  const lastHtmlStartIndex = code.lastIndexOf("<html>");
+  // Use regex to find <html> tag with optional attributes
+  const htmlStartMatch = code.match(/<html[^>]*>/i);
+  if (!htmlStartMatch) {
+    return "";
+  }
+
+  const lastHtmlStartIndex = code.lastIndexOf(htmlStartMatch[0]);
   let htmlEndIndex = code.indexOf("</html>", lastHtmlStartIndex);
 
   if (lastHtmlStartIndex !== -1) {

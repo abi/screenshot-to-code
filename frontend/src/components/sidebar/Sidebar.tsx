@@ -113,17 +113,6 @@ function Sidebar({
       {/* Show code preview when coding and the selected variant is not complete */}
       {appState === AppState.CODING && !isSelectedVariantComplete && (
         <div className="flex flex-col">
-          {/* Speed disclaimer for video mode */}
-          {inputMode === "video" && (
-            <div
-              className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700
-            p-2 text-xs mb-4 mt-1"
-            >
-              Code generation from videos can take 3-4 minutes. We do multiple
-              passes to get the best result. Please be patient.
-            </div>
-          )}
-
           <CodePreview code={viewedCode} />
 
           <div className="flex w-full">

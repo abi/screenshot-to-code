@@ -14,9 +14,6 @@ class Llm(Enum):
     GPT_4_1_MINI_2025_04_14 = "gpt-4.1-mini-2025-04-14"
     GPT_4_1_NANO_2025_04_14 = "gpt-4.1-nano-2025-04-14"
     GPT_5_2_2025_12_11 = "gpt-5.2-2025-12-11"
-    CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
-    CLAUDE_3_OPUS = "claude-3-opus-20240229"
-    CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
     CLAUDE_3_7_SONNET_2025_02_19 = "claude-3-7-sonnet-20250219"
     CLAUDE_4_SONNET_2025_05_14 = "claude-sonnet-4-20250514"
     CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
@@ -58,9 +55,6 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.O4_MINI_2025_04_16: "openai",
     Llm.O3_2025_04_16: "openai",
     # Anthropic models
-    Llm.CLAUDE_3_SONNET: "anthropic",
-    Llm.CLAUDE_3_OPUS: "anthropic",
-    Llm.CLAUDE_3_HAIKU: "anthropic",
     Llm.CLAUDE_3_7_SONNET_2025_02_19: "anthropic",
     Llm.CLAUDE_4_SONNET_2025_05_14: "anthropic",
     Llm.CLAUDE_4_5_SONNET_2025_09_29: "anthropic",

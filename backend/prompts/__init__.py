@@ -7,7 +7,6 @@ from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
 from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
 from prompts.types import Stack, PromptContent
-from video.utils import assemble_claude_prompt_video
 
 
 USER_PROMPT = """
@@ -46,6 +45,21 @@ async def create_prompt(
             prompt_messages = assemble_prompt(image_url, stack, text_prompt)
         elif input_mode == "text":
             prompt_messages = assemble_text_prompt(prompt["text"], stack)
+        elif input_mode == "video":
+            # For video mode initial creation, prompt is handled by VideoGenerationStage
+            # which sends the video directly to Gemini with its own prompt
+            if generation_type == "create":
+                # Return empty prompt - actual generation is handled by VideoGenerationStage
+                prompt_messages = []
+            else:
+                # For video mode updates, use the screenshot system prompt
+                # since we're now working with the generated code, not the video
+                prompt_messages = [
+                    {
+                        "role": "system",
+                        "content": SYSTEM_PROMPTS[stack],
+                    }
+                ]
         else:
             # Default to image mode for backward compatibility
             image_url = prompt["images"][0]
@@ -60,10 +74,6 @@ async def create_prompt(
                 prompt_messages.append(message)
 
             image_cache = create_alt_url_mapping(history[-2]["text"])
-
-    if input_mode == "video":
-        video_data_url = prompt["images"][0]
-        prompt_messages = await assemble_claude_prompt_video(video_data_url)
 
     return prompt_messages, image_cache
 

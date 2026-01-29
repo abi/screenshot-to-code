@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
-import { URLS } from "../urls";
 import ScreenRecorder from "./recording/ScreenRecorder";
 import { ScreenRecorderState } from "../types";
 import { IS_RUNNING_ON_CLOUD } from "../config";
@@ -40,10 +39,24 @@ const rejectStyle = {
 };
 
 // TODO: Move to a separate file
-function fileToDataURL(file: File) {
+function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Check if the MIME type is correctly set in the data URL
+      // Some browsers return application/octet-stream for video files
+      if (result.startsWith("data:application/octet-stream") && file.type) {
+        // Replace with the correct MIME type from the file
+        const correctedResult = result.replace(
+          "data:application/octet-stream",
+          `data:${file.type}`,
+        );
+        resolve(correctedResult);
+      } else {
+        resolve(result);
+      }
+    };
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
   });
@@ -57,7 +70,7 @@ interface Props {
   setReferenceImages: (
     referenceImages: string[],
     inputMode: "image" | "video",
-    textPrompt?: string
+    textPrompt?: string,
   ) => void;
   onUploadStateChange?: (hasUpload: boolean) => void;
 }
@@ -66,7 +79,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadedDataUrls, setUploadedDataUrls] = useState<string[]>([]);
   const [uploadedInputMode, setUploadedInputMode] = useState<"image" | "video">(
-    "image"
+    "image",
   );
   const [textPrompt, setTextPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(false);
@@ -137,7 +150,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
       onDrop: (acceptedFiles) => {
         if (IS_RUNNING_ON_CLOUD) {
           const isVideo = acceptedFiles.some((file) =>
-            file.type.startsWith("video/")
+            file.type.startsWith("video/"),
           );
           if (isVideo) {
             toast.error("Videos are not yet supported on the hosted version.");
@@ -151,18 +164,28 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
           acceptedFiles.map((file: File) =>
             Object.assign(file, {
               preview: URL.createObjectURL(file),
-            })
-          ) as FileWithPreview[]
+            }),
+          ) as FileWithPreview[],
         );
+
+        // Determine input mode from file type (more reliable than checking data URL)
+        const firstFile = acceptedFiles[0];
+        const isVideo =
+          firstFile?.type?.startsWith("video/") ||
+          [".mp4", ".mov", ".webm"].some((ext) =>
+            firstFile?.name?.toLowerCase().endsWith(ext),
+          );
 
         // Convert images to data URLs and store them (don't trigger generation yet)
         Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
           .then((dataUrls) => {
             if (dataUrls.length > 0) {
-              const inputMode = (dataUrls[0] as string).startsWith("data:video")
-                ? "video"
-                : "image";
-              setUploadedDataUrls(dataUrls.map((dataUrl) => dataUrl as string));
+              // Use file type detection as primary, fall back to data URL check
+              const inputMode =
+                isVideo || (dataUrls[0] as string).startsWith("data:video")
+                  ? "video"
+                  : "image";
+              setUploadedDataUrls(dataUrls as string[]);
               setUploadedInputMode(inputMode);
               // Focus the text input after upload
               setTimeout(() => textInputRef.current?.focus(), 100);
@@ -189,13 +212,13 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
       ...(isDragAccept ? acceptStyle : {}),
       ...(isDragReject ? rejectStyle : {}),
     }),
-    [isFocused, isDragAccept, isDragReject]
+    [isFocused, isDragAccept, isDragReject],
   );
 
   // Screen recorder callback - wrap to include empty text prompt
   const handleScreenRecorderGenerate = (
     images: string[],
-    inputMode: "image" | "video"
+    inputMode: "image" | "video",
   ) => {
     setReferenceImages(images, inputMode, "");
   };
@@ -289,31 +312,22 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
         </div>
       )}
 
-      {/* Disable on prod for now */}
-      {!IS_RUNNING_ON_CLOUD && (
-        <>
-          {screenRecorderState === ScreenRecorderState.INITIAL &&
-            !hasUploadedFile && (
-              <div className="text-center text-sm text-slate-800 mt-4">
-                Upload a screen recording (.mp4, .mov) or record your screen to
-                clone a whole app (experimental).{" "}
-                <a
-                  className="underline"
-                  href={URLS["intro-to-video"]}
-                  target="_blank"
-                >
-                  Learn more.
-                </a>
-              </div>
-            )}
-          {!hasUploadedFile && (
-            <ScreenRecorder
-              screenRecorderState={screenRecorderState}
-              setScreenRecorderState={setScreenRecorderState}
-              generateCode={handleScreenRecorderGenerate}
-            />
-          )}
-        </>
+      {screenRecorderState === ScreenRecorderState.INITIAL &&
+        !hasUploadedFile && (
+          <div className="text-center text-sm text-slate-800 mt-4">
+            Upload a screen recording (.mp4, .mov) or record your screen to
+            clone a whole app.{" "}
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+              Beta
+            </span>
+          </div>
+        )}
+      {!hasUploadedFile && (
+        <ScreenRecorder
+          screenRecorderState={screenRecorderState}
+          setScreenRecorderState={setScreenRecorderState}
+          generateCode={handleScreenRecorderGenerate}
+        />
       )}
     </section>
   );

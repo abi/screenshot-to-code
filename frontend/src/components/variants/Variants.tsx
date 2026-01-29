@@ -66,8 +66,7 @@ function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
 }
 
 function Variants() {
-  const { inputMode, head, commits, updateSelectedVariantIndex } =
-    useProjectStore();
+  const { head, commits, updateSelectedVariantIndex } = useProjectStore();
 
   // Get commit data safely
   const commit = head ? commits[head] : null;
@@ -117,7 +116,7 @@ function Variants() {
   }
 
   // If there is only one variant or the commit is already committed, don't show the variants
-  if (variants.length <= 1 || commit.isCommitted || inputMode === "video") {
+  if (variants.length <= 1 || commit.isCommitted) {
     return <div className="mt-2"></div>;
   }
 

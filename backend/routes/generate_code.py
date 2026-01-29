@@ -12,6 +12,8 @@ from codegen.utils import extract_html_content
 from config import (
     IS_PROD,
     NUM_VARIANTS,
+    NUM_VARIANTS_VIDEO,
+    OPENAI_API_KEY,
     OPENAI_BASE_URL,
     PLATFORM_ANTHROPIC_API_KEY,
     PLATFORM_GEMINI_API_KEY,
@@ -29,9 +31,9 @@ from llm import (
 )
 from models import (
     stream_claude_response,
-    stream_claude_response_native,
     stream_openai_response,
     stream_gemini_response,
+    stream_gemini_response_video,
 )
 from mock_llm import mock_completion
 from typing import (
@@ -62,8 +64,9 @@ MessageType = Literal[
 ]
 from image_generation.core import generate_images
 from prompts import create_prompt
-from prompts.claude_prompts import VIDEO_PROMPT
+from prompts.claude_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
+from video.utils import get_video_bytes_and_mime_type
 
 # from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
@@ -441,6 +444,15 @@ class ModelSelectionStage:
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
+        # Video create mode requires Gemini - 2 variants for comparison
+        if input_mode == "video" and generation_type == "create":
+            if not gemini_api_key:
+                raise Exception(
+                    "Video mode requires a Gemini API key. "
+                    "Please add GEMINI_API_KEY to backend/.env or in the settings dialog"
+                )
+            return [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, Llm.GEMINI_3_PRO_PREVIEW_HIGH]
+
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key:
             # Temporary: Compare thinking models
@@ -528,57 +540,6 @@ class MockResponseStage:
         return completions
 
 
-class VideoGenerationStage:
-    """Handles video mode code generation using Claude 3 Opus"""
-
-    def __init__(
-        self,
-        send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
-        throw_error: Callable[[str], Coroutine[Any, Any, None]],
-    ):
-        self.send_message = send_message
-        self.throw_error = throw_error
-
-    async def generate_video_code(
-        self,
-        prompt_messages: List[ChatCompletionMessageParam],
-        anthropic_api_key: str | None,
-    ) -> List[str]:
-        """Generate code for video input mode"""
-
-        if IS_PROD:
-            raise Exception("Video mode is not supported in prod")
-
-        if not anthropic_api_key:
-            await self.throw_error(
-                "Video only works with Anthropic models. No Anthropic API key found. "
-                "Please add the environment variable ANTHROPIC_API_KEY to backend/.env "
-                "or in the settings dialog"
-            )
-            raise Exception("No Anthropic key")
-
-        async def process_chunk(content: str, variantIndex: int):
-            await self.send_message("chunk", content, variantIndex)
-
-        completion_results = [
-            await stream_claude_response_native(
-                system_prompt=VIDEO_PROMPT,
-                messages=prompt_messages,  # type: ignore
-                api_key=anthropic_api_key,
-                callback=lambda x: process_chunk(x, 0),
-                model_name=Llm.CLAUDE_3_OPUS.value,
-                include_thinking=True,
-            )
-        ]
-        completions = [result["code"] for result in completion_results]
-
-        # Send the complete variant back to the client
-        await self.send_message("setCode", completions[0], 0)
-        await self.send_message("variantComplete", "Variant generation complete", 0)
-
-        return completions
-
-
 class PostProcessingStage:
     """Handles post-processing after code generation completes"""
 
@@ -640,6 +601,7 @@ class ParallelGenerationStage:
         generation_type: Literal["create", "update"],
         is_imported_from_code: bool,
         generation_group_id: str,
+        prompt: PromptContent,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -655,6 +617,7 @@ class ParallelGenerationStage:
         self.generation_type = generation_type
         self.is_imported_from_code = is_imported_from_code
         self.generation_group_id = generation_group_id
+        self.prompt = prompt
 
     async def process_variants(
         self,
@@ -702,8 +665,39 @@ class ParallelGenerationStage:
         """Create generation tasks for each variant model"""
         tasks: List[Coroutine[Any, Any, Completion]] = []
 
+        # Check if this is a video create request
+        is_video_create = (
+            self.input_mode == "video" and self.generation_type == "create"
+        )
+
         for index, model in enumerate(variant_models):
-            if model in OPENAI_MODELS:
+            # Video create mode: use video-specific Gemini streaming
+            if is_video_create and model in GEMINI_MODELS:
+                video_data_url = self.prompt.get("images", [None])[0]
+                if not video_data_url:
+                    raise Exception("Video mode requires a video to be provided")
+
+                video_bytes, video_mime_type = get_video_bytes_and_mime_type(
+                    video_data_url
+                )
+                print(
+                    f"Using Gemini for video generation (video size: {len(video_bytes)} bytes)"
+                )
+
+                tasks.append(
+                    stream_gemini_response_video(
+                        video_bytes=video_bytes,
+                        video_mime_type=video_mime_type,
+                        system_prompt=GEMINI_VIDEO_PROMPT,
+                        api_key=self.gemini_api_key,
+                        callback=lambda x, i=index: self._process_chunk(x, i),
+                        model=model,
+                        thinking_callback=lambda x, i=index: self._process_thinking(
+                            x, i
+                        ),
+                    )
+                )
+            elif model in OPENAI_MODELS:
                 if self.openai_api_key is None:
                     raise Exception("OpenAI API key is missing.")
 
@@ -714,16 +708,16 @@ class ParallelGenerationStage:
                         index=index,
                     )
                 )
-            elif model in GEMINI_MODELS:
-                if self.gemini_api_key is None:
-                    raise Exception("Gemini API key is missing.")
+            elif self.gemini_api_key and model in GEMINI_MODELS:
                 tasks.append(
                     stream_gemini_response(
                         prompt_messages,
                         api_key=self.gemini_api_key,
                         callback=lambda x, i=index: self._process_chunk(x, i),
-                        model_name=model.value,
-                        thinking_callback=lambda x, i=index: self._process_thinking(x, i),
+                        model=model,
+                        thinking_callback=lambda x, i=index: self._process_thinking(
+                            x, i
+                        ),
                     )
                 )
             elif model in ANTHROPIC_MODELS:
@@ -736,7 +730,9 @@ class ParallelGenerationStage:
                         api_key=self.anthropic_api_key,
                         callback=lambda x, i=index: self._process_chunk(x, i),
                         model_name=model.value,
-                        thinking_callback=lambda x, i=index: self._process_thinking(x, i),
+                        thinking_callback=lambda x, i=index: self._process_thinking(
+                            x, i
+                        ),
                     )
                 )
 
@@ -861,7 +857,6 @@ class ParallelGenerationStage:
                     completion["code"],
                     image_cache,
                 )
-
                 # Extract HTML content
                 processed_html = extract_html_content(processed_html)
 
@@ -969,10 +964,18 @@ class StatusBroadcastMiddleware(Middleware):
     async def process(
         self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
     ) -> None:
-        # Tell frontend how many variants we're using
-        await context.send_message("variantCount", str(NUM_VARIANTS), 0)
+        # Determine variant count based on input mode
+        assert context.extracted_params is not None
+        is_video_create = (
+            context.extracted_params.input_mode == "video"
+            and context.extracted_params.generation_type == "create"
+        )
+        num_variants = NUM_VARIANTS_VIDEO if is_video_create else NUM_VARIANTS
 
-        for i in range(NUM_VARIANTS):
+        # Tell frontend how many variants we're using
+        await context.send_message("variantCount", str(num_variants), 0)
+
+        for i in range(num_variants):
             await context.send_message("status", "Generating code...", i)
 
         await next_func()
@@ -1011,67 +1014,61 @@ class CodeGenerationMiddleware(Middleware):
         else:
             try:
                 assert context.extracted_params is not None
-                if context.extracted_params.input_mode == "video":
-                    # Use video generation for video mode
-                    video_stage = VideoGenerationStage(
-                        context.send_message, context.throw_error
-                    )
-                    context.completions = await video_stage.generate_video_code(
-                        context.prompt_messages,
-                        context.extracted_params.anthropic_api_key,
-                    )
-                else:
-                    # Select models
-                    model_selector = ModelSelectionStage(context.throw_error)
-                    context.variant_models = await model_selector.select_models(
-                        generation_type=context.extracted_params.generation_type,
-                        input_mode=context.extracted_params.input_mode,
-                        openai_api_key=context.extracted_params.openai_api_key,
-                        anthropic_api_key=context.extracted_params.anthropic_api_key,
-                        gemini_api_key=context.extracted_params.gemini_api_key,
-                    )
 
-                    # Generate code for all variants
-                    generation_stage = ParallelGenerationStage(
-                        send_message=context.send_message,
-                        openai_api_key=context.extracted_params.openai_api_key,
-                        openai_base_url=context.extracted_params.openai_base_url,
-                        anthropic_api_key=context.extracted_params.anthropic_api_key,
-                        gemini_api_key=context.extracted_params.gemini_api_key,
-                        should_generate_images=context.extracted_params.should_generate_images,
-                        # SaaS logging parameters
-                        user_id=context.extracted_params.user_id,
-                        payment_method=context.extracted_params.payment_method,
-                        stack=context.extracted_params.stack,
-                        input_mode=context.extracted_params.input_mode,
-                        generation_type=context.extracted_params.generation_type,
-                        is_imported_from_code=context.extracted_params.is_imported_from_code,
-                        generation_group_id=context.generation_group_id,
+                # Select models (handles video mode internally)
+                model_selector = ModelSelectionStage(context.throw_error)
+                context.variant_models = await model_selector.select_models(
+                    generation_type=context.extracted_params.generation_type,
+                    input_mode=context.extracted_params.input_mode,
+                    openai_api_key=context.extracted_params.openai_api_key,
+                    anthropic_api_key=context.extracted_params.anthropic_api_key,
+                    gemini_api_key=GEMINI_API_KEY,
+                )
+
+                # Generate code for all variants (handles video mode internally)
+                generation_stage = ParallelGenerationStage(
+                    send_message=context.send_message,
+                    openai_api_key=context.extracted_params.openai_api_key,
+                    openai_base_url=context.extracted_params.openai_base_url,
+                    anthropic_api_key=context.extracted_params.anthropic_api_key,
+                    gemini_api_key=GEMINI_API_KEY,
+                    should_generate_images=context.extracted_params.should_generate_images,
+                    input_mode=context.extracted_params.input_mode,
+                    generation_type=context.extracted_params.generation_type,
+                    prompt=context.extracted_params.prompt,
+                    # SaaS logging parameters
+                    user_id=context.extracted_params.user_id,
+                    payment_method=context.extracted_params.payment_method,
+                    stack=context.extracted_params.stack,
+                    input_mode=context.extracted_params.input_mode,
+                    generation_type=context.extracted_params.generation_type,
+                    is_imported_from_code=context.extracted_params.is_imported_from_code,
+                    generation_group_id=context.generation_group_id,
+                )
+
+                context.variant_completions = (
+                    await generation_stage.process_variants(
+                        variant_models=context.variant_models,
+                        prompt_messages=context.prompt_messages,
+                        image_cache=context.image_cache,
+                        params=context.params,
                     )
+                )
 
-                    context.variant_completions = (
-                        await generation_stage.process_variants(
-                            variant_models=context.variant_models,
-                            prompt_messages=context.prompt_messages,
-                            image_cache=context.image_cache,
-                            params=context.params,
-                        )
+                # Check if all variants failed
+                if len(context.variant_completions) == 0:
+                    await context.throw_error(
+                        "Error generating code. Please contact support."
                     )
+                    return  # Don't continue the pipeline
 
-                    # Check if all variants failed
-                    if len(context.variant_completions) == 0:
-                        await context.throw_error(
-                            "Error generating code. Please contact support."
-                        )
-                        return  # Don't continue the pipeline
-
-                    # Convert to list format
-                    context.completions = []
-                    for i in range(len(context.variant_models)):
-                        if i in context.variant_completions:
-                            context.completions.append(context.variant_completions[i])
-                        else:
-                            context.completions.append("")
+                # Convert to list format
+                context.completions = []
+                for i in range(len(context.variant_models)):
+                    if i in context.variant_completions:
+                        context.completions.append(context.variant_completions[i])
+                    else:
+                        context.completions.append("")
 
             except Exception as e:
                 print(f"[GENERATE_CODE] Unexpected error: {e}")

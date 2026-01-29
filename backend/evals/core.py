@@ -40,7 +40,7 @@ async def generate_code_core(
             prompt_messages,
             api_key=GEMINI_API_KEY,
             callback=lambda x: process_chunk(x),
-            model_name=model.value,
+            model=model,
         )
     else:
         if not OPENAI_API_KEY:
