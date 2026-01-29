@@ -871,6 +871,12 @@ class ParallelGenerationStage:
                 # Log to SaaS backend in production
                 if IS_PROD:
                     try:
+                        video_data_url = None
+                        if (
+                            self.input_mode == "video"
+                            and self.generation_type == "create"
+                        ):
+                            video_data_url = self.prompt.get("images", [None])[0]
                         await send_to_saas_backend(
                             user_id=self.user_id,
                             prompt_messages=prompt_messages,
@@ -883,6 +889,7 @@ class ParallelGenerationStage:
                             is_imported_from_code=self.is_imported_from_code,
                             input_mode=self.input_mode,
                             other_info={"generation_type": self.generation_type},
+                            video_data_url=video_data_url,
                         )
                     except Exception as e:
                         print("Error sending to SaaS backend", e)

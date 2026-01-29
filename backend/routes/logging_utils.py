@@ -30,6 +30,7 @@ async def send_to_saas_backend(
     is_imported_from_code: bool,
     input_mode: InputMode,
     other_info: dict[str, str | bool] = {},
+    video_data_url: str | None = None,
 ):
     if IS_PROD:
         async with httpx.AsyncClient() as client:
@@ -49,6 +50,7 @@ async def send_to_saas_backend(
                     "includes_result_image": False,  # Deprecated
                     "input_mode": input_mode,
                     "other_info": other_info,
+                    "video_data_url": video_data_url,
                 }
             )
 
