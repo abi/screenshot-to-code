@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
-import { URLS } from "../urls";
 import ScreenRecorder from "./recording/ScreenRecorder";
 import { ScreenRecorderState } from "../types";
 
@@ -300,14 +299,10 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
       {screenRecorderState === ScreenRecorderState.INITIAL && !hasUploadedFile && (
         <div className="text-center text-sm text-slate-800 mt-4">
           Upload a screen recording (.mp4, .mov) or record your screen to clone
-          a whole app (experimental).{" "}
-          <a
-            className="underline"
-            href={URLS["intro-to-video"]}
-            target="_blank"
-          >
-            Learn more.
-          </a>
+          a whole app.{" "}
+          <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+            Beta
+          </span>
         </div>
       )}
       {!hasUploadedFile && (
