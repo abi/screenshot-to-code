@@ -12,6 +12,7 @@ from config import (
     GEMINI_API_KEY,
     IS_PROD,
     NUM_VARIANTS,
+    NUM_VARIANTS_VIDEO,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
     REPLICATE_API_KEY,
@@ -376,14 +377,14 @@ class ModelSelectionStage:
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
-        # Video create mode requires Gemini - single variant only
+        # Video create mode requires Gemini - 2 variants for comparison
         if input_mode == "video" and generation_type == "create":
             if not gemini_api_key:
                 raise Exception(
                     "Video mode requires a Gemini API key. "
                     "Please add GEMINI_API_KEY to backend/.env or in the settings dialog"
                 )
-            return [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL]
+            return [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, Llm.GEMINI_3_PRO_PREVIEW_HIGH]
 
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key:
@@ -837,10 +838,18 @@ class StatusBroadcastMiddleware(Middleware):
     async def process(
         self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
     ) -> None:
-        # Tell frontend how many variants we're using
-        await context.send_message("variantCount", str(NUM_VARIANTS), 0)
+        # Determine variant count based on input mode
+        assert context.extracted_params is not None
+        is_video_create = (
+            context.extracted_params.input_mode == "video"
+            and context.extracted_params.generation_type == "create"
+        )
+        num_variants = NUM_VARIANTS_VIDEO if is_video_create else NUM_VARIANTS
 
-        for i in range(NUM_VARIANTS):
+        # Tell frontend how many variants we're using
+        await context.send_message("variantCount", str(num_variants), 0)
+
+        for i in range(num_variants):
             await context.send_message("status", "Generating code...", i)
 
         await next_func()
