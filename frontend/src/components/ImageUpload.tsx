@@ -3,8 +3,6 @@ import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import ScreenRecorder from "./recording/ScreenRecorder";
 import { ScreenRecorderState } from "../types";
-import { IS_RUNNING_ON_CLOUD } from "../config";
-import { addEvent } from "../lib/analytics";
 
 const baseStyle = {
   flex: 1,
@@ -148,17 +146,6 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
         "video/webm": [".webm"],
       },
       onDrop: (acceptedFiles) => {
-        if (IS_RUNNING_ON_CLOUD) {
-          const isVideo = acceptedFiles.some((file) =>
-            file.type.startsWith("video/"),
-          );
-          if (isVideo) {
-            toast.error("Videos are not yet supported on the hosted version.");
-            addEvent("VideoUpload");
-            return;
-          }
-        }
-
         // Set up the preview thumbnail images
         setFiles(
           acceptedFiles.map((file: File) =>
