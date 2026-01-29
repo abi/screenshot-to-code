@@ -1022,7 +1022,7 @@ class CodeGenerationMiddleware(Middleware):
                     input_mode=context.extracted_params.input_mode,
                     openai_api_key=context.extracted_params.openai_api_key,
                     anthropic_api_key=context.extracted_params.anthropic_api_key,
-                    gemini_api_key=GEMINI_API_KEY,
+                    gemini_api_key=context.extracted_params.gemini_api_key,
                 )
 
                 # Generate code for all variants (handles video mode internally)
@@ -1031,7 +1031,7 @@ class CodeGenerationMiddleware(Middleware):
                     openai_api_key=context.extracted_params.openai_api_key,
                     openai_base_url=context.extracted_params.openai_base_url,
                     anthropic_api_key=context.extracted_params.anthropic_api_key,
-                    gemini_api_key=GEMINI_API_KEY,
+                    gemini_api_key=context.extracted_params.gemini_api_key,
                     should_generate_images=context.extracted_params.should_generate_images,
                     input_mode=context.extracted_params.input_mode,
                     generation_type=context.extracted_params.generation_type,
@@ -1040,8 +1040,6 @@ class CodeGenerationMiddleware(Middleware):
                     user_id=context.extracted_params.user_id,
                     payment_method=context.extracted_params.payment_method,
                     stack=context.extracted_params.stack,
-                    input_mode=context.extracted_params.input_mode,
-                    generation_type=context.extracted_params.generation_type,
                     is_imported_from_code=context.extracted_params.is_imported_from_code,
                     generation_group_id=context.generation_group_id,
                 )
