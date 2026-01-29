@@ -6,7 +6,7 @@ import {
   FaMobile,
   FaCode,
 } from "react-icons/fa";
-import { LuExternalLink } from "react-icons/lu";
+import { LuExternalLink, LuRefreshCw } from "react-icons/lu";
 import { AppState, Settings } from "../../types";
 import CodeTab from "./CodeTab";
 import { Button } from "../ui/button";
@@ -71,22 +71,40 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
           </div>
           <div className="flex items-center">
             <TabsList>
-              <TabsTrigger value="desktop" className="flex gap-x-2">
-                <FaDesktop /> Desktop
+              <TabsTrigger value="desktop" title="Desktop">
+                <FaDesktop />
               </TabsTrigger>
-              <TabsTrigger value="mobile" className="flex gap-x-2">
-                <FaMobile /> Mobile
+              <TabsTrigger value="mobile" title="Mobile">
+                <FaMobile />
               </TabsTrigger>
-              <TabsTrigger value="code" className="flex gap-x-2">
+              <TabsTrigger value="code" title="Code">
                 <FaCode />
-                Code
               </TabsTrigger>
             </TabsList>
             <Button
               onClick={() => openInNewTab(previewCode)}
-              className="flex items-center gap-x-2 ml-2 dark:text-white dark:bg-gray-700"
+              variant="ghost"
+              size="icon"
+              title="Open in New Tab"
             >
-              <LuExternalLink /> New Tab
+              <LuExternalLink />
+            </Button>
+            <Button
+              onClick={() => {
+                const iframes = document.querySelectorAll("iframe");
+                iframes.forEach((iframe) => {
+                  if (iframe.srcdoc) {
+                    const content = iframe.srcdoc;
+                    iframe.srcdoc = "";
+                    iframe.srcdoc = content;
+                  }
+                });
+              }}
+              variant="ghost"
+              size="icon"
+              title="Refresh Preview"
+            >
+              <LuRefreshCw />
             </Button>
           </div>
         </div>
