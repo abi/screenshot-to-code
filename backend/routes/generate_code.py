@@ -750,21 +750,13 @@ class ParallelGenerationStage:
             variant_completions[index] = completion["code"]
 
             try:
-                # Skip image generation for video create mode
-                is_video_create = (
-                    self.input_mode == "video" and self.generation_type == "create"
+                # Process images for this variant
+                processed_html = await self._perform_image_generation(
+                    completion["code"],
+                    image_cache,
                 )
-
-                if is_video_create:
-                    processed_html = extract_html_content(completion["code"])
-                else:
-                    # Process images for this variant
-                    processed_html = await self._perform_image_generation(
-                        completion["code"],
-                        image_cache,
-                    )
-                    # Extract HTML content
-                    processed_html = extract_html_content(processed_html)
+                # Extract HTML content
+                processed_html = extract_html_content(processed_html)
 
                 # Send the complete variant back to the client
                 await self.send_message("setCode", processed_html, index)
