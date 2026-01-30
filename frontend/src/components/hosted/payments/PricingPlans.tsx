@@ -61,7 +61,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             <ul className="mt-4 space-y-2">
               <li className="flex items-center dark:text-white">
                 <FaCheckCircle className="text-black dark:text-white mr-2" />
-                100 credits / mo
+                150 credits / mo
               </li>
               <li className="flex items-center dark:text-white">
                 <FaCheckCircle className="text-black dark:text-white mr-2" />
@@ -107,7 +107,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             <ul className="mt-4 space-y-2">
               <li className="flex items-center dark:text-white">
                 <FaCheckCircle className="text-black dark:text-white mr-2" />
-                300 credits / mo
+                400 credits / mo
               </li>
               <li className="flex items-center dark:text-white">
                 <FaCheckCircle className="text-black dark:text-white mr-2" />
