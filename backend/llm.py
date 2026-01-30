@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import TypedDict
+from typing_extensions import NotRequired
 
 
 # Actual model versions that are passed to the LLMs and stored in our logs
@@ -35,6 +36,7 @@ class Llm(Enum):
 class Completion(TypedDict):
     duration: float
     code: str
+    cost: NotRequired[float]
 
 
 # Explicitly map each model to the provider backing it.  This keeps provider

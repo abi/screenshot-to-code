@@ -398,6 +398,7 @@ async def stream_gemini_response_video(
     # Track actual token usage from the response
     # usage_metadata fields: prompt_token_count, candidates_token_count, total_token_count
     usage_metadata = None
+    actual_cost_total: float | None = None
 
     async for chunk in await client.aio.models.generate_content_stream(
         model=api_model_name,
@@ -436,6 +437,7 @@ async def stream_gemini_response_video(
         # Thinking tokens are billed at the same rate as output tokens
         billable_output_tokens = thinking_tokens + output_tokens
         actual_cost = calculate_cost(input_tokens, billable_output_tokens, model)
+        actual_cost_total = actual_cost.total_cost
 
         print(f"\n=== Video Generation Actual Usage ({model.value}) ===")
         print(f"Input tokens:    {input_tokens:,} (${actual_cost.input_cost:.4f})")
@@ -451,4 +453,7 @@ async def stream_gemini_response_video(
         print(f"Generation time: {completion_time:.2f} seconds")
         print("=" * 50)
 
-    return {"duration": completion_time, "code": full_response}
+    completion: Completion = {"duration": completion_time, "code": full_response}
+    if actual_cost_total is not None:
+        completion["cost"] = actual_cost_total
+    return completion

@@ -895,6 +895,12 @@ class ParallelGenerationStage:
                             and self.generation_type == "create"
                         ):
                             video_data_url = self.prompt.get("images", [None])[0]
+                        video_generation_cost = None
+                        if (
+                            self.input_mode == "video"
+                            and self.generation_type == "create"
+                        ):
+                            video_generation_cost = completion.get("cost")
                         await send_to_saas_backend(
                             user_id=self.user_id,
                             prompt_messages=prompt_messages,
@@ -908,6 +914,7 @@ class ParallelGenerationStage:
                             input_mode=self.input_mode,
                             other_info={"generation_type": self.generation_type},
                             video_data_url=video_data_url,
+                            video_generation_cost=video_generation_cost,
                         )
                     except Exception as e:
                         print("Error sending to SaaS backend", e)
