@@ -83,7 +83,9 @@ def detect_mime_type_from_base64(base64_data: str) -> str | None:
     return None
 
 
-def extract_image_from_content(content: str | List[Dict[str, Any]]) -> Dict[str, str] | None:
+def extract_images_from_content(
+    content: str | List[Dict[str, Any]]
+) -> List[Dict[str, str]]:
     """
     Extracts image data from message content.
 
@@ -91,13 +93,14 @@ def extract_image_from_content(content: str | List[Dict[str, Any]]) -> Dict[str,
         content: Message content (string or list of content parts)
 
     Returns:
-        Dictionary with mime_type and data keys for the first image found, or None if no image
+        List of image data dictionaries (mime_type+data or uri).
     """
     # If content is a string, there's no image
     if isinstance(content, str):
-        return None
+        return []
 
     # Content is a list of content parts
+    images: List[Dict[str, str]] = []
     for content_part in content:
         if content_part.get("type") == "image_url":
             image_url = content_part["image_url"]["url"]
@@ -116,13 +119,12 @@ def extract_image_from_content(content: str | List[Dict[str, Any]]) -> Dict[str,
                         print(f"Warning: Could not detect MIME type for data URL, skipping")
                         continue
 
-                return {"mime_type": mime_type, "data": base64_data}
+                images.append({"mime_type": mime_type, "data": base64_data})
             else:
                 # Handle regular URLs
-                return {"uri": image_url}
+                images.append({"uri": image_url})
 
-    # No image found
-    return None
+    return images
 
 
 def convert_message_to_gemini_content(
@@ -141,18 +143,21 @@ def convert_message_to_gemini_content(
 
     # Extract text and image from content
     text = extract_text_from_content(content)  # type: ignore
-    image_data = extract_image_from_content(content)  # type: ignore
+    image_data_list = extract_images_from_content(content)  # type: ignore
 
     if text:
         parts.append({"text": text})
-    if image_data and "data" in image_data:
-        parts.append(
-            types.Part.from_bytes(
-                data=base64.b64decode(image_data["data"]),
-                mime_type=image_data["mime_type"],
-                media_resolution=types.PartMediaResolutionLevel.MEDIA_RESOLUTION_ULTRA_HIGH,
+    for image_data in image_data_list:
+        if "data" in image_data:
+            parts.append(
+                types.Part.from_bytes(
+                    data=base64.b64decode(image_data["data"]),
+                    mime_type=image_data["mime_type"],
+                    media_resolution=types.PartMediaResolutionLevel.MEDIA_RESOLUTION_ULTRA_HIGH,
+                )
             )
-        )
+        elif "uri" in image_data:
+            parts.append({"file_uri": image_data["uri"]})
 
     return types.Content(role=gemini_role, parts=parts)  # type: ignore
 
