@@ -10,11 +10,12 @@ from prompts.types import Stack, PromptContent
 
 
 USER_PROMPT = """
-Generate code for a web page that looks exactly like this.
+Generate code for a web page that looks exactly like the provided screenshot(s).
+If multiple screenshots are provided, treat them as different screens in the same app.
 """
 
 SVG_USER_PROMPT = """
-Generate code for a SVG that looks exactly like this.
+Generate code for a SVG that looks exactly like the provided screenshot(s).
 """
 
 
