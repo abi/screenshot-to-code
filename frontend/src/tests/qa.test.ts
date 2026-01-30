@@ -496,6 +496,6 @@ async function installMockWebSocket(page: Page) {
       }
     }
 
-    window.WebSocket = MockWebSocket;
+    window.WebSocket = MockWebSocket as unknown as typeof WebSocket;
   });
 }

@@ -184,7 +184,7 @@ function UploadTab({ doCreate }: Props) {
     <div className="flex flex-col items-center gap-6">
       {screenRecorderState === ScreenRecorderState.INITIAL && !hasUploadedFile && (
         <div {...getRootProps({ style })} data-testid="upload-dropzone">
-          <input {...getInputProps({ "data-testid": "upload-input" })} />
+          <input data-testid="upload-input" {...getInputProps()} />
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
               <svg
