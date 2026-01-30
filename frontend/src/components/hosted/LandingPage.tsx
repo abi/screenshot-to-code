@@ -237,6 +237,67 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Video Recording Section */}
+      <section className="py-24 px-6 landing-bg">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left side - Video demo */}
+            <div className="relative order-2 lg:order-1">
+              <div className="video-frame">
+                <video
+                  src="/demos/video.mp4"
+                  className="w-full"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                />
+              </div>
+            </div>
+
+            {/* Right side - Content */}
+            <div className="order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-[#2563EB]/10 text-[#2563EB]">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2563EB] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2563EB]"></span>
+                </span>
+                <span className="text-sm font-medium">New Feature</span>
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+                Screen Recording
+                <br />
+                <span className="font-editorial">to Code</span>
+              </h2>
+              <p className="text-xl landing-text-muted mb-6 max-w-md leading-relaxed">
+                Record your screen showing any UI interaction, and watch as our AI transforms it into functional, production-ready code.
+              </p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-start gap-3">
+                  <span className="text-[#2563EB] mt-1">✓</span>
+                  <span className="landing-text-muted">Capture complex interactions and animations</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-[#2563EB] mt-1">✓</span>
+                  <span className="landing-text-muted">AI understands hover states, transitions & flows</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-[#2563EB] mt-1">✓</span>
+                  <span className="landing-text-muted">Generate complete interactive components</span>
+                </li>
+              </ul>
+              <button
+                onClick={signIn}
+                className="btn-primary px-6 py-3 text-sm font-medium inline-flex items-center gap-2 group"
+              >
+                <span>Try Video Recording</span>
+                <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Logo Wall */}
       <section className="py-16 px-6 border-y landing-border overflow-hidden">
         <div className="max-w-7xl mx-auto">
