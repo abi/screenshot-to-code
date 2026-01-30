@@ -71,98 +71,106 @@ export function FeedbackModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Get a $100 gift card for feedback</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl p-0 overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 text-white px-6 py-5">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Get a $100 gift card for feedback
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-white/90 mt-2">
+            We’re looking for a few users to share feedback on a 30‑minute call.
+            After the call, you’ll receive $100 via Amazon gift card, PayPal, or
+            another payment method of your choice.
+          </p>
+        </div>
 
-        {!submitted && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-700">
-              We’re looking for a few users to share feedback on a 30‑minute
-              call. After the call, you’ll receive $100 via Amazon gift card,
-              PayPal, or another payment method of your choice.
-            </p>
-            <div>
-              <p className="text-sm font-medium text-gray-800">
-                Do you speak English fluently?
-              </p>
-              <div className="mt-2 flex gap-2">
-                <Button
-                  variant={englishFluent === true ? "default" : "secondary"}
-                  onClick={() => setEnglishFluent(true)}
-                >
-                  Yes
-                </Button>
-                <Button
-                  variant={englishFluent === false ? "default" : "secondary"}
-                  onClick={() => setEnglishFluent(false)}
-                >
-                  No
+        <div className="px-6 py-5 bg-white">
+          {!submitted && (
+            <div className="space-y-5">
+              <div className="rounded-lg border border-gray-200 p-4">
+                <p className="text-sm font-medium text-gray-900">
+                  Do you speak English fluently?
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    className="w-24"
+                    variant={englishFluent === true ? "default" : "secondary"}
+                    onClick={() => setEnglishFluent(true)}
+                  >
+                    Yes
+                  </Button>
+                  <Button
+                    className="w-24"
+                    variant={englishFluent === false ? "default" : "secondary"}
+                    onClick={() => setEnglishFluent(false)}
+                  >
+                    No
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 p-4">
+                <p className="text-sm font-medium text-gray-900">
+                  Do you have time for a 30 min video call in the next few days?
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    className="w-24"
+                    variant={hasTimeForCall === true ? "default" : "secondary"}
+                    onClick={() => setHasTimeForCall(true)}
+                  >
+                    Yes
+                  </Button>
+                  <Button
+                    className="w-24"
+                    variant={hasTimeForCall === false ? "default" : "secondary"}
+                    onClick={() => setHasTimeForCall(false)}
+                  >
+                    No
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSubmit} disabled={isSubmitting}>
+                  {isSubmitting ? "Saving..." : "Submit"}
                 </Button>
               </div>
             </div>
+          )}
 
-            <div>
-              <p className="text-sm font-medium text-gray-800">
-                Do you have time for a 30 min video call in the next few days?
-              </p>
-              <div className="mt-2 flex gap-2">
-                <Button
-                  variant={hasTimeForCall === true ? "default" : "secondary"}
-                  onClick={() => setHasTimeForCall(true)}
-                >
-                  Yes
-                </Button>
-                <Button
-                  variant={hasTimeForCall === false ? "default" : "secondary"}
-                  onClick={() => setHasTimeForCall(false)}
-                >
-                  No
-                </Button>
+          {submitted &&
+            (englishFluent === false || hasTimeForCall === false) && (
+              <div className="text-sm text-gray-700">
+                Thanks for the response! It looks like this call isn’t the best
+                fit right now.
+              </div>
+            )}
+
+          {submitted &&
+            !showCalEmbed &&
+            englishFluent === true &&
+            hasTimeForCall === true && (
+              <div className="text-sm text-gray-700">
+                Thanks for your response. We’ll reach out to schedule a call if
+                it’s a good fit.
+              </div>
+            )}
+
+          {showCalEmbed && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-700">Thanks! Book a time below.</p>
+              <div className="w-full h-[560px] border rounded-md overflow-hidden">
+                <iframe
+                  src="https://cal.com/abi-raja-wy2pfh/15-min-screenshot-to-code-feedback-session?embed=1"
+                  className="w-full h-full"
+                  title="Book a feedback call"
+                />
               </div>
             </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Submit"}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {submitted &&
-          (englishFluent === false || hasTimeForCall === false) && (
-            <div className="text-sm text-gray-700">
-              Thanks for the response! It looks like this call isn’t the best
-              fit right now.
-            </div>
           )}
-
-        {submitted &&
-          !showCalEmbed &&
-          englishFluent === true &&
-          hasTimeForCall === true && (
-            <div className="text-sm text-gray-700">
-              Thanks for your response. We’ll reach out to schedule a call if
-              it’s a good fit.
-            </div>
-          )}
-
-        {showCalEmbed && (
-          <div className="space-y-3">
-            <p className="text-sm text-gray-700">
-              Thanks! Book a time below.
-            </p>
-            <div className="w-full h-[560px] border rounded-md overflow-hidden">
-              <iframe
-                src="https://cal.com/abi-raja-wy2pfh/15-min-screenshot-to-code-feedback-session?embed=1"
-                className="w-full h-full"
-                title="Book a feedback call"
-              />
-            </div>
-          </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );
