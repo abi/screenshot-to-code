@@ -133,7 +133,7 @@ function LandingPage() {
 
               {/* Subheadline */}
               <p className="text-xl sm:text-xl landing-text-muted max-w-md mb-8 sm:mb-8 leading-relaxed">
-                AI-powered conversion from screenshots and designs to clean, production-ready code.
+                AI-powered conversion from screenshots and videos to clean, production-ready code.
               </p>
 
               {/* CTAs */}
