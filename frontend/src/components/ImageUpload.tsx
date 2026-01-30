@@ -3,6 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import ScreenRecorder from "./recording/ScreenRecorder";
 import { ScreenRecorderState } from "../types";
+import { getVideoDurationSecondsFromBlob } from "./recording/utils";
 
 const baseStyle = {
   flex: 1,
@@ -82,6 +83,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
   const [textPrompt, setTextPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(false);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
+  const MAX_VIDEO_SECONDS = 30;
 
   // TODO: Switch to Zustand
   const [screenRecorderState, setScreenRecorderState] =
@@ -146,16 +148,6 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
         "video/webm": [".webm"],
       },
       onDrop: (acceptedFiles) => {
-        // Set up the preview thumbnail images
-        setFiles(
-          acceptedFiles.map((file: File) =>
-            Object.assign(file, {
-              preview: URL.createObjectURL(file),
-            }),
-          ) as FileWithPreview[],
-        );
-
-        // Determine input mode from file type (more reliable than checking data URL)
         const firstFile = acceptedFiles[0];
         const isVideo =
           firstFile?.type?.startsWith("video/") ||
@@ -163,25 +155,53 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
             firstFile?.name?.toLowerCase().endsWith(ext),
           );
 
-        // Convert images to data URLs and store them (don't trigger generation yet)
-        Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
-          .then((dataUrls) => {
-            if (dataUrls.length > 0) {
-              // Use file type detection as primary, fall back to data URL check
-              const inputMode =
-                isVideo || (dataUrls[0] as string).startsWith("data:video")
-                  ? "video"
-                  : "image";
-              setUploadedDataUrls(dataUrls as string[]);
-              setUploadedInputMode(inputMode);
-              // Focus the text input after upload
-              setTimeout(() => textInputRef.current?.focus(), 100);
+        const processUpload = async () => {
+          if (isVideo && firstFile) {
+            try {
+              const durationSeconds =
+                await getVideoDurationSecondsFromBlob(firstFile);
+              if (durationSeconds > MAX_VIDEO_SECONDS) {
+                toast.error(
+                  "Videos longer than 30 seconds aren't supported. Please trim and try again.",
+                );
+                return;
+              }
+            } catch (error) {
+              console.error("Failed to read video duration", error);
             }
-          })
-          .catch((error) => {
-            toast.error("Error reading files" + error);
-            console.error("Error reading files:", error);
-          });
+          }
+
+          // Set up the preview thumbnail images
+          setFiles(
+            acceptedFiles.map((file: File) =>
+              Object.assign(file, {
+                preview: URL.createObjectURL(file),
+              }),
+            ) as FileWithPreview[],
+          );
+
+          // Convert images to data URLs and store them (don't trigger generation yet)
+          Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
+            .then((dataUrls) => {
+              if (dataUrls.length > 0) {
+                // Use file type detection as primary, fall back to data URL check
+                const inputMode =
+                  isVideo || (dataUrls[0] as string).startsWith("data:video")
+                    ? "video"
+                    : "image";
+                setUploadedDataUrls(dataUrls as string[]);
+                setUploadedInputMode(inputMode);
+                // Focus the text input after upload
+                setTimeout(() => textInputRef.current?.focus(), 100);
+              }
+            })
+            .catch((error) => {
+              toast.error("Error reading files" + error);
+              console.error("Error reading files:", error);
+            });
+        };
+
+        void processUpload();
       },
       onDropRejected: (rejectedFiles) => {
         toast.error(rejectedFiles[0].errors[0].message);
@@ -218,7 +238,7 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
           <div {...getRootProps({ style: style as any })}>
             <input {...getInputProps()} className="file-input" />
             <p className="text-slate-700 text-lg">
-              Drag & drop a screenshot here, <br />
+              Drag & drop a screenshot or video, <br />
               or click to upload
             </p>
           </div>
@@ -307,6 +327,9 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
             <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
               Beta
             </span>
+            <div className="text-slate-400 text-[11px] mt-1">
+              *30s max for video
+            </div>
           </div>
         )}
       {!hasUploadedFile && (

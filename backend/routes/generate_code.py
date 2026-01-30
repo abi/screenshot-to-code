@@ -66,6 +66,7 @@ from image_generation.core import generate_images
 from prompts import create_prompt
 from prompts.claude_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
+from video.cost_estimation import get_video_duration_from_bytes
 from video.utils import get_video_bytes_and_mime_type
 
 # from utils import pprint_prompt
@@ -664,6 +665,7 @@ class ParallelGenerationStage:
     ) -> List[Coroutine[Any, Any, Completion]]:
         """Create generation tasks for each variant model"""
         tasks: List[Coroutine[Any, Any, Completion]] = []
+        MAX_VIDEO_SECONDS = 30
 
         # Check if this is a video create request
         is_video_create = (
@@ -680,6 +682,22 @@ class ParallelGenerationStage:
                 video_bytes, video_mime_type = get_video_bytes_and_mime_type(
                     video_data_url
                 )
+                video_duration = get_video_duration_from_bytes(video_bytes)
+                if video_duration and video_duration > MAX_VIDEO_SECONDS:
+                    with sentry_sdk.configure_scope() as scope:
+                        scope.set_extra("duration_seconds", video_duration)
+                        scope.set_extra("max_seconds", MAX_VIDEO_SECONDS)
+                        scope.set_extra("user_id", self.user_id)
+                        scope.set_extra(
+                            "generation_group_id", self.generation_group_id
+                        )
+                        scope.set_extra("source", "backend")
+                        sentry_sdk.capture_message(
+                            "video_upload_too_long", level="warning"
+                        )
+                    raise Exception(
+                        "Videos longer than 30 seconds aren't supported. Please trim and try again."
+                    )
                 print(
                     f"Using Gemini for video generation (video size: {len(video_bytes)} bytes)"
                 )

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { ScreenRecorderState } from "../../types";
-import { blobToBase64DataUrl } from "./utils";
+import { blobToBase64DataUrl, getVideoDurationSecondsFromBlob } from "./utils";
 import fixWebmDuration from "webm-duration-fix";
 import toast from "react-hot-toast";
 
@@ -26,6 +26,7 @@ function ScreenRecorder({
   const [screenRecordingDataUrl, setScreenRecordingDataUrl] = useState<
     string | null
   >(null);
+  const MAX_VIDEO_SECONDS = 30;
 
   const startScreenRecording = async () => {
     try {
@@ -55,6 +56,21 @@ function ScreenRecorder({
             type: options.mimeType,
           })
         );
+
+        try {
+          const durationSeconds =
+            await getVideoDurationSecondsFromBlob(completeBlob);
+          if (durationSeconds > MAX_VIDEO_SECONDS) {
+            toast.error(
+              "Videos longer than 30 seconds aren't supported. Please trim and try again."
+            );
+            setScreenRecordingDataUrl(null);
+            setScreenRecorderState(ScreenRecorderState.INITIAL);
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to read recording duration", error);
+        }
 
         const dataUrl = await blobToBase64DataUrl(completeBlob);
 

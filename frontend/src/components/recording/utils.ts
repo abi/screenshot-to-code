@@ -29,3 +29,33 @@ export function blobToBase64DataUrl(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
+
+export function getVideoDurationSecondsFromBlob(blob: Blob): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    const objectUrl = URL.createObjectURL(blob);
+
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    video.preload = "metadata";
+    video.onloadedmetadata = () => {
+      const duration = video.duration;
+      cleanup();
+      if (Number.isFinite(duration)) {
+        resolve(duration);
+      } else {
+        reject(new Error("Unable to read video duration"));
+      }
+    };
+    video.onerror = () => {
+      cleanup();
+      reject(new Error("Failed to load video metadata"));
+    };
+
+    video.src = objectUrl;
+  });
+}
