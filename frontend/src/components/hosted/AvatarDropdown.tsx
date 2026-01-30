@@ -27,9 +27,6 @@ export default function AvatarDropdown() {
 
   const subscriberTier = useStore((state) => state.subscriberTier);
   const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
-  const setProjectsHistoryDialogOpen = useStore(
-    (state) => state.setProjectsHistoryDialogOpen
-  );
   const isFreeUser = subscriberTier === "free" || !subscriberTier;
 
   const { user, isLoaded, isSignedIn } = useUser();
@@ -120,12 +117,6 @@ export default function AvatarDropdown() {
                 </>
               )}
 
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild={true}>
-                <a onClick={() => setProjectsHistoryDialogOpen(true)}>
-                  Your history
-                </a>
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild={true}>
                 <a onClick={() => showNewMessage("")}>Contact support</a>
