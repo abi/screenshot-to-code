@@ -186,57 +186,6 @@ function LandingPage() {
         <div className="absolute top-1/4 right-4 w-24 h-24 border-2 border-[#2563EB] opacity-10 rotate-12 hidden xl:block" />
       </header>
 
-      {/* Features Section */}
-      <section className="py-24 px-6 landing-bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            {/* Left side - Section intro */}
-            <div className="lg:sticky lg:top-32">
-              <div className="accent-line w-16 mb-8" />
-              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
-                Built for the way
-                <br />
-                <span className="font-editorial">you work</span>
-              </h2>
-              <p className="text-xl landing-text-muted mb-8 max-w-md">
-                No complex setup. No learning curve. Just paste, click, and ship.
-              </p>
-              <button
-                onClick={signIn}
-                className="btn-primary px-6 py-3 text-sm font-medium inline-flex items-center gap-2 group"
-              >
-                <span>Try it now</span>
-                <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
-              </button>
-            </div>
-
-            {/* Right side - Feature cards */}
-            <div className="space-y-6">
-              {FEATURES.map((feature, index) => (
-                <div
-                  key={index}
-                  className="feature-card-unique p-8"
-                >
-                  <div className="flex items-start gap-6">
-                    <span className="stat-highlight text-3xl opacity-20">
-                      {feature.number}
-                    </span>
-                    <div>
-                      <h3 className="text-xl font-semibold mb-2">
-                        {feature.title}
-                      </h3>
-                      <p className="landing-text-muted leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Video Recording Section */}
       <section className="py-24 px-6 landing-bg">
         <div className="max-w-7xl mx-auto">
@@ -293,6 +242,57 @@ function LandingPage() {
                 <span>Try Video Recording</span>
                 <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
               </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 px-6 landing-bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+            {/* Left side - Section intro */}
+            <div className="lg:sticky lg:top-32">
+              <div className="accent-line w-16 mb-8" />
+              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+                Built for the way
+                <br />
+                <span className="font-editorial">you work</span>
+              </h2>
+              <p className="text-xl landing-text-muted mb-8 max-w-md">
+                No complex setup. No learning curve. Just paste, click, and ship.
+              </p>
+              <button
+                onClick={signIn}
+                className="btn-primary px-6 py-3 text-sm font-medium inline-flex items-center gap-2 group"
+              >
+                <span>Try it now</span>
+                <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
+              </button>
+            </div>
+
+            {/* Right side - Feature cards */}
+            <div className="space-y-6">
+              {FEATURES.map((feature, index) => (
+                <div
+                  key={index}
+                  className="feature-card-unique p-8"
+                >
+                  <div className="flex items-start gap-6">
+                    <span className="stat-highlight text-3xl opacity-20">
+                      {feature.number}
+                    </span>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">
+                        {feature.title}
+                      </h3>
+                      <p className="landing-text-muted leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
