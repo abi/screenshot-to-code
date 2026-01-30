@@ -184,11 +184,13 @@ function Sidebar({
                   }
                 }}
                 value={updateInstruction}
+                data-testid="update-instruction-input"
               />
               <div className="flex gap-2">
                 <Button
                   onClick={() => doUpdate(updateInstruction)}
                   className="dark:text-white dark:bg-gray-700 update-btn flex-1"
+                  data-testid="update-btn"
                 >
                   Update <KeyboardShortcutBadge letter="enter" />
                 </Button>
@@ -209,6 +211,7 @@ function Sidebar({
               <Button
                 onClick={regenerate}
                 className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
+                data-testid="regenerate-btn"
               >
                 🔄 Regenerate
               </Button>

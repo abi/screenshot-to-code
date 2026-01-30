@@ -95,12 +95,14 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
                 }
               }}
               className="w-full"
+              data-testid="url-input"
             />
             <Button
               onClick={takeScreenshot}
               disabled={isLoading}
-              className="w-full"
+              className="w-full capture-btn"
               size="lg"
+              data-testid="capture-btn"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">

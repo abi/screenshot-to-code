@@ -96,7 +96,7 @@ function ImportTab({ importFromCode }: Props) {
                 }`,
               })}
             >
-              <input {...getInputProps()} />
+              <input {...getInputProps()} data-testid="import-file-input" />
               <Textarea
                 ref={textareaRef}
                 value={code}
@@ -104,6 +104,7 @@ function ImportTab({ importFromCode }: Props) {
                 onKeyDown={handleKeyDown}
                 className="w-full h-48 font-mono text-sm resize-none"
                 placeholder="Paste your HTML code here or drag/drop a .html file..."
+                data-testid="import-code-input"
               />
             </div>
 
@@ -114,7 +115,7 @@ function ImportTab({ importFromCode }: Props) {
               shouldDisableUpdates={false}
             />
 
-            <Button onClick={doImport} className="w-full" size="lg">
+            <Button onClick={doImport} className="w-full import-btn" size="lg" data-testid="import-btn">
               Import Code
             </Button>
 

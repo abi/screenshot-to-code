@@ -29,11 +29,11 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
   const renderedHistory = renderHistory(flatHistory);
 
   return renderedHistory.length === 0 ? null : (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen" data-testid="version-history">
       <h1 className="font-bold mb-2">Versions</h1>
-      <ul className="space-y-0 flex flex-col-reverse">
+      <ul className="space-y-0 flex flex-col-reverse" data-testid="version-list">
         {renderedHistory.map((item, index) => (
-          <li key={index}>
+          <li key={index} data-testid={`version-item-${index + 1}`}>
             <Collapsible>
               <div
                 className={classNames(
@@ -44,6 +44,8 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                     "bg-slate-500 text-white": item.hash === head,
                   }
                 )}
+                data-testid={`version-container-${index + 1}`}
+                data-active={item.hash === head}
               >
                 <div
                   className="flex justify-between truncate flex-1 p-2"
@@ -54,6 +56,7 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                         )
                       : setHead(item.hash)
                   }
+                  data-testid={`version-select-${index + 1}`}
                 >
                   <div className="flex gap-x-1 truncate">
                     <h2 className="text-sm truncate">{item.summary}</h2>
@@ -63,7 +66,7 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
                       </h2>
                     )}
                   </div>
-                  <h2 className="text-sm">v{index + 1}</h2>
+                  <h2 className="text-sm" data-testid={`version-label-${index + 1}`}>v{index + 1}</h2>
                 </div>
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-6">

@@ -12,12 +12,16 @@ const SCREENSHOT_WITH_IMAGES = `${FIXTURES_PATH}/simple_ui_with_image.png`;
 // Results
 const RESULTS_DIR = `${TESTS_ROOT_PATH}/results`;
 
+// Run with MOCK=true backend for stability
+// Command: MOCK=true poetry run uvicorn main:app --reload --port 7001
+
 describe.skip("e2e tests", () => {
   let browser: Browser;
   let page: Page;
 
   const DEBUG = true;
   const IS_HEADLESS = true;
+  const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:5173";
 
   const stacks = Object.values(Stack).slice(0, DEBUG ? 1 : undefined);
   const models = DEBUG
@@ -27,18 +31,10 @@ describe.skip("e2e tests", () => {
   beforeAll(async () => {
     browser = await puppeteer.launch({ headless: IS_HEADLESS });
     page = await browser.newPage();
-    await page.goto("http://localhost:5173/");
+    await page.goto(BASE_URL);
 
     // Set screen size
     await page.setViewport({ width: 1080, height: 1024 });
-
-    // TODO: Does this need to be moved?
-    // const client = await page.createCDPSession();
-    // Set download behavior path
-    // await client.send("Page.setDownloadBehavior", {
-    //   behavior: "allow",
-    //   downloadPath: DOWNLOAD_PATH,
-    // });
   });
 
   afterAll(async () => {
@@ -82,7 +78,7 @@ describe.skip("e2e tests", () => {
     });
   });
 
-  // Update tests - for every model (doesn’t need to be repeated for each stack - fix to HTML Tailwind only)
+  // Update tests - for every model (doesn't need to be repeated for each stack - fix to HTML Tailwind only)
   models.forEach((model) => {
     ["html_tailwind"].forEach((stack) => {
       it(
@@ -123,16 +119,6 @@ describe.skip("e2e tests", () => {
           await app.init();
 
           await app.importFromCode();
-
-          // Regenerate works for v1
-          // await app.regenerate();
-          // // Make an update
-          // await app.edit("make the header blue", "v2");
-          // // Make another update
-          // await app.edit("make all text italic", "v3");
-          // // Branch off v2 and make an update
-          // await app.clickVersion("v2");
-          // await app.edit("make all text red", "v4");
         },
         90 * 1000
       );
@@ -185,88 +171,105 @@ class App {
   }
 
   async _waitUntilVersionIsReady(version: string) {
-    await this.page.waitForNetworkIdle();
-    await this.page.waitForFunction(
-      (version) => document.body.innerText.includes(version),
-      {
-        timeout: 30000,
-      },
-      version
+    // Wait for network idle
+    await this.page.waitForNetworkIdle({ timeout: 30000 });
+
+    // Wait for the version label to appear using data-testid
+    const versionNumber = version.replace("v", "");
+    await this.page.waitForSelector(
+      `[data-testid="version-label-${versionNumber}"]`,
+      { timeout: 30000 }
     );
-    // Wait for 3s so that the HTML and JS has time to render before screenshotting
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // Small delay for rendering to complete
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   async generateFromUrl(url: string) {
-    // Type in the URL
-    await this.page.type('input[placeholder="Enter URL"]', url);
+    // Type in the URL using data-testid
+    const urlInput = await this.page.waitForSelector('[data-testid="url-input"]');
+    await urlInput?.type(url);
     await this._screenshot("typed_url");
 
-    // Click the capture button and wait for the code to be generated
-    await this.page.click("button.capture-btn");
+    // Click the capture button using data-testid
+    await this.page.click('[data-testid="capture-btn"]');
     await this._waitUntilVersionIsReady("v1");
     await this._screenshot("url_result");
   }
 
   // Uploads a screenshot and generates the image
   async uploadImage(screenshotPath: string) {
-    // Upload file
-    const fileInput = (await this.page.$(
-      ".file-input"
-    )) as ElementHandle<HTMLInputElement>;
+    // Upload file using data-testid
+    const fileInput = await this.page.waitForSelector(
+      '[data-testid="file-input"]'
+    ) as ElementHandle<HTMLInputElement>;
+
     if (!fileInput) {
       throw new Error("File input element not found");
     }
     await fileInput.uploadFile(screenshotPath);
     await this._screenshot("image_uploaded");
 
-    // Click the generate button and wait for the code to be generated
+    // Wait for generate button and click it
+    const generateBtn = await this.page.waitForSelector('[data-testid="generate-btn"]');
+    if (generateBtn) {
+      await generateBtn.click();
+    }
+
     await this._waitUntilVersionIsReady("v1");
     await this._screenshot("image_results");
   }
 
   // Makes a text edit and waits for a new version
   async edit(edit: string, version: string) {
-    // Type in the edit
-    await this.page.type(
-      'textarea[placeholder="Tell the AI what to change..."]',
-      edit
+    // Type in the edit using data-testid
+    const textarea = await this.page.waitForSelector(
+      '[data-testid="update-instruction-input"]'
     );
+    await textarea?.type(edit);
     await this._screenshot(`typed_${version}`);
 
-    // Click the update button and wait for the code to be generated
-    await this.page.click(".update-btn");
+    // Click the update button using data-testid
+    await this.page.click('[data-testid="update-btn"]');
     await this._waitUntilVersionIsReady(version);
     await this._screenshot(`done_${version}`);
   }
 
   async clickVersion(version: string) {
-    await this.page.evaluate((version) => {
-      document.querySelectorAll("div").forEach((div) => {
-        if (div.innerText.includes(version)) {
-          div.click();
-        }
-      });
-    }, version);
+    const versionNumber = version.replace("v", "");
+    // Click on the version using data-testid
+    const versionSelector = `[data-testid="version-select-${versionNumber}"]`;
+    await this.page.waitForSelector(versionSelector);
+    await this.page.click(versionSelector);
+
+    // Wait for the version to become active
+    await this.page.waitForSelector(
+      `[data-testid="version-container-${versionNumber}"][data-active="true"]`
+    );
   }
 
   async regenerate() {
-    await this.page.click(".regenerate-btn");
+    // Click regenerate button using data-testid
+    await this.page.click('[data-testid="regenerate-btn"]');
     await this._waitUntilVersionIsReady("v1");
     await this._screenshot("regenerate_results");
   }
 
-  // Work in progress
   async importFromCode() {
-    await this.page.click(".import-from-code-btn");
+    // Click import tab/button
+    const importTab = await this.page.waitForSelector('[data-testid="import-tab"]');
+    await importTab?.click();
 
-    await this.page.type("textarea", "<html>hello world</html>");
-
-    await this.page.select("#output-settings-js", "HTML + Tailwind");
+    // Type code into the textarea using data-testid
+    const codeInput = await this.page.waitForSelector(
+      '[data-testid="import-code-input"]'
+    );
+    await codeInput?.type("<html><body>Hello World</body></html>");
 
     await this._screenshot("typed_code");
 
-    await this.page.click(".import-btn");
+    // Click import button using data-testid
+    await this.page.click('[data-testid="import-btn"]');
 
     await this._waitUntilVersionIsReady("v1");
   }

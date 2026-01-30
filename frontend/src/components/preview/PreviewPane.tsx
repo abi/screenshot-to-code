@@ -55,6 +55,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                 <Button
                   onClick={reset}
                   className="flex items-center ml-4 gap-x-2 dark:text-white dark:bg-gray-700"
+                  data-testid="reset-btn"
                 >
                   <FaUndo />
                   Reset
@@ -63,6 +64,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                   onClick={() => downloadCode(previewCode)}
                   variant="secondary"
                   className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
+                  data-testid="download-btn"
                 >
                   <FaDownload /> Download Code
                 </Button>
