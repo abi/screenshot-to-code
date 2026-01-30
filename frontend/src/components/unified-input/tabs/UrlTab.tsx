@@ -82,14 +82,11 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
 
           <div className="text-center">
             <h3 className="text-gray-700 font-medium">Screenshot from URL</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Enter a website URL to capture and generate code
-            </p>
           </div>
 
           <div className="w-full space-y-3">
             <Input
-              placeholder="https://example.com"
+              placeholder=""
               onChange={(e) => setReferenceUrl(e.target.value)}
               value={referenceUrl}
               onKeyDown={(e) => {
@@ -136,7 +133,7 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
           </div>
 
           <p className="text-xs text-gray-400 text-center">
-            Press Enter to capture. Requires ScreenshotOne API key.
+            Requires ScreenshotOne API key.
           </p>
         </div>
       </div>
