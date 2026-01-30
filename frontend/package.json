@@ -10,7 +10,8 @@
     "build-hosted": "tsc && vite build --mode prod",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "jest"
+    "test": "jest",
+    "test:qa": "RUN_E2E=true TEST_ROOT_PATH=src/tests yarn test src/tests/qa.test.ts"
   },
   "dependencies": {
     "@codemirror/lang-html": "^6.4.6",
