@@ -303,7 +303,16 @@ class App {
     await this.switchToTab("tab-import");
     await this.page.type('[data-testid="import-input"]', code);
     await this.page.click('[data-testid="stack-select"]');
-    await this.page.click('div[role="option"] >> text="HTML + Tailwind"');
+    await this.page.waitForSelector('[role="option"]', { timeout: 5000 });
+    await this.page.evaluate(() => {
+      const options = Array.from(
+        document.querySelectorAll('[role="option"]')
+      ) as HTMLElement[];
+      const target = options.find((option) =>
+        option.textContent?.includes("HTML + Tailwind")
+      );
+      target?.click();
+    });
     await this.takeScreenshot("typed_code");
     await this.page.click('[data-testid="import-submit"]');
     await this.waitUntilVersionIsReady("v1");
@@ -335,6 +344,9 @@ class App {
 
   async assertCodeActions() {
     await this.page.click('[data-testid="tab-code"]');
+    await this.page.waitForSelector('[data-testid="copy-code"]', {
+      timeout: 10000,
+    });
     await this.page.click('[data-testid="copy-code"]');
     await this.page.click('[data-testid="open-codepen"]');
     await this.page.click('[data-testid="download-code"]');
@@ -367,6 +379,10 @@ async function setupRequestInterception(
       request.respond({
         status: 200,
         contentType: "application/json",
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "*",
+        },
         body: JSON.stringify({ url: screenshotDataUrl }),
       });
       return;
