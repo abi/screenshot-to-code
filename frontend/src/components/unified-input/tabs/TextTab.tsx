@@ -8,10 +8,12 @@ interface Props {
 }
 
 const EXAMPLE_PROMPTS = [
-  "A SaaS admin dashboard with charts and user management",
-  "A modern e-commerce product page with reviews",
-  "A landing page for a mobile app with pricing",
-  "A social media profile page with posts and followers",
+  "A cozy cafe menu board with seasonal specials",
+  "A minimalist portfolio with case studies and a contact section",
+  "A fintech savings app dashboard with balances and goals",
+  "A travel itinerary planner with map and daily schedule",
+  "A fitness class booking page with timetable and trainers",
+  "A real estate listing page with photo gallery and details",
 ];
 
 function TextTab({ doCreateFromText }: Props) {
@@ -68,9 +70,6 @@ function TextTab({ doCreateFromText }: Props) {
 
             <div className="text-center">
               <h3 className="text-gray-700 font-medium">Generate from Text</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Describe what you want to build
-              </p>
             </div>
           </div>
 
@@ -102,7 +101,7 @@ function TextTab({ doCreateFromText }: Props) {
             </div>
 
             <Button onClick={handleGenerate} className="w-full" size="lg">
-              Generate Code
+              Generate
             </Button>
 
             <p className="text-xs text-gray-400 text-center">
