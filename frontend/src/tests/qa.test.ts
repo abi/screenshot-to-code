@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 import puppeteer, { Browser, ElementHandle, Page } from "puppeteer";
 import { Stack } from "../lib/stacks";
 import { CodeGenerationModel } from "../lib/models";
