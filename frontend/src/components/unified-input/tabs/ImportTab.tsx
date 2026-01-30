@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useDropzone } from "react-dropzone";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
 import OutputSettingsSection from "../../settings/OutputSettingsSection";
@@ -13,6 +14,7 @@ function ImportTab({ importFromCode }: Props) {
   const [code, setCode] = useState("");
   const [stack, setStack] = useState<Stack | undefined>(undefined);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -38,6 +40,25 @@ function ImportTab({ importFromCode }: Props) {
       doImport();
     }
   };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: {
+      "text/html": [".html", ".htm"],
+    },
+    maxFiles: 1,
+    noClick: true,
+    noKeyboard: true,
+    onDragEnter: () => setIsDraggingFile(true),
+    onDragLeave: () => setIsDraggingFile(false),
+    onDrop: async (acceptedFiles) => {
+      setIsDraggingFile(false);
+      const file = acceptedFiles[0];
+      if (!file) return;
+      const contents = await file.text();
+      setCode(contents);
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    },
+  });
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -68,14 +89,23 @@ function ImportTab({ importFromCode }: Props) {
           </div>
 
           <div className="space-y-4">
-            <Textarea
-              ref={textareaRef}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full h-48 font-mono text-sm resize-none"
-              placeholder="Paste your HTML code here..."
-            />
+            <div
+              {...getRootProps({
+                className: `rounded-lg ${
+                  isDraggingFile ? "ring-2 ring-blue-300 ring-offset-2" : ""
+                }`,
+              })}
+            >
+              <input {...getInputProps()} />
+              <Textarea
+                ref={textareaRef}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full h-48 font-mono text-sm resize-none"
+                placeholder="Paste your HTML code here..."
+              />
+            </div>
 
             <OutputSettingsSection
               stack={stack}
