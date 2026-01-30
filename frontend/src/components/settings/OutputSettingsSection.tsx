@@ -5,8 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "../ui/select";
-import { Badge } from "../ui/badge";
-import { Stack, STACK_DESCRIPTIONS } from "../../lib/stacks";
+import { Stack } from "../../lib/stacks";
 import StackLabel from "../core/StackLabel";
 
 interface Props {
@@ -40,11 +39,6 @@ function OutputSettingsSection({
                 <SelectItem key={stack} value={stack}>
                   <div className="flex items-center">
                     <StackLabel stack={stack} />
-                    {STACK_DESCRIPTIONS[stack].inBeta && (
-                      <Badge className="ml-2" variant="secondary">
-                        Beta
-                      </Badge>
-                    )}
                   </div>
                 </SelectItem>
               ))}
