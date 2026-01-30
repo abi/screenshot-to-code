@@ -376,7 +376,7 @@ async function setupRequestInterception(
 }
 
 async function installDomTestHooks(page: Page) {
-  await page.addInitScript(() => {
+  await page.evaluateOnNewDocument(() => {
     window.__qaDownloads = [];
     window.__qaFormSubmits = [];
     window.__qaClipboardCalls = [];
@@ -405,7 +405,7 @@ async function installDomTestHooks(page: Page) {
 }
 
 async function installMockWebSocket(page: Page) {
-  await page.addInitScript(() => {
+  await page.evaluateOnNewDocument(() => {
     class MockWebSocket {
       static CONNECTING = 0;
       static OPEN = 1;
