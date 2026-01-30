@@ -50,11 +50,6 @@ GEMINI_PRICING = {
         "input_per_million": 2.00,  # prompts <= 200k tokens
         "output_per_million": 12.00,  # including thinking tokens
     },
-    # Gemini 2.5 Flash
-    "gemini-2.5-flash": {
-        "input_per_million": 0.30,  # text/image/video
-        "output_per_million": 2.50,
-    },
 }
 
 
@@ -63,8 +58,6 @@ def get_model_api_name(model: Llm) -> str:
         return "gemini-3-flash-preview"
     elif model in [Llm.GEMINI_3_PRO_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_LOW]:
         return "gemini-3-pro-preview"
-    elif model == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20:
-        return "gemini-2.5-flash"
     return model.value
 
 

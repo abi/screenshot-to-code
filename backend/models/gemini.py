@@ -206,17 +206,7 @@ async def stream_gemini_response(
     client = genai.Client(api_key=api_key)
     full_response = ""
 
-    if model == Llm.GEMINI_2_5_FLASH_PREVIEW_05_20:
-        # Gemini 2.5 Flash supports thinking budgets
-        config = types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=20000,
-            system_instruction=system_prompt,
-            thinking_config=types.ThinkingConfig(
-                thinking_budget=5000, include_thoughts=True
-            ),
-        )
-    elif model == Llm.GEMINI_3_FLASH_PREVIEW_HIGH:
+    if model == Llm.GEMINI_3_FLASH_PREVIEW_HIGH:
         # Gemini 3 Flash with HIGH thinking
         config = types.GenerateContentConfig(
             temperature=0,
