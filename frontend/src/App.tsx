@@ -255,10 +255,12 @@ function App() {
 
     // Kick off the code generation
     if (referenceImages.length > 0) {
+      const images =
+        inputMode === "video" ? [referenceImages[0]] : referenceImages;
       doGenerateCode({
         generationType: "create",
         inputMode,
-        prompt: { text: textPrompt, images: [referenceImages[0]] },
+        prompt: { text: textPrompt, images },
       });
     }
   }

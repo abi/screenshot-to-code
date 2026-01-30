@@ -77,6 +77,7 @@ function UploadTab({ doCreate }: Props) {
     setFiles([]);
     setTextPrompt("");
     setShowTextPrompt(false);
+    setUploadedInputMode("image");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -88,7 +89,7 @@ function UploadTab({ doCreate }: Props) {
 
   const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
     useDropzone({
-      maxFiles: 1,
+      maxFiles: 10,
       maxSize: 1024 * 1024 * 20,
       accept: {
         "image/png": [".png"],
@@ -99,6 +100,21 @@ function UploadTab({ doCreate }: Props) {
         "video/webm": [".webm"],
       },
       onDrop: (acceptedFiles) => {
+        if (acceptedFiles.length === 0) return;
+
+        const hasVideo = acceptedFiles.some(
+          (file) =>
+            file.type.startsWith("video/") ||
+            [".mp4", ".mov", ".webm"].some((ext) =>
+              file.name.toLowerCase().endsWith(ext)
+            )
+        );
+
+        if (hasVideo && acceptedFiles.length > 1) {
+          toast.error("Please upload a single video or multiple images.");
+          return;
+        }
+
         setFiles(
           acceptedFiles.map((file: File) =>
             Object.assign(file, {
@@ -107,18 +123,11 @@ function UploadTab({ doCreate }: Props) {
           ) as FileWithPreview[]
         );
 
-        const firstFile = acceptedFiles[0];
-        const isVideo =
-          firstFile?.type?.startsWith("video/") ||
-          [".mp4", ".mov", ".webm"].some((ext) =>
-            firstFile?.name?.toLowerCase().endsWith(ext)
-          );
-
         Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
           .then((dataUrls) => {
             if (dataUrls.length > 0) {
               const inputMode =
-                isVideo || (dataUrls[0] as string).startsWith("data:video")
+                hasVideo || (dataUrls[0] as string).startsWith("data:video")
                   ? "video"
                   : "image";
               setUploadedDataUrls(dataUrls as string[]);
@@ -206,11 +215,11 @@ function UploadTab({ doCreate }: Props) {
             </div>
             <div className="text-center">
               <p className="text-gray-700 font-medium">
-                Drop a screenshot or video here
+                Drop screenshots or a video here
               </p>
             </div>
             <p className="text-xs text-gray-400 mt-2">
-              Supports PNG, JPG, MP4, MOV, WebM (max 20MB, 30s video)
+              Supports PNG, JPG, MP4, MOV, WebM (max 20MB each, 30s video)
             </p>
           </div>
         </div>
@@ -226,16 +235,21 @@ function UploadTab({ doCreate }: Props) {
                 controls
               />
             ) : (
-              <img
-                src={files[0]?.preview}
-                alt="Uploaded screenshot"
-                className="w-full h-auto max-h-[400px] object-contain rounded-lg border border-gray-200"
-              />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto rounded-lg border border-gray-200 p-3">
+                {files.map((file, index) => (
+                  <img
+                    key={`${file.name}-${index}`}
+                    src={file.preview}
+                    alt={`Uploaded screenshot ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-md border border-gray-100"
+                  />
+                ))}
+              </div>
             )}
             <button
               onClick={handleClear}
               className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-100 transition-colors"
-              aria-label="Remove file"
+              aria-label="Remove files"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
