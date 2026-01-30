@@ -214,9 +214,7 @@ function LandingPage() {
                 <span className="text-sm font-medium">New Feature</span>
               </div>
               <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
-                Video
-                <br />
-                <span className="font-editorial">to Code</span>
+                Video to Code
               </h2>
               <p className="text-xl landing-text-muted mb-6 max-w-md leading-relaxed">
                 Record your screen showing a full website, app or UI interaction, and watch as our AI transforms it into functional, production-ready code.
