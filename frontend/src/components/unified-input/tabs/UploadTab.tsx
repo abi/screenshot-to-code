@@ -285,13 +285,15 @@ function UploadTab({ doCreate }: Props) {
         </div>
       )}
 
-      {screenRecorderState === ScreenRecorderState.INITIAL && !hasUploadedFile && (
+      {!hasUploadedFile && (
         <div className="flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <div className="h-px w-12 bg-gray-300" />
-            <span>or</span>
-            <div className="h-px w-12 bg-gray-300" />
-          </div>
+          {screenRecorderState === ScreenRecorderState.INITIAL && (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="h-px w-12 bg-gray-300" />
+              <span>or</span>
+              <div className="h-px w-12 bg-gray-300" />
+            </div>
+          )}
           <ScreenRecorder
             screenRecorderState={screenRecorderState}
             setScreenRecorderState={setScreenRecorderState}
@@ -299,15 +301,6 @@ function UploadTab({ doCreate }: Props) {
           />
         </div>
       )}
-
-      {!hasUploadedFile &&
-        screenRecorderState !== ScreenRecorderState.INITIAL && (
-          <ScreenRecorder
-            screenRecorderState={screenRecorderState}
-            setScreenRecorderState={setScreenRecorderState}
-            generateCode={handleScreenRecorderGenerate}
-          />
-        )}
     </div>
   );
 }
