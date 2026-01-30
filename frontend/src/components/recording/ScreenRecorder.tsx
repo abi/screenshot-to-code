@@ -4,6 +4,9 @@ import { ScreenRecorderState } from "../../types";
 import { blobToBase64DataUrl } from "./utils";
 import fixWebmDuration from "webm-duration-fix";
 import toast from "react-hot-toast";
+import * as Sentry from "@sentry/react";
+
+const MAX_VIDEO_DURATION_SECONDS = 30;
 
 interface Props {
   screenRecorderState: ScreenRecorderState;
@@ -26,6 +29,10 @@ function ScreenRecorder({
   const [screenRecordingDataUrl, setScreenRecordingDataUrl] = useState<
     string | null
   >(null);
+  const [videoTooLong, setVideoTooLong] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState<number | null>(
+    null
+  );
 
   const startScreenRecording = async () => {
     try {
@@ -56,10 +63,49 @@ function ScreenRecorder({
           })
         );
 
-        const dataUrl = await blobToBase64DataUrl(completeBlob);
+        // Check video duration
+        const video = document.createElement("video");
+        video.preload = "metadata";
+        const blobUrl = URL.createObjectURL(completeBlob);
 
-        setScreenRecordingDataUrl(dataUrl);
-        setScreenRecorderState(ScreenRecorderState.FINISHED);
+        video.onloadedmetadata = async () => {
+          const duration = video.duration;
+          URL.revokeObjectURL(blobUrl);
+
+          // Send Sentry event with video duration
+          Sentry.captureMessage("Screen recording completed", {
+            level: "info",
+            extra: {
+              videoDurationSeconds: duration,
+              fileSize: completeBlob.size,
+            },
+          });
+
+          setRecordingDuration(duration);
+
+          if (duration > MAX_VIDEO_DURATION_SECONDS) {
+            setVideoTooLong(true);
+            toast.error(
+              `Recording is too long (${Math.round(duration)}s). Please record a video that is ${MAX_VIDEO_DURATION_SECONDS} seconds or shorter.`
+            );
+          } else {
+            setVideoTooLong(false);
+          }
+
+          const dataUrl = await blobToBase64DataUrl(completeBlob);
+          setScreenRecordingDataUrl(dataUrl);
+          setScreenRecorderState(ScreenRecorderState.FINISHED);
+        };
+
+        video.onerror = async () => {
+          URL.revokeObjectURL(blobUrl);
+          // Continue even if we can't check duration
+          const dataUrl = await blobToBase64DataUrl(completeBlob);
+          setScreenRecordingDataUrl(dataUrl);
+          setScreenRecorderState(ScreenRecorderState.FINISHED);
+        };
+
+        video.src = blobUrl;
       };
 
       // Start recording
@@ -125,16 +171,27 @@ function ScreenRecorder({
               src={screenRecordingDataUrl}
             />
           )}
+          {videoTooLong && (
+            <div className="text-red-600 text-sm text-center max-w-[340px]">
+              Recording is too long ({Math.round(recordingDuration || 0)}s).
+              Please re-record a video that is {MAX_VIDEO_DURATION_SECONDS}{" "}
+              seconds or shorter.
+            </div>
+          )}
           <div className="flex gap-x-2">
             <Button
               variant="secondary"
-              onClick={() =>
-                setScreenRecorderState(ScreenRecorderState.INITIAL)
-              }
+              onClick={() => {
+                setVideoTooLong(false);
+                setRecordingDuration(null);
+                setScreenRecorderState(ScreenRecorderState.INITIAL);
+              }}
             >
               Re-record
             </Button>
-            <Button onClick={kickoffGeneration}>Generate</Button>
+            <Button onClick={kickoffGeneration} disabled={videoTooLong}>
+              Generate
+            </Button>
           </div>
         </div>
       )}

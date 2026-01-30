@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
+import * as Sentry from "@sentry/react";
 import ScreenRecorder from "./recording/ScreenRecorder";
 import { ScreenRecorderState } from "../types";
+
+const MAX_VIDEO_DURATION_SECONDS = 30;
 
 const baseStyle = {
   flex: 1,
@@ -57,6 +60,25 @@ function fileToDataURL(file: File): Promise<string> {
     };
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
+  });
+}
+
+function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(video.src);
+      resolve(video.duration);
+    };
+
+    video.onerror = () => {
+      URL.revokeObjectURL(video.src);
+      reject(new Error("Failed to load video metadata"));
+    };
+
+    video.src = URL.createObjectURL(file);
   });
 }
 
@@ -145,7 +167,42 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
         "video/mp4": [".mp4"],
         "video/webm": [".webm"],
       },
-      onDrop: (acceptedFiles) => {
+      onDrop: async (acceptedFiles) => {
+        // Determine input mode from file type (more reliable than checking data URL)
+        const firstFile = acceptedFiles[0];
+        const isVideo =
+          firstFile?.type?.startsWith("video/") ||
+          [".mp4", ".mov", ".webm"].some((ext) =>
+            firstFile?.name?.toLowerCase().endsWith(ext),
+          );
+
+        // Check video duration before processing
+        if (isVideo && firstFile) {
+          try {
+            const duration = await getVideoDuration(firstFile);
+
+            // Always send Sentry event with video duration
+            Sentry.captureMessage("Video upload attempted", {
+              level: "info",
+              extra: {
+                videoDurationSeconds: duration,
+                fileName: firstFile.name,
+                fileSize: firstFile.size,
+              },
+            });
+
+            if (duration > MAX_VIDEO_DURATION_SECONDS) {
+              toast.error(
+                `Video is too long (${Math.round(duration)}s). Please upload a video that is ${MAX_VIDEO_DURATION_SECONDS} seconds or shorter.`,
+              );
+              return;
+            }
+          } catch (error) {
+            console.error("Error checking video duration:", error);
+            // Continue with upload if we can't check duration
+          }
+        }
+
         // Set up the preview thumbnail images
         setFiles(
           acceptedFiles.map((file: File) =>
@@ -154,14 +211,6 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
             }),
           ) as FileWithPreview[],
         );
-
-        // Determine input mode from file type (more reliable than checking data URL)
-        const firstFile = acceptedFiles[0];
-        const isVideo =
-          firstFile?.type?.startsWith("video/") ||
-          [".mp4", ".mov", ".webm"].some((ext) =>
-            firstFile?.name?.toLowerCase().endsWith(ext),
-          );
 
         // Convert images to data URLs and store them (don't trigger generation yet)
         Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
