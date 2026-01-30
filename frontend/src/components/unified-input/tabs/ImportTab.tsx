@@ -106,6 +106,7 @@ function ImportTab({ importFromCode }: Props) {
                 placeholder="Paste your HTML code here..."
               />
             </div>
+            <p className="text-xs text-gray-400">Tip: drop a .html file here.</p>
 
             <OutputSettingsSection
               stack={stack}
