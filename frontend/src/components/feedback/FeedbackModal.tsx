@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Button } from "../ui/button";
+import { Dialog, DialogContent } from "../ui/dialog";
 import { useAuthenticatedFetch } from "../hosted/useAuthenticatedFetch";
 import { SAAS_BACKEND_URL } from "../../config";
 import toast from "react-hot-toast";
+import {
+  FiGift,
+  FiMessageCircle,
+  FiGlobe,
+  FiCalendar,
+  FiCheck,
+} from "react-icons/fi";
 
 type Answer = boolean | null;
 
@@ -11,6 +17,31 @@ interface FeedbackModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   subscriberTier: string | null;
+}
+
+interface ToggleButtonProps {
+  selected: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}
+
+function ToggleButton({ selected, onClick, children }: ToggleButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        px-5 py-2 rounded-lg text-sm font-medium transition-all duration-150
+        ${
+          selected
+            ? "bg-emerald-600 text-white"
+            : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
+        }
+      `}
+    >
+      {selected && <FiCheck className="inline-block w-4 h-4 mr-1.5 -mt-0.5" />}
+      {children}
+    </button>
+  );
 }
 
 export function FeedbackModal({
@@ -50,14 +81,10 @@ export function FeedbackModal({
 
     setIsSubmitting(true);
     try {
-      await authenticatedFetch(
-        `${SAAS_BACKEND_URL}/feedback/submit`,
-        "POST",
-        {
-          english_fluent: englishFluent,
-          available_for_call: hasTimeForCall,
-        }
-      );
+      await authenticatedFetch(`${SAAS_BACKEND_URL}/feedback/submit`, "POST", {
+        english_fluent: englishFluent,
+        available_for_call: hasTimeForCall,
+      });
       setSubmitted(true);
     } catch (error) {
       toast.error("Failed to save your response. Please try again.");
@@ -68,83 +95,110 @@ export function FeedbackModal({
   };
 
   const showCalEmbed = submitted && englishFluent === true && isSubscriber;
+  const canSubmit = englishFluent !== null && hasTimeForCall !== null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 text-white px-6 py-5">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Get a $100 gift card for feedback
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-white/90 mt-2">
-            We’re looking for a few users to share feedback on a 30‑minute call.
-            After the call, you’ll receive $100 via Amazon gift card, PayPal, or
-            another payment method of your choice.
-          </p>
+      <DialogContent className="max-w-md p-0 overflow-hidden">
+        <div className="relative bg-emerald-700 text-white px-8 py-8">
+          <div className="absolute top-6 right-6 opacity-10">
+            <FiGift className="w-20 h-20" strokeWidth={1.5} />
+          </div>
+          <div className="relative">
+            <p className="text-emerald-200 text-xs font-medium uppercase tracking-wider mb-2">
+              User Research
+            </p>
+            <h2 className="text-2xl font-semibold">
+              Get a $100 gift card
+            </h2>
+            <p className="text-emerald-100/80 mt-2 text-sm leading-relaxed max-w-md">
+              Share your feedback in a 30-minute call and receive $100 via
+              Amazon, PayPal, or your preferred payment method.
+            </p>
+          </div>
         </div>
 
-        <div className="px-6 py-5 bg-white">
+        <div className="px-8 py-6 bg-white">
           {!submitted && (
-            <div className="space-y-5">
-              <div className="rounded-lg border border-gray-200 p-4">
-                <p className="text-sm font-medium text-gray-900">
-                  Do you speak English fluently?
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    className="w-24"
-                    variant={englishFluent === true ? "default" : "secondary"}
-                    onClick={() => setEnglishFluent(true)}
-                  >
-                    Yes
-                  </Button>
-                  <Button
-                    className="w-24"
-                    variant={englishFluent === false ? "default" : "secondary"}
-                    onClick={() => setEnglishFluent(false)}
-                  >
-                    No
-                  </Button>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <FiGlobe className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-gray-800 font-medium mb-3">
+                    Do you speak English fluently?
+                  </p>
+                  <div className="flex gap-2">
+                    <ToggleButton
+                      selected={englishFluent === true}
+                      onClick={() => setEnglishFluent(true)}
+                    >
+                      Yes
+                    </ToggleButton>
+                    <ToggleButton
+                      selected={englishFluent === false}
+                      onClick={() => setEnglishFluent(false)}
+                    >
+                      No
+                    </ToggleButton>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-gray-200 p-4">
-                <p className="text-sm font-medium text-gray-900">
-                  Do you have time for a 30 min video call in the next few days?
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    className="w-24"
-                    variant={hasTimeForCall === true ? "default" : "secondary"}
-                    onClick={() => setHasTimeForCall(true)}
-                  >
-                    Yes
-                  </Button>
-                  <Button
-                    className="w-24"
-                    variant={hasTimeForCall === false ? "default" : "secondary"}
-                    onClick={() => setHasTimeForCall(false)}
-                  >
-                    No
-                  </Button>
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <FiCalendar className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-gray-800 font-medium mb-3">
+                    Available for a 30-min video call this week?
+                  </p>
+                  <div className="flex gap-2">
+                    <ToggleButton
+                      selected={hasTimeForCall === true}
+                      onClick={() => setHasTimeForCall(true)}
+                    >
+                      Yes
+                    </ToggleButton>
+                    <ToggleButton
+                      selected={hasTimeForCall === false}
+                      onClick={() => setHasTimeForCall(false)}
+                    >
+                      No
+                    </ToggleButton>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <Button onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : "Submit"}
-                </Button>
-              </div>
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !canSubmit}
+                className={`
+                  w-full py-3 rounded-lg font-medium text-sm
+                  transition-all duration-150
+                  ${
+                    canSubmit
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  }
+                `}
+              >
+                {isSubmitting ? "Submitting..." : "Continue"}
+              </button>
             </div>
           )}
 
           {submitted &&
             (englishFluent === false || hasTimeForCall === false) && (
-              <div className="text-sm text-gray-700">
-                Thanks for the response! It looks like this call isn’t the best
-                fit right now.
+              <div className="text-center py-6">
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                  <FiMessageCircle className="w-5 h-5 text-gray-500" />
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Thanks for your response! This opportunity isn't the right fit
+                  at the moment, but we appreciate your time.
+                </p>
               </div>
             )}
 
@@ -152,16 +206,28 @@ export function FeedbackModal({
             !showCalEmbed &&
             englishFluent === true &&
             hasTimeForCall === true && (
-              <div className="text-sm text-gray-700">
-                Thanks for your response. We’ll reach out to schedule a call if
-                it’s a good fit.
+              <div className="text-center py-6">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+                  <FiCheck className="w-5 h-5 text-emerald-600" />
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Thanks for your interest! We'll reach out soon if it's a good
+                  fit.
+                </p>
               </div>
             )}
 
           {showCalEmbed && (
-            <div className="space-y-3">
-              <p className="text-sm text-gray-700">Thanks! Book a time below.</p>
-              <div className="w-full h-[560px] border rounded-md overflow-hidden">
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+                  <FiCheck className="w-5 h-5 text-emerald-600" />
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Great! Pick a time that works for you.
+                </p>
+              </div>
+              <div className="w-full h-[560px] border border-gray-200 rounded-lg overflow-hidden">
                 <iframe
                   src="https://cal.com/abi-raja-wy2pfh/15-min-screenshot-to-code-feedback-session?embed=1"
                   className="w-full h-full"
