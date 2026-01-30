@@ -4,13 +4,16 @@ from typing import TypedDict
 
 # Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
+    # GPT
     GPT_4_1_2025_04_14 = "gpt-4.1-2025-04-14"
     GPT_5_2_2025_12_11 = "gpt-5.2-2025-12-11"
+    # Claude
     CLAUDE_3_7_SONNET_2025_02_19 = "claude-3-7-sonnet-20250219"
     CLAUDE_4_SONNET_2025_05_14 = "claude-sonnet-4-20250514"
-    CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
     CLAUDE_4_OPUS_2025_05_14 = "claude-opus-4-20250514"
+    CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
     CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101"
+    # Gemini
     GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)"
     GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)"
     GEMINI_3_PRO_PREVIEW_HIGH = "gemini-3-pro-preview (high thinking)"
