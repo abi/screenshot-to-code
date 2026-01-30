@@ -18,7 +18,6 @@ import { CreditsUsage } from "./types";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { showNewMessage } from "@intercom/messenger-js-sdk";
-import { URLS } from "../../urls";
 
 export default function AvatarDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -125,12 +124,6 @@ export default function AvatarDropdown() {
               <DropdownMenuItem asChild={true}>
                 <a onClick={() => setProjectsHistoryDialogOpen(true)}>
                   Your history
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild={true}>
-                <a href={URLS.tips} target="_blank">
-                  Tips for better results
                 </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
