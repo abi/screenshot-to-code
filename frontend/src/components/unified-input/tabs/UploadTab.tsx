@@ -208,12 +208,9 @@ function UploadTab({ doCreate }: Props) {
               <p className="text-gray-700 font-medium">
                 Drop a screenshot or video here
               </p>
-              <p className="text-sm text-gray-500 mt-1">
-                or click to browse
-              </p>
             </div>
             <p className="text-xs text-gray-400 mt-2">
-              Supports PNG, JPG, MP4, MOV, WebM (max 20MB)
+              Supports PNG, JPG, MP4, MOV, WebM (max 20MB, 30s video)
             </p>
           </div>
         </div>

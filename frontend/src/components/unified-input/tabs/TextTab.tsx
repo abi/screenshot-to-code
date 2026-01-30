@@ -12,8 +12,6 @@ const EXAMPLE_PROMPTS = [
   "A minimalist portfolio with case studies and a contact section",
   "A fintech savings app dashboard with balances and goals",
   "A travel itinerary planner with map and daily schedule",
-  "A fitness class booking page with timetable and trainers",
-  "A real estate listing page with photo gallery and details",
 ];
 
 function TextTab({ doCreateFromText }: Props) {
