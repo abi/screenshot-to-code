@@ -85,9 +85,6 @@ function ImportTab({ importFromCode }: Props) {
 
             <div className="text-center">
               <h3 className="text-gray-700 font-medium">Import Existing Code</h3>
-              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 mt-2">
-                Drop a .html file to import
-              </span>
             </div>
           </div>
 
@@ -106,7 +103,7 @@ function ImportTab({ importFromCode }: Props) {
                 onChange={(e) => setCode(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="w-full h-48 font-mono text-sm resize-none"
-                placeholder="Paste your HTML code here..."
+                placeholder="Paste your HTML code here or drag/drop a .html file..."
               />
             </div>
 
