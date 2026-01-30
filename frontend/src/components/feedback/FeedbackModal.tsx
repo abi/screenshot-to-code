@@ -94,12 +94,16 @@ export function FeedbackModal({
     }
   };
 
-  const showCalEmbed = submitted && englishFluent === true && isSubscriber;
+  const showCalEmbed =
+    submitted &&
+    englishFluent === true &&
+    hasTimeForCall === true &&
+    isSubscriber;
   const canSubmit = englishFluent !== null && hasTimeForCall !== null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
+      <DialogContent className="max-w-md p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="relative bg-emerald-700 text-white px-8 py-8">
           <div className="absolute top-6 right-6 opacity-10">
             <FiGift className="w-20 h-20" strokeWidth={1.5} />
