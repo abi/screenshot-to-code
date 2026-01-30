@@ -117,7 +117,7 @@ class TestModelSelectionOpenAIOnly:
 
     @pytest.mark.asyncio
     async def test_openai_only(self):
-        """OpenAI only: GPT-4.1, GPT-4o, cycling"""
+        """OpenAI only: GPT-4.1 only"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -128,9 +128,8 @@ class TestModelSelectionOpenAIOnly:
 
         expected = [
             Llm.GPT_4_1_2025_04_14,
-            Llm.GPT_4O_2024_11_20,
             Llm.GPT_4_1_2025_04_14,
-            Llm.GPT_4O_2024_11_20,
+            Llm.GPT_4_1_2025_04_14,
         ]
         assert models == expected
 

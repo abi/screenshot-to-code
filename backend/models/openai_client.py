@@ -37,12 +37,6 @@ async def stream_openai_response(
         params["stream"] = True
         params["max_tokens"] = 20000
 
-    if model_name == "gpt-4o-2024-05-13":
-        params["max_tokens"] = 4096
-
-    if model_name == "gpt-4o-2024-11-20":
-        params["max_tokens"] = 16384
-
     if model_name == "o1-2024-12-17":
         params["max_completion_tokens"] = 20000
 

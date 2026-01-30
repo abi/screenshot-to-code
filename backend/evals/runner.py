@@ -94,7 +94,7 @@ async def run_image_evals(
         data_url = await image_to_data_url(filepath)
         for n_idx in range(n):
             current_model_for_task = (
-                selected_model if n_idx == 0 else Llm.GPT_4O_2024_05_13
+                selected_model if n_idx == 0 else Llm.GPT_4_1_2025_04_14
             )
             coro = generate_code_and_time(
                 image_url=data_url,

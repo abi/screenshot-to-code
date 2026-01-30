@@ -4,11 +4,6 @@ from typing import TypedDict
 
 # Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
-    GPT_4_VISION = "gpt-4-vision-preview"
-    GPT_4_TURBO_2024_04_09 = "gpt-4-turbo-2024-04-09"
-    GPT_4O_2024_05_13 = "gpt-4o-2024-05-13"
-    GPT_4O_2024_08_06 = "gpt-4o-2024-08-06"
-    GPT_4O_2024_11_20 = "gpt-4o-2024-11-20"
     GPT_4_1_2025_04_14 = "gpt-4.1-2025-04-14"
     GPT_4_1_MINI_2025_04_14 = "gpt-4.1-mini-2025-04-14"
     GPT_4_1_NANO_2025_04_14 = "gpt-4.1-nano-2025-04-14"
@@ -37,11 +32,6 @@ class Completion(TypedDict):
 # models elsewhere in the codebase.
 MODEL_PROVIDER: dict[Llm, str] = {
     # OpenAI models
-    Llm.GPT_4_VISION: "openai",
-    Llm.GPT_4_TURBO_2024_04_09: "openai",
-    Llm.GPT_4O_2024_05_13: "openai",
-    Llm.GPT_4O_2024_08_06: "openai",
-    Llm.GPT_4O_2024_11_20: "openai",
     Llm.GPT_4_1_2025_04_14: "openai",
     Llm.GPT_4_1_MINI_2025_04_14: "openai",
     Llm.GPT_4_1_NANO_2025_04_14: "openai",

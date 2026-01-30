@@ -400,7 +400,7 @@ class ModelSelectionStage:
         elif anthropic_api_key:
             models = [Llm.CLAUDE_4_5_SONNET_2025_09_29, Llm.CLAUDE_4_5_OPUS_2025_11_01]
         elif openai_api_key:
-            models = [Llm.GPT_4_1_2025_04_14, Llm.GPT_4O_2024_11_20]
+            models = [Llm.GPT_4_1_2025_04_14]
         else:
             raise Exception("No OpenAI or Anthropic key")
 
