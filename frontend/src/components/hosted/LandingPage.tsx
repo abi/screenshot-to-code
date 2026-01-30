@@ -194,7 +194,7 @@ function LandingPage() {
             <div className="relative order-2 lg:order-1">
               <div className="video-frame">
                 <video
-                  src="/demos/video.mp4"
+                  src="/demos/tally form.mp4"
                   className="w-full"
                   autoPlay
                   loop
