@@ -36,19 +36,35 @@ function UnifiedInputPane({
         className="w-full"
       >
         <TabsList className="grid w-full grid-cols-4 mb-6">
-          <TabsTrigger value="upload" className="flex items-center gap-2">
+          <TabsTrigger
+            value="upload"
+            className="flex items-center gap-2"
+            data-testid="tab-upload"
+          >
             <UploadIcon />
             <span className="hidden sm:inline">Upload</span>
           </TabsTrigger>
-          <TabsTrigger value="url" className="flex items-center gap-2">
+          <TabsTrigger
+            value="url"
+            className="flex items-center gap-2"
+            data-testid="tab-url"
+          >
             <UrlIcon />
             <span className="hidden sm:inline">URL</span>
           </TabsTrigger>
-          <TabsTrigger value="text" className="flex items-center gap-2">
+          <TabsTrigger
+            value="text"
+            className="flex items-center gap-2"
+            data-testid="tab-text"
+          >
             <TextIcon />
             <span className="hidden sm:inline">Text</span>
           </TabsTrigger>
-          <TabsTrigger value="import" className="flex items-center gap-2">
+          <TabsTrigger
+            value="import"
+            className="flex items-center gap-2"
+            data-testid="tab-import"
+          >
             <ImportIcon />
             <span className="hidden sm:inline">Import</span>
           </TabsTrigger>

@@ -63,6 +63,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                   onClick={() => downloadCode(previewCode)}
                   variant="secondary"
                   className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
+                  data-testid="download-code"
                 >
                   <FaDownload /> Download Code
                 </Button>
@@ -71,13 +72,13 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
           </div>
           <div className="flex items-center">
             <TabsList>
-              <TabsTrigger value="desktop" title="Desktop">
+              <TabsTrigger value="desktop" title="Desktop" data-testid="tab-desktop">
                 <FaDesktop />
               </TabsTrigger>
-              <TabsTrigger value="mobile" title="Mobile">
+              <TabsTrigger value="mobile" title="Mobile" data-testid="tab-mobile">
                 <FaMobile />
               </TabsTrigger>
-              <TabsTrigger value="code" title="Code">
+              <TabsTrigger value="code" title="Code" data-testid="tab-code">
                 <FaCode />
               </TabsTrigger>
             </TabsList>

@@ -30,7 +30,11 @@ function OutputSettingsSection({
           onValueChange={(value: string) => setStack(value as Stack)}
           disabled={shouldDisableUpdates}
         >
-          <SelectTrigger className="col-span-2" id="output-settings-js">
+          <SelectTrigger
+            className="col-span-2"
+            id="output-settings-js"
+            data-testid="stack-select"
+          >
             {stack ? <StackLabel stack={stack} /> : "Select a stack"}
           </SelectTrigger>
           <SelectContent>

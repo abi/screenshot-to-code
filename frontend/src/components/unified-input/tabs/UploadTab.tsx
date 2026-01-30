@@ -183,8 +183,8 @@ function UploadTab({ doCreate }: Props) {
   return (
     <div className="flex flex-col items-center gap-6">
       {screenRecorderState === ScreenRecorderState.INITIAL && !hasUploadedFile && (
-        <div {...getRootProps({ style })}>
-          <input {...getInputProps()} />
+        <div {...getRootProps({ style })} data-testid="upload-dropzone">
+          <input {...getInputProps({ "data-testid": "upload-input" })} />
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
               <svg
@@ -277,7 +277,12 @@ function UploadTab({ doCreate }: Props) {
           )}
 
           <div className="flex flex-col items-center gap-1 w-full max-w-md">
-            <Button onClick={handleGenerate} className="w-full" size="lg">
+            <Button
+              onClick={handleGenerate}
+              className="w-full"
+              size="lg"
+              data-testid="upload-generate"
+            >
               Generate Code
             </Button>
             <p className="text-xs text-gray-400">Press Enter to generate</p>

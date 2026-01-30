@@ -184,6 +184,7 @@ function Sidebar({
                   }
                 }}
                 value={updateInstruction}
+                data-testid="update-input"
               />
               <div className="flex gap-2">
                 <Button

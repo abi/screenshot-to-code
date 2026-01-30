@@ -80,6 +80,7 @@ function TextTab({ doCreateFromText }: Props) {
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
+              data-testid="text-input"
             />
 
             <div className="flex flex-col gap-2">
@@ -98,7 +99,12 @@ function TextTab({ doCreateFromText }: Props) {
               </div>
             </div>
 
-            <Button onClick={handleGenerate} className="w-full" size="lg">
+            <Button
+              onClick={handleGenerate}
+              className="w-full"
+              size="lg"
+              data-testid="text-generate"
+            >
               Generate
             </Button>
 
