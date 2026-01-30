@@ -5,8 +5,6 @@ from typing import TypedDict
 # Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
     GPT_4_1_2025_04_14 = "gpt-4.1-2025-04-14"
-    GPT_4_1_MINI_2025_04_14 = "gpt-4.1-mini-2025-04-14"
-    GPT_4_1_NANO_2025_04_14 = "gpt-4.1-nano-2025-04-14"
     GPT_5_2_2025_12_11 = "gpt-5.2-2025-12-11"
     CLAUDE_3_7_SONNET_2025_02_19 = "claude-3-7-sonnet-20250219"
     CLAUDE_4_SONNET_2025_05_14 = "claude-sonnet-4-20250514"
@@ -30,8 +28,6 @@ class Completion(TypedDict):
 MODEL_PROVIDER: dict[Llm, str] = {
     # OpenAI models
     Llm.GPT_4_1_2025_04_14: "openai",
-    Llm.GPT_4_1_MINI_2025_04_14: "openai",
-    Llm.GPT_4_1_NANO_2025_04_14: "openai",
     Llm.GPT_5_2_2025_12_11: "openai",
     # Anthropic models
     Llm.CLAUDE_3_7_SONNET_2025_02_19: "anthropic",
