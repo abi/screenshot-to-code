@@ -71,9 +71,14 @@ interface Props {
     textPrompt?: string
   ) => void;
   onUploadStateChange?: (hasUpload: boolean) => void;
+  dropzoneSize?: "large" | "compact";
 }
 
-function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
+function ImageUpload({
+  setReferenceImages,
+  onUploadStateChange,
+  dropzoneSize = "large",
+}: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadedDataUrls, setUploadedDataUrls] = useState<string[]>([]);
   const [uploadedInputMode, setUploadedInputMode] = useState<
@@ -188,15 +193,22 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
     return () => files.forEach((file) => URL.revokeObjectURL(file.preview));
   }, [files]);
 
-  const style = useMemo(
-    () => ({
+  const style = useMemo(() => {
+    const sizeOverrides =
+      dropzoneSize === "compact"
+        ? {
+            width: "100%",
+            minHeight: "280px",
+          }
+        : {};
+    return {
       ...baseStyle,
+      ...sizeOverrides,
       ...(isFocused ? focusedStyle : {}),
       ...(isDragAccept ? acceptStyle : {}),
       ...(isDragReject ? rejectStyle : {}),
-    }),
-    [isFocused, isDragAccept, isDragReject]
-  );
+    };
+  }, [dropzoneSize, isFocused, isDragAccept, isDragReject]);
 
   // Screen recorder callback - wrap to include empty text prompt
   const handleScreenRecorderGenerate = (

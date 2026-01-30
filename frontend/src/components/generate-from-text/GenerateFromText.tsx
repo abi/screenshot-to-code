@@ -5,18 +5,27 @@ import toast from "react-hot-toast";
 
 interface GenerateFromTextProps {
   doCreateFromText: (text: string) => void;
+  defaultOpen?: boolean;
+  showTrigger?: boolean;
+  className?: string;
 }
 
-function GenerateFromText({ doCreateFromText }: GenerateFromTextProps) {
-  const [isOpen, setIsOpen] = useState(false);
+function GenerateFromText({
+  doCreateFromText,
+  defaultOpen = false,
+  showTrigger = true,
+  className,
+}: GenerateFromTextProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isOpenState = showTrigger ? isOpen : true;
 
   useEffect(() => {
-    if (isOpen && textareaRef.current) {
+    if (isOpenState && textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, [isOpen]);
+  }, [isOpenState]);
 
   const handleGenerate = () => {
     if (text.trim() === "") {
@@ -34,8 +43,8 @@ function GenerateFromText({ doCreateFromText }: GenerateFromTextProps) {
   };
 
   return (
-    <div className="mt-4">
-      {!isOpen ? (
+    <div className={className}>
+      {showTrigger && !isOpenState ? (
         <div className="flex justify-center">
           <Button variant="secondary" onClick={() => setIsOpen(true)}>
             Generate from text prompt [BETA]
@@ -57,9 +66,11 @@ function GenerateFromText({ doCreateFromText }: GenerateFromTextProps) {
               Press Cmd/Ctrl + Enter to generate
             </span>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsOpen(false)}>
-                Cancel
-              </Button>
+              {showTrigger && (
+                <Button variant="outline" onClick={() => setIsOpen(false)}>
+                  Cancel
+                </Button>
+              )}
               <Button onClick={handleGenerate}>Generate</Button>
             </div>
           </div>

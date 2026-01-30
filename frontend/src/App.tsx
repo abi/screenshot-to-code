@@ -22,7 +22,6 @@ import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
-import GenerateFromText from "./components/generate-from-text/GenerateFromText";
 
 function App() {
   const {
@@ -397,10 +396,6 @@ function App() {
 
           {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
 
-          {appState === AppState.INITIAL && (
-            <GenerateFromText doCreateFromText={doCreateFromText} />
-          )}
-
           {/* Rest of the sidebar when we're not in the initial state */}
           {(appState === AppState.CODING ||
             appState === AppState.CODE_READY) && (
@@ -418,6 +413,7 @@ function App() {
         {appState === AppState.INITIAL && (
           <StartPane
             doCreate={doCreate}
+            doCreateFromText={doCreateFromText}
             importFromCode={importFromCode}
             settings={settings}
           />

@@ -11,9 +11,14 @@ interface Props {
     inputMode: "image" | "video",
     textPrompt?: string
   ) => void;
+  label?: string;
 }
 
-export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
+export function UrlInputSection({
+  doCreate,
+  screenshotOneApiKey,
+  label = "Or screenshot a URL...",
+}: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
 
@@ -64,7 +69,7 @@ export function UrlInputSection({ doCreate, screenshotOneApiKey }: Props) {
 
   return (
     <div className="max-w-[90%] min-w-[40%] gap-y-2 flex flex-col">
-      <div className="text-gray-500 text-sm">Or screenshot a URL...</div>
+      {label && <div className="text-gray-500 text-sm">{label}</div>}
       <Input
         placeholder="Enter URL"
         onChange={(e) => setReferenceUrl(e.target.value)}
