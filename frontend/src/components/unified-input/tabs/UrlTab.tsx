@@ -86,7 +86,7 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
 
           <div className="w-full space-y-3">
             <Input
-              placeholder=""
+              placeholder="https://"
               onChange={(e) => setReferenceUrl(e.target.value)}
               value={referenceUrl}
               onKeyDown={(e) => {
