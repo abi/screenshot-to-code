@@ -8,9 +8,6 @@ class Llm(Enum):
     GPT_4_1_2025_04_14 = "gpt-4.1-2025-04-14"
     GPT_5_2_2025_12_11 = "gpt-5.2-2025-12-11"
     # Claude
-    CLAUDE_3_7_SONNET_2025_02_19 = "claude-3-7-sonnet-20250219"
-    CLAUDE_4_SONNET_2025_05_14 = "claude-sonnet-4-20250514"
-    CLAUDE_4_OPUS_2025_05_14 = "claude-opus-4-20250514"
     CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
     CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101"
     # Gemini
@@ -33,10 +30,7 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GPT_4_1_2025_04_14: "openai",
     Llm.GPT_5_2_2025_12_11: "openai",
     # Anthropic models
-    Llm.CLAUDE_3_7_SONNET_2025_02_19: "anthropic",
-    Llm.CLAUDE_4_SONNET_2025_05_14: "anthropic",
     Llm.CLAUDE_4_5_SONNET_2025_09_29: "anthropic",
-    Llm.CLAUDE_4_OPUS_2025_05_14: "anthropic",
     Llm.CLAUDE_4_5_OPUS_2025_11_01: "anthropic",
     # Gemini models
     Llm.GEMINI_3_FLASH_PREVIEW_HIGH: "gemini",
