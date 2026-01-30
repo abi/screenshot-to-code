@@ -64,9 +64,6 @@ function ImportTab({ importFromCode }: Props) {
 
             <div className="text-center">
               <h3 className="text-gray-700 font-medium">Import Existing Code</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Paste your HTML code to iterate on it with AI
-              </p>
             </div>
           </div>
 
