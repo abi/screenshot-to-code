@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import SettingsDialog from "./components/settings/SettingsDialog";
@@ -30,9 +30,8 @@ import ProjectHistoryView from "./components/hosted/project_history/ProjectHisto
 import { Button } from "./components/ui/button";
 import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
 import { FeedbackFAB } from "./components/feedback/FeedbackFAB";
+import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
-
-const FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSet4G88pgVLaJ_lGyfkGqaHYEVG4RSOyvJttyfHHtcpkcYn6g/viewform";
 
 interface Props {
   navbarComponent?: JSX.Element;
@@ -87,6 +86,7 @@ function App({ navbarComponent }: Props) {
 
   const { shouldShowBanner, incrementGenerations, dismissBanner } =
     useFeedbackState();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -477,7 +477,7 @@ function App({ navbarComponent }: Props) {
           <div className="px-4 mb-2">
             <FeedbackBanner
               onDismiss={dismissBanner}
-              formUrl={FEEDBACK_FORM_URL}
+              onOpen={() => setIsFeedbackOpen(true)}
             />
           </div>
         )}
@@ -495,7 +495,12 @@ function App({ navbarComponent }: Props) {
         )}
       </main>
 
-      <FeedbackFAB formUrl={FEEDBACK_FORM_URL} />
+      <FeedbackFAB onOpen={() => setIsFeedbackOpen(true)} />
+      <FeedbackModal
+        open={isFeedbackOpen}
+        onOpenChange={setIsFeedbackOpen}
+        subscriberTier={subscriberTier}
+      />
     </div>
   );
 }

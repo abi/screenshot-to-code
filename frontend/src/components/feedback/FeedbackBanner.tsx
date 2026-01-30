@@ -2,10 +2,10 @@ import { IoClose } from "react-icons/io5";
 
 interface FeedbackBannerProps {
   onDismiss: () => void;
-  formUrl: string;
+  onOpen: () => void;
 }
 
-export function FeedbackBanner({ onDismiss, formUrl }: FeedbackBannerProps) {
+export function FeedbackBanner({ onDismiss, onOpen }: FeedbackBannerProps) {
   return (
     <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-3 rounded-lg mb-4 shadow-md">
       <div className="flex items-center justify-between gap-3">
@@ -17,14 +17,12 @@ export function FeedbackBanner({ onDismiss, formUrl }: FeedbackBannerProps) {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <a
-            href={formUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={onOpen}
             className="bg-white text-purple-700 px-3 py-1 rounded-md text-sm font-semibold hover:bg-purple-50 transition-colors"
           >
             Claim
-          </a>
+          </button>
           <button
             onClick={onDismiss}
             className="text-white/80 hover:text-white p-1 transition-colors"
