@@ -80,9 +80,15 @@ export default function AvatarDropdown() {
         <DropdownMenuContent className="w-56" align="end">
           {/* Free users */}
           {isFreeUser && (
-            <DropdownMenuItem asChild={true}>
-              <a onClick={openPricingDialog}>Get pro</a>
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white focus:text-white focus:bg-gradient-to-r focus:from-blue-700 focus:to-indigo-700 rounded-md my-1 cursor-pointer"
+                onClick={openPricingDialog}
+              >
+                <span className="font-medium">Upgrade to Pro</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
           )}
           {/* Paying user */}
           {!isFreeUser && (
