@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Stack } from "../../lib/stacks";
 import { Settings } from "../../types";
+import { IS_RUNNING_ON_CLOUD } from "../../config";
 import UploadTab from "./tabs/UploadTab";
 import UrlTab from "./tabs/UrlTab";
 import TextTab from "./tabs/TextTab";
 import ImportTab from "./tabs/ImportTab";
+import HistoryTab from "./tabs/HistoryTab";
 
 interface Props {
   doCreate: (
@@ -18,7 +20,7 @@ interface Props {
   settings: Settings;
 }
 
-type InputTab = "upload" | "url" | "text" | "import";
+type InputTab = "upload" | "url" | "text" | "import" | "history";
 
 function UnifiedInputPane({
   doCreate,
@@ -35,7 +37,11 @@ function UnifiedInputPane({
         onValueChange={(value) => setActiveTab(value as InputTab)}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList
+          className={`grid w-full mb-6 ${
+            IS_RUNNING_ON_CLOUD ? "grid-cols-5" : "grid-cols-4"
+          }`}
+        >
           <TabsTrigger
             value="upload"
             className="flex items-center gap-2"
@@ -68,6 +74,16 @@ function UnifiedInputPane({
             <ImportIcon />
             <span className="hidden sm:inline">Import</span>
           </TabsTrigger>
+          {IS_RUNNING_ON_CLOUD && (
+            <TabsTrigger
+              value="history"
+              className="flex items-center gap-2"
+              data-testid="tab-history"
+            >
+              <HistoryIcon />
+              <span className="hidden sm:inline">Your History</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="upload" className="mt-0">
@@ -88,6 +104,12 @@ function UnifiedInputPane({
         <TabsContent value="import" className="mt-0">
           <ImportTab importFromCode={importFromCode} />
         </TabsContent>
+
+        {IS_RUNNING_ON_CLOUD && (
+          <TabsContent value="history" className="mt-0">
+            <HistoryTab />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
@@ -167,6 +189,26 @@ function ImportIcon() {
     >
       <polyline points="16 18 22 12 16 6" />
       <polyline points="8 6 2 12 8 18" />
+    </svg>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 12a9 9 0 1 0 9-9" />
+      <polyline points="3 8 3 12 7 12" />
+      <path d="M12 7v5l4 2" />
     </svg>
   );
 }
