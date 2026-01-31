@@ -10,11 +10,12 @@ from prompts.types import Stack, PromptContent
 
 
 USER_PROMPT = """
-Generate code for a web page that looks exactly like this.
+Generate code for a web page that looks exactly like the provided screenshot(s).
+If multiple screenshots are provided, treat them as different screens in the same app.
 """
 
 SVG_USER_PROMPT = """
-Generate code for a SVG that looks exactly like this.
+Generate code for a SVG that looks exactly like the provided screenshot(s).
 """
 
 
@@ -40,9 +41,9 @@ async def create_prompt(
     else:
         # Assemble the prompt for non-imported code
         if input_mode == "image":
-            image_url = prompt["images"][0]
+            image_urls = prompt.get("images", [])
             text_prompt = prompt.get("text", "")
-            prompt_messages = assemble_prompt(image_url, stack, text_prompt)
+            prompt_messages = assemble_prompt(image_urls, stack, text_prompt)
         elif input_mode == "text":
             prompt_messages = assemble_text_prompt(prompt["text"], stack)
         elif input_mode == "video":
@@ -62,9 +63,9 @@ async def create_prompt(
                 ]
         else:
             # Default to image mode for backward compatibility
-            image_url = prompt["images"][0]
+            image_urls = prompt.get("images", [])
             text_prompt = prompt.get("text", "")
-            prompt_messages = assemble_prompt(image_url, stack, text_prompt)
+            prompt_messages = assemble_prompt(image_urls, stack, text_prompt)
 
         if generation_type == "update":
             # Transform the history tree into message format
@@ -145,7 +146,7 @@ def assemble_imported_code_prompt(
 
 
 def assemble_prompt(
-    image_data_url: str,
+    image_data_urls: list[str],
     stack: Stack,
     text_prompt: str = "",
 ) -> list[ChatCompletionMessageParam]:
@@ -156,16 +157,20 @@ def assemble_prompt(
     if text_prompt.strip():
         user_prompt = user_prompt.strip() + "\n\nAdditional instructions: " + text_prompt
 
-    user_content: list[ChatCompletionContentPartParam] = [
-        {
-            "type": "image_url",
-            "image_url": {"url": image_data_url, "detail": "high"},
-        },
+    user_content: list[ChatCompletionContentPartParam] = []
+    for image_data_url in image_data_urls:
+        user_content.append(
+            {
+                "type": "image_url",
+                "image_url": {"url": image_data_url, "detail": "high"},
+            }
+        )
+    user_content.append(
         {
             "type": "text",
             "text": user_prompt,
-        },
-    ]
+        }
+    )
     return [
         {
             "role": "system",

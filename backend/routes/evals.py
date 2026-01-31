@@ -195,12 +195,7 @@ async def run_evals(request: RunEvalsRequest) -> List[str]:
 
 @router.get("/models", response_model=Dict[str, List[str]])
 async def get_models():
-    current_models = [
-        model.value
-        for model in Llm
-        if model != Llm.GPT_4_TURBO_2024_04_09
-        and model != Llm.GPT_4_VISION
-    ]
+    current_models = [model.value for model in Llm]
 
     # Import Stack type from prompts.types and get all literal values
     available_stacks = list(Stack.__args__)

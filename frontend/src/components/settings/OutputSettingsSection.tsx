@@ -5,8 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "../ui/select";
-import { Badge } from "../ui/badge";
-import { Stack, STACK_DESCRIPTIONS } from "../../lib/stacks";
+import { Stack } from "../../lib/stacks";
 import { addEvent } from "../../lib/analytics";
 import StackLabel from "../core/StackLabel";
 
@@ -35,7 +34,11 @@ function OutputSettingsSection({
           }}
           disabled={shouldDisableUpdates}
         >
-          <SelectTrigger className="col-span-2" id="output-settings-js">
+          <SelectTrigger
+            className="col-span-2"
+            id="output-settings-js"
+            data-testid="stack-select"
+          >
             {stack ? <StackLabel stack={stack} /> : "Select a stack"}
           </SelectTrigger>
           <SelectContent>
@@ -44,11 +47,6 @@ function OutputSettingsSection({
                 <SelectItem key={stack} value={stack}>
                   <div className="flex items-center">
                     <StackLabel stack={stack} />
-                    {STACK_DESCRIPTIONS[stack].inBeta && (
-                      <Badge className="ml-2" variant="secondary">
-                        Beta
-                      </Badge>
-                    )}
                   </div>
                 </SelectItem>
               ))}

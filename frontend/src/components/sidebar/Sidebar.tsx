@@ -184,6 +184,7 @@ function Sidebar({
                   }
                 }}
                 value={updateInstruction}
+                data-testid="update-input"
               />
               <div className="flex gap-2">
                 <Button
@@ -230,11 +231,26 @@ function Sidebar({
               })}
             >
               {inputMode === "image" && (
-                <img
-                  className="w-[340px] border border-gray-200 rounded-md"
-                  src={referenceImages[0]}
-                  alt="Reference"
-                />
+                <>
+                  {referenceImages.length === 1 ? (
+                    <img
+                      className="w-[340px] border border-gray-200 rounded-md"
+                      src={referenceImages[0]}
+                      alt="Reference"
+                    />
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 w-[340px] max-h-[360px] overflow-y-auto border border-gray-200 rounded-md p-2">
+                      {referenceImages.map((image, index) => (
+                        <img
+                          key={`${image}-${index}`}
+                          className="w-full h-24 object-cover rounded"
+                          src={image}
+                          alt={`Reference ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
               {inputMode === "video" && (
                 <video
@@ -247,7 +263,11 @@ function Sidebar({
               )}
             </div>
             <div className="text-gray-400 uppercase text-sm text-center mt-1">
-              {inputMode === "video" ? "Original Video" : "Original Screenshot"}
+              {inputMode === "video"
+                ? "Original Video"
+                : referenceImages.length > 1
+                  ? `Original Screenshots (${referenceImages.length})`
+                  : "Original Screenshot"}
             </div>
           </div>
         )}

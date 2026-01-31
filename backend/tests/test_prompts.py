@@ -122,7 +122,7 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like this.>",
+                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
                             },
                         ],
                     },
@@ -182,7 +182,7 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like this.>",
+                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
                             },
                         ],
                     },
@@ -402,7 +402,7 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like this.>",
+                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
                             },
                         ],
                     },
@@ -479,7 +479,7 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like this.>",
+                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
                             },
                         ],
                     },
@@ -561,7 +561,7 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like this.>",
+                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
                             },
                         ],
                     },

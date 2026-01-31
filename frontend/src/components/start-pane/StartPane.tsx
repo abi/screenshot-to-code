@@ -1,52 +1,48 @@
-import React, { useState } from "react";
-import ImageUpload from "../ImageUpload";
-import { UrlInputSection } from "../UrlInputSection";
-import ImportCodeSection from "../ImportCodeSection";
+import React from "react";
 import { Settings } from "../../types";
 import { Stack } from "../../lib/stacks";
 import { Button } from "../ui/button";
 import { useStore } from "../../store/store";
+import UnifiedInputPane from "../unified-input/UnifiedInputPane";
 
 interface Props {
   doCreate: (
     images: string[],
     inputMode: "image" | "video",
-    textPrompt?: string
+    textPrompt?: string,
   ) => void;
+  doCreateFromText: (text: string) => void;
   importFromCode: (code: string, stack: Stack) => void;
   settings: Settings;
 }
 
-const StartPane: React.FC<Props> = ({ doCreate, importFromCode, settings }) => {
+const StartPane: React.FC<Props> = ({
+  doCreate,
+  doCreateFromText,
+  importFromCode,
+  settings,
+}) => {
   const setProjectsHistoryDialogOpen = useStore(
-    (state) => state.setProjectsHistoryDialogOpen
+    (state) => state.setProjectsHistoryDialogOpen,
   );
-  const [hasImageUpload, setHasImageUpload] = useState(false);
 
   return (
-    <div className="flex flex-col justify-center items-center gap-y-10">
-      <ImageUpload
-        setReferenceImages={doCreate}
-        onUploadStateChange={setHasImageUpload}
+    <div className="flex flex-col justify-center items-center py-8">
+      <UnifiedInputPane
+        doCreate={doCreate}
+        doCreateFromText={doCreateFromText}
+        importFromCode={importFromCode}
+        settings={settings}
       />
 
-      {!hasImageUpload && (
-        <>
-          <UrlInputSection
-            doCreate={doCreate}
-            screenshotOneApiKey={settings.screenshotOneApiKey}
-          />
-          <div className="flex justify-between gap-x-2">
-            <ImportCodeSection importFromCode={importFromCode} />
-            <Button
-              variant="secondary"
-              onClick={() => setProjectsHistoryDialogOpen(true)}
-            >
-              Import from Your History
-            </Button>
-          </div>
-        </>
-      )}
+      <div className="flex justify-between gap-x-2">
+        <Button
+          variant="secondary"
+          onClick={() => setProjectsHistoryDialogOpen(true)}
+        >
+          Import from Your History
+        </Button>
+      </div>
     </div>
   );
 };

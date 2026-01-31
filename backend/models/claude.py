@@ -70,10 +70,6 @@ async def stream_claude_response(
     max_tokens = 8192
     temperature = 0.0
 
-    # Claude 3.7 Sonnet can support higher max tokens
-    if model_name == "claude-3-7-sonnet-20250219":
-        max_tokens = 20000
-
     # Translate OpenAI messages to Claude messages
 
     # Convert OpenAI format messages to Claude format
@@ -83,8 +79,6 @@ async def stream_claude_response(
 
     # Models that support extended thinking
     thinking_models = [
-        Llm.CLAUDE_4_SONNET_2025_05_14.value,
-        Llm.CLAUDE_4_OPUS_2025_05_14.value,
         Llm.CLAUDE_4_5_SONNET_2025_09_29.value,
         Llm.CLAUDE_4_5_OPUS_2025_11_01.value,
     ]
@@ -144,7 +138,7 @@ async def stream_claude_response_native(
     api_key: str,
     callback: Callable[[str], Awaitable[None]],
     include_thinking: bool = False,
-    model_name: str = "claude-3-7-sonnet-20250219",
+    model_name: str = Llm.CLAUDE_4_5_SONNET_2025_09_29.value,
 ) -> Completion:
     start_time = time.time()
     client = AsyncAnthropic(api_key=api_key)

@@ -43,7 +43,7 @@ function App({ navbarComponent }: Props) {
   const { getToken } = useAuth();
   const subscriberTier = useStore((state) => state.subscriberTier);
   const setProjectsHistoryDialogOpen = useStore(
-    (state) => state.setProjectsHistoryDialogOpen
+    (state) => state.setProjectsHistoryDialogOpen,
   );
 
   const {
@@ -102,7 +102,7 @@ function App({ navbarComponent }: Props) {
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
-    "setting"
+    "setting",
   );
 
   const wsRef = useRef<WebSocket>(null);
@@ -146,7 +146,7 @@ function App({ navbarComponent }: Props) {
   const regenerate = () => {
     if (head === null) {
       toast.error(
-        "No current version set. Please contact support via chat or Github."
+        "No current version set. Please contact support via chat or Github.",
       );
       throw new Error("Regenerate called with no head");
     }
@@ -281,7 +281,7 @@ function App({ navbarComponent }: Props) {
   async function doCreate(
     referenceImages: string[],
     inputMode: "image" | "video",
-    textPrompt: string = ""
+    textPrompt: string = "",
   ) {
     // Reset any existing state
     reset();
@@ -293,10 +293,12 @@ function App({ navbarComponent }: Props) {
     // Kick off the code generation
     if (referenceImages.length > 0) {
       addEvent("Create");
+      const images =
+        inputMode === "video" ? [referenceImages[0]] : referenceImages;
       doGenerateCode({
         generationType: "create",
         inputMode,
-        prompt: { text: textPrompt, images: [referenceImages[0]] },
+        prompt: { text: textPrompt, images },
       });
     }
   }
@@ -317,7 +319,7 @@ function App({ navbarComponent }: Props) {
   // Subsequent updates
   async function doUpdate(
     updateInstruction: string,
-    selectedElement?: HTMLElement
+    selectedElement?: HTMLElement,
   ) {
     if (updateInstruction.trim() === "") {
       toast.error("Please include some instructions for AI on what to update.");
@@ -326,7 +328,7 @@ function App({ navbarComponent }: Props) {
 
     if (head === null) {
       toast.error(
-        "No current version set. Contact support or open a Github issue."
+        "No current version set. Contact support or open a Github issue.",
       );
       throw new Error("Update called with no head");
     }
@@ -337,7 +339,7 @@ function App({ navbarComponent }: Props) {
     } catch {
       addEvent("HistoryTreeFailed");
       toast.error(
-        "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
+        "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue.",
       );
       throw new Error("Invalid version history");
     }
@@ -443,10 +445,6 @@ function App({ navbarComponent }: Props) {
             subscriberTier === "free" && <OnboardingNote />}
 
           {appState === AppState.INITIAL && (
-            <GenerateFromText doCreateFromText={doCreateFromText} />
-          )}
-
-          {appState === AppState.INITIAL && (
             <div className="flex justify-center">
               <Button
                 variant="secondary"
@@ -485,6 +483,7 @@ function App({ navbarComponent }: Props) {
         {appState === AppState.INITIAL && (
           <StartPane
             doCreate={doCreate}
+            doCreateFromText={doCreateFromText}
             importFromCode={importFromCode}
             settings={settings}
           />

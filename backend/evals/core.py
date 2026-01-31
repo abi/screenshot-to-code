@@ -11,7 +11,7 @@ from openai.types.chat import ChatCompletionMessageParam
 
 
 async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> str:
-    prompt_messages = assemble_prompt(image_url, stack)
+    prompt_messages = assemble_prompt([image_url], stack)
     return await generate_code_core(prompt_messages, model)
 
 
