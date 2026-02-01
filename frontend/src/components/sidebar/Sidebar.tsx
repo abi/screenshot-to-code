@@ -63,6 +63,7 @@ function Sidebar({
   }, [updateImages, setUpdateImages]);
 
   const { inputMode, referenceImages, head, commits } = useProjectStore();
+  const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
 
   const viewedCode =
     head && commits[head]
@@ -103,6 +104,18 @@ function Sidebar({
   useEffect(() => {
     setIsErrorExpanded(false);
   }, [head, commits[head || ""]?.selectedVariantIndex]);
+
+  useEffect(() => {
+    if (activeReferenceIndex >= referenceImages.length) {
+      setActiveReferenceIndex(0);
+    }
+  }, [activeReferenceIndex, referenceImages.length]);
+
+  useEffect(() => {
+    if (referenceImages.length > 0) {
+      setActiveReferenceIndex(0);
+    }
+  }, [referenceImages]);
 
   return (
     <>
@@ -226,31 +239,43 @@ function Sidebar({
         {referenceImages.length > 0 && (
           <div className="flex flex-col">
             <div
-              className={classNames({
-                "scanning relative": appState === AppState.CODING,
+              className={classNames("relative w-[340px]", {
+                scanning: appState === AppState.CODING,
               })}
             >
               {inputMode === "image" && (
-                <>
-                  {referenceImages.length === 1 ? (
+                <div className="w-[340px] rounded-md border border-gray-200 bg-white p-2">
+                  <div className="rounded-md border border-gray-100 bg-gray-50 p-1">
                     <img
-                      className="w-[340px] border border-gray-200 rounded-md"
-                      src={referenceImages[0]}
-                      alt="Reference"
+                      className="w-full max-h-[360px] object-contain rounded"
+                      src={referenceImages[activeReferenceIndex] || referenceImages[0]}
+                      alt={`Reference ${activeReferenceIndex + 1}`}
                     />
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2 w-[340px] max-h-[360px] overflow-y-auto border border-gray-200 rounded-md p-2">
+                  </div>
+                  {referenceImages.length > 1 && (
+                    <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
                       {referenceImages.map((image, index) => (
-                        <img
+                        <button
                           key={`${image}-${index}`}
-                          className="w-full h-24 object-cover rounded"
-                          src={image}
-                          alt={`Reference ${index + 1}`}
-                        />
+                          type="button"
+                          onClick={() => setActiveReferenceIndex(index)}
+                          className={`h-14 w-14 rounded border overflow-hidden flex-shrink-0 ${
+                            activeReferenceIndex === index
+                              ? "border-blue-500 ring-2 ring-blue-200"
+                              : "border-gray-200"
+                          }`}
+                          aria-label={`View reference ${index + 1}`}
+                        >
+                          <img
+                            className="h-full w-full object-cover"
+                            src={image}
+                            alt={`Reference thumbnail ${index + 1}`}
+                          />
+                        </button>
                       ))}
                     </div>
                   )}
-                </>
+                </div>
               )}
               {inputMode === "video" && (
                 <video
@@ -266,7 +291,7 @@ function Sidebar({
               {inputMode === "video"
                 ? "Original Video"
                 : referenceImages.length > 1
-                  ? `Original Screenshots (${referenceImages.length})`
+                  ? `Original Screenshots (${activeReferenceIndex + 1}/${referenceImages.length})`
                   : "Original Screenshot"}
             </div>
           </div>

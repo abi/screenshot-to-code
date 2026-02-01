@@ -11,7 +11,13 @@ from prompts.types import Stack, PromptContent
 
 USER_PROMPT = """
 Generate code for a web page that looks exactly like the provided screenshot(s).
-If multiple screenshots are provided, treat them as different screens in the same app.
+If multiple screenshots are provided, organize them meaningfully. If they appear to be
+different pages in a website, make them distinct pages and link them. If they look like
+different tabs or views in an app, connect them with appropriate navigation. If they
+appear unrelated, create a scaffold that separates them into "Screenshot 1", "Screenshot 2",
+"Screenshot 3", etc. so it is easy to navigate.
+For mobile screenshots, do not include the device frame or browser chrome; focus only on
+the actual UI mockups.
 """
 
 SVG_USER_PROMPT = """
