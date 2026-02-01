@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { HTTP_BACKEND_URL } from "../../../config";
+import { HTTP_BACKEND_URL, IS_RUNNING_ON_CLOUD } from "../../../config";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@clerk/clerk-react";
 
 interface Props {
   screenshotOneApiKey: string | null;
@@ -16,9 +17,10 @@ interface Props {
 function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
+  const { getToken } = useAuth();
 
   async function takeScreenshot() {
-    if (!screenshotOneApiKey) {
+    if (!IS_RUNNING_ON_CLOUD && !screenshotOneApiKey) {
       toast.error(
         "Please add a ScreenshotOne API key in Settings. You can also upload screenshots directly in the Upload tab.",
         { duration: 6000 }
@@ -33,26 +35,44 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
 
     try {
       setIsLoading(true);
+      const authToken = IS_RUNNING_ON_CLOUD ? await getToken() : "local";
+      if (IS_RUNNING_ON_CLOUD && !authToken) {
+        toast.error("Please sign in to capture a URL.");
+        return;
+      }
+      const payload: { url: string; apiKey: string | null } = {
+        url: referenceUrl,
+        apiKey: IS_RUNNING_ON_CLOUD ? null : screenshotOneApiKey,
+      };
+
       const response = await fetch(`${HTTP_BACKEND_URL}/api/screenshot`, {
         method: "POST",
-        body: JSON.stringify({
-          url: referenceUrl,
-          apiKey: screenshotOneApiKey,
-        }),
+        body: JSON.stringify({ ...payload, authToken }),
         headers: {
           "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to capture screenshot");
+        let errorDetail = "";
+        try {
+          const errorBody = await response.json();
+          errorDetail = errorBody?.detail ? ` ${errorBody.detail}` : "";
+        } catch (error) {
+          errorDetail = "";
+        }
+        throw new Error(
+          `Failed to capture screenshot (${response.status}).${errorDetail}`
+        );
       }
 
       const res = await response.json();
       doCreate([res.url], "image");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to capture screenshot. Check console for details.");
+      toast.error(
+        "Failed to capture screenshot. Check console and backend logs for details."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -134,9 +154,11 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
             </Button>
           </div>
 
-          <p className="text-xs text-gray-400 text-center">
-            Requires ScreenshotOne API key.
-          </p>
+          {!IS_RUNNING_ON_CLOUD && (
+            <p className="text-xs text-gray-400 text-center">
+              Requires ScreenshotOne API key.
+            </p>
+          )}
         </div>
       </div>
     </div>
