@@ -105,6 +105,10 @@
   }
 }
 
+.sidebar-scrollbar-stable {
+  scrollbar-gutter: stable;
+}
+
 @layer base {
   * {
     @apply border-border;
