@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
+import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
 import { Button } from "../../ui/button";
 import { ScreenRecorderState } from "../../../types";
 import ScreenRecorder from "../../recording/ScreenRecorder";
@@ -29,6 +30,14 @@ type FileWithPreview = {
   preview: string;
 } & File;
 
+const MAX_FILES = 10;
+
+const isVideoFile = (file: File) =>
+  file.type.startsWith("video/") ||
+  [".mp4", ".mov", ".webm"].some((ext) =>
+    file.name.toLowerCase().endsWith(ext)
+  );
+
 interface Props {
   doCreate: (
     referenceImages: string[],
@@ -45,7 +54,9 @@ function UploadTab({ doCreate }: Props) {
   >("image");
   const [textPrompt, setTextPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
+  const filesRef = useRef<FileWithPreview[]>([]);
   const [screenRecorderState, setScreenRecorderState] =
     useState<ScreenRecorderState>(ScreenRecorderState.INITIAL);
 
@@ -73,11 +84,13 @@ function UploadTab({ doCreate }: Props) {
   }, [hasUploadedFile, handleGenerate]);
 
   const handleClear = () => {
+    files.forEach((file) => URL.revokeObjectURL(file.preview));
     setUploadedDataUrls([]);
     setFiles([]);
     setTextPrompt("");
     setShowTextPrompt(false);
     setUploadedInputMode("image");
+    setSelectedIndex(0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -87,67 +100,107 @@ function UploadTab({ doCreate }: Props) {
     }
   };
 
-  const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
-    useDropzone({
-      maxFiles: 10,
-      maxSize: 1024 * 1024 * 20,
-      accept: {
-        "image/png": [".png"],
-        "image/jpeg": [".jpeg"],
-        "image/jpg": [".jpg"],
-        "video/quicktime": [".mov"],
-        "video/mp4": [".mp4"],
-        "video/webm": [".webm"],
-      },
-      onDrop: (acceptedFiles) => {
-        if (acceptedFiles.length === 0) return;
+  const handleAddFiles = useCallback(
+    async (acceptedFiles: File[]) => {
+      if (acceptedFiles.length === 0) return;
 
-        const hasVideo = acceptedFiles.some(
-          (file) =>
-            file.type.startsWith("video/") ||
-            [".mp4", ".mov", ".webm"].some((ext) =>
-              file.name.toLowerCase().endsWith(ext)
-            )
+      const incomingHasVideo = acceptedFiles.some(isVideoFile);
+      const hasExistingImages = files.length > 0 && uploadedInputMode === "image";
+
+      if (incomingHasVideo && (acceptedFiles.length > 1 || hasExistingImages)) {
+        toast.error("Please upload a single video or multiple images.");
+        return;
+      }
+
+      if (uploadedInputMode === "video" && files.length > 0) {
+        toast.error("Remove the video to add images.");
+        return;
+      }
+
+      if (!incomingHasVideo && files.length >= MAX_FILES) {
+        toast.error(`You can upload up to ${MAX_FILES} images.`);
+        return;
+      }
+
+      let filesToAdd = acceptedFiles;
+      if (!incomingHasVideo && files.length + acceptedFiles.length > MAX_FILES) {
+        const remainingSlots = MAX_FILES - files.length;
+        toast.error(
+          `You can add up to ${remainingSlots} more image${
+            remainingSlots === 1 ? "" : "s"
+          }.`
         );
+        filesToAdd = acceptedFiles.slice(0, remainingSlots);
+      }
 
-        if (hasVideo && acceptedFiles.length > 1) {
-          toast.error("Please upload a single video or multiple images.");
-          return;
+      const newFiles = filesToAdd.map((file: File) =>
+        Object.assign(file, {
+          preview: URL.createObjectURL(file),
+        })
+      ) as FileWithPreview[];
+
+      try {
+        const dataUrls = await Promise.all(filesToAdd.map((file) => fileToDataURL(file)));
+        if (dataUrls.length === 0) return;
+
+        if (incomingHasVideo) {
+          files.forEach((file) => URL.revokeObjectURL(file.preview));
+          setFiles(newFiles);
+          setUploadedDataUrls(dataUrls as string[]);
+          setUploadedInputMode("video");
+          setSelectedIndex(0);
+        } else {
+          setFiles((prev) => [...prev, ...newFiles]);
+          setUploadedDataUrls((prev) => [...prev, ...(dataUrls as string[])]);
+          setUploadedInputMode("image");
+          if (files.length === 0) {
+            setSelectedIndex(0);
+          }
         }
 
-        setFiles(
-          acceptedFiles.map((file: File) =>
-            Object.assign(file, {
-              preview: URL.createObjectURL(file),
-            })
-          ) as FileWithPreview[]
-        );
+        setTimeout(() => textInputRef.current?.focus(), 100);
+      } catch (error) {
+        newFiles.forEach((file) => URL.revokeObjectURL(file.preview));
+        toast.error("Error reading files" + error);
+        console.error("Error reading files:", error);
+      }
+    },
+    [files, uploadedInputMode]
+  );
 
-        Promise.all(acceptedFiles.map((file) => fileToDataURL(file)))
-          .then((dataUrls) => {
-            if (dataUrls.length > 0) {
-              const inputMode =
-                hasVideo || (dataUrls[0] as string).startsWith("data:video")
-                  ? "video"
-                  : "image";
-              setUploadedDataUrls(dataUrls as string[]);
-              setUploadedInputMode(inputMode);
-              setTimeout(() => textInputRef.current?.focus(), 100);
-            }
-          })
-          .catch((error) => {
-            toast.error("Error reading files" + error);
-            console.error("Error reading files:", error);
-          });
-      },
-      onDropRejected: (rejectedFiles) => {
-        toast.error(rejectedFiles[0].errors[0].message);
-      },
-    });
+  const {
+    getRootProps,
+    getInputProps,
+    isFocused,
+    isDragAccept,
+    isDragReject,
+    isDragActive,
+    open,
+  } = useDropzone({
+    maxFiles: MAX_FILES,
+    maxSize: 1024 * 1024 * 20,
+    noClick: true,
+    accept: {
+      "image/png": [".png"],
+      "image/jpeg": [".jpeg"],
+      "image/jpg": [".jpg"],
+      "video/quicktime": [".mov"],
+      "video/mp4": [".mp4"],
+      "video/webm": [".webm"],
+    },
+    onDrop: handleAddFiles,
+    onDropRejected: (rejectedFiles) => {
+      toast.error(rejectedFiles[0].errors[0].message);
+    },
+  });
 
   useEffect(() => {
-    return () => files.forEach((file) => URL.revokeObjectURL(file.preview));
+    filesRef.current = files;
   }, [files]);
+
+  useEffect(() => {
+    return () => filesRef.current.forEach((file) => URL.revokeObjectURL(file.preview));
+  }, []);
 
   const style = useMemo(() => {
     const baseStyle: React.CSSProperties = {
@@ -189,6 +242,30 @@ function UploadTab({ doCreate }: Props) {
     doCreate(images, inputMode, "");
   };
 
+  const handleRemoveImage = (index: number) => {
+    if (uploadedInputMode === "video" || files.length === 1) {
+      handleClear();
+      return;
+    }
+
+    const removed = files[index];
+    if (removed) {
+      URL.revokeObjectURL(removed.preview);
+    }
+
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadedDataUrls((prev) => prev.filter((_, i) => i !== index));
+    setSelectedIndex((prev) => {
+      if (prev === index) {
+        return Math.max(0, index - 1);
+      }
+      if (prev > index) {
+        return prev - 1;
+      }
+      return prev;
+    });
+  };
+
   return (
     <div className="flex flex-col items-center gap-6">
       {screenRecorderState === ScreenRecorderState.INITIAL && !hasUploadedFile && (
@@ -221,49 +298,111 @@ function UploadTab({ doCreate }: Props) {
             <p className="text-xs text-gray-400 mt-2">
               Supports PNG, JPG, MP4, MOV, WebM (max 20MB each, 30s video)
             </p>
+            <button
+              type="button"
+              onClick={open}
+              className="text-sm text-gray-600 hover:text-gray-800 underline"
+            >
+              Browse files
+            </button>
           </div>
         </div>
       )}
 
       {hasUploadedFile && (
         <div className="flex flex-col items-center gap-4 w-full">
-          <div className="relative w-full max-w-2xl">
+          <div className="relative w-full max-w-3xl">
             {uploadedInputMode === "video" ? (
-              <video
-                src={files[0]?.preview}
-                className="w-full h-auto max-h-[400px] object-contain rounded-lg border border-gray-200"
-                controls
-              />
+              <div className="relative rounded-lg border border-gray-200 bg-white p-3">
+                <video
+                  src={files[0]?.preview}
+                  className="w-full h-auto max-h-[400px] object-contain rounded-md border border-gray-100"
+                  controls
+                />
+                <button
+                  onClick={handleClear}
+                  className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-100 transition-colors"
+                  aria-label="Remove video"
+                >
+                  <Cross2Icon className="h-4 w-4 text-gray-600" />
+                </button>
+              </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto rounded-lg border border-gray-200 p-3">
-                {files.map((file, index) => (
-                  <img
-                    key={`${file.name}-${index}`}
-                    src={file.preview}
-                    alt={`Uploaded screenshot ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-md border border-gray-100"
-                  />
-                ))}
+              <div
+                {...getRootProps({
+                  className: `relative rounded-lg border border-gray-200 bg-white p-4 ${
+                    isDragActive ? "ring-2 ring-blue-200" : ""
+                  }`,
+                })}
+              >
+                <input {...getInputProps()} />
+                <div className="flex items-center justify-between text-xs uppercase tracking-wide text-gray-400">
+                  <span>Uploaded Screenshots ({files.length})</span>
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="mt-3 rounded-md border border-gray-100 bg-gray-50 p-2">
+                  {files[selectedIndex] && (
+                    <img
+                      src={files[selectedIndex].preview}
+                      alt={`Uploaded screenshot ${selectedIndex + 1}`}
+                      className="w-full max-h-[280px] object-contain rounded"
+                    />
+                  )}
+                </div>
+                <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
+                  {files.map((file, index) => (
+                    <div key={`${file.name}-${index}`} className="relative group flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedIndex(index)}
+                        className={`h-14 w-14 rounded-md border overflow-hidden ${
+                          selectedIndex === index
+                            ? "border-blue-500 ring-2 ring-blue-200"
+                            : "border-gray-200"
+                        }`}
+                        aria-label={`Preview screenshot ${index + 1}`}
+                      >
+                        <img
+                          src={file.preview}
+                          alt={`Thumbnail ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute -top-1 -right-1 h-4 w-4 bg-gray-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`Remove screenshot ${index + 1}`}
+                      >
+                        <Cross2Icon className="h-2 w-2" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={open}
+                    className="h-14 w-14 rounded-md border border-dashed border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 flex items-center justify-center flex-shrink-0"
+                    aria-label="Add more screenshots"
+                  >
+                    <ImageIcon className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="mt-2 text-xs text-gray-400">
+                  Drag and drop to add more screenshots
+                </div>
+                {isDragActive && (
+                  <div className="absolute inset-0 bg-blue-50/80 border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center pointer-events-none">
+                    <p className="text-blue-600 font-medium">Drop to add</p>
+                  </div>
+                )}
               </div>
             )}
-            <button
-              onClick={handleClear}
-              className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-100 transition-colors"
-              aria-label="Remove files"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-gray-600"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
           </div>
 
           {!showTextPrompt ? (
