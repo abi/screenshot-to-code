@@ -62,6 +62,85 @@ def _parse_json_arguments(raw_args: Any) -> Tuple[Dict[str, Any], Optional[str]]
         return {}, f"Invalid JSON arguments: {exc}"
 
 
+def _strip_incomplete_escape(value: str) -> str:
+    if not value:
+        return value
+    trailing = 0
+    for ch in reversed(value):
+        if ch == "\\":
+            trailing += 1
+        else:
+            break
+    if trailing % 2 == 1:
+        return value[:-1]
+    return value
+
+
+def _extract_partial_json_string(raw_text: str, key: str) -> Optional[str]:
+    if not raw_text:
+        return None
+    token = f"\"{key}\""
+    idx = raw_text.find(token)
+    if idx == -1:
+        return None
+    colon = raw_text.find(":", idx + len(token))
+    if colon == -1:
+        return None
+    cursor = colon + 1
+    while cursor < len(raw_text) and raw_text[cursor].isspace():
+        cursor += 1
+    if cursor >= len(raw_text) or raw_text[cursor] != "\"":
+        return None
+    start = cursor + 1
+    last_quote: Optional[int] = None
+    cursor = start
+    while cursor < len(raw_text):
+        if raw_text[cursor] == "\"":
+            backslashes = 0
+            back = cursor - 1
+            while back >= start and raw_text[back] == "\\":
+                backslashes += 1
+                back -= 1
+            if backslashes % 2 == 0:
+                last_quote = cursor
+        cursor += 1
+    if last_quote is None:
+        partial = raw_text[start:]
+    else:
+        partial = raw_text[start:last_quote]
+    partial = _strip_incomplete_escape(partial)
+    if not partial:
+        return ""
+    try:
+        return json.loads(f"\"{partial}\"")
+    except Exception:
+        return (
+            partial.replace("\\n", "\n")
+            .replace("\\t", "\t")
+            .replace("\\r", "\r")
+            .replace("\\\"", "\"")
+            .replace("\\\\", "\\")
+        )
+
+
+def _extract_content_from_args(raw_args: Any) -> Optional[str]:
+    if isinstance(raw_args, dict):
+        content = raw_args.get("content")
+        if content is None:
+            return None
+        return _ensure_str(content)
+    raw_text = _ensure_str(raw_args)
+    return _extract_partial_json_string(raw_text, "content")
+
+
+def _extract_path_from_args(raw_args: Any) -> Optional[str]:
+    if isinstance(raw_args, dict):
+        path = raw_args.get("path")
+        return _ensure_str(path) if path is not None else None
+    raw_text = _ensure_str(raw_args)
+    return _extract_partial_json_string(raw_text, "path")
+
+
 class AgentToolbox:
     def __init__(
         self,
@@ -577,6 +656,7 @@ class AgenticRunner:
                 assistant_event_id = self._next_event_id("assistant")
                 assistant_text = ""
                 tool_calls: Dict[int, Dict[str, Any]] = {}
+                started_tool_ids: set[str] = set()
 
                 params: Dict[str, Any] = {
                     "model": model.value,
@@ -612,6 +692,8 @@ class AgenticRunner:
                                     "id": tc.id or f"tool-{idx}-{uuid.uuid4().hex[:6]}",
                                     "name": None,
                                     "arguments": "",
+                                    "started": False,
+                                    "last_len": 0,
                                 },
                             )
                             if tc.id:
@@ -620,6 +702,35 @@ class AgenticRunner:
                                 entry["name"] = tc.function.name
                             if tc.function and tc.function.arguments:
                                 entry["arguments"] += tc.function.arguments
+                            if entry.get("name") == "create_file":
+                                content = _extract_content_from_args(entry.get("arguments"))
+                                if content is not None:
+                                    if not entry["started"]:
+                                        path = (
+                                            _extract_path_from_args(entry.get("arguments"))
+                                            or self.file_state.path
+                                            or "index.html"
+                                        )
+                                        await self._send(
+                                            "toolStart",
+                                            data={
+                                                "name": "create_file",
+                                                "input": {
+                                                    "path": path,
+                                                    "contentLength": len(content),
+                                                    "preview": _summarize_text(content, 200),
+                                                },
+                                            },
+                                            event_id=entry["id"],
+                                        )
+                                        entry["started"] = True
+                                        started_tool_ids.add(entry["id"])
+                                    if entry["last_len"] == 0 and content:
+                                        entry["last_len"] = len(content)
+                                        await self._send("setCode", content)
+                                    elif len(content) - entry["last_len"] >= 40:
+                                        entry["last_len"] = len(content)
+                                        await self._send("setCode", content)
 
                 tool_call_list: List[ToolCall] = []
                 for entry in tool_calls.values():
@@ -656,14 +767,19 @@ class AgenticRunner:
 
                 for tool_call in tool_call_list:
                     tool_event_id = tool_call.id or self._next_event_id("tool")
-                    await self._send(
-                        "toolStart",
-                        data={
-                            "name": tool_call.name,
-                            "input": self._summarize_tool_input(tool_call),
-                        },
-                        event_id=tool_event_id,
-                    )
+                    if tool_event_id not in started_tool_ids:
+                        await self._send(
+                            "toolStart",
+                            data={
+                                "name": tool_call.name,
+                                "input": self._summarize_tool_input(tool_call),
+                            },
+                            event_id=tool_event_id,
+                        )
+                    if tool_call.name == "create_file" and tool_event_id not in started_tool_ids:
+                        content = _extract_content_from_args(tool_call.arguments)
+                        if content:
+                            await self._send("setCode", content)
                     tool_result = await self.toolbox.execute(tool_call)
                     if tool_result.updated_content:
                         await self._send("setCode", tool_result.updated_content)
@@ -792,6 +908,10 @@ class AgenticRunner:
                         },
                         event_id=tool_event_id,
                     )
+                    if tool_call.name == "create_file":
+                        content = _extract_content_from_args(tool_call.arguments)
+                        if content:
+                            await self._send("setCode", content)
                     tool_result = await self.toolbox.execute(tool_call)
                     if tool_result.updated_content:
                         await self._send("setCode", tool_result.updated_content)
@@ -848,6 +968,8 @@ class AgenticRunner:
             assistant_text = ""
             tool_calls: List[ToolCall] = []
             function_call_parts: List[types.Part] = []
+            tool_stream_state: Dict[str, Dict[str, Any]] = {}
+            started_tool_ids: set[str] = set()
 
             thinking_level = get_thinking_level_for_model(model)
             config = types.GenerateContentConfig(
@@ -878,11 +1000,46 @@ class AgenticRunner:
                     if part.function_call:
                         function_call_parts.append(part)
                         args = part.function_call.args or {}
+                        tool_id = part.function_call.id or f"tool-{uuid.uuid4().hex[:6]}"
+                        tool_name = part.function_call.name or "unknown_tool"
+                        if tool_name == "create_file":
+                            content = _extract_content_from_args(args)
+                            if content is not None:
+                                state = tool_stream_state.setdefault(
+                                    tool_id, {"started": False, "last_len": 0}
+                                )
+                                if not state["started"]:
+                                    path = (
+                                        _extract_path_from_args(args)
+                                        or self.file_state.path
+                                        or "index.html"
+                                    )
+                                    await self._send(
+                                        "toolStart",
+                                        data={
+                                            "name": "create_file",
+                                            "input": {
+                                                "path": path,
+                                                "contentLength": len(content),
+                                                "preview": _summarize_text(
+                                                    content, 200
+                                                ),
+                                            },
+                                        },
+                                        event_id=tool_id,
+                                    )
+                                    state["started"] = True
+                                    started_tool_ids.add(tool_id)
+                                if state["last_len"] == 0 and content:
+                                    state["last_len"] = len(content)
+                                    await self._send("setCode", content)
+                                elif len(content) - state["last_len"] >= 40:
+                                    state["last_len"] = len(content)
+                                    await self._send("setCode", content)
                         tool_calls.append(
                             ToolCall(
-                                id=part.function_call.id
-                                or f"tool-{uuid.uuid4().hex[:6]}",
-                                name=part.function_call.name or "unknown_tool",
+                                id=tool_id,
+                                name=tool_name,
                                 arguments=args,
                             )
                         )
@@ -907,14 +1064,19 @@ class AgenticRunner:
             tool_result_parts: List[types.Part] = []
             for tool_call in tool_calls:
                 tool_event_id = tool_call.id or self._next_event_id("tool")
-                await self._send(
-                    "toolStart",
-                    data={
-                        "name": tool_call.name,
-                        "input": self._summarize_tool_input(tool_call),
-                    },
-                    event_id=tool_event_id,
-                )
+                if tool_event_id not in started_tool_ids:
+                    await self._send(
+                        "toolStart",
+                        data={
+                            "name": tool_call.name,
+                            "input": self._summarize_tool_input(tool_call),
+                        },
+                        event_id=tool_event_id,
+                    )
+                if tool_call.name == "create_file" and tool_event_id not in started_tool_ids:
+                    content = _extract_content_from_args(tool_call.arguments)
+                    if content:
+                        await self._send("setCode", content)
                 tool_result = await self.toolbox.execute(tool_call)
                 if tool_result.updated_content:
                     await self._send("setCode", tool_result.updated_content)
