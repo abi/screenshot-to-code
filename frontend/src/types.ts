@@ -42,6 +42,10 @@ export interface CodeGenerationParams {
   prompt: PromptContent;
   history?: PromptContent[];
   isImportedFromCode?: boolean;
+  fileState?: {
+    path: string;
+    content: string;
+  };
 }
 
 export type FullGenerationSettings = CodeGenerationParams & Settings;

@@ -246,6 +246,7 @@ class ExtractedParams:
     prompt: PromptContent
     history: List[Dict[str, Any]]
     is_imported_from_code: bool
+    file_state: Dict[str, str] | None
 
 
 class ParameterExtractionStage:
@@ -310,6 +311,15 @@ class ParameterExtractionStage:
         # Extract imported code flag
         is_imported_from_code = params.get("isImportedFromCode", False)
 
+        # Extract file state for agentic edits
+        raw_file_state = params.get("fileState")
+        file_state: Dict[str, str] | None = None
+        if isinstance(raw_file_state, dict):
+            content = raw_file_state.get("content")
+            if isinstance(content, str) and content.strip():
+                path = raw_file_state.get("path") or "index.html"
+                file_state = {"path": path, "content": content}
+
         return ExtractedParams(
             stack=validated_stack,
             input_mode=validated_input_mode,
@@ -321,6 +331,7 @@ class ParameterExtractionStage:
             prompt=prompt,
             history=history,
             is_imported_from_code=is_imported_from_code,
+            file_state=file_state,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -832,6 +843,7 @@ class AgenticGenerationStage:
         gemini_api_key: str | None,
         should_generate_images: bool,
         image_cache: Dict[str, str],
+        file_state: Dict[str, str] | None,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -840,6 +852,7 @@ class AgenticGenerationStage:
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
         self.image_cache = image_cache
+        self.file_state = file_state
 
     async def process_variants(
         self,
@@ -881,6 +894,7 @@ class AgenticGenerationStage:
                 gemini_api_key=self.gemini_api_key,
                 should_generate_images=self.should_generate_images,
                 image_cache=self.image_cache,
+                initial_file_state=self.file_state,
             )
             completion = await runner.run(model, prompt_messages)
             if completion:
@@ -1091,6 +1105,7 @@ class CodeGenerationMiddleware(Middleware):
                         gemini_api_key=GEMINI_API_KEY,
                         should_generate_images=context.extracted_params.should_generate_images,
                         image_cache=context.image_cache,
+                        file_state=context.extracted_params.file_state,
                     )
 
                     context.variant_completions = (

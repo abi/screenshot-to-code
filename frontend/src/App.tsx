@@ -384,6 +384,10 @@ function App() {
       throw new Error("Update called with no head");
     }
 
+    const currentCommit = commits[head];
+    const currentCode =
+      currentCommit?.variants[currentCommit.selectedVariantIndex]?.code || "";
+
     let historyTree;
     try {
       historyTree = extractHistory(head, commits);
@@ -418,6 +422,12 @@ function App() {
           : { text: "", images: [referenceImages[0]] },
       history: updatedHistory,
       isImportedFromCode,
+      fileState: currentCode
+        ? {
+            path: "index.html",
+            content: currentCode,
+          }
+        : undefined,
     });
 
     setUpdateInstruction("");

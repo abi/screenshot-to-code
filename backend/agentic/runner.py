@@ -295,6 +295,7 @@ class AgenticRunner:
         gemini_api_key: Optional[str],
         should_generate_images: bool,
         image_cache: Dict[str, str],
+        initial_file_state: Optional[Dict[str, str]] = None,
     ):
         self.send_message = send_message
         self.variant_index = variant_index
@@ -306,6 +307,9 @@ class AgenticRunner:
         self.image_cache = image_cache
 
         self.file_state = AgentFileState()
+        if initial_file_state and initial_file_state.get("content"):
+            self.file_state.path = initial_file_state.get("path") or "index.html"
+            self.file_state.content = initial_file_state["content"]
         self.toolbox = AgentToolbox(
             self.file_state,
             self.image_cache,
@@ -318,6 +322,49 @@ class AgenticRunner:
 
     def _next_event_id(self, prefix: str) -> str:
         return f"{prefix}-{self.variant_index}-{uuid.uuid4().hex[:8]}"
+
+    def _extract_text_content(self, message: ChatCompletionMessageParam) -> str:
+        content = message.get("content", "")
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "text":
+                    return _ensure_str(part.get("text"))
+        return ""
+
+    def _seed_file_state_from_messages(
+        self, prompt_messages: List[ChatCompletionMessageParam]
+    ) -> None:
+        if self.file_state.content:
+            return
+        for message in reversed(prompt_messages):
+            if message.get("role") != "assistant":
+                continue
+            raw_text = self._extract_text_content(message)
+            if not raw_text:
+                continue
+            extracted = extract_html_content(raw_text)
+            self.file_state.content = extracted or raw_text
+            if not self.file_state.path:
+                self.file_state.path = "index.html"
+            return
+        if prompt_messages:
+            system_message = prompt_messages[0]
+            if system_message.get("role") == "system":
+                system_text = self._extract_text_content(system_message)
+                markers = [
+                    "Here is the code of the app:",
+                    "Here is the code of the SVG:",
+                ]
+                for marker in markers:
+                    if marker in system_text:
+                        raw_text = system_text.split(marker, 1)[1].strip()
+                        extracted = extract_html_content(raw_text)
+                        self.file_state.content = extracted or raw_text
+                        if not self.file_state.path:
+                            self.file_state.path = "index.html"
+                        return
 
     async def _send(
         self,
@@ -505,6 +552,7 @@ class AgenticRunner:
         return openai_tools, anthropic_tools, gemini_tools
 
     async def run(self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]) -> str:
+        self._seed_file_state_from_messages(prompt_messages)
         if model in OPENAI_MODELS:
             return await self._run_openai(model, prompt_messages)
         if model in ANTHROPIC_MODELS:

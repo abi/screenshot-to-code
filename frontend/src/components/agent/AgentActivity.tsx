@@ -33,12 +33,13 @@ function formatDuration(startedAt?: number, endedAt?: number): string {
 
 function formatTotalDuration(events: AgentEvent[]): string {
   if (events.length === 0) return "";
-  const start = Math.min(...events.map((event) => event.startedAt));
   const now = Date.now();
-  const end = Math.max(
-    ...events.map((event) => event.endedAt ?? now)
-  );
-  const seconds = Math.max(1, Math.round((end - start) / 1000));
+  const totalMs = events.reduce((sum, event) => {
+    const end = event.endedAt ?? now;
+    const duration = Math.max(0, end - event.startedAt);
+    return sum + duration;
+  }, 0);
+  const seconds = Math.max(1, Math.round(totalMs / 1000));
   return `${seconds}s`;
 }
 
