@@ -228,6 +228,28 @@ function App() {
       onVariantComplete: (variantIndex) => {
         console.log(`Variant ${variantIndex} complete event received`);
         updateVariantStatus(commit.hash, variantIndex, "complete");
+        const lastThinking = lastThinkingEventIdRef.current[variantIndex];
+        if (lastThinking) {
+          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        }
+        const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
+        if (lastAssistant) {
+          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        }
+        const lastTool = lastToolEventIdRef.current[variantIndex];
+        if (lastTool) {
+          finishAgentEvent(commit.hash, variantIndex, lastTool, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+          delete lastToolEventIdRef.current[variantIndex];
+        }
       },
       onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);

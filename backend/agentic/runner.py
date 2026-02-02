@@ -1,3 +1,4 @@
+import asyncio
 import json
 import uuid
 from dataclasses import dataclass
@@ -398,6 +399,32 @@ class AgenticRunner:
         )
         self.assistant_step = 0
         self.thinking_step = 0
+        self._tool_preview_lengths: Dict[str, int] = {}
+
+    def _mark_preview_length(self, tool_event_id: Optional[str], length: int) -> None:
+        if not tool_event_id:
+            return
+        current = self._tool_preview_lengths.get(tool_event_id, 0)
+        if length > current:
+            self._tool_preview_lengths[tool_event_id] = length
+
+    async def _stream_code_preview(self, tool_event_id: Optional[str], content: str) -> None:
+        if not tool_event_id or not content:
+            return
+        already_sent = self._tool_preview_lengths.get(tool_event_id, 0)
+        total_len = len(content)
+        if already_sent >= total_len:
+            return
+        max_chunks = 18
+        min_step = 200
+        step = max(min_step, total_len // max_chunks)
+        start = already_sent if already_sent > 0 else 0
+        for end in range(start + step, total_len, step):
+            await self._send("setCode", content[:end])
+            self._mark_preview_length(tool_event_id, end)
+            await asyncio.sleep(0.01)
+        await self._send("setCode", content)
+        self._mark_preview_length(tool_event_id, total_len)
 
     def _next_event_id(self, prefix: str) -> str:
         return f"{prefix}-{self.variant_index}-{uuid.uuid4().hex[:8]}"
@@ -728,9 +755,11 @@ class AgenticRunner:
                                     if entry["last_len"] == 0 and content:
                                         entry["last_len"] = len(content)
                                         await self._send("setCode", content)
+                                        self._mark_preview_length(entry["id"], len(content))
                                     elif len(content) - entry["last_len"] >= 40:
                                         entry["last_len"] = len(content)
                                         await self._send("setCode", content)
+                                        self._mark_preview_length(entry["id"], len(content))
 
                 tool_call_list: List[ToolCall] = []
                 for entry in tool_calls.values():
@@ -776,10 +805,10 @@ class AgenticRunner:
                             },
                             event_id=tool_event_id,
                         )
-                    if tool_call.name == "create_file" and tool_event_id not in started_tool_ids:
+                    if tool_call.name == "create_file":
                         content = _extract_content_from_args(tool_call.arguments)
                         if content:
-                            await self._send("setCode", content)
+                            await self._stream_code_preview(tool_event_id, content)
                     tool_result = await self.toolbox.execute(tool_call)
                     if tool_result.updated_content:
                         await self._send("setCode", tool_result.updated_content)
@@ -826,6 +855,9 @@ class AgenticRunner:
                 assistant_event_id = self._next_event_id("assistant")
                 thinking_event_id = self._next_event_id("thinking")
                 assistant_text = ""
+                tool_blocks: Dict[int, Dict[str, Any]] = {}
+                tool_json_buffers: Dict[int, str] = {}
+                started_tool_ids: set[str] = set()
 
                 thinking_models = [
                     Llm.CLAUDE_4_5_SONNET_2025_09_29.value,
@@ -850,6 +882,40 @@ class AgenticRunner:
 
                 async with client.messages.stream(**stream_kwargs) as stream:
                     async for event in stream:
+                        if event.type == "content_block_start":
+                            block = event.content_block
+                            if getattr(block, "type", None) == "tool_use":
+                                tool_id = getattr(block, "id", None) or f"tool-{uuid.uuid4().hex[:6]}"
+                                tool_name = getattr(block, "name", None) or "unknown_tool"
+                                tool_blocks[event.index] = {
+                                    "id": tool_id,
+                                    "name": tool_name,
+                                }
+                                tool_json_buffers[event.index] = ""
+                                if tool_name == "create_file":
+                                    args = getattr(block, "input", None)
+                                    content = _extract_content_from_args(args)
+                                    if tool_id not in started_tool_ids:
+                                        path = (
+                                            _extract_path_from_args(args)
+                                            or self.file_state.path
+                                            or "index.html"
+                                        )
+                                        await self._send(
+                                            "toolStart",
+                                            data={
+                                                "name": "create_file",
+                                                "input": {
+                                                    "path": path,
+                                                    "contentLength": len(content or ""),
+                                                    "preview": _summarize_text(content or "", 200),
+                                                },
+                                            },
+                                            event_id=tool_id,
+                                        )
+                                        started_tool_ids.add(tool_id)
+                                    if content:
+                                        await self._stream_code_preview(tool_id, content)
                         if event.type == "content_block_delta":
                             if event.delta.type == "thinking_delta":
                                 await self._send(
@@ -864,6 +930,35 @@ class AgenticRunner:
                                     event.delta.text,
                                     event_id=assistant_event_id,
                                 )
+                            elif event.delta.type == "input_json_delta":
+                                partial_json = getattr(event.delta, "partial_json", None) or ""
+                                if partial_json:
+                                    buffer = tool_json_buffers.get(event.index, "") + partial_json
+                                    tool_json_buffers[event.index] = buffer
+                                    meta = tool_blocks.get(event.index)
+                                    if meta and meta.get("name") == "create_file":
+                                        content = _extract_content_from_args(buffer)
+                                        if meta["id"] not in started_tool_ids:
+                                            path = (
+                                                _extract_path_from_args(buffer)
+                                                or self.file_state.path
+                                                or "index.html"
+                                            )
+                                            await self._send(
+                                                "toolStart",
+                                                data={
+                                                    "name": "create_file",
+                                                    "input": {
+                                                        "path": path,
+                                                        "contentLength": len(content or ""),
+                                                        "preview": _summarize_text(content or "", 200),
+                                                    },
+                                                },
+                                                event_id=meta["id"],
+                                            )
+                                            started_tool_ids.add(meta["id"])
+                                        if content:
+                                            await self._stream_code_preview(meta["id"], content)
 
                     final_message = await stream.get_final_message()
 
@@ -900,18 +995,19 @@ class AgenticRunner:
                 tool_result_blocks: List[Dict[str, Any]] = []
                 for tool_call in tool_calls:
                     tool_event_id = tool_call.id or self._next_event_id("tool")
-                    await self._send(
-                        "toolStart",
-                        data={
-                            "name": tool_call.name,
-                            "input": self._summarize_tool_input(tool_call),
-                        },
-                        event_id=tool_event_id,
-                    )
+                    if tool_event_id not in started_tool_ids:
+                        await self._send(
+                            "toolStart",
+                            data={
+                                "name": tool_call.name,
+                                "input": self._summarize_tool_input(tool_call),
+                            },
+                            event_id=tool_event_id,
+                        )
                     if tool_call.name == "create_file":
                         content = _extract_content_from_args(tool_call.arguments)
                         if content:
-                            await self._send("setCode", content)
+                            await self._stream_code_preview(tool_event_id, content)
                     tool_result = await self.toolbox.execute(tool_call)
                     if tool_result.updated_content:
                         await self._send("setCode", tool_result.updated_content)
@@ -1033,9 +1129,11 @@ class AgenticRunner:
                                 if state["last_len"] == 0 and content:
                                     state["last_len"] = len(content)
                                     await self._send("setCode", content)
+                                    self._mark_preview_length(tool_id, len(content))
                                 elif len(content) - state["last_len"] >= 40:
                                     state["last_len"] = len(content)
                                     await self._send("setCode", content)
+                                    self._mark_preview_length(tool_id, len(content))
                         tool_calls.append(
                             ToolCall(
                                 id=tool_id,
@@ -1073,10 +1171,10 @@ class AgenticRunner:
                         },
                         event_id=tool_event_id,
                     )
-                if tool_call.name == "create_file" and tool_event_id not in started_tool_ids:
+                if tool_call.name == "create_file":
                     content = _extract_content_from_args(tool_call.arguments)
                     if content:
-                        await self._send("setCode", content)
+                        await self._stream_code_preview(tool_event_id, content)
                 tool_result = await self.toolbox.execute(tool_call)
                 if tool_result.updated_content:
                     await self._send("setCode", tool_result.updated_content)
