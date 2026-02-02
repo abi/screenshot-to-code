@@ -2,6 +2,21 @@ export type CommitHash = string;
 
 export type VariantStatus = "generating" | "complete" | "cancelled" | "error";
 
+export type AgentEventStatus = "running" | "complete" | "error";
+export type AgentEventType = "thinking" | "assistant" | "tool";
+
+export type AgentEvent = {
+  id: string;
+  type: AgentEventType;
+  status: AgentEventStatus;
+  content?: string;
+  toolName?: string;
+  input?: any;
+  output?: any;
+  startedAt: number;
+  endedAt?: number;
+};
+
 export type Variant = {
   code: string;
   status?: VariantStatus;
@@ -9,6 +24,7 @@ export type Variant = {
   thinking?: string;
   thinkingStartTime?: number;
   thinkingDuration?: number;
+  agentEvents?: AgentEvent[];
 };
 
 export type BaseCommit = {

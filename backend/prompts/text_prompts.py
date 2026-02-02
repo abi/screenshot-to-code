@@ -12,9 +12,7 @@ LIBRARY_INSTRUCTIONS = """
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>"""
 
 FORMAT_INSTRUCTIONS = """
-Return only the full code in <html></html> tags.
-Do not include markdown "```" or "```html" at the start or end.
-Reply with only the code, and no text/explanation before and after the code.
+Follow the tool instructions in the system prompt. Do not output raw code directly.
 """
 
 HTML_TAILWIND_SYSTEM_PROMPT = f"""

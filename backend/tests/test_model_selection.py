@@ -5,7 +5,7 @@ from llm import Llm
 
 
 class TestModelSelectionAllKeys:
-    """Test model selection when Gemini and Anthropic API keys are present."""
+    """Test model selection when Gemini, Anthropic, and OpenAI API keys are present."""
 
     def setup_method(self):
         """Set up test fixtures."""
@@ -14,7 +14,7 @@ class TestModelSelectionAllKeys:
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_create(self):
-        """Gemini + Anthropic: Gemini 3 Flash, Claude 4.5 Sonnet, Claude 4.5 Opus, Gemini 3 Pro"""
+        """All keys: Claude 4.5 Opus, GPT 5.2, Gemini 3 Flash (high), Gemini 3 Pro (high)"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -25,15 +25,15 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-            Llm.CLAUDE_4_5_SONNET_2025_09_29,
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
             Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.GPT_5_2_2025_12_11,
         ]
         assert models == expected
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_update(self):
-        """Gemini + Anthropic update: Same models regardless of generation_type"""
+        """All keys update: Same models regardless of generation_type"""
         models = await self.model_selector.select_models(
             generation_type="update",
             input_mode="image",
@@ -44,9 +44,9 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-            Llm.CLAUDE_4_5_SONNET_2025_09_29,
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
             Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.GPT_5_2_2025_12_11,
         ]
         assert models == expected
 
@@ -61,7 +61,7 @@ class TestModelSelectionOpenAIAnthropic:
 
     @pytest.mark.asyncio
     async def test_openai_anthropic(self):
-        """OpenAI + Anthropic: Claude 4.5 Sonnet, GPT-4.1, cycling"""
+        """OpenAI + Anthropic: Claude 4.5 Opus, GPT 5.2, cycling"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -71,10 +71,10 @@ class TestModelSelectionOpenAIAnthropic:
         )
 
         expected = [
-            Llm.CLAUDE_4_5_SONNET_2025_09_29,
-            Llm.GPT_4_1_2025_04_14,
-            Llm.CLAUDE_4_5_SONNET_2025_09_29,
-            Llm.GPT_4_1_2025_04_14,
+            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.GPT_5_2_2025_12_11,
+            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.GPT_5_2_2025_12_11,
         ]
         assert models == expected
 
@@ -89,7 +89,7 @@ class TestModelSelectionAnthropicOnly:
 
     @pytest.mark.asyncio
     async def test_anthropic_only(self):
-        """Anthropic only: Claude 4.5 Sonnet, Claude 4.5 Opus, cycling"""
+        """Anthropic only: Claude 4.5 Opus only"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -99,9 +99,9 @@ class TestModelSelectionAnthropicOnly:
         )
 
         expected = [
-            Llm.CLAUDE_4_5_SONNET_2025_09_29,
             Llm.CLAUDE_4_5_OPUS_2025_11_01,
-            Llm.CLAUDE_4_5_SONNET_2025_09_29,
+            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.CLAUDE_4_5_OPUS_2025_11_01,
             Llm.CLAUDE_4_5_OPUS_2025_11_01,
         ]
         assert models == expected
@@ -117,7 +117,7 @@ class TestModelSelectionOpenAIOnly:
 
     @pytest.mark.asyncio
     async def test_openai_only(self):
-        """OpenAI only: GPT-4.1 only"""
+        """OpenAI only: GPT 5.2 only"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -127,9 +127,10 @@ class TestModelSelectionOpenAIOnly:
         )
 
         expected = [
-            Llm.GPT_4_1_2025_04_14,
-            Llm.GPT_4_1_2025_04_14,
-            Llm.GPT_4_1_2025_04_14,
+            Llm.GPT_5_2_2025_12_11,
+            Llm.GPT_5_2_2025_12_11,
+            Llm.GPT_5_2_2025_12_11,
+            Llm.GPT_5_2_2025_12_11,
         ]
         assert models == expected
 
@@ -145,7 +146,7 @@ class TestModelSelectionNoKeys:
     @pytest.mark.asyncio
     async def test_no_keys_raises_error(self):
         """No keys: Should raise an exception"""
-        with pytest.raises(Exception, match="No OpenAI or Anthropic key"):
+        with pytest.raises(Exception, match="No API key"):
             await self.model_selector.select_models(
                 generation_type="create",
                 input_mode="text",

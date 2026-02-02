@@ -58,12 +58,17 @@ MessageType = Literal[
     "variantError",
     "variantCount",
     "thinking",
+    "assistant",
+    "toolStart",
+    "toolResult",
 ]
 from image_generation.core import generate_images
 from prompts import create_prompt
+from prompts.agentic_instructions import apply_tool_instructions
 from prompts.claude_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
 from video.utils import get_video_bytes_and_mime_type
+from agentic.runner import AgenticRunner
 
 # from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
@@ -170,8 +175,10 @@ class WebSocketCommunicator:
     async def send_message(
         self,
         type: MessageType,
-        value: str,
+        value: str | None,
         variantIndex: int,
+        data: Dict[str, Any] | None = None,
+        eventId: str | None = None,
     ) -> None:
         """Send a message to the client with debug logging"""
         if self.is_closed:
@@ -188,9 +195,14 @@ class WebSocketCommunicator:
             print(f"Variant {variantIndex + 1} error: {value}")
 
         try:
-            await self.websocket.send_json(
-                {"type": type, "value": value, "variantIndex": variantIndex}
-            )
+            payload: Dict[str, Any] = {"type": type, "variantIndex": variantIndex}
+            if value is not None:
+                payload["value"] = value
+            if data is not None:
+                payload["data"] = data
+            if eventId is not None:
+                payload["eventId"] = eventId
+            await self.websocket.send_json(payload)
         except (ConnectionClosedOK, ConnectionClosedError):
             print(f"WebSocket closed by client, skipping message: {type}")
             self.is_closed = True
@@ -360,11 +372,11 @@ class ModelSelectionStage:
             return variant_models
         except Exception:
             await self.throw_error(
-                "No OpenAI or Anthropic API key found. Please add the environment variable "
-                "OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. "
+                "No OpenAI, Anthropic, or Gemini API key found. Please add the environment variable "
+                "OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY to backend/.env or in the settings dialog. "
                 "If you add it to .env, make sure to restart the backend server."
             )
-            raise Exception("No OpenAI or Anthropic key")
+            raise Exception("No API key")
 
     def _get_variant_models(
         self,
@@ -387,20 +399,42 @@ class ModelSelectionStage:
             return [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, Llm.GEMINI_3_PRO_PREVIEW_HIGH]
 
         # Define models based on available API keys
-        if gemini_api_key and anthropic_api_key:
-            # Temporary: Compare thinking models
+        if gemini_api_key and anthropic_api_key and openai_api_key:
             models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,  # Flash HIGH thinking
-                Llm.GEMINI_3_PRO_PREVIEW_LOW,  # Pro LOW thinking
-                Llm.GEMINI_3_PRO_PREVIEW_HIGH,  # Pro HIGH thinking
-                Llm.CLAUDE_4_5_OPUS_2025_11_01,  # Claude Opus 4.5 with thinking
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.CLAUDE_4_5_OPUS_2025_11_01,
+                Llm.GPT_5_2_2025_12_11,
+            ]
+        elif gemini_api_key and anthropic_api_key:
+            models = [
+                Llm.CLAUDE_4_5_OPUS_2025_11_01,
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
+            ]
+        elif gemini_api_key and openai_api_key:
+            models = [
+                Llm.GPT_5_2_2025_12_11,
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
             ]
         elif openai_api_key and anthropic_api_key:
-            models = [Llm.CLAUDE_4_5_SONNET_2025_09_29, Llm.GPT_4_1_2025_04_14]
+            models = [Llm.CLAUDE_4_5_OPUS_2025_11_01, Llm.GPT_5_2_2025_12_11]
+        elif gemini_api_key:
+            models = [
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
+            ]
         elif anthropic_api_key:
-            models = [Llm.CLAUDE_4_5_SONNET_2025_09_29, Llm.CLAUDE_4_5_OPUS_2025_11_01]
+            models = [Llm.CLAUDE_4_5_OPUS_2025_11_01]
         elif openai_api_key:
-            models = [Llm.GPT_4_1_2025_04_14]
+            models = [Llm.GPT_5_2_2025_12_11]
         else:
             raise Exception("No OpenAI or Anthropic key")
 
@@ -448,7 +482,10 @@ class MockResponseStage:
 
     def __init__(
         self,
-        send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[
+            [MessageType, str | None, int, Dict[str, Any] | None, str | None],
+            Coroutine[Any, Any, None],
+        ],
     ):
         self.send_message = send_message
 
@@ -503,7 +540,10 @@ class ParallelGenerationStage:
 
     def __init__(
         self,
-        send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[
+            [MessageType, str | None, int, Dict[str, Any] | None, str | None],
+            Coroutine[Any, Any, None],
+        ],
         openai_api_key: str | None,
         openai_base_url: str | None,
         anthropic_api_key: str | None,
@@ -780,6 +820,126 @@ class ParallelGenerationStage:
                 await self.send_message("variantError", str(e), index)
 
 
+class AgenticGenerationStage:
+    """Handles agentic tool-calling generation for each variant."""
+
+    def __init__(
+        self,
+        send_message: Callable[[MessageType, str | None, int, Dict[str, Any] | None, str | None], Coroutine[Any, Any, None]],
+        openai_api_key: str | None,
+        openai_base_url: str | None,
+        anthropic_api_key: str | None,
+        gemini_api_key: str | None,
+        should_generate_images: bool,
+        image_cache: Dict[str, str],
+    ):
+        self.send_message = send_message
+        self.openai_api_key = openai_api_key
+        self.openai_base_url = openai_base_url
+        self.anthropic_api_key = anthropic_api_key
+        self.gemini_api_key = gemini_api_key
+        self.should_generate_images = should_generate_images
+        self.image_cache = image_cache
+
+    async def process_variants(
+        self,
+        variant_models: List[Llm],
+        prompt_messages: List[ChatCompletionMessageParam],
+    ) -> Dict[int, str]:
+        tasks: List[asyncio.Task[str]] = []
+        for index, model in enumerate(variant_models):
+            tasks.append(
+                asyncio.create_task(
+                    self._run_variant(index, model, prompt_messages)
+                )
+            )
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        variant_completions: Dict[int, str] = {}
+        for index, result in enumerate(results):
+            if isinstance(result, BaseException):
+                print(f"Variant {index + 1} failed: {result}")
+                continue
+            if result:
+                variant_completions[index] = result
+
+        return variant_completions
+
+    async def _run_variant(
+        self,
+        index: int,
+        model: Llm,
+        prompt_messages: List[ChatCompletionMessageParam],
+    ) -> str:
+        try:
+            runner = AgenticRunner(
+                send_message=self.send_message,
+                variant_index=index,
+                openai_api_key=self.openai_api_key,
+                openai_base_url=self.openai_base_url,
+                anthropic_api_key=self.anthropic_api_key,
+                gemini_api_key=self.gemini_api_key,
+                should_generate_images=self.should_generate_images,
+                image_cache=self.image_cache,
+            )
+            completion = await runner.run(model, prompt_messages)
+            if completion:
+                await self.send_message("setCode", completion, index, None, None)
+            await self.send_message(
+                "variantComplete",
+                "Variant generation complete",
+                index,
+                None,
+                None,
+            )
+            return completion
+        except openai.AuthenticationError as e:
+            print(f"[VARIANT {index + 1}] OpenAI Authentication failed", e)
+            error_message = (
+                "Incorrect OpenAI key. Please make sure your OpenAI API key is correct, "
+                "or create a new OpenAI API key on your OpenAI dashboard."
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
+            )
+            await self.send_message("variantError", error_message, index, None, None)
+            return ""
+        except openai.NotFoundError as e:
+            print(f"[VARIANT {index + 1}] OpenAI Model not found", e)
+            error_message = (
+                e.message
+                + ". Please make sure you have followed the instructions correctly to obtain "
+                "an OpenAI key with GPT vision access: "
+                "https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md"
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
+            )
+            await self.send_message("variantError", error_message, index, None, None)
+            return ""
+        except openai.RateLimitError as e:
+            print(f"[VARIANT {index + 1}] OpenAI Rate limit exceeded", e)
+            error_message = (
+                "OpenAI error - 'You exceeded your current quota, please check your plan and billing details.'"
+                + (
+                    " Alternatively, you can purchase code generation credits directly on this website."
+                    if IS_PROD
+                    else ""
+                )
+            )
+            await self.send_message("variantError", error_message, index, None, None)
+            return ""
+        except Exception as e:
+            print(f"Error in variant {index + 1}: {e}")
+            traceback.print_exception(type(e), e, e.__traceback__)
+            await self.send_message("variantError", str(e), index, None, None)
+            return ""
+
+
 # Pipeline Middleware Implementations
 
 
@@ -860,6 +1020,11 @@ class PromptCreationMiddleware(Middleware):
                 context.extracted_params,
             )
         )
+        if context.prompt_messages and context.prompt_messages[0].get("content"):
+            context.prompt_messages[0]["content"] = apply_tool_instructions(
+                str(context.prompt_messages[0]["content"]),
+                context.extracted_params.should_generate_images,
+            )
 
         await next_func()
 
@@ -891,27 +1056,49 @@ class CodeGenerationMiddleware(Middleware):
                     gemini_api_key=GEMINI_API_KEY,
                 )
 
-                # Generate code for all variants (handles video mode internally)
-                generation_stage = ParallelGenerationStage(
-                    send_message=context.send_message,
-                    openai_api_key=context.extracted_params.openai_api_key,
-                    openai_base_url=context.extracted_params.openai_base_url,
-                    anthropic_api_key=context.extracted_params.anthropic_api_key,
-                    gemini_api_key=GEMINI_API_KEY,
-                    should_generate_images=context.extracted_params.should_generate_images,
-                    input_mode=context.extracted_params.input_mode,
-                    generation_type=context.extracted_params.generation_type,
-                    prompt=context.extracted_params.prompt,
+                is_video_create = (
+                    context.extracted_params.input_mode == "video"
+                    and context.extracted_params.generation_type == "create"
                 )
 
-                context.variant_completions = (
-                    await generation_stage.process_variants(
-                        variant_models=context.variant_models,
-                        prompt_messages=context.prompt_messages,
-                        image_cache=context.image_cache,
-                        params=context.params,
+                if is_video_create:
+                    generation_stage = ParallelGenerationStage(
+                        send_message=context.send_message,
+                        openai_api_key=context.extracted_params.openai_api_key,
+                        openai_base_url=context.extracted_params.openai_base_url,
+                        anthropic_api_key=context.extracted_params.anthropic_api_key,
+                        gemini_api_key=GEMINI_API_KEY,
+                        should_generate_images=context.extracted_params.should_generate_images,
+                        input_mode=context.extracted_params.input_mode,
+                        generation_type=context.extracted_params.generation_type,
+                        prompt=context.extracted_params.prompt,
                     )
-                )
+
+                    context.variant_completions = (
+                        await generation_stage.process_variants(
+                            variant_models=context.variant_models,
+                            prompt_messages=context.prompt_messages,
+                            image_cache=context.image_cache,
+                            params=context.params,
+                        )
+                    )
+                else:
+                    generation_stage = AgenticGenerationStage(
+                        send_message=context.send_message,
+                        openai_api_key=context.extracted_params.openai_api_key,
+                        openai_base_url=context.extracted_params.openai_base_url,
+                        anthropic_api_key=context.extracted_params.anthropic_api_key,
+                        gemini_api_key=GEMINI_API_KEY,
+                        should_generate_images=context.extracted_params.should_generate_images,
+                        image_cache=context.image_cache,
+                    )
+
+                    context.variant_completions = (
+                        await generation_stage.process_variants(
+                            variant_models=context.variant_models,
+                            prompt_messages=context.prompt_messages,
+                        )
+                    )
 
                 # Check if all variants failed
                 if len(context.variant_completions) == 0:

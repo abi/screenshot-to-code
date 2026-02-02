@@ -14,8 +14,7 @@ In terms of libraries,
 - You can use Google Fonts
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
 
-Return only the full code in <html></html> tags.
-Do not include markdown "```" or "```html" at the start or end.
+Follow the tool instructions in the system prompt.
 """
 
 IMPORTED_CODE_HTML_CSS_SYSTEM_PROMPT = """
@@ -30,8 +29,7 @@ In terms of libraries,
 - You can use Google Fonts
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
 
-Return only the full code in <html></html> tags.
-Do not include markdown "```" or "```html" at the start or end.
+Follow the tool instructions in the system prompt.
 """
 
 IMPORTED_CODE_REACT_TAILWIND_SYSTEM_PROMPT = """
@@ -51,8 +49,7 @@ In terms of libraries,
 - You can use Google Fonts
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
 
-Return only the full code in <html></html> tags.
-Do not include markdown "```" or "```html" at the start or end.
+Follow the tool instructions in the system prompt.
 """
 
 IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT = """
@@ -68,8 +65,7 @@ In terms of libraries,
 - You can use Google Fonts
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
 
-Return only the full code in <html></html> tags.
-Do not include markdown "```" or "```html" at the start or end.
+Follow the tool instructions in the system prompt.
 """
 
 IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT = """
@@ -94,8 +90,7 @@ In terms of libraries,
     <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons/dist/esm/ionicons.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/ionicons/dist/collection/components/icon/icon.min.css" rel="stylesheet">
 
-Return only the full code in <html></html> tags.
-Do not include markdown "```" or "```html" at the start or end.
+Follow the tool instructions in the system prompt.
 """
 
 IMPORTED_CODE_VUE_TAILWIND_SYSTEM_PROMPT = """
@@ -126,9 +121,7 @@ In terms of libraries,
 - You can use Google Fonts
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
 
-Return only the full code in <html></html> tags.
-Do not include markdown "```" or "```html" at the start or end.
-The return result must only include the code."""
+Follow the tool instructions in the system prompt."""
 
 IMPORTED_CODE_SVG_SYSTEM_PROMPT = """
 You are an expert at building SVGs.
@@ -138,8 +131,7 @@ You are an expert at building SVGs.
 - For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
 - You can use Google Fonts
 
-Return only the full code in <svg></svg> tags.
-Do not include markdown "```" or "```svg" at the start or end.
+Follow the tool instructions in the system prompt.
 """
 
 IMPORTED_CODE_SYSTEM_PROMPTS = SystemPrompts(

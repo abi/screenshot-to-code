@@ -31,7 +31,14 @@ async def stream_openai_response(
     ]:
         params["temperature"] = 0
         params["stream"] = True
-        params["max_tokens"] = 20000
+        params["max_tokens"] = 30000
+
+    if model_name in [
+        "gpt-5.2-2025-12-11",
+    ]:
+        params["temperature"] = 0
+        params["stream"] = True
+        params["max_completion_tokens"] = 30000
 
     stream = await client.chat.completions.create(**params)  # type: ignore
     full_response = ""

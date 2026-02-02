@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { Commit, CommitHash, VariantStatus } from "../components/commits/types";
+import {
+  AgentEvent,
+  Commit,
+  CommitHash,
+  VariantStatus,
+} from "../components/commits/types";
 
 // Store for app-wide state
 interface ProjectStore {
@@ -42,6 +47,24 @@ interface ProjectStore {
   ) => void;
   resizeVariants: (hash: CommitHash, count: number) => void;
 
+  startAgentEvent: (
+    hash: CommitHash,
+    numVariant: number,
+    event: AgentEvent
+  ) => void;
+  appendAgentEventContent: (
+    hash: CommitHash,
+    numVariant: number,
+    eventId: string,
+    content: string
+  ) => void;
+  finishAgentEvent: (
+    hash: CommitHash,
+    numVariant: number,
+    eventId: string,
+    updates: Partial<AgentEvent>
+  ) => void;
+
   setHead: (hash: CommitHash) => void;
   resetHead: () => void;
 
@@ -74,6 +97,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         ...variant,
         status: variant.status || ("generating" as VariantStatus),
         thinkingStartTime: Date.now(),
+        agentEvents: [],
       })),
     };
 
@@ -229,7 +253,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       // Resize variants array to match backend count
       const currentVariants = commit.variants;
       const newVariants = Array(count).fill(null).map((_, index) => 
-        currentVariants[index] || { code: "", status: "generating" as VariantStatus }
+        currentVariants[index] || { code: "", status: "generating" as VariantStatus, agentEvents: [] }
       );
 
       return {
@@ -240,6 +264,79 @@ export const useProjectStore = create<ProjectStore>((set) => ({
             variants: newVariants,
             selectedVariantIndex: Math.min(commit.selectedVariantIndex, count - 1),
           },
+        },
+      };
+    }),
+
+  startAgentEvent: (hash, numVariant, event) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      if (!commit || commit.isCommitted) return state;
+      const variants = commit.variants.map((variant, index) => {
+        if (index !== numVariant) return variant;
+        const events = variant.agentEvents || [];
+        const existingIndex = events.findIndex((e) => e.id === event.id);
+        if (existingIndex === -1) {
+          return { ...variant, agentEvents: [...events, event] };
+        }
+        const updatedEvents = events.map((e) =>
+          e.id === event.id
+            ? {
+                ...e,
+                ...event,
+                content: event.content ? event.content : e.content,
+                startedAt: e.startedAt || event.startedAt,
+              }
+            : e
+        );
+        return { ...variant, agentEvents: updatedEvents };
+      });
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: { ...commit, variants },
+        },
+      };
+    }),
+
+  appendAgentEventContent: (hash, numVariant, eventId, content) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      if (!commit || commit.isCommitted) return state;
+      const variants = commit.variants.map((variant, index) => {
+        if (index !== numVariant) return variant;
+        const events = variant.agentEvents || [];
+        const updatedEvents = events.map((event) =>
+          event.id === eventId
+            ? { ...event, content: (event.content || "") + content }
+            : event
+        );
+        return { ...variant, agentEvents: updatedEvents };
+      });
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: { ...commit, variants },
+        },
+      };
+    }),
+
+  finishAgentEvent: (hash, numVariant, eventId, updates) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      if (!commit || commit.isCommitted) return state;
+      const variants = commit.variants.map((variant, index) => {
+        if (index !== numVariant) return variant;
+        const events = variant.agentEvents || [];
+        const updatedEvents = events.map((event) =>
+          event.id === eventId ? { ...event, ...updates } : event
+        );
+        return { ...variant, agentEvents: updatedEvents };
+      });
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: { ...commit, variants },
         },
       };
     }),

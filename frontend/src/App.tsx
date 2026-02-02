@@ -41,12 +41,14 @@ function App() {
     removeCommit,
     setHead,
     appendCommitCode,
-    appendVariantThinking,
     setCommitCode,
     resetCommits,
     resetHead,
     updateVariantStatus,
     resizeVariants,
+    startAgentEvent,
+    appendAgentEventContent,
+    finishAgentEvent,
 
     // Outputs
     appendExecutionConsole,
@@ -72,7 +74,7 @@ function App() {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
-      codeGenerationModel: CodeGenerationModel.CLAUDE_4_5_SONNET_2025_09_29,
+      codeGenerationModel: CodeGenerationModel.CLAUDE_4_5_OPUS_2025_11_01,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
@@ -80,6 +82,8 @@ function App() {
   );
 
   const wsRef = useRef<WebSocket>(null);
+  const lastThinkingEventIdRef = useRef<Record<number, string>>({});
+  const lastAssistantEventIdRef = useRef<Record<number, string>>({});
 
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
@@ -207,6 +211,9 @@ function App() {
     addCommit(commit);
     setHead(commit.hash);
 
+    lastThinkingEventIdRef.current = {};
+    lastAssistantEventIdRef.current = {};
+
     generateCode(wsRef, updatedParams, {
       onChange: (token, variantIndex) => {
         appendCommitCode(commit.hash, variantIndex, token);
@@ -223,18 +230,100 @@ function App() {
       onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);
         updateVariantStatus(commit.hash, variantIndex, "error", error);
+        const lastThinking = lastThinkingEventIdRef.current[variantIndex];
+        if (lastThinking) {
+          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
+            status: "error",
+            endedAt: Date.now(),
+          });
+        }
+        const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
+        if (lastAssistant) {
+          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
+            status: "error",
+            endedAt: Date.now(),
+          });
+        }
       },
       onVariantCount: (count) => {
         console.log(`Backend is using ${count} variants`);
         resizeVariants(commit.hash, count);
       },
-      onThinking: (content, variantIndex) => {
-        appendVariantThinking(commit.hash, variantIndex, content);
+      onThinking: (content, variantIndex, eventId) => {
+        if (!eventId) return;
+        lastThinkingEventIdRef.current[variantIndex] = eventId;
+        startAgentEvent(commit.hash, variantIndex, {
+          id: eventId,
+          type: "thinking",
+          status: "running",
+          startedAt: Date.now(),
+        });
+        appendAgentEventContent(commit.hash, variantIndex, eventId, content);
+      },
+      onAssistant: (content, variantIndex, eventId) => {
+        if (!eventId) return;
+        lastAssistantEventIdRef.current[variantIndex] = eventId;
+        startAgentEvent(commit.hash, variantIndex, {
+          id: eventId,
+          type: "assistant",
+          status: "running",
+          startedAt: Date.now(),
+        });
+        appendAgentEventContent(commit.hash, variantIndex, eventId, content);
+      },
+      onToolStart: (data, variantIndex, eventId) => {
+        if (!eventId) return;
+        const lastThinking = lastThinkingEventIdRef.current[variantIndex];
+        if (lastThinking && lastThinking !== eventId) {
+          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        }
+        const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
+        if (lastAssistant && lastAssistant !== eventId) {
+          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        }
+        startAgentEvent(commit.hash, variantIndex, {
+          id: eventId,
+          type: "tool",
+          status: "running",
+          toolName: data?.name,
+          input: data?.input,
+          startedAt: Date.now(),
+        });
+      },
+      onToolResult: (data, variantIndex, eventId) => {
+        if (!eventId) return;
+        finishAgentEvent(commit.hash, variantIndex, eventId, {
+          status: data?.ok === false ? "error" : "complete",
+          output: data?.output,
+          endedAt: Date.now(),
+        });
       },
       onCancel: () => {
         cancelCodeGenerationAndReset(commit);
       },
       onComplete: () => {
+        const lastThinking = lastThinkingEventIdRef.current;
+        const lastAssistant = lastAssistantEventIdRef.current;
+        Object.keys(lastThinking).forEach((key) => {
+          const idx = Number(key);
+          finishAgentEvent(commit.hash, idx, lastThinking[idx], {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        });
+        Object.keys(lastAssistant).forEach((key) => {
+          const idx = Number(key);
+          finishAgentEvent(commit.hash, idx, lastAssistant[idx], {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        });
         setAppState(AppState.CODE_READY);
       },
     });
