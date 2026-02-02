@@ -84,6 +84,7 @@ function App() {
   const wsRef = useRef<WebSocket>(null);
   const lastThinkingEventIdRef = useRef<Record<number, string>>({});
   const lastAssistantEventIdRef = useRef<Record<number, string>>({});
+  const lastToolEventIdRef = useRef<Record<number, string>>({});
 
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
@@ -213,6 +214,7 @@ function App() {
 
     lastThinkingEventIdRef.current = {};
     lastAssistantEventIdRef.current = {};
+    lastToolEventIdRef.current = {};
 
     generateCode(wsRef, updatedParams, {
       onChange: (token, variantIndex) => {
@@ -243,6 +245,14 @@ function App() {
             status: "error",
             endedAt: Date.now(),
           });
+        }
+        const lastTool = lastToolEventIdRef.current[variantIndex];
+        if (lastTool) {
+          finishAgentEvent(commit.hash, variantIndex, lastTool, {
+            status: "error",
+            endedAt: Date.now(),
+          });
+          delete lastToolEventIdRef.current[variantIndex];
         }
       },
       onVariantCount: (count) => {
@@ -295,6 +305,7 @@ function App() {
           input: data?.input,
           startedAt: Date.now(),
         });
+        lastToolEventIdRef.current[variantIndex] = eventId;
       },
       onToolResult: (data, variantIndex, eventId) => {
         if (!eventId) return;
@@ -303,6 +314,9 @@ function App() {
           output: data?.output,
           endedAt: Date.now(),
         });
+        if (lastToolEventIdRef.current[variantIndex] === eventId) {
+          delete lastToolEventIdRef.current[variantIndex];
+        }
       },
       onCancel: () => {
         cancelCodeGenerationAndReset(commit);
@@ -310,6 +324,7 @@ function App() {
       onComplete: () => {
         const lastThinking = lastThinkingEventIdRef.current;
         const lastAssistant = lastAssistantEventIdRef.current;
+        const lastTool = lastToolEventIdRef.current;
         Object.keys(lastThinking).forEach((key) => {
           const idx = Number(key);
           finishAgentEvent(commit.hash, idx, lastThinking[idx], {
@@ -320,6 +335,13 @@ function App() {
         Object.keys(lastAssistant).forEach((key) => {
           const idx = Number(key);
           finishAgentEvent(commit.hash, idx, lastAssistant[idx], {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        });
+        Object.keys(lastTool).forEach((key) => {
+          const idx = Number(key);
+          finishAgentEvent(commit.hash, idx, lastTool[idx], {
             status: "complete",
             endedAt: Date.now(),
           });

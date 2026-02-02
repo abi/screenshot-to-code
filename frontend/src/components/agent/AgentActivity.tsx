@@ -25,22 +25,36 @@ function getPreview(text: string): string {
   return `${cleaned.slice(0, 140)}...`;
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function formatDurationMs(milliseconds: number): string {
+  const seconds = Math.max(1, Math.round(milliseconds / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h ${remainingMinutes}m`;
+}
+
 function formatDuration(startedAt?: number, endedAt?: number): string {
-  if (!startedAt || !endedAt) return "";
-  const seconds = Math.max(1, Math.round((endedAt - startedAt) / 1000));
-  return `${seconds}s`;
+  if (!isFiniteNumber(startedAt) || !isFiniteNumber(endedAt)) return "";
+  return formatDurationMs(endedAt - startedAt);
 }
 
 function formatTotalDuration(events: AgentEvent[]): string {
   if (events.length === 0) return "";
   const now = Date.now();
-  const totalMs = events.reduce((sum, event) => {
-    const end = event.endedAt ?? now;
+  const totalMs = events.reduce((acc, event) => {
+    if (!isFiniteNumber(event.startedAt)) return acc;
+    const end = isFiniteNumber(event.endedAt) ? event.endedAt : now;
     const duration = Math.max(0, end - event.startedAt);
-    return sum + duration;
+    return acc + duration;
   }, 0);
-  const seconds = Math.max(1, Math.round(totalMs / 1000));
-  return `${seconds}s`;
+  return totalMs > 0 ? formatDurationMs(totalMs) : "";
 }
 
 function getStatusTone(status: AgentEventStatus) {
@@ -115,6 +129,30 @@ function getEventTitle(event: AgentEvent): string {
   return "Activity";
 }
 
+function getToolSummary(event: AgentEvent): string | null {
+  if (event.type !== "tool") return null;
+  const output = event.output as any;
+  if (output?.error) {
+    return `Error: ${output.error}`;
+  }
+  if (event.toolName === "create_file") {
+    const path = output?.path ?? "index.html";
+    const length = output?.contentLength;
+    return length ? `Created ${path} · ${length} chars` : `Created ${path}`;
+  }
+  if (event.toolName === "edit_file") {
+    const edits = Array.isArray(output?.edits) ? output.edits.length : 0;
+    return edits ? `${edits} edit${edits > 1 ? "s" : ""} applied` : "Edits applied";
+  }
+  if (event.toolName === "generate_images") {
+    const images = Array.isArray(output?.images) ? output.images.length : 0;
+    return images
+      ? `${images} image${images > 1 ? "s" : ""} generated`
+      : "Images generated";
+  }
+  return "Tool completed";
+}
+
 function renderToolDetails(event: AgentEvent) {
   if (!event.input && !event.output) return null;
 
@@ -136,49 +174,145 @@ function renderToolDetails(event: AgentEvent) {
     );
   };
 
+  const output = event.output as any;
+  const hasError = Boolean(output?.error);
   const images =
-    event.output && Array.isArray((event.output as any).images)
-      ? ((event.output as any).images as Array<any>)
-      : null;
+    output && Array.isArray(output.images) ? (output.images as Array<any>) : null;
+  const edits =
+    output && Array.isArray(output.edits) ? (output.edits as Array<any>) : null;
 
   return (
     <div className="text-sm text-gray-700 dark:text-gray-200">
-      {event.input && (
-        <div>
-          <div className="text-xs uppercase tracking-wide text-gray-400">
-            Input
+      {hasError && (
+        <div className="rounded-md border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/30 p-3">
+          <div className="text-xs uppercase tracking-wide text-red-500">Error</div>
+          <div className="mt-1 text-sm text-red-700 dark:text-red-200">
+            {output?.error}
           </div>
-          {renderJson(event.input)}
-        </div>
-      )}
-      {event.output && (
-        <div className="mt-3">
-          <div className="text-xs uppercase tracking-wide text-gray-400">
-            Output
-          </div>
-          {images ? (
-            <div className="mt-2 space-y-2">
-              {images.map((item, index) => (
-                <div
-                  key={`${item.prompt}-${index}`}
-                  className="flex items-start justify-between gap-3 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-2"
-                >
-                  <div>
-                    <div className="text-xs text-gray-500">Prompt</div>
-                    <div className="text-sm text-gray-700 dark:text-gray-100">
-                      {item.prompt}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {item.status === "ok" ? "✓" : "⚠"}
-                  </div>
-                </div>
-              ))}
+          {event.input && (
+            <div className="mt-2">
+              <div className="text-xs uppercase tracking-wide text-red-400">
+                Input
+              </div>
+              {renderJson(event.input)}
             </div>
-          ) : (
-            renderJson(event.output)
           )}
         </div>
+      )}
+      {event.toolName === "create_file" && !hasError && (
+        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-wide text-gray-400">
+              File
+            </div>
+            {output?.contentLength && (
+              <div className="text-xs text-gray-500">
+                {output.contentLength} characters
+              </div>
+            )}
+          </div>
+          <div className="mt-1 text-sm font-medium text-gray-800 dark:text-gray-100">
+            {output?.path ?? "index.html"}
+          </div>
+          {output?.preview && (
+            <pre className="mt-2 rounded bg-gray-50 dark:bg-gray-800 p-2 text-xs text-gray-700 dark:text-gray-200 line-clamp-4 overflow-hidden">
+              {output.preview}
+            </pre>
+          )}
+        </div>
+      )}
+
+      {event.toolName === "edit_file" && edits && !hasError && (
+        <div className="space-y-2">
+          {edits.map((edit, index) => (
+            <div
+              key={`${edit.old_text}-${index}`}
+              className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3"
+            >
+              <div className="text-xs uppercase tracking-wide text-gray-400">
+                Edit {index + 1}
+              </div>
+              <div className="mt-2 grid gap-2">
+                <div>
+                  <div className="text-xs text-gray-500">Old</div>
+                  <div className="mt-1 rounded bg-red-50 dark:bg-red-900/30 p-2 text-xs font-mono text-red-700 dark:text-red-200 break-all">
+                    {edit.old_text}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">New</div>
+                  <div className="mt-1 rounded bg-emerald-50 dark:bg-emerald-900/30 p-2 text-xs font-mono text-emerald-700 dark:text-emerald-200 break-all">
+                    {edit.new_text}
+                  </div>
+                </div>
+              </div>
+              {edit.replaced !== undefined && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Replaced {edit.replaced} time{edit.replaced === 1 ? "" : "s"}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {event.toolName === "generate_images" && images && !hasError && (
+        <div className="space-y-2">
+          {images.map((item, index) => (
+            <div
+              key={`${item.prompt}-${index}`}
+              className="flex items-start gap-3 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3"
+            >
+              {item.url ? (
+                <img
+                  src={item.url}
+                  alt={item.prompt || `Generated image ${index + 1}`}
+                  className="h-16 w-16 rounded-md object-cover border border-gray-200 dark:border-gray-700"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                  N/A
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="text-xs text-gray-500">Prompt</div>
+                <div className="text-sm text-gray-700 dark:text-gray-100">
+                  {item.prompt}
+                </div>
+                {item.url && (
+                  <div className="text-xs text-gray-500 mt-1 truncate">
+                    {item.url}
+                  </div>
+                )}
+              </div>
+              <div className="text-xs text-gray-500">
+                {item.status === "ok" ? "✓" : "⚠"}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!event.toolName && !hasError && (
+        <>
+          {event.input && (
+            <div>
+              <div className="text-xs uppercase tracking-wide text-gray-400">
+                Input
+              </div>
+              {renderJson(event.input)}
+            </div>
+          )}
+          {event.output && (
+            <div className="mt-3">
+              <div className="text-xs uppercase tracking-wide text-gray-400">
+                Output
+              </div>
+              {renderJson(event.output)}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -202,6 +336,7 @@ function AgentEventCard({
   const isExpanded =
     (event.type !== "thinking" && event.status === "running") || expanded;
   const preview = useMemo(() => getPreview(event.content || ""), [event.content]);
+  const toolSummary = useMemo(() => getToolSummary(event), [event]);
 
   return (
     <div
@@ -236,10 +371,10 @@ function AgentEventCard({
           {event.type === "tool" && renderToolDetails(event)}
         </div>
       ) : (
-        preview &&
-        event.type !== "thinking" && (
+        event.type !== "thinking" &&
+        (event.type === "tool" ? toolSummary : preview) && (
           <div className="px-3 pb-2 text-xs text-gray-500 dark:text-gray-400">
-            {preview}
+            {event.type === "tool" ? toolSummary : preview}
           </div>
         )
       )}
@@ -259,6 +394,8 @@ function AgentActivity() {
   const lastAssistantId = [...events]
     .reverse()
     .find((event) => event.type === "assistant")?.id;
+  const hasRunning = events.some((event) => event.status === "running");
+  const totalDuration = formatTotalDuration(events);
 
   const isLatestCommit = head === latestCommitHash;
   if (!isLatestCommit || events.length === 0) {
@@ -272,7 +409,7 @@ function AgentActivity() {
           Agent activity
         </div>
         <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-          Total time {formatTotalDuration(events)}
+          {hasRunning ? "Time so far" : "Total time"} {totalDuration || "--"}
         </div>
       </div>
       {events.map((event) => (
