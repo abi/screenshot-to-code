@@ -880,7 +880,21 @@ class AgenticRunner:
                 else:
                     stream_kwargs["temperature"] = 0.0
 
-                async with client.messages.stream(**stream_kwargs) as stream:
+                stream_ctx = None
+                stream_client = None
+                if hasattr(client, "beta") and hasattr(client.beta, "messages"):
+                    stream_client = client.beta.messages
+                else:
+                    stream_client = client.messages
+                try:
+                    stream_ctx = stream_client.stream(
+                        **stream_kwargs,
+                        betas=["fine-grained-tool-streaming-2025-05-14"],
+                    )
+                except TypeError:
+                    stream_ctx = stream_client.stream(**stream_kwargs)
+
+                async with stream_ctx as stream:
                     async for event in stream:
                         if event.type == "content_block_start":
                             block = event.content_block
