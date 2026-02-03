@@ -113,10 +113,10 @@ export function FeedbackModal({
               User Research
             </p>
             <h2 className="text-2xl font-semibold">
-              Get a $100 gift card
+              Get a $200 gift card
             </h2>
             <p className="text-emerald-100/80 mt-2 text-sm leading-relaxed max-w-md">
-              Share your feedback in a 30-minute call and receive $100 via
+              Share your feedback in a 30-minute call and receive $200 via
               Amazon, PayPal, or your preferred payment method.
             </p>
           </div>

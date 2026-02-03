@@ -12,7 +12,7 @@ export function FeedbackBanner({ onDismiss, onOpen }: FeedbackBannerProps) {
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-lg">🎁</span>
           <p className="text-sm font-medium">
-            Get a <span className="font-bold">$100 gift card</span> for 30 min
+            Get a <span className="font-bold">$200 gift card</span> for 30 min
             of feedback
           </p>
         </div>
