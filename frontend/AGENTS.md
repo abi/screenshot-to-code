@@ -1,5 +1,8 @@
 # Project Agent Instructions
 
-After making changes, always run:
-- `npm run lint` (from the `admin/` directory)
-- `npm run typecheck` (from the `admin/` directory)
+Run checks based on what you changed:
+
+- Frontend: `cd frontend && yarn lint`
+- Backend: `cd backend && poetry run pyright` and `cd backend && poetry run pytest`
+
+If changes touch both, run both sets.
