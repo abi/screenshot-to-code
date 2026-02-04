@@ -137,7 +137,9 @@ function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
         }
       >
         <ImageIcon className="h-4 w-4" />
-        <span className="ml-2 text-sm">{`${updateImages.length}/${MAX_UPDATE_IMAGES}`}</span>
+        {updateImages.length > 0 && (
+          <span className="ml-2 text-sm">{`${updateImages.length}/${MAX_UPDATE_IMAGES}`}</span>
+        )}
       </Button>
       
     </div>
