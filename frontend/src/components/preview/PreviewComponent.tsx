@@ -2,16 +2,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import useThrottle from "../../hooks/useThrottle";
 import EditPopup from "../select-and-edit/EditPopup";
+import { Stack } from "../../lib/stacks";
 
 interface Props {
   code: string;
   device: "mobile" | "desktop";
   doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
+  stack: Stack;
 }
 
-function PreviewComponent({ code, device, doUpdate }: Props) {
+const DARTPAD_ORIGIN = "https://dartpad.dev";
+const DARTPAD_EMBED_URL =
+  "https://dartpad.dev/embed-flutter.html?split=0&run=true&theme=dark";
+
+function PreviewComponent({ code, device, doUpdate, stack }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const isFlutter = stack === Stack.FLUTTER;
 
   // Don't update code more often than every 200ms.
   const throttledCode = useThrottle(code, 200);
@@ -22,6 +29,18 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
   const handleIframeClick = useCallback((event: MouseEvent) => {
     setClickEvent(event);
   }, []);
+  const sendDartPadCode = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    iframe.contentWindow?.postMessage(
+      {
+        type: "sourceCode",
+        sourceCode: throttledCode,
+      },
+      DARTPAD_ORIGIN
+    );
+    iframe.contentWindow?.postMessage({ type: "execute" }, DARTPAD_ORIGIN);
+  }, [throttledCode]);
 
   // Add scaling logic
   useEffect(() => {
@@ -50,6 +69,9 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
   }, [device]);
 
   useEffect(() => {
+    if (isFlutter) {
+      return;
+    }
     const iframe = iframeRef.current;
     if (!iframe) return;
 
@@ -73,10 +95,20 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
+    if (isFlutter) {
+      const handleLoad = () => {
+        sendDartPadCode();
+      };
+      iframe.addEventListener("load", handleLoad);
+      sendDartPadCode();
+      return () => {
+        iframe.removeEventListener("load", handleLoad);
+      };
+    }
     if (iframe.srcdoc !== throttledCode) {
       iframe.srcdoc = throttledCode;
     }
-  }, [throttledCode]);
+  }, [isFlutter, sendDartPadCode, throttledCode]);
 
   return (
     <div className="flex justify-center mr-4">
@@ -88,6 +120,7 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
           id={`preview-${device}`}
           ref={iframeRef}
           title="Preview"
+          src={isFlutter ? DARTPAD_EMBED_URL : undefined}
           className={classNames(
             "border-[4px] border-black rounded-[20px] shadow-lg mx-auto",
             {
@@ -96,12 +129,14 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
             }
           )}
         ></iframe>
-        <EditPopup
-          event={clickEvent}
-          iframeRef={iframeRef}
-          doUpdate={doUpdate}
-          scale={scale}
-        />
+        {!isFlutter && (
+          <EditPopup
+            event={clickEvent}
+            iframeRef={iframeRef}
+            doUpdate={doUpdate}
+            scale={scale}
+          />
+        )}
       </div>
     </div>
   );

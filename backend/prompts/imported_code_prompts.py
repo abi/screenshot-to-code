@@ -130,6 +130,20 @@ Return only the full code in <html></html> tags.
 Do not include markdown "```" or "```html" at the start or end.
 The return result must only include the code."""
 
+IMPORTED_CODE_FLUTTER_SYSTEM_PROMPT = """
+You are an expert Flutter developer.
+
+- Do not add placeholder comments in place of full code. WRITE THE FULL CODE.
+- Repeat elements as needed to match the design.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text equivalent (e.g. in comments near the Image.network).
+
+Use Flutter's standard widgets (e.g. MaterialApp, Scaffold, Container, Row, Column, Stack, Text, Image).
+Return a complete, runnable Dart file (main.dart) that can run on Flutter web.
+
+Return only the full Dart code.
+Do not include markdown "```" or "```dart" at the start or end.
+"""
+
 IMPORTED_CODE_SVG_SYSTEM_PROMPT = """
 You are an expert at building SVGs.
 
@@ -149,5 +163,6 @@ IMPORTED_CODE_SYSTEM_PROMPTS = SystemPrompts(
     bootstrap=IMPORTED_CODE_BOOTSTRAP_SYSTEM_PROMPT,
     ionic_tailwind=IMPORTED_CODE_IONIC_TAILWIND_SYSTEM_PROMPT,
     vue_tailwind=IMPORTED_CODE_VUE_TAILWIND_SYSTEM_PROMPT,
+    flutter=IMPORTED_CODE_FLUTTER_SYSTEM_PROMPT,
     svg=IMPORTED_CODE_SVG_SYSTEM_PROMPT,
 )

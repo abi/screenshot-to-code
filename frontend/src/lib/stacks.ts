@@ -7,6 +7,7 @@ export enum Stack {
   BOOTSTRAP = "bootstrap",
   VUE_TAILWIND = "vue_tailwind",
   IONIC_TAILWIND = "ionic_tailwind",
+  FLUTTER = "flutter",
   SVG = "svg",
 }
 
@@ -19,5 +20,6 @@ export const STACK_DESCRIPTIONS: {
   bootstrap: { components: ["Bootstrap"], inBeta: false },
   vue_tailwind: { components: ["Vue", "Tailwind"], inBeta: true },
   ionic_tailwind: { components: ["Ionic", "Tailwind"], inBeta: true },
+  flutter: { components: ["Flutter"], inBeta: true },
   svg: { components: ["SVG"], inBeta: true },
 };
