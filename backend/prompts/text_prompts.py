@@ -105,6 +105,20 @@ In terms of libraries,
 {FORMAT_INSTRUCTIONS}
 """
 
+FLUTTER_SYSTEM_PROMPT = """
+You are an expert Flutter developer.
+Create a Flutter UI based on the user's text prompt.
+
+- Make sure the UI matches the requested layout and details.
+- Use Flutter's standard widgets (e.g. MaterialApp, Scaffold, Container, Row, Column, Stack, Text, Image).
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text equivalent (e.g. in comments near the Image.network).
+
+Return a complete, runnable Dart file (main.dart) that can run on Flutter web.
+
+Return only the full Dart code.
+Do not include markdown "```" or "```dart" at the start or end.
+"""
+
 SVG_SYSTEM_PROMPT = f"""
 You are an expert at building SVGs.
 
@@ -122,5 +136,6 @@ SYSTEM_PROMPTS = SystemPrompts(
     bootstrap=BOOTSTRAP_SYSTEM_PROMPT,
     ionic_tailwind=IONIC_TAILWIND_SYSTEM_PROMPT,
     vue_tailwind=VUE_TAILWIND_SYSTEM_PROMPT,
+    flutter=FLUTTER_SYSTEM_PROMPT,
     svg=SVG_SYSTEM_PROMPT,
 )

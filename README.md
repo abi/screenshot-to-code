@@ -12,6 +12,7 @@ Supported stacks:
 - Vue + Tailwind
 - Bootstrap
 - Ionic + Tailwind
+- Flutter
 - SVG
 
 Supported AI models:
@@ -116,5 +117,4 @@ https://github.com/user-attachments/assets/a335a105-f9cc-40e6-ac6b-64e5390bfc21
 
 
 https://github.com/user-attachments/assets/205cb5c7-9c3c-438d-acd4-26dfe6e077e5
-
 

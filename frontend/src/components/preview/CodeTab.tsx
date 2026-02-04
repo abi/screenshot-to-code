@@ -5,6 +5,7 @@ import { Settings } from "../../types";
 import copy from "copy-to-clipboard";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { Stack } from "../../lib/stacks";
 
 interface Props {
   code: string;
@@ -12,11 +13,16 @@ interface Props {
   settings: Settings;
 }
 
+const DARTPAD_ORIGIN = "https://dartpad.dev";
+const DARTPAD_EMBED_URL =
+  "https://dartpad.dev/embed-flutter.html?split=0&run=true&theme=dark";
+
 function CodeTab({ code, setCode, settings }: Props) {
   const copyCode = useCallback(() => {
     copy(code);
     toast.success("Copied to clipboard");
   }, [code]);
+  const isFlutter = settings.generatedCodeConfig === Stack.FLUTTER;
 
   const doOpenInCodepenio = useCallback(async () => {
     // TODO: Update CSS and JS external links depending on the framework being used
@@ -53,6 +59,21 @@ function CodeTab({ code, setCode, settings }: Props) {
     form.submit();
   }, [code]);
 
+  const doOpenInDartPad = useCallback(() => {
+    const dartPadWindow = window.open(DARTPAD_EMBED_URL, "_blank");
+    if (!dartPadWindow) return;
+    setTimeout(() => {
+      dartPadWindow.postMessage(
+        {
+          type: "sourceCode",
+          sourceCode: code,
+        },
+        DARTPAD_ORIGIN
+      );
+      dartPadWindow.postMessage({ type: "execute" }, DARTPAD_ORIGIN);
+    }, 1000);
+  }, [code]);
+
   return (
     <div className="relative">
       <div className="flex justify-start items-center px-4 mb-2">
@@ -64,18 +85,28 @@ function CodeTab({ code, setCode, settings }: Props) {
         >
           Copy Code <FaCopy className="ml-2" />
         </span>
-        <Button
-          onClick={doOpenInCodepenio}
-          className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
-          data-testid="open-codepen"
-        >
-          Open in{" "}
-          <img
-            src="https://assets.codepen.io/t-1/codepen-logo.svg"
-            alt="codepen.io"
-            className="h-4 ml-1"
-          />
-        </Button>
+        {isFlutter ? (
+          <Button
+            onClick={doOpenInDartPad}
+            className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
+            data-testid="open-dartpad"
+          >
+            Open in DartPad
+          </Button>
+        ) : (
+          <Button
+            onClick={doOpenInCodepenio}
+            className="bg-gray-100 text-black ml-2 py-2 px-4 border border-black rounded-md hover:bg-gray-400 focus:outline-none"
+            data-testid="open-codepen"
+          >
+            Open in{" "}
+            <img
+              src="https://assets.codepen.io/t-1/codepen-logo.svg"
+              alt="codepen.io"
+              className="h-4 ml-1"
+            />
+          </Button>
+        )}
       </div>
       <CodeMirror
         code={code}

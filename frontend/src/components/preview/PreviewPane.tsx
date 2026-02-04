@@ -15,8 +15,28 @@ import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
+import { Stack } from "../../lib/stacks";
 
-function openInNewTab(code: string) {
+const DARTPAD_ORIGIN = "https://dartpad.dev";
+const DARTPAD_EMBED_URL =
+  "https://dartpad.dev/embed-flutter.html?split=0&run=true&theme=dark";
+
+function openInNewTab(code: string, stack: Stack) {
+  if (stack === Stack.FLUTTER) {
+    const dartPadWindow = window.open(DARTPAD_EMBED_URL, "_blank");
+    if (!dartPadWindow) return;
+    setTimeout(() => {
+      dartPadWindow.postMessage(
+        {
+          type: "sourceCode",
+          sourceCode: code,
+        },
+        DARTPAD_ORIGIN
+      );
+      dartPadWindow.postMessage({ type: "execute" }, DARTPAD_ORIGIN);
+    }, 1000);
+    return;
+  }
   const newWindow = window.open("", "_blank");
   if (newWindow) {
     newWindow.document.open();
@@ -83,7 +103,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
               </TabsTrigger>
             </TabsList>
             <Button
-              onClick={() => openInNewTab(previewCode)}
+              onClick={() => openInNewTab(previewCode, settings.generatedCodeConfig)}
               variant="ghost"
               size="icon"
               title="Open in New Tab"
@@ -114,6 +134,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
             code={previewCode}
             device="desktop"
             doUpdate={doUpdate}
+            stack={settings.generatedCodeConfig}
           />
         </TabsContent>
         <TabsContent value="mobile">
@@ -121,6 +142,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
             code={previewCode}
             device="mobile"
             doUpdate={doUpdate}
+            stack={settings.generatedCodeConfig}
           />
         </TabsContent>
         <TabsContent value="code">
