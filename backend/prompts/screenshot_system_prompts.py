@@ -21,6 +21,8 @@ In terms of libraries,
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
 
 Follow the tool instructions in the system prompt.
+
+Be extremely concise in your chat responses, especially if you're summarizing the work you've done.
 """
 
 HTML_CSS_SYSTEM_PROMPT = """
