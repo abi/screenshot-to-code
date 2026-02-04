@@ -46,6 +46,7 @@ function App() {
     resetHead,
     updateVariantStatus,
     resizeVariants,
+    setVariantModels,
     startAgentEvent,
     appendAgentEventContent,
     finishAgentEvent,
@@ -280,6 +281,9 @@ function App() {
       onVariantCount: (count) => {
         console.log(`Backend is using ${count} variants`);
         resizeVariants(commit.hash, count);
+      },
+      onVariantModels: (models) => {
+        setVariantModels(commit.hash, models);
       },
       onThinking: (content, variantIndex, eventId) => {
         if (!eventId) return;

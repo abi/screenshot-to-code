@@ -46,6 +46,7 @@ interface ProjectStore {
     errorMessage?: string
   ) => void;
   resizeVariants: (hash: CommitHash, count: number) => void;
+  setVariantModels: (hash: CommitHash, models: string[]) => void;
 
   startAgentEvent: (
     hash: CommitHash,
@@ -264,6 +265,21 @@ export const useProjectStore = create<ProjectStore>((set) => ({
             variants: newVariants,
             selectedVariantIndex: Math.min(commit.selectedVariantIndex, count - 1),
           },
+        },
+      };
+    }),
+  setVariantModels: (hash: CommitHash, models: string[]) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      if (!commit || commit.isCommitted) return state;
+      const variants = commit.variants.map((variant, index) => ({
+        ...variant,
+        model: models[index] ?? variant.model,
+      }));
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: { ...commit, variants },
         },
       };
     }),

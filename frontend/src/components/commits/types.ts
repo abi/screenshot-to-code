@@ -25,6 +25,7 @@ export type Variant = {
   thinkingStartTime?: number;
   thinkingDuration?: number;
   agentEvents?: AgentEvent[];
+  model?: string;
 };
 
 export type BaseCommit = {

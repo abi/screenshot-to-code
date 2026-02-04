@@ -2,6 +2,10 @@ import { useProjectStore } from "../../store/project-store";
 import Spinner from "../core/Spinner";
 import { useEffect, useRef, useState } from "react";
 import { useThrottle } from "../../hooks/useThrottle";
+import {
+  CODE_GENERATION_MODEL_DESCRIPTIONS,
+  CodeGenerationModel,
+} from "../../lib/models";
 
 const IFRAME_WIDTH = 1280;
 const IFRAME_HEIGHT = 800;
@@ -188,6 +192,13 @@ function Variants() {
                   ⌥{index + 1}
                 </span>
               </div>
+              {variant.model && (
+                <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
+                  {CODE_GENERATION_MODEL_DESCRIPTIONS[
+                    variant.model as CodeGenerationModel
+                  ]?.name || variant.model}
+                </div>
+              )}
               <VariantThumbnail
                 code={variant.code}
                 isSelected={index === selectedVariantIndex}

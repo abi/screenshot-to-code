@@ -20,6 +20,7 @@ type WebSocketResponse = {
     | "variantComplete"
     | "variantError"
     | "variantCount"
+    | "variantModels"
     | "thinking"
     | "assistant"
     | "toolStart"
@@ -37,6 +38,7 @@ interface CodeGenerationCallbacks {
   onVariantComplete: (variantIndex: number) => void;
   onVariantError: (variantIndex: number, error: string) => void;
   onVariantCount: (count: number) => void;
+  onVariantModels: (models: string[]) => void;
   onThinking: (content: string, variantIndex: number, eventId?: string) => void;
   onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
   onToolStart: (data: any, variantIndex: number, eventId?: string) => void;
@@ -74,6 +76,8 @@ export function generateCode(
       callbacks.onVariantError(response.variantIndex, response.value || "");
     } else if (response.type === "variantCount") {
       callbacks.onVariantCount(parseInt(response.value || "1"));
+    } else if (response.type === "variantModels") {
+      callbacks.onVariantModels(response.data?.models || []);
     } else if (response.type === "thinking") {
       callbacks.onThinking(response.value || "", response.variantIndex, response.eventId);
     } else if (response.type === "assistant") {

@@ -57,6 +57,7 @@ MessageType = Literal[
     "variantComplete",
     "variantError",
     "variantCount",
+    "variantModels",
     "thinking",
     "assistant",
     "toolStart",
@@ -1068,6 +1069,13 @@ class CodeGenerationMiddleware(Middleware):
                     openai_api_key=context.extracted_params.openai_api_key,
                     anthropic_api_key=context.extracted_params.anthropic_api_key,
                     gemini_api_key=GEMINI_API_KEY,
+                )
+                await context.send_message(
+                    "variantModels",
+                    None,
+                    0,
+                    {"models": [model.value for model in context.variant_models]},
+                    None,
                 )
 
                 is_video_create = (
