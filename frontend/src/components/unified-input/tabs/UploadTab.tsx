@@ -30,7 +30,7 @@ type FileWithPreview = {
   preview: string;
 } & File;
 
-const MAX_FILES = 10;
+const MAX_FILES = 5;
 
 const isVideoFile = (file: File) =>
   file.type.startsWith("video/") ||
@@ -61,6 +61,8 @@ function UploadTab({ doCreate }: Props) {
     useState<ScreenRecorderState>(ScreenRecorderState.INITIAL);
 
   const hasUploadedFile = uploadedDataUrls.length > 0;
+  const remainingSlots = Math.max(0, MAX_FILES - files.length);
+  const isAtLimit = remainingSlots === 0;
 
   const handleGenerate = useCallback(() => {
     if (uploadedDataUrls.length > 0) {
@@ -108,7 +110,9 @@ function UploadTab({ doCreate }: Props) {
       const hasExistingImages = files.length > 0 && uploadedInputMode === "image";
 
       if (incomingHasVideo && (acceptedFiles.length > 1 || hasExistingImages)) {
-        toast.error("Please upload a single video or multiple images.");
+        toast.error(
+          `Upload either one video or up to ${MAX_FILES} screenshots (not both).`
+        );
         return;
       }
 
@@ -118,7 +122,9 @@ function UploadTab({ doCreate }: Props) {
       }
 
       if (!incomingHasVideo && files.length >= MAX_FILES) {
-        toast.error(`You can upload up to ${MAX_FILES} images.`);
+        toast.error(
+          `You’ve reached the limit of ${MAX_FILES} screenshots. Remove one to add another.`
+        );
         return;
       }
 
@@ -126,9 +132,9 @@ function UploadTab({ doCreate }: Props) {
       if (!incomingHasVideo && files.length + acceptedFiles.length > MAX_FILES) {
         const remainingSlots = MAX_FILES - files.length;
         toast.error(
-          `You can add up to ${remainingSlots} more image${
+          `Only ${remainingSlots} more screenshot${
             remainingSlots === 1 ? "" : "s"
-          }.`
+          } will be added to stay within the ${MAX_FILES}-screenshot limit.`
         );
         filesToAdd = acceptedFiles.slice(0, remainingSlots);
       }
@@ -161,7 +167,7 @@ function UploadTab({ doCreate }: Props) {
         setTimeout(() => textInputRef.current?.focus(), 100);
       } catch (error) {
         newFiles.forEach((file) => URL.revokeObjectURL(file.preview));
-        toast.error("Error reading files" + error);
+        toast.error("Error reading files.");
         console.error("Error reading files:", error);
       }
     },
@@ -190,7 +196,28 @@ function UploadTab({ doCreate }: Props) {
     },
     onDrop: handleAddFiles,
     onDropRejected: (rejectedFiles) => {
-      toast.error(rejectedFiles[0].errors[0].message);
+      const firstError = rejectedFiles[0]?.errors?.[0];
+      if (!firstError) {
+        toast.error("Some files were rejected.");
+        return;
+      }
+
+      if (firstError.code === "file-too-large") {
+        toast.error("One or more files exceed the 20MB limit.");
+        return;
+      }
+
+      if (firstError.code === "file-invalid-type") {
+        toast.error("Unsupported file type. Use PNG, JPG, MP4, MOV, or WebM.");
+        return;
+      }
+
+      if (firstError.code === "too-many-files") {
+        toast.error(`You can upload up to ${MAX_FILES} screenshots.`);
+        return;
+      }
+
+      toast.error(firstError.message);
     },
   });
 
@@ -292,7 +319,7 @@ function UploadTab({ doCreate }: Props) {
             </div>
             <div className="text-center">
               <p className="text-gray-700 font-medium">
-                Drop screenshots or a video here
+                Drop up to {MAX_FILES} screenshots or a single video
               </p>
             </div>
             <p className="text-xs text-gray-400 mt-2">
@@ -337,7 +364,7 @@ function UploadTab({ doCreate }: Props) {
               >
                 <input {...getInputProps()} />
                 <div className="flex items-center justify-between text-xs uppercase tracking-wide text-gray-400">
-                  <span>Uploaded Screenshots ({files.length})</span>
+                  <span>{`Uploaded Screenshots (${files.length}/${MAX_FILES})`}</span>
                   <button
                     type="button"
                     onClick={handleClear}
@@ -345,6 +372,11 @@ function UploadTab({ doCreate }: Props) {
                   >
                     Clear all
                   </button>
+                </div>
+                <div className="mt-1 text-[11px] text-gray-400">
+                  {isAtLimit
+                    ? "Limit reached"
+                    : `${remainingSlots} remaining`}
                 </div>
                 <div className="mt-3 rounded-md border border-gray-100 bg-gray-50 p-2">
                   {files[selectedIndex] && (
@@ -386,8 +418,21 @@ function UploadTab({ doCreate }: Props) {
                   ))}
                   <button
                     type="button"
-                    onClick={open}
-                    className="h-14 w-14 rounded-md border border-dashed border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 flex items-center justify-center flex-shrink-0"
+                    onClick={() => {
+                      if (isAtLimit) {
+                        toast.error(
+                          `You’ve reached the limit of ${MAX_FILES} screenshots. Remove one to add another.`
+                        );
+                        return;
+                      }
+                      open();
+                    }}
+                    disabled={isAtLimit}
+                    className={`h-14 w-14 rounded-md border border-dashed flex items-center justify-center flex-shrink-0 ${
+                      isAtLimit
+                        ? "border-gray-200 text-gray-300 cursor-not-allowed"
+                        : "border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400"
+                    }`}
                     aria-label="Add more screenshots"
                   >
                     <ImageIcon className="h-5 w-5" />
