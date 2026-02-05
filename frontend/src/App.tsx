@@ -30,6 +30,9 @@ import { FeedbackFAB } from "./components/feedback/FeedbackFAB";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 
+// Temporary kill switch for feedback call UI. Set to true to re-enable.
+const SHOW_FEEDBACK_CALL_UI = false;
+
 interface Props {
   navbarComponent?: JSX.Element;
 }
@@ -454,7 +457,7 @@ function App({ navbarComponent }: Props) {
       <main className="py-2 lg:pl-96">
         {!!navbarComponent && navbarComponent}
 
-        {shouldShowBanner && (
+        {SHOW_FEEDBACK_CALL_UI && shouldShowBanner && (
           <div className="px-4 mb-2">
             <FeedbackBanner
               onDismiss={dismissBanner}
@@ -477,12 +480,16 @@ function App({ navbarComponent }: Props) {
         )}
       </main>
 
-      <FeedbackFAB onOpen={() => setIsFeedbackOpen(true)} />
-      <FeedbackModal
-        open={isFeedbackOpen}
-        onOpenChange={setIsFeedbackOpen}
-        subscriberTier={subscriberTier}
-      />
+      {SHOW_FEEDBACK_CALL_UI && (
+        <>
+          <FeedbackFAB onOpen={() => setIsFeedbackOpen(true)} />
+          <FeedbackModal
+            open={isFeedbackOpen}
+            onOpenChange={setIsFeedbackOpen}
+            subscriberTier={subscriberTier}
+          />
+        </>
+      )}
     </div>
   );
 }
