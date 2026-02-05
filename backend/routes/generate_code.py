@@ -388,17 +388,17 @@ class ModelSelectionStage:
 
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key:
-            # Temporary: Compare thinking models
+            # Compare thinking models
             models = [
                 Llm.GEMINI_3_FLASH_PREVIEW_HIGH,  # Flash HIGH thinking
                 Llm.GEMINI_3_PRO_PREVIEW_LOW,  # Pro LOW thinking
                 Llm.GEMINI_3_PRO_PREVIEW_HIGH,  # Pro HIGH thinking
-                Llm.CLAUDE_4_5_OPUS_2025_11_01,  # Claude Opus 4.5 with thinking
+                Llm.CLAUDE_OPUS_4_6,  # Claude Opus 4.6 with adaptive thinking
             ]
         elif openai_api_key and anthropic_api_key:
-            models = [Llm.CLAUDE_4_5_SONNET_2025_09_29, Llm.GPT_4_1_2025_04_14]
+            models = [Llm.CLAUDE_OPUS_4_6, Llm.GPT_4_1_2025_04_14]
         elif anthropic_api_key:
-            models = [Llm.CLAUDE_4_5_SONNET_2025_09_29, Llm.CLAUDE_4_5_OPUS_2025_11_01]
+            models = [Llm.CLAUDE_OPUS_4_6, Llm.CLAUDE_4_5_SONNET_2025_09_29]
         elif openai_api_key:
             models = [Llm.GPT_4_1_2025_04_14]
         else:
