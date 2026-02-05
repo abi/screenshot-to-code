@@ -196,12 +196,14 @@ class AgentToolbox:
         should_generate_images: bool,
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
+        option_codes: Optional[List[str]] = None,
     ):
         self.file_state = file_state
         self.image_cache = image_cache
         self.should_generate_images = should_generate_images
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
+        self.option_codes = option_codes or []
 
     async def execute(self, tool_call: ToolCall) -> ToolExecutionResult:
         if tool_call.name == "create_file":
@@ -212,6 +214,8 @@ class AgentToolbox:
             return await self._generate_images(tool_call.arguments)
         if tool_call.name == "remove_background":
             return await self._remove_background(tool_call.arguments)
+        if tool_call.name == "retrieve_option":
+            return self._retrieve_option(tool_call.arguments)
         return ToolExecutionResult(
             ok=False,
             result={"error": f"Unknown tool: {tool_call.name}"},
@@ -443,6 +447,69 @@ class AgentToolbox:
                 summary={"error": _summarize_text(str(e), 100)},
             )
 
+    def _retrieve_option(self, args: Dict[str, Any]) -> ToolExecutionResult:
+        raw_option_number = args.get("option_number")
+        raw_index = args.get("index")
+
+        def _coerce_int(value: Any) -> Optional[int]:
+            if value is None:
+                return None
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return None
+
+        option_number = _coerce_int(raw_option_number)
+        index = _coerce_int(raw_index)
+
+        if option_number is None and index is None:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "retrieve_option requires option_number"},
+                summary={"error": "Missing option_number"},
+            )
+
+        resolved_index = index if option_number is None else option_number - 1
+        if resolved_index is None:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "Invalid option_number"},
+                summary={"error": "Invalid option_number"},
+            )
+
+        if resolved_index < 0 or resolved_index >= len(self.option_codes):
+            return ToolExecutionResult(
+                ok=False,
+                result={
+                    "error": "Option index out of range",
+                    "option_number": resolved_index + 1,
+                    "available": len(self.option_codes),
+                },
+                summary={
+                    "error": "Option index out of range",
+                    "available": len(self.option_codes),
+                },
+            )
+
+        code = _ensure_str(self.option_codes[resolved_index])
+        if not code.strip():
+            return ToolExecutionResult(
+                ok=False,
+                result={
+                    "error": "Option code is empty or unavailable",
+                    "option_number": resolved_index + 1,
+                },
+                summary={"error": "Option code unavailable"},
+            )
+
+        summary = {
+            "option_number": resolved_index + 1,
+            "contentLength": len(code),
+            "preview": _summarize_text(code, 200),
+        }
+        result = {"option_number": resolved_index + 1, "code": code}
+        return ToolExecutionResult(ok=True, result=result, summary=summary)
+
 
 class AgenticRunner:
     def __init__(
@@ -456,6 +523,7 @@ class AgenticRunner:
         should_generate_images: bool,
         image_cache: Dict[str, str],
         initial_file_state: Optional[Dict[str, str]] = None,
+        option_codes: Optional[List[str]] = None,
     ):
         self.send_message = send_message
         self.variant_index = variant_index
@@ -476,6 +544,7 @@ class AgenticRunner:
             should_generate_images,
             openai_api_key,
             openai_base_url,
+            option_codes,
         )
         self.assistant_step = 0
         self.thinking_step = 0
@@ -607,6 +676,11 @@ class AgenticRunner:
         if tool_call.name == "remove_background":
             image_url = _ensure_str(args.get("image_url"))
             return {"image_url": _summarize_text(image_url, 100)}
+        if tool_call.name == "retrieve_option":
+            return {
+                "option_number": args.get("option_number"),
+                "index": args.get("index"),
+            }
         return args
 
     def _tool_schemas(self) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[types.Tool]]:
@@ -680,6 +754,16 @@ class AgenticRunner:
             },
             "required": ["image_url"],
         }
+        retrieve_option_schema = {
+            "type": "object",
+            "properties": {
+                "option_number": {
+                    "type": "integer",
+                    "description": "1-based option number to retrieve (Option 1, Option 2, etc.).",
+                }
+            },
+            "required": ["option_number"],
+        }
 
         openai_tools = [
             {
@@ -714,6 +798,14 @@ class AgenticRunner:
                     "parameters": remove_bg_schema,
                 },
             },
+            {
+                "type": "function",
+                "function": {
+                    "name": "retrieve_option",
+                    "description": "Retrieve the full HTML for a specific option (variant) so you can reference it.",
+                    "parameters": retrieve_option_schema,
+                },
+            },
         ]
 
         anthropic_tools = [
@@ -736,6 +828,11 @@ class AgenticRunner:
                 "name": "remove_background",
                 "description": "Remove the background from an image. Returns a URL to the processed image with transparent background.",
                 "input_schema": remove_bg_schema,
+            },
+            {
+                "name": "retrieve_option",
+                "description": "Retrieve the full HTML for a specific option (variant) so you can reference it.",
+                "input_schema": retrieve_option_schema,
             },
         ]
 
@@ -761,6 +858,11 @@ class AgenticRunner:
                         name="remove_background",
                         description="Remove the background from an image. Returns a URL to the processed image with transparent background.",
                         parameters_json_schema=remove_bg_schema,
+                    ),
+                    types.FunctionDeclaration(
+                        name="retrieve_option",
+                        description="Retrieve the full HTML for a specific option (variant) so you can reference it.",
+                        parameters_json_schema=retrieve_option_schema,
                     ),
                 ]
             )
@@ -845,6 +947,17 @@ class AgenticRunner:
             },
             "required": ["image_url"],
         }
+        retrieve_option_schema = {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "option_number": {
+                    "type": "integer",
+                    "description": "1-based option number to retrieve (Option 1, Option 2, etc.).",
+                },
+            },
+            "required": ["option_number"],
+        }
         return [
             {
                 "type": "function",
@@ -872,6 +985,13 @@ class AgenticRunner:
                 "name": "remove_background",
                 "description": "Remove the background from an image. Returns a URL to the processed image with transparent background.",
                 "parameters": remove_bg_schema,
+                "strict": True,
+            },
+            {
+                "type": "function",
+                "name": "retrieve_option",
+                "description": "Retrieve the full HTML for a specific option (variant) so you can reference it.",
+                "parameters": retrieve_option_schema,
                 "strict": True,
             },
         ]

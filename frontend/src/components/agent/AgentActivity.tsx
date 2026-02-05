@@ -16,6 +16,7 @@ import {
   BsPencilSquare,
   BsImage,
   BsScissors,
+  BsFiles,
 } from "react-icons/bs";
 import ReactMarkdown from "react-markdown";
 
@@ -104,6 +105,9 @@ function getEventIcon(type: AgentEventType, toolName?: string) {
   if (toolName === "remove_background") {
     return <BsScissors className="text-teal-500" />;
   }
+  if (toolName === "retrieve_option") {
+    return <BsFiles className="text-slate-500" />;
+  }
   return <BsFileEarmarkPlus className="text-gray-500" />;
 }
 
@@ -133,6 +137,11 @@ function getEventTitle(event: AgentEvent): string {
         ? "Removing background"
         : "Background removed";
     }
+    if (event.toolName === "retrieve_option") {
+      return event.status === "running"
+        ? "Retrieving option"
+        : "Retrieved option";
+    }
     return event.status === "running" ? "Running tool" : "Tool completed";
   }
   return "Activity";
@@ -161,6 +170,17 @@ function getToolSummary(event: AgentEvent): string | null {
   }
   if (event.toolName === "remove_background") {
     return output?.result_url ? "Background removed successfully" : "Processing image";
+  }
+  if (event.toolName === "retrieve_option") {
+    const optionNumber = output?.option_number;
+    const length = output?.contentLength;
+    if (optionNumber && length) {
+      return `Retrieved option ${optionNumber} · ${length} chars`;
+    }
+    if (optionNumber) {
+      return `Retrieved option ${optionNumber}`;
+    }
+    return "Retrieved option";
   }
   return "Tool completed";
 }

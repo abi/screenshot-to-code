@@ -46,6 +46,7 @@ export interface CodeGenerationParams {
     path: string;
     content: string;
   };
+  optionCodes?: string[];
 }
 
 export type FullGenerationSettings = CodeGenerationParams & Settings;

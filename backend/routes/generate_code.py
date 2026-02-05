@@ -248,6 +248,7 @@ class ExtractedParams:
     history: List[Dict[str, Any]]
     is_imported_from_code: bool
     file_state: Dict[str, str] | None
+    option_codes: List[str]
 
 
 class ParameterExtractionStage:
@@ -321,6 +322,17 @@ class ParameterExtractionStage:
                 path = raw_file_state.get("path") or "index.html"
                 file_state = {"path": path, "content": content}
 
+        raw_option_codes = params.get("optionCodes")
+        option_codes: List[str] = []
+        if isinstance(raw_option_codes, list):
+            for entry in raw_option_codes:
+                if isinstance(entry, str):
+                    option_codes.append(entry)
+                elif entry is None:
+                    option_codes.append("")
+                else:
+                    option_codes.append(str(entry))
+
         return ExtractedParams(
             stack=validated_stack,
             input_mode=validated_input_mode,
@@ -333,6 +345,7 @@ class ParameterExtractionStage:
             history=history,
             is_imported_from_code=is_imported_from_code,
             file_state=file_state,
+            option_codes=option_codes,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -848,6 +861,7 @@ class AgenticGenerationStage:
         should_generate_images: bool,
         image_cache: Dict[str, str],
         file_state: Dict[str, str] | None,
+        option_codes: List[str] | None,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -857,6 +871,7 @@ class AgenticGenerationStage:
         self.should_generate_images = should_generate_images
         self.image_cache = image_cache
         self.file_state = file_state
+        self.option_codes = option_codes or []
 
     async def process_variants(
         self,
@@ -899,6 +914,7 @@ class AgenticGenerationStage:
                 should_generate_images=self.should_generate_images,
                 image_cache=self.image_cache,
                 initial_file_state=self.file_state,
+                option_codes=self.option_codes,
             )
             completion = await runner.run(model, prompt_messages)
             if completion:
@@ -1117,6 +1133,7 @@ class CodeGenerationMiddleware(Middleware):
                         should_generate_images=context.extracted_params.should_generate_images,
                         image_cache=context.image_cache,
                         file_state=context.extracted_params.file_state,
+                        option_codes=context.extracted_params.option_codes,
                     )
 
                     context.variant_completions = (

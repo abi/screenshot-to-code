@@ -435,6 +435,9 @@ function App() {
     const currentCommit = commits[head];
     const currentCode =
       currentCommit?.variants[currentCommit.selectedVariantIndex]?.code || "";
+    const optionCodes = currentCommit?.variants.map(
+      (variant) => variant.code || ""
+    );
 
     let historyTree;
     try {
@@ -470,6 +473,7 @@ function App() {
           : { text: "", images: [referenceImages[0]] },
       history: updatedHistory,
       isImportedFromCode,
+      optionCodes,
       fileState: currentCode
         ? {
             path: "index.html",
