@@ -428,12 +428,12 @@ class ModelSelectionStage:
             models = [
                 Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
                 Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-                Llm.CLAUDE_4_5_OPUS_2025_11_01,
+                Llm.CLAUDE_OPUS_4_6,
                 Llm.GPT_5_2_CODEX_HIGH,
             ]
         elif gemini_api_key and anthropic_api_key:
             models = [
-                Llm.CLAUDE_4_5_OPUS_2025_11_01,
+                Llm.CLAUDE_OPUS_4_6,
                 Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
                 Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
                 Llm.GEMINI_3_PRO_PREVIEW_HIGH,
@@ -448,7 +448,7 @@ class ModelSelectionStage:
             ]
         elif openai_api_key and anthropic_api_key:
             models = [
-                Llm.CLAUDE_4_5_OPUS_2025_11_01,
+                Llm.CLAUDE_OPUS_4_6,
                 Llm.GPT_5_2_CODEX_HIGH,
                 Llm.GPT_5_2_CODEX_MEDIUM,
             ]
@@ -460,7 +460,7 @@ class ModelSelectionStage:
                 Llm.GEMINI_3_PRO_PREVIEW_LOW,
             ]
         elif anthropic_api_key:
-            models = [Llm.CLAUDE_4_5_OPUS_2025_11_01]
+            models = [Llm.CLAUDE_OPUS_4_6, Llm.CLAUDE_4_5_SONNET_2025_09_29]
         elif openai_api_key:
             models = [Llm.GPT_5_2_CODEX_HIGH, Llm.GPT_5_2_CODEX_MEDIUM]
         else:

@@ -14,7 +14,7 @@ class TestModelSelectionAllKeys:
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_create(self):
-        """All keys: Claude 4.5 Opus, GPT 5.2 Codex (high), Gemini 3 Flash (high), Gemini 3 Pro (high)"""
+        """All keys: Claude Opus 4.6, GPT 5.2 Codex (high), Gemini 3 Flash (high), Gemini 3 Pro (high)"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -26,7 +26,7 @@ class TestModelSelectionAllKeys:
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
             Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.CLAUDE_OPUS_4_6,
             Llm.GPT_5_2_CODEX_HIGH,
         ]
         assert models == expected
@@ -45,7 +45,7 @@ class TestModelSelectionAllKeys:
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
             Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.CLAUDE_OPUS_4_6,
             Llm.GPT_5_2_CODEX_HIGH,
         ]
         assert models == expected
@@ -61,7 +61,7 @@ class TestModelSelectionOpenAIAnthropic:
 
     @pytest.mark.asyncio
     async def test_openai_anthropic(self):
-        """OpenAI + Anthropic: Claude 4.5 Opus, GPT 5.2 Codex (high/medium), cycling"""
+        """OpenAI + Anthropic: Claude Opus 4.6, GPT 5.2 Codex (high/medium), cycling"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -71,10 +71,10 @@ class TestModelSelectionOpenAIAnthropic:
         )
 
         expected = [
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.CLAUDE_OPUS_4_6,
             Llm.GPT_5_2_CODEX_HIGH,
             Llm.GPT_5_2_CODEX_MEDIUM,
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.CLAUDE_OPUS_4_6,
         ]
         assert models == expected
 
@@ -89,7 +89,7 @@ class TestModelSelectionAnthropicOnly:
 
     @pytest.mark.asyncio
     async def test_anthropic_only(self):
-        """Anthropic only: Claude 4.5 Opus only"""
+        """Anthropic only: Claude Opus 4.6 and Claude Sonnet 4.5 cycling"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -99,10 +99,10 @@ class TestModelSelectionAnthropicOnly:
         )
 
         expected = [
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
-            Llm.CLAUDE_4_5_OPUS_2025_11_01,
+            Llm.CLAUDE_OPUS_4_6,
+            Llm.CLAUDE_4_5_SONNET_2025_09_29,
+            Llm.CLAUDE_OPUS_4_6,
+            Llm.CLAUDE_4_5_SONNET_2025_09_29,
         ]
         assert models == expected
 

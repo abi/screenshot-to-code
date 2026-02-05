@@ -4,6 +4,7 @@ export enum CodeGenerationModel {
   GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
   GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)",
   CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101",
+  CLAUDE_OPUS_4_6 = "claude-opus-4-6",
   CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
   GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
@@ -24,7 +25,8 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
     inBeta: true,
   },
   "claude-opus-4-5-20251101": { name: "Claude Opus 4.5", inBeta: false },
-  "claude-sonnet-4-5-20250929": { name: "Claude Sonnet 4.5", inBeta: true },
+  "claude-opus-4-6": { name: "Claude Opus 4.6", inBeta: false },
+  "claude-sonnet-4-5-20250929": { name: "Claude Sonnet 4.5", inBeta: false },
   "gemini-3-flash-preview (high thinking)": {
     name: "Gemini 3 Flash (high)",
     inBeta: true,

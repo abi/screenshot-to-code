@@ -3,6 +3,8 @@ import { toast } from "react-hot-toast";
 import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
 import { Button } from "./ui/button";
 
+const MAX_UPDATE_IMAGES = 5;
+
 // Helper function to convert file to data URL
 function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -26,8 +28,15 @@ export function UpdateImagePreview({ updateImages, setUpdateImages }: Props) {
 
   if (updateImages.length === 0) return null;
 
+  const remaining = Math.max(0, MAX_UPDATE_IMAGES - updateImages.length);
+  const isAtLimit = remaining === 0;
+
   return (
     <div className="mb-2">
+      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+        <span>{`Reference images: ${updateImages.length}/${MAX_UPDATE_IMAGES}`}</span>
+        <span>{isAtLimit ? "Limit reached" : `${remaining} remaining`}</span>
+      </div>
       <div className="flex gap-2 overflow-x-auto py-2">
         {updateImages.map((image, index) => (
           <div key={index} className="relative flex-shrink-0 group">
@@ -51,9 +60,17 @@ export function UpdateImagePreview({ updateImages, setUpdateImages }: Props) {
 
 function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const remaining = Math.max(0, MAX_UPDATE_IMAGES - updateImages.length);
+  const isAtLimit = remaining === 0;
 
 
   const handleButtonClick = () => {
+    if (isAtLimit) {
+      toast.error(
+        `You’ve reached the limit of ${MAX_UPDATE_IMAGES} reference images. Remove one to add another.`
+      );
+      return;
+    }
     fileInputRef.current?.click();
   };
 
@@ -61,9 +78,28 @@ function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
     const files = e.target.files;
     if (files) {
       try {
-        const newImagePromises = Array.from(files).map(file => fileToDataURL(file));
+        if (updateImages.length >= MAX_UPDATE_IMAGES) {
+          toast.error(
+            `You’ve reached the limit of ${MAX_UPDATE_IMAGES} reference images. Remove one to add another.`
+          );
+          return;
+        }
+
+        const remainingSlots = MAX_UPDATE_IMAGES - updateImages.length;
+        let filesToAdd = Array.from(files);
+        if (filesToAdd.length > remainingSlots) {
+          toast.error(
+            `Only ${remainingSlots} more image${
+              remainingSlots === 1 ? "" : "s"
+            } will be added to stay within the ${MAX_UPDATE_IMAGES}-image limit.`
+          );
+          filesToAdd = filesToAdd.slice(0, remainingSlots);
+        }
+
+        const newImagePromises = filesToAdd.map((file) => fileToDataURL(file));
         const newImages = await Promise.all(newImagePromises);
         setUpdateImages([...updateImages, ...newImages]);
+        e.target.value = "";
       } catch (error) {
         toast.error("Error reading image files");
         console.error("Error reading files:", error);
@@ -88,12 +124,21 @@ function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
         variant="outline"
         size="default"
         onClick={handleButtonClick}
-        className={`dark:text-white dark:bg-gray-700 h-10 px-3 ${updateImages.length > 0 ? 'border-blue-500' : ''} relative`}
-        title={updateImages.length > 0 ? "Add more images" : "Add reference images"}
+        className={`dark:text-white dark:bg-gray-700 h-10 px-3 ${
+          updateImages.length > 0 ? "border-blue-500" : ""
+        } relative`}
+        disabled={isAtLimit}
+        title={
+          isAtLimit
+            ? `Limit reached (${MAX_UPDATE_IMAGES})`
+            : updateImages.length > 0
+              ? `Add up to ${remaining} more`
+              : `Add up to ${MAX_UPDATE_IMAGES}`
+        }
       >
         <ImageIcon className="h-4 w-4" />
         {updateImages.length > 0 && (
-          <span className="ml-2 text-sm">{updateImages.length}</span>
+          <span className="ml-2 text-sm">{`${updateImages.length}/${MAX_UPDATE_IMAGES}`}</span>
         )}
       </Button>
       

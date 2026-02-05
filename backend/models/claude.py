@@ -83,7 +83,40 @@ async def stream_claude_response(
         Llm.CLAUDE_4_5_OPUS_2025_11_01.value,
     ]
 
-    if model_name in thinking_models:
+    # Models that use adaptive thinking with effort
+    adaptive_thinking_models = [
+        Llm.CLAUDE_OPUS_4_6.value,
+    ]
+
+    if model_name in adaptive_thinking_models:
+        print(f"Using {model_name} with adaptive thinking (effort: max)")
+        thinking_started = False
+        async with client.messages.stream(
+            model=model_name,
+            thinking={"type": "adaptive"},
+            max_tokens=30000,
+            system=system_prompt,
+            messages=claude_messages,  # type: ignore
+            extra_body={"output_config": {"effort": "max"}},
+        ) as stream:
+            async for event in stream:
+                if event.type == "content_block_start":
+                    if event.content_block.type == "thinking":
+                        thinking_started = False
+                elif event.type == "content_block_delta":
+                    if event.delta.type == "thinking_delta":
+                        if not thinking_started:
+                            thinking_started = True
+                        if thinking_callback:
+                            await thinking_callback(event.delta.thinking)
+                    elif event.delta.type == "text_delta":
+                        response += event.delta.text
+                        await callback(event.delta.text)
+                elif event.type == "content_block_stop":
+                    if thinking_started:
+                        thinking_started = False
+
+    elif model_name in thinking_models:
         print(f"Using {model_name} with thinking")
         thinking_started = False
         # Thinking is not compatible with temperature
