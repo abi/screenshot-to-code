@@ -416,7 +416,7 @@ class ModelSelectionStage:
                 Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
                 Llm.GEMINI_3_PRO_PREVIEW_HIGH,
                 Llm.CLAUDE_4_5_OPUS_2025_11_01,
-                Llm.GPT_5_2_2025_12_11,
+                Llm.GPT_5_2_CODEX_HIGH,
             ]
         elif gemini_api_key and anthropic_api_key:
             models = [
@@ -428,14 +428,17 @@ class ModelSelectionStage:
             ]
         elif gemini_api_key and openai_api_key:
             models = [
-                Llm.GPT_5_2_2025_12_11,
                 Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
                 Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-                Llm.GEMINI_3_PRO_PREVIEW_LOW,
+                Llm.GPT_5_2_CODEX_HIGH,
+                Llm.GPT_5_2_CODEX_MEDIUM,
             ]
         elif openai_api_key and anthropic_api_key:
-            models = [Llm.CLAUDE_4_5_OPUS_2025_11_01, Llm.GPT_5_2_2025_12_11]
+            models = [
+                Llm.CLAUDE_4_5_OPUS_2025_11_01,
+                Llm.GPT_5_2_CODEX_HIGH,
+                Llm.GPT_5_2_CODEX_MEDIUM,
+            ]
         elif gemini_api_key:
             models = [
                 Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
@@ -446,7 +449,7 @@ class ModelSelectionStage:
         elif anthropic_api_key:
             models = [Llm.CLAUDE_4_5_OPUS_2025_11_01]
         elif openai_api_key:
-            models = [Llm.GPT_5_2_2025_12_11]
+            models = [Llm.GPT_5_2_CODEX_HIGH, Llm.GPT_5_2_CODEX_MEDIUM]
         else:
             raise Exception("No OpenAI or Anthropic key")
 
@@ -655,7 +658,7 @@ class ParallelGenerationStage:
                 tasks.append(
                     self._stream_openai_with_error_handling(
                         prompt_messages,
-                        model_name=model.value,
+                        model=model,
                         index=index,
                     )
                 )
@@ -700,7 +703,7 @@ class ParallelGenerationStage:
     async def _stream_openai_with_error_handling(
         self,
         prompt_messages: List[ChatCompletionMessageParam],
-        model_name: str,
+        model: Llm,
         index: int,
     ) -> Completion:
         """Wrap OpenAI streaming with specific error handling"""
@@ -711,7 +714,7 @@ class ParallelGenerationStage:
                 api_key=self.openai_api_key,
                 base_url=self.openai_base_url,
                 callback=lambda x: self._process_chunk(x, index),
-                model_name=model_name,
+                model=model,
             )
         except openai.AuthenticationError as e:
             print(f"[VARIANT {index + 1}] OpenAI Authentication failed", e)

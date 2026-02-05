@@ -51,7 +51,7 @@ async def generate_code_core(
             api_key=OPENAI_API_KEY,
             base_url=None,
             callback=lambda x: process_chunk(x),
-            model_name=model.value,
+            model=model,
         )
 
     return completion["code"]

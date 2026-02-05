@@ -13,7 +13,15 @@ from google.genai import types
 from codegen.utils import extract_html_content
 from config import REPLICATE_API_KEY
 from image_generation.core import process_tasks
-from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
+from llm import (
+    Llm,
+    OPENAI_MODELS,
+    ANTHROPIC_MODELS,
+    GEMINI_MODELS,
+    OPENAI_CODEX_MODELS,
+    get_openai_api_name,
+    get_openai_reasoning_effort,
+)
 
 
 @dataclass
@@ -61,6 +69,43 @@ def _parse_json_arguments(raw_args: Any) -> Tuple[Dict[str, Any], Optional[str]]
         return json.loads(raw_text), None
     except json.JSONDecodeError as exc:
         return {}, f"Invalid JSON arguments: {exc}"
+
+
+def _convert_message_to_responses_input(
+    message: ChatCompletionMessageParam,
+) -> Dict[str, Any]:
+    role = message.get("role", "user")
+    content = message.get("content", "")
+
+    if isinstance(content, str):
+        return {"role": role, "content": content}
+
+    parts: List[Dict[str, Any]] = []
+    if isinstance(content, list):
+        for part in content:
+            if not isinstance(part, dict):
+                continue
+            if part.get("type") == "text":
+                parts.append({"type": "input_text", "text": part.get("text", "")})
+            elif part.get("type") == "image_url":
+                image_url = part.get("image_url", {})
+                parts.append(
+                    {
+                        "type": "input_image",
+                        "image_url": image_url.get("url", ""),
+                        "detail": image_url.get("detail", "auto"),
+                    }
+                )
+
+    return {"role": role, "content": parts}
+
+
+def _get_event_attr(event: Any, key: str, default: Any = None) -> Any:
+    if hasattr(event, key):
+        return getattr(event, key)
+    if isinstance(event, dict):
+        return event.get(key, default)
+    return default
 
 
 def _strip_incomplete_escape(value: str) -> str:
@@ -670,6 +715,8 @@ class AgenticRunner:
     async def _run_openai(
         self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]
     ) -> str:
+        if model in OPENAI_CODEX_MODELS:
+            return await self._run_openai_responses(model, prompt_messages)
         if not self.openai_api_key:
             raise Exception("OpenAI API key is missing.")
 
@@ -686,17 +733,14 @@ class AgenticRunner:
                 started_tool_ids: set[str] = set()
 
                 params: Dict[str, Any] = {
-                    "model": model.value,
+                    "model": get_openai_api_name(model),
                     "messages": messages,
                     "tools": openai_tools,
                     "tool_choice": "auto",
                     "temperature": 0,
                     "stream": True,
                 }
-                if model.value == "gpt-5.2-2025-12-11":
-                    params["max_completion_tokens"] = 30000
-                else:
-                    params["max_tokens"] = 30000
+                params["max_tokens"] = 30000
 
                 stream = await client.chat.completions.create(**params)
 
@@ -766,9 +810,10 @@ class AgenticRunner:
                     args, error = _parse_json_arguments(entry.get("arguments"))
                     if error:
                         args = {"_raw": entry.get("arguments")}
+                    tool_call_id = entry.get("id") or f"tool-{uuid.uuid4().hex[:6]}"
                     tool_call_list.append(
                         ToolCall(
-                            id=entry["id"],
+                            id=tool_call_id,
                             name=entry.get("name") or "unknown_tool",
                             arguments=args,
                         )
@@ -830,6 +875,180 @@ class AgenticRunner:
                             "content": json.dumps(tool_result.result),
                         }
                     )
+
+            raise Exception("Agent exceeded max tool turns")
+        finally:
+            await client.close()
+
+    async def _run_openai_responses(
+        self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]
+    ) -> str:
+        if not self.openai_api_key:
+            raise Exception("OpenAI API key is missing.")
+
+        client = AsyncOpenAI(api_key=self.openai_api_key, base_url=self.openai_base_url)
+        openai_tools, _, _ = self._tool_schemas()
+        base_input = [_convert_message_to_responses_input(m) for m in prompt_messages]
+        previous_response_id: Optional[str] = None
+
+        max_steps = 8
+        try:
+            for _ in range(max_steps):
+                assistant_event_id = self._next_event_id("assistant")
+                assistant_text = ""
+                tool_calls: Dict[str, Dict[str, Any]] = {}
+                response_id: Optional[str] = None
+
+                params: Dict[str, Any] = {
+                    "model": get_openai_api_name(model),
+                    "input": base_input,
+                    "tools": openai_tools,
+                    "tool_choice": "auto",
+                    "stream": True,
+                    "max_output_tokens": 30000,
+                }
+                reasoning_effort = get_openai_reasoning_effort(model)
+                if reasoning_effort:
+                    params["reasoning"] = {"effort": reasoning_effort}
+                if previous_response_id:
+                    params["previous_response_id"] = previous_response_id
+
+                responses_client = getattr(client, "responses", None)
+                if responses_client is None:
+                    raise Exception(
+                        "OpenAI SDK is too old for GPT-5.2 Codex. Please upgrade the 'openai' package to a version that supports the Responses API."
+                    )
+                stream = await responses_client.create(**params)  # type: ignore
+
+                async for event in stream:  # type: ignore
+                    event_type = _get_event_attr(event, "type")
+                    if event_type in ("response.created", "response.completed"):
+                        response = _get_event_attr(event, "response")
+                        response_id = (
+                            _get_event_attr(response, "id")
+                            or _get_event_attr(event, "response_id")
+                            or response_id
+                        )
+                        continue
+                    if event_type == "response.output_text.delta":
+                        delta = _get_event_attr(event, "delta", "")
+                        if delta:
+                            assistant_text += delta
+                            await self._send(
+                                "assistant", delta, event_id=assistant_event_id
+                            )
+                        continue
+                    if event_type == "response.output_item.added":
+                        item = _get_event_attr(event, "item")
+                        if item and _get_event_attr(item, "type") == "function_call":
+                            call_id = _get_event_attr(item, "call_id") or _get_event_attr(
+                                item, "id"
+                            )
+                            if call_id:
+                                tool_calls[call_id] = {
+                                    "id": call_id,
+                                    "name": _get_event_attr(item, "name"),
+                                    "arguments": _get_event_attr(item, "arguments", ""),
+                                }
+                        continue
+                    if event_type == "response.function_call_arguments.delta":
+                        call_id = _get_event_attr(event, "call_id") or _get_event_attr(
+                            event, "item_id"
+                        )
+                        if not call_id:
+                            continue
+                        entry = tool_calls.setdefault(
+                            call_id,
+                            {
+                                "id": call_id,
+                                "name": _get_event_attr(event, "name"),
+                                "arguments": "",
+                            },
+                        )
+                        entry["arguments"] += _get_event_attr(event, "delta", "") or ""
+                        continue
+                    if event_type == "response.function_call_arguments.done":
+                        call_id = _get_event_attr(event, "call_id") or _get_event_attr(
+                            event, "item_id"
+                        )
+                        if not call_id:
+                            continue
+                        entry = tool_calls.setdefault(
+                            call_id,
+                            {
+                                "id": call_id,
+                                "name": _get_event_attr(event, "name"),
+                                "arguments": "",
+                            },
+                        )
+                        entry["arguments"] = _get_event_attr(
+                            event, "arguments", entry["arguments"]
+                        )
+                        if _get_event_attr(event, "name"):
+                            entry["name"] = _get_event_attr(event, "name")
+
+                if not tool_calls:
+                    return await self._finalize_response(assistant_text)
+
+                tool_call_list: List[ToolCall] = []
+                for entry in tool_calls.values():
+                    args, error = _parse_json_arguments(entry.get("arguments"))
+                    if error:
+                        args = {"_raw": entry.get("arguments")}
+                    tool_call_list.append(
+                        ToolCall(
+                            id=entry["id"],
+                            name=entry.get("name") or "unknown_tool",
+                            arguments=args,
+                        )
+                    )
+
+                tool_output_items: List[Dict[str, Any]] = []
+                for tool_call in tool_call_list:
+                    tool_event_id = tool_call.id or self._next_event_id("tool")
+                    await self._send(
+                        "toolStart",
+                        data={
+                            "name": tool_call.name,
+                            "input": self._summarize_tool_input(tool_call),
+                        },
+                        event_id=tool_event_id,
+                    )
+                    if tool_call.name == "create_file":
+                        content = _extract_content_from_args(tool_call.arguments)
+                        if content:
+                            await self._stream_code_preview(tool_event_id, content)
+
+                    tool_result = await self.toolbox.execute(tool_call)
+                    if tool_result.updated_content:
+                        await self._send("setCode", tool_result.updated_content)
+
+                    await self._send(
+                        "toolResult",
+                        data={
+                            "name": tool_call.name,
+                            "output": tool_result.summary,
+                            "ok": tool_result.ok,
+                        },
+                        event_id=tool_event_id,
+                    )
+
+                    tool_output_items.append(
+                        {
+                            "type": "function_call_output",
+                            "call_id": tool_call.id,
+                            "output": json.dumps(tool_result.result),
+                        }
+                    )
+
+                if response_id:
+                    previous_response_id = response_id
+                    base_input = tool_output_items
+                else:
+                    base_input = [
+                        _convert_message_to_responses_input(m)
+                        for m in prompt_messages
+                    ] + tool_output_items
 
             raise Exception("Agent exceeded max tool turns")
         finally:

@@ -1,7 +1,8 @@
 // Keep in sync with backend (llm.py)
 // Order here matches dropdown order
 export enum CodeGenerationModel {
-  GPT_5_2_2025_12_11 = "gpt-5.2-2025-12-11",
+  GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
+  GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)",
   CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101",
   CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
@@ -14,7 +15,14 @@ export enum CodeGenerationModel {
 export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   [key in CodeGenerationModel]: { name: string; inBeta: boolean };
 } = {
-  "gpt-5.2-2025-12-11": { name: "GPT 5.2", inBeta: false },
+  "gpt-5.2-codex (medium thinking)": {
+    name: "GPT 5.2 Codex (medium)",
+    inBeta: true,
+  },
+  "gpt-5.2-codex (high thinking)": {
+    name: "GPT 5.2 Codex (high)",
+    inBeta: true,
+  },
   "claude-opus-4-5-20251101": { name: "Claude Opus 4.5", inBeta: false },
   "claude-sonnet-4-5-20250929": { name: "Claude Sonnet 4.5", inBeta: true },
   "gemini-3-flash-preview (high thinking)": {
