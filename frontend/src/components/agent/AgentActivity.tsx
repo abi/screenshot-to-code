@@ -15,6 +15,7 @@ import {
   BsFileEarmarkPlus,
   BsPencilSquare,
   BsImage,
+  BsScissors,
 } from "react-icons/bs";
 import ReactMarkdown from "react-markdown";
 
@@ -100,6 +101,9 @@ function getEventIcon(type: AgentEventType, toolName?: string) {
   if (toolName === "generate_images") {
     return <BsImage className="text-pink-500" />;
   }
+  if (toolName === "remove_background") {
+    return <BsScissors className="text-teal-500" />;
+  }
   return <BsFileEarmarkPlus className="text-gray-500" />;
 }
 
@@ -123,6 +127,11 @@ function getEventTitle(event: AgentEvent): string {
       return event.status === "running"
         ? "Generating images"
         : "Generated images";
+    }
+    if (event.toolName === "remove_background") {
+      return event.status === "running"
+        ? "Removing background"
+        : "Background removed";
     }
     return event.status === "running" ? "Running tool" : "Tool completed";
   }
@@ -149,6 +158,9 @@ function getToolSummary(event: AgentEvent): string | null {
     return images
       ? `${images} image${images > 1 ? "s" : ""} generated`
       : "Images generated";
+  }
+  if (event.toolName === "remove_background") {
+    return output?.result_url ? "Background removed successfully" : "Processing image";
   }
   return "Tool completed";
 }
@@ -291,6 +303,60 @@ function renderToolDetails(event: AgentEvent) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {event.toolName === "remove_background" && !hasError && (
+        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="text-xs text-gray-500 mb-2">Before</div>
+              {output?.image_url ? (
+                <img
+                  src={output.image_url}
+                  alt="Original image"
+                  className="w-full max-w-[120px] rounded-md border border-gray-200 dark:border-gray-700"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                  N/A
+                </div>
+              )}
+            </div>
+            <div className="text-gray-400 text-xl">→</div>
+            <div className="flex-1">
+              <div className="text-xs text-gray-500 mb-2">After</div>
+              {output?.result_url ? (
+                <div className="relative">
+                  <div
+                    className="absolute inset-0 rounded-md max-w-[120px]"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)",
+                      backgroundSize: "10px 10px",
+                      backgroundPosition: "0 0, 0 5px, 5px -5px, -5px 0px",
+                    }}
+                  />
+                  <img
+                    src={output.result_url}
+                    alt="Background removed"
+                    className="relative w-full max-w-[120px] rounded-md border border-gray-200 dark:border-gray-700"
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div className="h-20 w-20 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                  N/A
+                </div>
+              )}
+            </div>
+          </div>
+          {output?.result_url && (
+            <div className="text-xs text-gray-500 mt-3 truncate">
+              {output.result_url}
+            </div>
+          )}
         </div>
       )}
 

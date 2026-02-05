@@ -13,6 +13,7 @@ from google.genai import types
 from codegen.utils import extract_html_content
 from config import REPLICATE_API_KEY
 from image_generation.core import process_tasks
+from image_generation.replicate import remove_background
 from llm import (
     Llm,
     OPENAI_MODELS,
@@ -209,6 +210,8 @@ class AgentToolbox:
             return self._edit_file(tool_call.arguments)
         if tool_call.name == "generate_images":
             return await self._generate_images(tool_call.arguments)
+        if tool_call.name == "remove_background":
+            return await self._remove_background(tool_call.arguments)
         return ToolExecutionResult(
             ok=False,
             result={"error": f"Unknown tool: {tool_call.name}"},
@@ -408,6 +411,38 @@ class AgentToolbox:
         summary = {"images": summary_items}
         return ToolExecutionResult(ok=True, result=result, summary=summary)
 
+    async def _remove_background(self, args: Dict[str, Any]) -> ToolExecutionResult:
+        if not REPLICATE_API_KEY:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "Background removal requires REPLICATE_API_KEY."},
+                summary={"error": "Missing Replicate API key"},
+            )
+
+        image_url = _ensure_str(args.get("image_url"))
+        if not image_url:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "remove_background requires an image_url"},
+                summary={"error": "Missing image_url"},
+            )
+
+        try:
+            result_url = await remove_background(image_url, REPLICATE_API_KEY)
+            result = {"image_url": image_url, "result_url": result_url}
+            summary = {
+                "image_url": _summarize_text(image_url, 100),
+                "result_url": result_url,
+                "status": "ok",
+            }
+            return ToolExecutionResult(ok=True, result=result, summary=summary)
+        except Exception as e:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": str(e), "image_url": image_url},
+                summary={"error": _summarize_text(str(e), 100)},
+            )
+
 
 class AgenticRunner:
     def __init__(
@@ -569,6 +604,9 @@ class AgenticRunner:
                     "count": len(prompts),
                     "prompts": [_summarize_text(_ensure_str(p), 140) for p in prompts],
                 }
+        if tool_call.name == "remove_background":
+            image_url = _ensure_str(args.get("image_url"))
+            return {"image_url": _summarize_text(image_url, 100)}
         return args
 
     def _tool_schemas(self) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[types.Tool]]:
@@ -632,6 +670,16 @@ class AgenticRunner:
             },
             "required": ["prompts"],
         }
+        remove_bg_schema = {
+            "type": "object",
+            "properties": {
+                "image_url": {
+                    "type": "string",
+                    "description": "URL of the image to remove the background from.",
+                },
+            },
+            "required": ["image_url"],
+        }
 
         openai_tools = [
             {
@@ -658,6 +706,14 @@ class AgenticRunner:
                     "parameters": image_schema,
                 },
             },
+            {
+                "type": "function",
+                "function": {
+                    "name": "remove_background",
+                    "description": "Remove the background from an image. Returns a URL to the processed image with transparent background.",
+                    "parameters": remove_bg_schema,
+                },
+            },
         ]
 
         anthropic_tools = [
@@ -675,6 +731,11 @@ class AgenticRunner:
                 "name": "generate_images",
                 "description": "Generate image URLs from prompts. Use to replace placeholder images. You can pass multiple prompts at once.",
                 "input_schema": image_schema,
+            },
+            {
+                "name": "remove_background",
+                "description": "Remove the background from an image. Returns a URL to the processed image with transparent background.",
+                "input_schema": remove_bg_schema,
             },
         ]
 
@@ -695,6 +756,11 @@ class AgenticRunner:
                         name="generate_images",
                         description="Generate image URLs from prompts. Use to replace placeholder images. You can pass multiple prompts at once.",
                         parameters_json_schema=image_schema,
+                    ),
+                    types.FunctionDeclaration(
+                        name="remove_background",
+                        description="Remove the background from an image. Returns a URL to the processed image with transparent background.",
+                        parameters_json_schema=remove_bg_schema,
                     ),
                 ]
             )
@@ -768,6 +834,17 @@ class AgenticRunner:
             },
             "required": ["prompts"],
         }
+        remove_bg_schema = {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "image_url": {
+                    "type": "string",
+                    "description": "URL of the image to remove the background from.",
+                },
+            },
+            "required": ["image_url"],
+        }
         return [
             {
                 "type": "function",
@@ -788,6 +865,13 @@ class AgenticRunner:
                 "name": "generate_images",
                 "description": "Generate image URLs from prompts. Use to replace placeholder images. You can pass multiple prompts at once.",
                 "parameters": image_schema,
+                "strict": True,
+            },
+            {
+                "type": "function",
+                "name": "remove_background",
+                "description": "Remove the background from an image. Returns a URL to the processed image with transparent background.",
+                "parameters": remove_bg_schema,
                 "strict": True,
             },
         ]
@@ -814,7 +898,7 @@ class AgenticRunner:
         openai_tools, _, _ = self._tool_schemas()
         messages: List[Dict[str, Any]] = [dict(m) for m in prompt_messages]
 
-        max_steps = 8
+        max_steps = 20
         try:
             for _ in range(max_steps):
                 assistant_event_id = self._next_event_id("assistant")
@@ -982,7 +1066,7 @@ class AgenticRunner:
             _convert_message_to_responses_input(m) for m in prompt_messages
         ]
 
-        max_steps = 8
+        max_steps = 20
         try:
             for _ in range(max_steps):
                 assistant_event_id = self._next_event_id("assistant")
@@ -1295,7 +1379,7 @@ class AgenticRunner:
         client = AsyncAnthropic(api_key=self.anthropic_api_key)
         _, anthropic_tools, _ = self._tool_schemas()
 
-        max_steps = 8
+        max_steps = 20
         try:
             for _ in range(max_steps):
                 assistant_event_id = self._next_event_id("assistant")
@@ -1517,7 +1601,7 @@ class AgenticRunner:
         _, _, gemini_tools = self._tool_schemas()
         client = genai.Client(api_key=self.gemini_api_key)
 
-        max_steps = 8
+        max_steps = 20
         for _ in range(max_steps):
             assistant_event_id = self._next_event_id("assistant")
             thinking_event_id = self._next_event_id("thinking")
