@@ -702,6 +702,96 @@ class AgenticRunner:
 
         return openai_tools, anthropic_tools, gemini_tools
 
+    def _openai_responses_tools(self) -> List[Dict[str, Any]]:
+        create_schema = {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "path": {
+                    "type": ["string", "null"],
+                    "description": "Path for the main HTML file. Use index.html if unsure.",
+                },
+                "content": {
+                    "type": "string",
+                    "description": "The full HTML content for the app (single file).",
+                },
+            },
+            "required": ["path", "content"],
+        }
+        edit_schema = {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "path": {
+                    "type": ["string", "null"],
+                    "description": "Path for the main HTML file.",
+                },
+                "old_text": {
+                    "type": ["string", "null"],
+                    "description": "Exact text to replace.",
+                },
+                "new_text": {
+                    "type": ["string", "null"],
+                    "description": "Replacement text.",
+                },
+                "count": {
+                    "type": ["integer", "null"],
+                    "description": "How many occurrences to replace. Use -1 for all.",
+                },
+                "edits": {
+                    "type": ["array", "null"],
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "old_text": {"type": ["string", "null"]},
+                            "new_text": {"type": ["string", "null"]},
+                            "count": {"type": ["integer", "null"]},
+                        },
+                        "required": ["old_text", "new_text", "count"],
+                    },
+                },
+            },
+            "required": ["path", "old_text", "new_text", "count", "edits"],
+        }
+        image_schema = {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "prompts": {
+                    "type": ["array", "null"],
+                    "items": {
+                        "type": "string",
+                        "description": "Prompt describing a single image to generate.",
+                    },
+                }
+            },
+            "required": ["prompts"],
+        }
+        return [
+            {
+                "type": "function",
+                "name": "create_file",
+                "description": "Create the main HTML file for the app. Use exactly once to write the full HTML. Returns the updated file content.",
+                "parameters": create_schema,
+                "strict": True,
+            },
+            {
+                "type": "function",
+                "name": "edit_file",
+                "description": "Edit the main HTML file using exact string replacements. Do not regenerate the entire file. Returns the updated file content.",
+                "parameters": edit_schema,
+                "strict": True,
+            },
+            {
+                "type": "function",
+                "name": "generate_images",
+                "description": "Generate image URLs from prompts. Use to replace placeholder images. You can pass multiple prompts at once.",
+                "parameters": image_schema,
+                "strict": True,
+            },
+        ]
+
     async def run(self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]) -> str:
         self._seed_file_state_from_messages(prompt_messages)
         if model in OPENAI_MODELS:
@@ -887,21 +977,25 @@ class AgenticRunner:
             raise Exception("OpenAI API key is missing.")
 
         client = AsyncOpenAI(api_key=self.openai_api_key, base_url=self.openai_base_url)
-        openai_tools, _, _ = self._tool_schemas()
-        base_input = [_convert_message_to_responses_input(m) for m in prompt_messages]
-        previous_response_id: Optional[str] = None
+        openai_tools = self._openai_responses_tools()
+        input_items: List[Dict[str, Any]] = [
+            _convert_message_to_responses_input(m) for m in prompt_messages
+        ]
 
         max_steps = 8
         try:
             for _ in range(max_steps):
                 assistant_event_id = self._next_event_id("assistant")
+                thinking_event_id = self._next_event_id("thinking")
                 assistant_text = ""
                 tool_calls: Dict[str, Dict[str, Any]] = {}
-                response_id: Optional[str] = None
+                item_to_call_id: Dict[str, str] = {}
+                output_items_by_index: Dict[int, Dict[str, Any]] = {}
+                started_tool_ids: set[str] = set()
 
                 params: Dict[str, Any] = {
                     "model": get_openai_api_name(model),
-                    "input": base_input,
+                    "input": input_items,
                     "tools": openai_tools,
                     "tool_choice": "auto",
                     "stream": True,
@@ -910,8 +1004,6 @@ class AgenticRunner:
                 reasoning_effort = get_openai_reasoning_effort(model)
                 if reasoning_effort:
                     params["reasoning"] = {"effort": reasoning_effort}
-                if previous_response_id:
-                    params["previous_response_id"] = previous_response_id
 
                 responses_client = getattr(client, "responses", None)
                 if responses_client is None:
@@ -922,13 +1014,17 @@ class AgenticRunner:
 
                 async for event in stream:  # type: ignore
                     event_type = _get_event_attr(event, "type")
-                    if event_type in ("response.created", "response.completed"):
-                        response = _get_event_attr(event, "response")
-                        response_id = (
-                            _get_event_attr(response, "id")
-                            or _get_event_attr(event, "response_id")
-                            or response_id
-                        )
+                    if event_type in (
+                        "response.created",
+                        "response.completed",
+                        "response.done",
+                        "response.output_item.done",
+                    ):
+                        if event_type == "response.output_item.done":
+                            output_index = _get_event_attr(event, "output_index")
+                            item = _get_event_attr(event, "item")
+                            if isinstance(output_index, int) and item:
+                                output_items_by_index[output_index] = item
                         continue
                     if event_type == "response.output_text.delta":
                         delta = _get_event_attr(event, "delta", "")
@@ -938,23 +1034,68 @@ class AgenticRunner:
                                 "assistant", delta, event_id=assistant_event_id
                             )
                         continue
+                    if event_type in (
+                        "response.reasoning_text.delta",
+                        "response.reasoning_summary_text.delta",
+                    ):
+                        delta = _get_event_attr(event, "delta", "")
+                        if delta:
+                            await self._send("thinking", delta, event_id=thinking_event_id)
+                        continue
+                    if event_type in (
+                        "response.reasoning_summary_part.added",
+                        "response.reasoning_summary_part.done",
+                    ):
+                        part = _get_event_attr(event, "part") or {}
+                        text = _get_event_attr(part, "text", "")
+                        if text:
+                            await self._send("thinking", text, event_id=thinking_event_id)
+                        continue
                     if event_type == "response.output_item.added":
                         item = _get_event_attr(event, "item")
-                        if item and _get_event_attr(item, "type") == "function_call":
-                            call_id = _get_event_attr(item, "call_id") or _get_event_attr(
-                                item, "id"
-                            )
+                        item_type = _get_event_attr(item, "type") if item else None
+                        output_index = _get_event_attr(event, "output_index")
+                        if isinstance(output_index, int) and item:
+                            output_items_by_index.setdefault(output_index, item)
+                        if item and item_type in ("function_call", "custom_tool_call"):
+                            item_id = _get_event_attr(item, "id")
+                            call_id = _get_event_attr(item, "call_id") or item_id
+                            if item_id and call_id:
+                                item_to_call_id[item_id] = call_id
                             if call_id:
-                                tool_calls[call_id] = {
-                                    "id": call_id,
-                                    "name": _get_event_attr(item, "name"),
-                                    "arguments": _get_event_attr(item, "arguments", ""),
-                                }
+                                if item_id and item_id in tool_calls and item_id != call_id:
+                                    existing = tool_calls.pop(item_id)
+                                    tool_calls[call_id] = {
+                                        **existing,
+                                        "id": call_id,
+                                    }
+                                args_value = _get_event_attr(item, "arguments")
+                                if args_value is None and item_type == "custom_tool_call":
+                                    args_value = _get_event_attr(item, "input")
+                                tool_calls.setdefault(
+                                    call_id,
+                                    {
+                                        "id": call_id,
+                                        "name": _get_event_attr(item, "name"),
+                                        "arguments": args_value or "",
+                                        "started": False,
+                                        "last_len": 0,
+                                    },
+                                )
                         continue
-                    if event_type == "response.function_call_arguments.delta":
-                        call_id = _get_event_attr(event, "call_id") or _get_event_attr(
-                            event, "item_id"
-                        )
+                    if event_type in (
+                        "response.function_call_arguments.delta",
+                        "response.mcp_call_arguments.delta",
+                        "response.custom_tool_call_input.delta",
+                    ):
+                        item_id = _get_event_attr(event, "item_id")
+                        call_id = _get_event_attr(event, "call_id")
+                        if call_id and item_id:
+                            item_to_call_id[item_id] = call_id
+                        if not call_id:
+                            call_id = item_to_call_id.get(item_id) if item_id else None
+                        if not call_id and item_id:
+                            call_id = item_id
                         if not call_id:
                             continue
                         entry = tool_calls.setdefault(
@@ -963,14 +1104,59 @@ class AgenticRunner:
                                 "id": call_id,
                                 "name": _get_event_attr(event, "name"),
                                 "arguments": "",
+                                "started": False,
+                                "last_len": 0,
                             },
                         )
-                        entry["arguments"] += _get_event_attr(event, "delta", "") or ""
+                        delta_value = _get_event_attr(event, "delta")
+                        if delta_value is None:
+                            delta_value = _get_event_attr(event, "input")
+                        entry["arguments"] += delta_value or ""
+                        if entry.get("name") == "create_file":
+                            content = _extract_content_from_args(entry.get("arguments"))
+                            if content is not None:
+                                if not entry["started"]:
+                                    path = (
+                                        _extract_path_from_args(entry.get("arguments"))
+                                        or self.file_state.path
+                                        or "index.html"
+                                    )
+                                    await self._send(
+                                        "toolStart",
+                                        data={
+                                            "name": "create_file",
+                                            "input": {
+                                                "path": path,
+                                                "contentLength": len(content),
+                                                "preview": _summarize_text(content, 200),
+                                            },
+                                        },
+                                        event_id=entry["id"],
+                                    )
+                                    entry["started"] = True
+                                    started_tool_ids.add(entry["id"])
+                                if entry["last_len"] == 0 and content:
+                                    entry["last_len"] = len(content)
+                                    await self._send("setCode", content)
+                                    self._mark_preview_length(entry["id"], len(content))
+                                elif len(content) - entry["last_len"] >= 40:
+                                    entry["last_len"] = len(content)
+                                    await self._send("setCode", content)
+                                    self._mark_preview_length(entry["id"], len(content))
                         continue
-                    if event_type == "response.function_call_arguments.done":
-                        call_id = _get_event_attr(event, "call_id") or _get_event_attr(
-                            event, "item_id"
-                        )
+                    if event_type in (
+                        "response.function_call_arguments.done",
+                        "response.mcp_call_arguments.done",
+                        "response.custom_tool_call_input.done",
+                    ):
+                        item_id = _get_event_attr(event, "item_id")
+                        call_id = _get_event_attr(event, "call_id")
+                        if call_id and item_id:
+                            item_to_call_id[item_id] = call_id
+                        if not call_id:
+                            call_id = item_to_call_id.get(item_id) if item_id else None
+                        if not call_id and item_id:
+                            call_id = item_id
                         if not call_id:
                             continue
                         entry = tool_calls.setdefault(
@@ -979,41 +1165,88 @@ class AgenticRunner:
                                 "id": call_id,
                                 "name": _get_event_attr(event, "name"),
                                 "arguments": "",
+                                "started": False,
+                                "last_len": 0,
                             },
                         )
-                        entry["arguments"] = _get_event_attr(
-                            event, "arguments", entry["arguments"]
-                        )
+                        final_value = _get_event_attr(event, "arguments")
+                        if final_value is None:
+                            final_value = _get_event_attr(event, "input")
+                        if final_value is None:
+                            final_value = entry["arguments"]
+                        entry["arguments"] = final_value
                         if _get_event_attr(event, "name"):
                             entry["name"] = _get_event_attr(event, "name")
+                        output_index = _get_event_attr(event, "output_index")
+                        if (
+                            item_id
+                            and isinstance(output_index, int)
+                            and isinstance(output_items_by_index.get(output_index), dict)
+                        ):
+                            output_items_by_index[output_index] = {
+                                **output_items_by_index[output_index],
+                                "arguments": entry["arguments"],
+                                "call_id": call_id,
+                                "name": entry.get("name"),
+                            }
 
-                if not tool_calls:
+                output_items = [
+                    output_items_by_index[idx]
+                    for idx in sorted(output_items_by_index.keys())
+                    if output_items_by_index.get(idx)
+                ]
+                tool_items = [
+                    item
+                    for item in output_items
+                    if isinstance(item, dict)
+                    and item.get("type") in ("function_call", "custom_tool_call")
+                ]
+                if not tool_items and not tool_calls:
                     return await self._finalize_response(assistant_text)
 
                 tool_call_list: List[ToolCall] = []
-                for entry in tool_calls.values():
-                    args, error = _parse_json_arguments(entry.get("arguments"))
-                    if error:
-                        args = {"_raw": entry.get("arguments")}
-                    tool_call_list.append(
-                        ToolCall(
-                            id=entry["id"],
-                            name=entry.get("name") or "unknown_tool",
-                            arguments=args,
+                if tool_items:
+                    for item in tool_items:
+                        raw_args = item.get("arguments")
+                        if raw_args is None and item.get("type") == "custom_tool_call":
+                            raw_args = item.get("input")
+                        args, error = _parse_json_arguments(raw_args)
+                        if error:
+                            args = {"_raw": raw_args}
+                        call_id = item.get("call_id") or item.get("id")
+                        tool_call_list.append(
+                            ToolCall(
+                                id=call_id or f"call-{uuid.uuid4().hex[:6]}",
+                                name=item.get("name") or "unknown_tool",
+                                arguments=args,
+                            )
                         )
-                    )
+                else:
+                    for entry in tool_calls.values():
+                        args, error = _parse_json_arguments(entry.get("arguments"))
+                        if error:
+                            args = {"_raw": entry.get("arguments")}
+                        call_id = entry.get("id") or entry.get("call_id")
+                        tool_call_list.append(
+                            ToolCall(
+                                id=call_id or f"call-{uuid.uuid4().hex[:6]}",
+                                name=entry.get("name") or "unknown_tool",
+                                arguments=args,
+                            )
+                        )
 
                 tool_output_items: List[Dict[str, Any]] = []
                 for tool_call in tool_call_list:
                     tool_event_id = tool_call.id or self._next_event_id("tool")
-                    await self._send(
-                        "toolStart",
-                        data={
-                            "name": tool_call.name,
-                            "input": self._summarize_tool_input(tool_call),
-                        },
-                        event_id=tool_event_id,
-                    )
+                    if tool_event_id not in started_tool_ids:
+                        await self._send(
+                            "toolStart",
+                            data={
+                                "name": tool_call.name,
+                                "input": self._summarize_tool_input(tool_call),
+                            },
+                            event_id=tool_event_id,
+                        )
                     if tool_call.name == "create_file":
                         content = _extract_content_from_args(tool_call.arguments)
                         if content:
@@ -1041,14 +1274,8 @@ class AgenticRunner:
                         }
                     )
 
-                if response_id:
-                    previous_response_id = response_id
-                    base_input = tool_output_items
-                else:
-                    base_input = [
-                        _convert_message_to_responses_input(m)
-                        for m in prompt_messages
-                    ] + tool_output_items
+                input_items.extend(output_items)
+                input_items.extend(tool_output_items)
 
             raise Exception("Agent exceeded max tool turns")
         finally:
