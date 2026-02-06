@@ -321,9 +321,9 @@ class TestCreatePrompt:
     async def test_video_mode_basic_prompt_creation(self) -> None:
         """Test basic video prompt creation in video mode.
 
-        For video mode with generation_type="create", the prompt is empty
-        because the actual generation is handled by VideoGenerationStage
-        which sends the video directly to Gemini.
+        For video mode with generation_type="create", we now assemble
+        a regular system+user prompt so video generation can run through
+        the agentic runner path.
         """
         # Setup test data
         video_data_url: str = "data:video/mp4;base64,test_video_data"
@@ -345,9 +345,26 @@ class TestCreatePrompt:
             is_imported_from_code=params.get("isImportedFromCode", False),
         )
 
-        # For video create mode, prompt is empty - actual generation handled by VideoGenerationStage
         expected: ExpectedResult = {
-            "messages": [],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "<CONTAINS:You will be given a video of a user interacting>",
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": video_data_url, "detail": "high"},
+                        },
+                        {
+                            "type": "text",
+                            "text": "Analyze this video and generate the code.",
+                        },
+                    ],
+                },
+            ],
             "image_cache": {}
         }
 

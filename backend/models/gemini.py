@@ -16,6 +16,7 @@ from video.cost_estimation import (
 
 # Set to True to print debug messages for Gemini requests
 DEBUG_GEMINI = False
+DEFAULT_VIDEO_FPS = 10
 
 
 def get_gemini_api_model_name(model: Llm) -> str:
@@ -149,10 +150,23 @@ def convert_message_to_gemini_content(
         parts.append({"text": text})
     for image_data in image_data_list:
         if "data" in image_data:
+            mime_type = image_data["mime_type"]
+            media_bytes = base64.b64decode(image_data["data"])
+            if mime_type.startswith("video/"):
+                # Gemini video inputs require inline video data plus metadata.
+                parts.append(
+                    types.Part(
+                        inline_data=types.Blob(data=media_bytes, mime_type=mime_type),
+                        video_metadata=types.VideoMetadata(fps=DEFAULT_VIDEO_FPS),
+                        media_resolution=types.PartMediaResolutionLevel.MEDIA_RESOLUTION_HIGH,
+                    )
+                )
+                continue
+
             parts.append(
                 types.Part.from_bytes(
-                    data=base64.b64decode(image_data["data"]),
-                    mime_type=image_data["mime_type"],
+                    data=media_bytes,
+                    mime_type=mime_type,
                     media_resolution=types.PartMediaResolutionLevel.MEDIA_RESOLUTION_ULTRA_HIGH,
                 )
             )
