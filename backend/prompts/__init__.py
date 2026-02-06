@@ -21,10 +21,6 @@ For mobile screenshots, do not include the device frame or browser chrome; focus
 the actual UI mockups.
 """
 
-SVG_USER_PROMPT = """
-Generate code for a SVG that looks exactly like the provided screenshot(s).
-"""
-
 
 async def create_prompt(
     stack: Stack,
@@ -145,12 +141,7 @@ def assemble_imported_code_prompt(
     code: str, stack: Stack
 ) -> list[ChatCompletionMessageParam]:
     system_content = IMPORTED_CODE_SYSTEM_PROMPTS[stack]
-
-    user_content = (
-        "Here is the code of the app: " + code
-        if stack != "svg"
-        else "Here is the code of the SVG: " + code
-    )
+    user_content = "Here is the code of the app: " + code
 
     return [
         {
@@ -166,7 +157,7 @@ def assemble_prompt(
     text_prompt: str = "",
 ) -> list[ChatCompletionMessageParam]:
     system_content = SYSTEM_PROMPTS[stack]
-    user_prompt = USER_PROMPT if stack != "svg" else SVG_USER_PROMPT
+    user_prompt = USER_PROMPT
 
     # Append optional text instructions if provided
     if text_prompt.strip():

@@ -58,7 +58,6 @@ def seed_file_state_from_messages(
     system_text = extract_text_content(system_message)
     markers = [
         "Here is the code of the app:",
-        "Here is the code of the SVG:",
     ]
     for marker in markers:
         if marker not in system_text:

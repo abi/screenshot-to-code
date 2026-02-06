@@ -103,16 +103,6 @@ In terms of libraries,
 {FORMAT_INSTRUCTIONS}
 """
 
-SVG_SYSTEM_PROMPT = f"""
-You are an expert at building SVGs.
-
-{GENERAL_INSTRUCTIONS}
-
-Return only the full code in <svg></svg> tags.
-Do not include markdown "```" or "```svg" at the start or end.
-"""
-
-
 SYSTEM_PROMPTS = SystemPrompts(
     html_css=HTML_CSS_SYSTEM_PROMPT,
     html_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
@@ -120,5 +110,4 @@ SYSTEM_PROMPTS = SystemPrompts(
     bootstrap=BOOTSTRAP_SYSTEM_PROMPT,
     ionic_tailwind=IONIC_TAILWIND_SYSTEM_PROMPT,
     vue_tailwind=VUE_TAILWIND_SYSTEM_PROMPT,
-    svg=SVG_SYSTEM_PROMPT,
 )

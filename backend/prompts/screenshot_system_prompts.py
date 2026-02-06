@@ -164,23 +164,6 @@ Follow the tool instructions in the system prompt.
 """
 
 
-SVG_SYSTEM_PROMPT = """
-You are an expert at building SVGs.
-You take screenshots of a reference web page from the user, and then build a SVG that looks exactly like the screenshot.
-
-- Make sure the SVG looks exactly like the screenshot.
-- Pay close attention to background color, text color, font size, font family, 
-padding, margin, border, etc. Match the colors and sizes exactly.
-- Use the exact text from the screenshot.
-- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" and "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
-- Repeat elements as needed to match the screenshot. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
-- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
-- You can use Google Fonts
-
-Follow the tool instructions in the system prompt.
-"""
-
-
 SYSTEM_PROMPTS = SystemPrompts(
     html_css=HTML_CSS_SYSTEM_PROMPT,
     html_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
@@ -188,5 +171,4 @@ SYSTEM_PROMPTS = SystemPrompts(
     bootstrap=BOOTSTRAP_SYSTEM_PROMPT,
     ionic_tailwind=IONIC_TAILWIND_SYSTEM_PROMPT,
     vue_tailwind=VUE_TAILWIND_SYSTEM_PROMPT,
-    svg=SVG_SYSTEM_PROMPT,
 )
