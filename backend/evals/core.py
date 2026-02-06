@@ -56,7 +56,6 @@ async def generate_code_core(
         anthropic_api_key=ANTHROPIC_API_KEY,
         gemini_api_key=GEMINI_API_KEY,
         should_generate_images=True,
-        image_cache={},
         initial_file_state=None,
         option_codes=None,
     )

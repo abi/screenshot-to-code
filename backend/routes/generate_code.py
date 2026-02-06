@@ -71,10 +71,9 @@ class PipelineContext:
 
     websocket: WebSocket
     ws_comm: "WebSocketCommunicator | None" = None
-    params: Dict[str, str] = field(default_factory=dict)
+    params: Dict[str, Any] = field(default_factory=dict)
     extracted_params: "ExtractedParams | None" = None
     prompt_messages: List[ChatCompletionMessageParam] = field(default_factory=list)
-    image_cache: Dict[str, str] = field(default_factory=dict)
     variant_models: List[Llm] = field(default_factory=list)
     completions: List[str] = field(default_factory=list)
     variant_completions: Dict[int, str] = field(default_factory=dict)
@@ -198,9 +197,9 @@ class WebSocketCommunicator:
                 print("WebSocket already closed by client")
             self.is_closed = True
 
-    async def receive_params(self) -> Dict[str, str]:
+    async def receive_params(self) -> Dict[str, Any]:
         """Receive parameters from the client"""
-        params: Dict[str, str] = await self.websocket.receive_json()
+        params: Dict[str, Any] = await self.websocket.receive_json()
         print("Received params")
         return params
 
@@ -236,7 +235,7 @@ class ParameterExtractionStage:
     def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
         self.throw_error = throw_error
 
-    async def extract_and_validate(self, params: Dict[str, str]) -> ExtractedParams:
+    async def extract_and_validate(self, params: Dict[str, Any]) -> ExtractedParams:
         """Extract and validate all parameters from the request"""
         # Read the code config settings (stack) from the request.
         generated_code_config = params.get("generatedCodeConfig", "")
@@ -284,13 +283,28 @@ class ParameterExtractionStage:
         generation_type = cast(Literal["create", "update"], generation_type)
 
         # Extract prompt content
-        prompt = params.get("prompt", {"text": "", "images": []})
+        prompt: PromptContent = {"text": "", "images": []}
+        raw_prompt = params.get("prompt")
+        if isinstance(raw_prompt, dict):
+            text = raw_prompt.get("text")
+            images = raw_prompt.get("images")
+            prompt = {
+                "text": text if isinstance(text, str) else "",
+                "images": [img for img in images if isinstance(img, str)]
+                if isinstance(images, list)
+                else [],
+            }
 
         # Extract history (default to empty list)
-        history = params.get("history", [])
+        history: List[Dict[str, Any]] = []
+        raw_history = params.get("history")
+        if isinstance(raw_history, list):
+            for item in raw_history:
+                if isinstance(item, dict):
+                    history.append(item)
 
         # Extract imported code flag
-        is_imported_from_code = params.get("isImportedFromCode", False)
+        is_imported_from_code = bool(params.get("isImportedFromCode", False))
 
         # Extract file state for agentic edits
         raw_file_state = params.get("fileState")
@@ -328,7 +342,7 @@ class ParameterExtractionStage:
         )
 
     def _get_from_settings_dialog_or_env(
-        self, params: dict[str, str], key: str, env_var: str | None
+        self, params: dict[str, Any], key: str, env_var: str | None
     ) -> str | None:
         """Get value from client settings or environment variable"""
         value = params.get(key)
@@ -462,10 +476,10 @@ class PromptCreationStage:
     async def create_prompt(
         self,
         extracted_params: ExtractedParams,
-    ) -> tuple[List[ChatCompletionMessageParam], Dict[str, str]]:
-        """Create prompt messages and return image cache"""
+    ) -> List[ChatCompletionMessageParam]:
+        """Create prompt messages"""
         try:
-            prompt_messages, image_cache = await create_prompt(
+            prompt_messages, _ = await create_prompt(
                 stack=extracted_params.stack,
                 input_mode=extracted_params.input_mode,
                 generation_type=extracted_params.generation_type,
@@ -476,7 +490,7 @@ class PromptCreationStage:
 
             print_prompt_summary(prompt_messages, truncate=False)
 
-            return prompt_messages, image_cache
+            return prompt_messages
         except Exception:
             await self.throw_error(
                 "Error assembling prompt. Contact support at support@picoapps.xyz"
@@ -503,7 +517,7 @@ class MockResponseStage:
         """Generate mock response for testing"""
 
         async def process_chunk(content: str, variantIndex: int):
-            await self.send_message("chunk", content, variantIndex)
+            await self.send_message("chunk", content, variantIndex, None, None)
 
         completion_results = [
             await mock_completion(process_chunk, input_mode=input_mode)
@@ -511,8 +525,14 @@ class MockResponseStage:
         completions = [result["code"] for result in completion_results]
 
         # Send the complete variant back to the client
-        await self.send_message("setCode", completions[0], 0)
-        await self.send_message("variantComplete", "Variant generation complete", 0)
+        await self.send_message("setCode", completions[0], 0, None, None)
+        await self.send_message(
+            "variantComplete",
+            "Variant generation complete",
+            0,
+            None,
+            None,
+        )
 
         return completions
 
@@ -553,7 +573,6 @@ class AgenticGenerationStage:
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
         should_generate_images: bool,
-        image_cache: Dict[str, str],
         file_state: Dict[str, str] | None,
         option_codes: List[str] | None,
     ):
@@ -563,7 +582,6 @@ class AgenticGenerationStage:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
-        self.image_cache = image_cache
         self.file_state = file_state
         self.option_codes = option_codes or []
 
@@ -598,15 +616,29 @@ class AgenticGenerationStage:
         prompt_messages: List[ChatCompletionMessageParam],
     ) -> str:
         try:
+            async def send_runner_message(
+                type: str,
+                value: str | None,
+                variant_index: int,
+                data: Dict[str, Any] | None,
+                event_id: str | None,
+            ) -> None:
+                await self.send_message(
+                    cast(MessageType, type),
+                    value,
+                    variant_index,
+                    data,
+                    event_id,
+                )
+
             runner = AgenticRunner(
-                send_message=self.send_message,
+                send_message=send_runner_message,
                 variant_index=index,
                 openai_api_key=self.openai_api_key,
                 openai_base_url=self.openai_base_url,
                 anthropic_api_key=self.anthropic_api_key,
                 gemini_api_key=self.gemini_api_key,
                 should_generate_images=self.should_generate_images,
-                image_cache=self.image_cache,
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,
             )
@@ -743,16 +775,17 @@ class PromptCreationMiddleware(Middleware):
     ) -> None:
         prompt_creator = PromptCreationStage(context.throw_error)
         assert context.extracted_params is not None
-        context.prompt_messages, context.image_cache = (
-            await prompt_creator.create_prompt(
-                context.extracted_params,
-            )
+        context.prompt_messages = await prompt_creator.create_prompt(
+            context.extracted_params,
         )
-        if context.prompt_messages and context.prompt_messages[0].get("content"):
-            context.prompt_messages[0]["content"] = apply_tool_instructions(
-                str(context.prompt_messages[0]["content"]),
-                context.extracted_params.should_generate_images,
-            )
+        if context.prompt_messages:
+            first_message = cast(Dict[str, Any], context.prompt_messages[0])
+            first_content = first_message.get("content")
+            if first_content:
+                first_message["content"] = apply_tool_instructions(
+                    str(first_content),
+                    context.extracted_params.should_generate_images,
+                )
 
         await next_func()
 
@@ -798,7 +831,6 @@ class CodeGenerationMiddleware(Middleware):
                     anthropic_api_key=context.extracted_params.anthropic_api_key,
                     gemini_api_key=GEMINI_API_KEY,
                     should_generate_images=context.extracted_params.should_generate_images,
-                    image_cache=context.image_cache,
                     file_state=context.extracted_params.file_state,
                     option_codes=context.extracted_params.option_codes,
                 )

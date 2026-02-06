@@ -279,22 +279,6 @@ def _copy_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     return copy.deepcopy(schema)
 
 
-def serialize_openai_chat_tools(
-    tools: List[CanonicalToolDefinition],
-) -> List[Dict[str, Any]]:
-    return [
-        {
-            "type": "function",
-            "function": {
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": _copy_schema(tool.parameters),
-            },
-        }
-        for tool in tools
-    ]
-
-
 def _nullable_type(type_value: Any) -> Any:
     if isinstance(type_value, list):
         if "null" not in type_value:
@@ -441,14 +425,12 @@ class AgentToolbox:
     def __init__(
         self,
         file_state: AgentFileState,
-        image_cache: Dict[str, str],
         should_generate_images: bool,
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
         option_codes: Optional[List[str]] = None,
     ):
         self.file_state = file_state
-        self.image_cache = image_cache
         self.should_generate_images = should_generate_images
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
@@ -616,40 +598,25 @@ class AgentToolbox:
                 result={"error": "No valid prompts provided"},
                 summary={"error": "No valid prompts"},
             )
+        if REPLICATE_API_KEY:
+            model = "flux"
+            api_key = REPLICATE_API_KEY
+            base_url = None
+        else:
+            if not self.openai_api_key:
+                return ToolExecutionResult(
+                    ok=False,
+                    result={"error": "No API key available for image generation."},
+                    summary={"error": "Missing image generation API key"},
+                )
+            model = "dalle3"
+            api_key = self.openai_api_key
+            base_url = self.openai_base_url
 
-        cached_results: Dict[str, Optional[str]] = {}
-        to_generate: List[str] = []
-        for prompt in unique_prompts:
-            if prompt in self.image_cache:
-                cached_results[prompt] = self.image_cache[prompt]
-            else:
-                to_generate.append(prompt)
-
-        generated_results: Dict[str, Optional[str]] = {}
-
-        if to_generate:
-            if REPLICATE_API_KEY:
-                model = "flux"
-                api_key = REPLICATE_API_KEY
-                base_url = None
-            else:
-                if not self.openai_api_key:
-                    return ToolExecutionResult(
-                        ok=False,
-                        result={"error": "No API key available for image generation."},
-                        summary={"error": "Missing image generation API key"},
-                    )
-                model = "dalle3"
-                api_key = self.openai_api_key
-                base_url = self.openai_base_url
-
-            generated = await process_tasks(to_generate, api_key, base_url, model)  # type: ignore
-            for prompt, url in zip(to_generate, generated):
-                generated_results[prompt] = url
-                if url:
-                    self.image_cache[prompt] = url
-
-        merged_results = {**cached_results, **generated_results}
+        generated = await process_tasks(unique_prompts, api_key, base_url, model)  # type: ignore
+        merged_results = {
+            prompt: url for prompt, url in zip(unique_prompts, generated)
+        }
         summary_items = [
             {
                 "prompt": summarize_text(prompt, 160),

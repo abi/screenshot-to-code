@@ -61,9 +61,3 @@ def get_openai_api_name(model: Llm) -> str:
 
 def get_openai_reasoning_effort(model: Llm) -> str | None:
     return OPENAI_MODEL_CONFIG.get(model, {}).get("reasoning_effort")
-
-
-OPENAI_CODEX_MODELS = {
-    Llm.GPT_5_2_CODEX_MEDIUM,
-    Llm.GPT_5_2_CODEX_HIGH,
-}

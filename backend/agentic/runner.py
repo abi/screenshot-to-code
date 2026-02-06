@@ -11,7 +11,6 @@ from codegen.utils import extract_html_content
 from llm import (
     ANTHROPIC_MODELS,
     GEMINI_MODELS,
-    OPENAI_CODEX_MODELS,
     OPENAI_MODELS,
     Llm,
 )
@@ -21,7 +20,6 @@ from agentic.streaming import (
     AnthropicAdapter,
     ExecutedToolCall,
     GeminiAdapter,
-    OpenAIChatAdapter,
     OpenAIResponsesAdapter,
     ProviderAdapter,
     StreamEvent,
@@ -33,7 +31,6 @@ from agentic.tools import (
     extract_path_from_args,
     serialize_anthropic_tools,
     serialize_gemini_tools,
-    serialize_openai_chat_tools,
     serialize_openai_responses_tools,
     summarize_text,
     summarize_tool_input,
@@ -53,7 +50,6 @@ class AgenticRunner:
         anthropic_api_key: Optional[str],
         gemini_api_key: Optional[str],
         should_generate_images: bool,
-        image_cache: Dict[str, str],
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
     ):
@@ -71,7 +67,6 @@ class AgenticRunner:
 
         self.toolbox = AgentToolbox(
             self.file_state,
-            image_cache,
             should_generate_images,
             openai_api_key,
             openai_base_url,
@@ -270,22 +265,13 @@ class AgenticRunner:
         canonical_tools = canonical_tool_definitions()
 
         try:
-            if model in OPENAI_CODEX_MODELS:
-                tools = serialize_openai_responses_tools(canonical_tools)
-                adapter: ProviderAdapter = OpenAIResponsesAdapter(
-                    client=client,
-                    model=model,
-                    prompt_messages=prompt_messages,
-                    tools=tools,
-                )
-            else:
-                tools = serialize_openai_chat_tools(canonical_tools)
-                adapter = OpenAIChatAdapter(
-                    client=client,
-                    model=model,
-                    prompt_messages=prompt_messages,
-                    tools=tools,
-                )
+            tools = serialize_openai_responses_tools(canonical_tools)
+            adapter: ProviderAdapter = OpenAIResponsesAdapter(
+                client=client,
+                model=model,
+                prompt_messages=prompt_messages,
+                tools=tools,
+            )
             return await self._run_with_adapter(adapter)
         finally:
             await client.close()
