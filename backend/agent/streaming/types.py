@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, List, Literal, Optional
 
-from agentic.tools import ToolCall, ToolExecutionResult
+from agent.tools import ToolCall, ToolExecutionResult
 
 
 StreamEventType = Literal[

@@ -323,7 +323,7 @@ class TestCreatePrompt:
 
         For video mode with generation_type="create", we now assemble
         a regular system+user prompt so video generation can run through
-        the agentic runner path.
+        the agent runner path.
         """
         # Setup test data
         video_data_url: str = "data:video/mp4;base64,test_video_data"

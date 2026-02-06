@@ -15,8 +15,8 @@ from llm import (
     Llm,
 )
 
-from agentic.state import AgentFileState, seed_file_state_from_messages
-from agentic.streaming import (
+from agent.state import AgentFileState, seed_file_state_from_messages
+from agent.streaming import (
     AnthropicAdapter,
     ExecutedToolCall,
     GeminiAdapter,
@@ -24,7 +24,7 @@ from agentic.streaming import (
     ProviderAdapter,
     StreamEvent,
 )
-from agentic.tools import (
+from agent.tools import (
     AgentToolbox,
     canonical_tool_definitions,
     extract_content_from_args,

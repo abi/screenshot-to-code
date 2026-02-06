@@ -3,7 +3,7 @@
 ## Goals
 - Reduce duplicated streaming logic across OpenAI/Anthropic/Gemini runners.
 - Centralize tool schemas and telemetry formatting.
-- Make the agentic pipeline easier to test, extend, and reason about.
+- Make the agent pipeline easier to test, extend, and reason about.
 
 ## Decision: Unified Stream Loop + Provider Adapters
 - Introduce a provider-agnostic stream loop that consumes normalized events
@@ -23,7 +23,7 @@
 ## Planned Removals
 
 ### Image Cache
-- Remove prompt-to-URL image caching in the agentic tool layer.
+- Remove prompt-to-URL image caching in the agent tool layer.
 - Rationale: simplify state, reduce hidden cross-variant coupling.
 - Follow-up: ensure image generation remains deterministic per request when needed
   (e.g., pass explicit seeds or expose caching at a higher layer if required).
@@ -34,19 +34,19 @@
 - Update model lists and runtime checks to eliminate the ChatCompletion branch.
 
 ### Non-Agentic Generation Paths (e.g., Video)
-Keep video generation, but route it through the agentic runner:
-- Replace video-specific streaming helpers with agentic runner support for video inputs.
-- Remove conditional branches that bypass the agentic path for video create/update.
+Keep video generation, but route it through the agent runner:
+- Replace video-specific streaming helpers with agent runner support for video inputs.
+- Remove conditional branches that bypass the agent path for video create/update.
 - Preserve video-specific prompt and media handling, but integrate it into the
-  agentic tool/stream pipeline.
-- Update tests and docs to reflect a single agentic generation path that
+  agent tool/stream pipeline.
+- Update tests and docs to reflect a single agent generation path that
   supports video inputs.
 
 ## File/Module Split
-- `agentic/runner.py`: orchestration + shared stream loop.
-- `agentic/streaming/`: provider adapters (openai, responses, anthropic, gemini).
-- `agentic/tools.py`: tool definitions, serialization, and execution.
-- `agentic/state.py`: file state + seeding utilities.
+- `agent/runner.py`: orchestration + shared stream loop.
+- `agent/streaming/`: provider adapters (openai, responses, anthropic, gemini).
+- `agent/tools.py`: tool definitions, serialization, and execution.
+- `agent/state.py`: file state + seeding utilities.
 
 ## Non-Goals
 - No functional UX changes beyond the removal items above.

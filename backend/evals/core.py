@@ -5,7 +5,7 @@ from config import (
     OPENAI_BASE_URL,
 )
 from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
-from agentic.runner import AgenticRunner
+from agent.runner import AgenticRunner
 from prompts import assemble_prompt
 from prompts.agentic_instructions import apply_tool_instructions
 from prompts.types import Stack
@@ -46,7 +46,7 @@ async def generate_code_core(
     if model in OPENAI_MODELS and not OPENAI_API_KEY:
         raise Exception("OpenAI API key not found")
 
-    print(f"[EVALS] Using agentic runner for model: {model.value}")
+    print(f"[EVALS] Using agent runner for model: {model.value}")
 
     runner = AgenticRunner(
         send_message=send_message,

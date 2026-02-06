@@ -11,7 +11,7 @@ from config import REPLICATE_API_KEY
 from image_generation.core import process_tasks
 from image_generation.replicate import remove_background
 
-from agentic.state import AgentFileState, ensure_str
+from agent.state import AgentFileState, ensure_str
 
 
 @dataclass(frozen=True)

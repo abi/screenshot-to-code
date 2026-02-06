@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from agentic.streaming.types import EventSink, ExecutedToolCall, StepResult
+from agent.streaming.types import EventSink, ExecutedToolCall, StepResult
 
 
 class ProviderAdapter(Protocol):

@@ -56,7 +56,7 @@ MessageType = Literal[
 from prompts import create_prompt
 from prompts.agentic_instructions import apply_tool_instructions
 from prompts.types import Stack, PromptContent
-from agentic.runner import AgenticRunner
+from agent.runner import AgenticRunner
 
 # from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
@@ -306,7 +306,7 @@ class ParameterExtractionStage:
         # Extract imported code flag
         is_imported_from_code = bool(params.get("isImportedFromCode", False))
 
-        # Extract file state for agentic edits
+        # Extract file state for agent edits
         raw_file_state = params.get("fileState")
         file_state: Dict[str, str] | None = None
         if isinstance(raw_file_state, dict):
@@ -563,7 +563,7 @@ class PostProcessingStage:
 
 
 class AgenticGenerationStage:
-    """Handles agentic tool-calling generation for each variant."""
+    """Handles agent tool-calling generation for each variant."""
 
     def __init__(
         self,
