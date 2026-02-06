@@ -153,11 +153,11 @@ def assemble_prompt(
     text_prompt: str = "",
 ) -> list[ChatCompletionMessageParam]:
     system_content = SYSTEM_PROMPT
-    user_prompt = USER_PROMPT
+    user_prompt = USER_PROMPT.strip() + f"\n\nSelected stack: {stack}"
 
     # Append optional text instructions if provided
     if text_prompt.strip():
-        user_prompt = user_prompt.strip() + "\n\nAdditional instructions: " + text_prompt
+        user_prompt = user_prompt + "\n\nAdditional instructions: " + text_prompt
 
     user_content: list[ChatCompletionContentPartParam] = []
     for image_data_url in image_data_urls:
