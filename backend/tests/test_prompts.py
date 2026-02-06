@@ -199,13 +199,7 @@ class TestCreatePrompt:
             },
             "generationType": "create"
         }
-        
-        # Mock the text system prompts
-        mock_text_system_prompts: Dict[str, str] = {
-            self.TEST_STACK: "Mock Text System Prompt"
-        }
-        
-        with patch('prompts.TEXT_SYSTEM_PROMPTS', mock_text_system_prompts):
+        with patch('prompts.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await create_prompt(
                 stack=self.TEST_STACK,
@@ -221,7 +215,7 @@ class TestCreatePrompt:
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Mock Text System Prompt"
+                        "content": self.MOCK_SYSTEM_PROMPT
                     },
                     {
                         "role": "user",
@@ -252,13 +246,7 @@ class TestCreatePrompt:
                 {"text": "Now add a navigation menu"}       # User's new request
             ]
         }
-        
-        # Mock the text system prompts and image cache function
-        mock_text_system_prompts: Dict[str, str] = {
-            self.TEST_STACK: "Mock Text System Prompt"
-        }
-        
-        with patch('prompts.TEXT_SYSTEM_PROMPTS', mock_text_system_prompts):
+        with patch('prompts.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await create_prompt(
                 stack=self.TEST_STACK,
@@ -274,7 +262,7 @@ class TestCreatePrompt:
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Mock Text System Prompt"
+                        "content": self.MOCK_SYSTEM_PROMPT
                     },
                     {
                         "role": "user",

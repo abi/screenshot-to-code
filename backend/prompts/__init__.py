@@ -4,7 +4,6 @@ from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentP
 from custom_types import InputMode
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPT
-from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
 from prompts.video_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
 
@@ -190,16 +189,20 @@ def assemble_text_prompt(
     stack: Stack,
 ) -> list[ChatCompletionMessageParam]:
 
-    system_content = TEXT_SYSTEM_PROMPTS[stack]
-
     return [
         {
             "role": "system",
-            "content": system_content,
+            "content": SYSTEM_PROMPT,
         },
         {
             "role": "user",
-            "content": "Generate UI for " + text_prompt,
+            "content": f"""
+            - Make sure to make it look modern and sleek.
+            - Use modern, professional fonts and colors.
+            - Follow UX best practices.
+            Selected stack: {stack}.
+            Generate UI for {text_prompt}.
+            """,
         },
     ]
 
