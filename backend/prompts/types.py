@@ -8,7 +8,6 @@ class SystemPrompts(TypedDict):
     bootstrap: str
     ionic_tailwind: str
     vue_tailwind: str
-    svg: str
 
 
 class PromptContent(TypedDict):
@@ -25,5 +24,4 @@ Stack = Literal[
     "bootstrap",
     "ionic_tailwind",
     "vue_tailwind",
-    "svg",
 ]

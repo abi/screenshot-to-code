@@ -41,12 +41,15 @@ function App() {
     removeCommit,
     setHead,
     appendCommitCode,
-    appendVariantThinking,
     setCommitCode,
     resetCommits,
     resetHead,
     updateVariantStatus,
     resizeVariants,
+    setVariantModels,
+    startAgentEvent,
+    appendAgentEventContent,
+    finishAgentEvent,
 
     // Outputs
     appendExecutionConsole,
@@ -72,7 +75,7 @@ function App() {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
-      codeGenerationModel: CodeGenerationModel.CLAUDE_4_5_SONNET_2025_09_29,
+      codeGenerationModel: CodeGenerationModel.CLAUDE_4_5_OPUS_2025_11_01,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
@@ -80,6 +83,9 @@ function App() {
   );
 
   const wsRef = useRef<WebSocket>(null);
+  const lastThinkingEventIdRef = useRef<Record<number, string>>({});
+  const lastAssistantEventIdRef = useRef<Record<number, string>>({});
+  const lastToolEventIdRef = useRef<Record<number, string>>({});
 
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
@@ -207,6 +213,10 @@ function App() {
     addCommit(commit);
     setHead(commit.hash);
 
+    lastThinkingEventIdRef.current = {};
+    lastAssistantEventIdRef.current = {};
+    lastToolEventIdRef.current = {};
+
     generateCode(wsRef, updatedParams, {
       onChange: (token, variantIndex) => {
         appendCommitCode(commit.hash, variantIndex, token);
@@ -219,22 +229,149 @@ function App() {
       onVariantComplete: (variantIndex) => {
         console.log(`Variant ${variantIndex} complete event received`);
         updateVariantStatus(commit.hash, variantIndex, "complete");
+        const lastThinking = lastThinkingEventIdRef.current[variantIndex];
+        if (lastThinking) {
+          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        }
+        const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
+        if (lastAssistant) {
+          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        }
+        const lastTool = lastToolEventIdRef.current[variantIndex];
+        if (lastTool) {
+          finishAgentEvent(commit.hash, variantIndex, lastTool, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+          delete lastToolEventIdRef.current[variantIndex];
+        }
       },
       onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);
         updateVariantStatus(commit.hash, variantIndex, "error", error);
+        const lastThinking = lastThinkingEventIdRef.current[variantIndex];
+        if (lastThinking) {
+          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
+            status: "error",
+            endedAt: Date.now(),
+          });
+        }
+        const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
+        if (lastAssistant) {
+          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
+            status: "error",
+            endedAt: Date.now(),
+          });
+        }
+        const lastTool = lastToolEventIdRef.current[variantIndex];
+        if (lastTool) {
+          finishAgentEvent(commit.hash, variantIndex, lastTool, {
+            status: "error",
+            endedAt: Date.now(),
+          });
+          delete lastToolEventIdRef.current[variantIndex];
+        }
       },
       onVariantCount: (count) => {
         console.log(`Backend is using ${count} variants`);
         resizeVariants(commit.hash, count);
       },
-      onThinking: (content, variantIndex) => {
-        appendVariantThinking(commit.hash, variantIndex, content);
+      onVariantModels: (models) => {
+        setVariantModels(commit.hash, models);
+      },
+      onThinking: (content, variantIndex, eventId) => {
+        if (!eventId) return;
+        lastThinkingEventIdRef.current[variantIndex] = eventId;
+        startAgentEvent(commit.hash, variantIndex, {
+          id: eventId,
+          type: "thinking",
+          status: "running",
+          startedAt: Date.now(),
+        });
+        appendAgentEventContent(commit.hash, variantIndex, eventId, content);
+      },
+      onAssistant: (content, variantIndex, eventId) => {
+        if (!eventId) return;
+        lastAssistantEventIdRef.current[variantIndex] = eventId;
+        startAgentEvent(commit.hash, variantIndex, {
+          id: eventId,
+          type: "assistant",
+          status: "running",
+          startedAt: Date.now(),
+        });
+        appendAgentEventContent(commit.hash, variantIndex, eventId, content);
+      },
+      onToolStart: (data, variantIndex, eventId) => {
+        if (!eventId) return;
+        const lastThinking = lastThinkingEventIdRef.current[variantIndex];
+        if (lastThinking && lastThinking !== eventId) {
+          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        }
+        const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
+        if (lastAssistant && lastAssistant !== eventId) {
+          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        }
+        startAgentEvent(commit.hash, variantIndex, {
+          id: eventId,
+          type: "tool",
+          status: "running",
+          toolName: data?.name,
+          input: data?.input,
+          startedAt: Date.now(),
+        });
+        lastToolEventIdRef.current[variantIndex] = eventId;
+      },
+      onToolResult: (data, variantIndex, eventId) => {
+        if (!eventId) return;
+        finishAgentEvent(commit.hash, variantIndex, eventId, {
+          status: data?.ok === false ? "error" : "complete",
+          output: data?.output,
+          endedAt: Date.now(),
+        });
+        if (lastToolEventIdRef.current[variantIndex] === eventId) {
+          delete lastToolEventIdRef.current[variantIndex];
+        }
       },
       onCancel: () => {
         cancelCodeGenerationAndReset(commit);
       },
       onComplete: () => {
+        const lastThinking = lastThinkingEventIdRef.current;
+        const lastAssistant = lastAssistantEventIdRef.current;
+        const lastTool = lastToolEventIdRef.current;
+        Object.keys(lastThinking).forEach((key) => {
+          const idx = Number(key);
+          finishAgentEvent(commit.hash, idx, lastThinking[idx], {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        });
+        Object.keys(lastAssistant).forEach((key) => {
+          const idx = Number(key);
+          finishAgentEvent(commit.hash, idx, lastAssistant[idx], {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        });
+        Object.keys(lastTool).forEach((key) => {
+          const idx = Number(key);
+          finishAgentEvent(commit.hash, idx, lastTool[idx], {
+            status: "complete",
+            endedAt: Date.now(),
+          });
+        });
         setAppState(AppState.CODE_READY);
       },
     });
@@ -295,6 +432,13 @@ function App() {
       throw new Error("Update called with no head");
     }
 
+    const currentCommit = commits[head];
+    const currentCode =
+      currentCommit?.variants[currentCommit.selectedVariantIndex]?.code || "";
+    const optionCodes = currentCommit?.variants.map(
+      (variant) => variant.code || ""
+    );
+
     let historyTree;
     try {
       historyTree = extractHistory(head, commits);
@@ -329,6 +473,13 @@ function App() {
           : { text: "", images: [referenceImages[0]] },
       history: updatedHistory,
       isImportedFromCode,
+      optionCodes,
+      fileState: currentCode
+        ? {
+            path: "index.html",
+            content: currentCode,
+          }
+        : undefined,
     });
 
     setUpdateInstruction("");

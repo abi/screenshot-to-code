@@ -35,7 +35,7 @@ const stacks = process.env.QA_STACKS
   ? process.env.QA_STACKS.split(",").map((stack) => stack.trim() as Stack)
   : defaultStacks;
 
-const defaultModels = [CodeGenerationModel.CLAUDE_4_5_SONNET_2025_09_29];
+const defaultModels = [CodeGenerationModel.CLAUDE_4_5_OPUS_2025_11_01];
 const models = process.env.QA_MODELS
   ? process.env.QA_MODELS.split(",").map((model) => model.trim())
   : defaultModels;

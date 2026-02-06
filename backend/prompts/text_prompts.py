@@ -12,9 +12,7 @@ LIBRARY_INSTRUCTIONS = """
 - Font Awesome for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>"""
 
 FORMAT_INSTRUCTIONS = """
-Return only the full code in <html></html> tags.
-Do not include markdown "```" or "```html" at the start or end.
-Reply with only the code, and no text/explanation before and after the code.
+Follow the tool instructions in the system prompt. Do not output raw code directly.
 """
 
 HTML_TAILWIND_SYSTEM_PROMPT = f"""
@@ -105,16 +103,6 @@ In terms of libraries,
 {FORMAT_INSTRUCTIONS}
 """
 
-SVG_SYSTEM_PROMPT = f"""
-You are an expert at building SVGs.
-
-{GENERAL_INSTRUCTIONS}
-
-Return only the full code in <svg></svg> tags.
-Do not include markdown "```" or "```svg" at the start or end.
-"""
-
-
 SYSTEM_PROMPTS = SystemPrompts(
     html_css=HTML_CSS_SYSTEM_PROMPT,
     html_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
@@ -122,5 +110,4 @@ SYSTEM_PROMPTS = SystemPrompts(
     bootstrap=BOOTSTRAP_SYSTEM_PROMPT,
     ionic_tailwind=IONIC_TAILWIND_SYSTEM_PROMPT,
     vue_tailwind=VUE_TAILWIND_SYSTEM_PROMPT,
-    svg=SVG_SYSTEM_PROMPT,
 )

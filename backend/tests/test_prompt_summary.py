@@ -1,5 +1,9 @@
 import io
 import sys
+from typing import cast
+
+from openai.types.chat import ChatCompletionMessageParam
+
 from utils import format_prompt_summary, print_prompt_summary
 
 
@@ -37,7 +41,7 @@ def test_print_prompt_summary():
     captured_output = io.StringIO()
     sys.stdout = captured_output
     
-    print_prompt_summary(messages)
+    print_prompt_summary(cast(list[ChatCompletionMessageParam], messages))
     
     # Reset stdout
     sys.stdout = sys.__stdout__
@@ -62,7 +66,7 @@ def test_print_prompt_summary_long_content():
     captured_output = io.StringIO()
     sys.stdout = captured_output
     
-    print_prompt_summary(messages)
+    print_prompt_summary(cast(list[ChatCompletionMessageParam], messages))
     
     # Reset stdout
     sys.stdout = sys.__stdout__
@@ -88,12 +92,16 @@ def test_format_prompt_summary_no_truncate():
     ]
 
     # Test with truncation (default)
-    summary_truncated = format_prompt_summary(messages)
+    summary_truncated = format_prompt_summary(
+        cast(list[ChatCompletionMessageParam], messages)
+    )
     assert "..." in summary_truncated
     assert len(summary_truncated.split(": ", 1)[1]) <= 50  # Role + truncated content
 
     # Test without truncation
-    summary_full = format_prompt_summary(messages, truncate=False)
+    summary_full = format_prompt_summary(
+        cast(list[ChatCompletionMessageParam], messages), truncate=False
+    )
     assert "..." not in summary_full
     assert "shown in full" in summary_full
 
@@ -107,7 +115,9 @@ def test_print_prompt_summary_no_truncate():
     captured_output = io.StringIO()
     sys.stdout = captured_output
     
-    print_prompt_summary(messages, truncate=False)
+    print_prompt_summary(
+        cast(list[ChatCompletionMessageParam], messages), truncate=False
+    )
     
     # Reset stdout
     sys.stdout = sys.__stdout__

@@ -20,17 +20,7 @@ from config import (
 )
 from custom_types import InputMode
 from llm import (
-    Completion,
     Llm,
-    OPENAI_MODELS,
-    ANTHROPIC_MODELS,
-    GEMINI_MODELS,
-)
-from models import (
-    stream_claude_response,
-    stream_openai_response,
-    stream_gemini_response,
-    stream_gemini_response_video,
 )
 from fs_logging.core import write_logs
 from mock_llm import mock_completion
@@ -57,13 +47,16 @@ MessageType = Literal[
     "variantComplete",
     "variantError",
     "variantCount",
+    "variantModels",
     "thinking",
+    "assistant",
+    "toolStart",
+    "toolResult",
 ]
-from image_generation.core import generate_images
 from prompts import create_prompt
-from prompts.claude_prompts import GEMINI_VIDEO_PROMPT
+from prompts.agentic_instructions import apply_tool_instructions
 from prompts.types import Stack, PromptContent
-from video.utils import get_video_bytes_and_mime_type
+from agent.runner import AgenticRunner
 
 # from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
@@ -72,24 +65,15 @@ from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 router = APIRouter()
 
 
-class VariantErrorAlreadySent(Exception):
-    """Exception that indicates a variantError message has already been sent to frontend"""
-
-    def __init__(self, original_error: Exception):
-        self.original_error = original_error
-        super().__init__(str(original_error))
-
-
 @dataclass
 class PipelineContext:
     """Context object that carries state through the pipeline"""
 
     websocket: WebSocket
     ws_comm: "WebSocketCommunicator | None" = None
-    params: Dict[str, str] = field(default_factory=dict)
+    params: Dict[str, Any] = field(default_factory=dict)
     extracted_params: "ExtractedParams | None" = None
     prompt_messages: List[ChatCompletionMessageParam] = field(default_factory=list)
-    image_cache: Dict[str, str] = field(default_factory=dict)
     variant_models: List[Llm] = field(default_factory=list)
     completions: List[str] = field(default_factory=list)
     variant_completions: Dict[int, str] = field(default_factory=dict)
@@ -170,8 +154,10 @@ class WebSocketCommunicator:
     async def send_message(
         self,
         type: MessageType,
-        value: str,
+        value: str | None,
         variantIndex: int,
+        data: Dict[str, Any] | None = None,
+        eventId: str | None = None,
     ) -> None:
         """Send a message to the client with debug logging"""
         if self.is_closed:
@@ -188,9 +174,14 @@ class WebSocketCommunicator:
             print(f"Variant {variantIndex + 1} error: {value}")
 
         try:
-            await self.websocket.send_json(
-                {"type": type, "value": value, "variantIndex": variantIndex}
-            )
+            payload: Dict[str, Any] = {"type": type, "variantIndex": variantIndex}
+            if value is not None:
+                payload["value"] = value
+            if data is not None:
+                payload["data"] = data
+            if eventId is not None:
+                payload["eventId"] = eventId
+            await self.websocket.send_json(payload)
         except (ConnectionClosedOK, ConnectionClosedError):
             print(f"WebSocket closed by client, skipping message: {type}")
             self.is_closed = True
@@ -206,9 +197,9 @@ class WebSocketCommunicator:
                 print("WebSocket already closed by client")
             self.is_closed = True
 
-    async def receive_params(self) -> Dict[str, str]:
+    async def receive_params(self) -> Dict[str, Any]:
         """Receive parameters from the client"""
-        params: Dict[str, str] = await self.websocket.receive_json()
+        params: Dict[str, Any] = await self.websocket.receive_json()
         print("Received params")
         return params
 
@@ -234,6 +225,8 @@ class ExtractedParams:
     prompt: PromptContent
     history: List[Dict[str, Any]]
     is_imported_from_code: bool
+    file_state: Dict[str, str] | None
+    option_codes: List[str]
 
 
 class ParameterExtractionStage:
@@ -242,7 +235,7 @@ class ParameterExtractionStage:
     def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
         self.throw_error = throw_error
 
-    async def extract_and_validate(self, params: Dict[str, str]) -> ExtractedParams:
+    async def extract_and_validate(self, params: Dict[str, Any]) -> ExtractedParams:
         """Extract and validate all parameters from the request"""
         # Read the code config settings (stack) from the request.
         generated_code_config = params.get("generatedCodeConfig", "")
@@ -290,13 +283,48 @@ class ParameterExtractionStage:
         generation_type = cast(Literal["create", "update"], generation_type)
 
         # Extract prompt content
-        prompt = params.get("prompt", {"text": "", "images": []})
+        prompt: PromptContent = {"text": "", "images": []}
+        raw_prompt = params.get("prompt")
+        if isinstance(raw_prompt, dict):
+            text = raw_prompt.get("text")
+            images = raw_prompt.get("images")
+            prompt = {
+                "text": text if isinstance(text, str) else "",
+                "images": [img for img in images if isinstance(img, str)]
+                if isinstance(images, list)
+                else [],
+            }
 
         # Extract history (default to empty list)
-        history = params.get("history", [])
+        history: List[Dict[str, Any]] = []
+        raw_history = params.get("history")
+        if isinstance(raw_history, list):
+            for item in raw_history:
+                if isinstance(item, dict):
+                    history.append(item)
 
         # Extract imported code flag
-        is_imported_from_code = params.get("isImportedFromCode", False)
+        is_imported_from_code = bool(params.get("isImportedFromCode", False))
+
+        # Extract file state for agent edits
+        raw_file_state = params.get("fileState")
+        file_state: Dict[str, str] | None = None
+        if isinstance(raw_file_state, dict):
+            content = raw_file_state.get("content")
+            if isinstance(content, str) and content.strip():
+                path = raw_file_state.get("path") or "index.html"
+                file_state = {"path": path, "content": content}
+
+        raw_option_codes = params.get("optionCodes")
+        option_codes: List[str] = []
+        if isinstance(raw_option_codes, list):
+            for entry in raw_option_codes:
+                if isinstance(entry, str):
+                    option_codes.append(entry)
+                elif entry is None:
+                    option_codes.append("")
+                else:
+                    option_codes.append(str(entry))
 
         return ExtractedParams(
             stack=validated_stack,
@@ -309,10 +337,12 @@ class ParameterExtractionStage:
             prompt=prompt,
             history=history,
             is_imported_from_code=is_imported_from_code,
+            file_state=file_state,
+            option_codes=option_codes,
         )
 
     def _get_from_settings_dialog_or_env(
-        self, params: dict[str, str], key: str, env_var: str | None
+        self, params: dict[str, Any], key: str, env_var: str | None
     ) -> str | None:
         """Get value from client settings or environment variable"""
         value = params.get(key)
@@ -360,11 +390,11 @@ class ModelSelectionStage:
             return variant_models
         except Exception:
             await self.throw_error(
-                "No OpenAI or Anthropic API key found. Please add the environment variable "
-                "OPENAI_API_KEY or ANTHROPIC_API_KEY to backend/.env or in the settings dialog. "
+                "No OpenAI, Anthropic, or Gemini API key found. Please add the environment variable "
+                "OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY to backend/.env or in the settings dialog. "
                 "If you add it to .env, make sure to restart the backend server."
             )
-            raise Exception("No OpenAI or Anthropic key")
+            raise Exception("No API key")
 
     def _get_variant_models(
         self,
@@ -387,20 +417,45 @@ class ModelSelectionStage:
             return [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, Llm.GEMINI_3_PRO_PREVIEW_HIGH]
 
         # Define models based on available API keys
-        if gemini_api_key and anthropic_api_key:
-            # Temporary: Compare thinking models
+        if gemini_api_key and anthropic_api_key and openai_api_key:
             models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,  # Flash HIGH thinking
-                Llm.GEMINI_3_PRO_PREVIEW_LOW,  # Pro LOW thinking
-                Llm.GEMINI_3_PRO_PREVIEW_HIGH,  # Pro HIGH thinking
-                Llm.CLAUDE_4_5_OPUS_2025_11_01,  # Claude Opus 4.5 with thinking
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.CLAUDE_OPUS_4_6,
+                Llm.GPT_5_2_CODEX_HIGH,
+            ]
+        elif gemini_api_key and anthropic_api_key:
+            models = [
+                Llm.CLAUDE_OPUS_4_6,
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
+            ]
+        elif gemini_api_key and openai_api_key:
+            models = [
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.GPT_5_2_CODEX_HIGH,
+                Llm.GPT_5_2_CODEX_MEDIUM,
             ]
         elif openai_api_key and anthropic_api_key:
-            models = [Llm.CLAUDE_4_5_SONNET_2025_09_29, Llm.GPT_4_1_2025_04_14]
+            models = [
+                Llm.CLAUDE_OPUS_4_6,
+                Llm.GPT_5_2_CODEX_HIGH,
+                Llm.GPT_5_2_CODEX_MEDIUM,
+            ]
+        elif gemini_api_key:
+            models = [
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
+            ]
         elif anthropic_api_key:
-            models = [Llm.CLAUDE_4_5_SONNET_2025_09_29, Llm.CLAUDE_4_5_OPUS_2025_11_01]
+            models = [Llm.CLAUDE_OPUS_4_6, Llm.CLAUDE_4_5_SONNET_2025_09_29]
         elif openai_api_key:
-            models = [Llm.GPT_4_1_2025_04_14]
+            models = [Llm.GPT_5_2_CODEX_HIGH, Llm.GPT_5_2_CODEX_MEDIUM]
         else:
             raise Exception("No OpenAI or Anthropic key")
 
@@ -421,10 +476,10 @@ class PromptCreationStage:
     async def create_prompt(
         self,
         extracted_params: ExtractedParams,
-    ) -> tuple[List[ChatCompletionMessageParam], Dict[str, str]]:
-        """Create prompt messages and return image cache"""
+    ) -> List[ChatCompletionMessageParam]:
+        """Create prompt messages"""
         try:
-            prompt_messages, image_cache = await create_prompt(
+            prompt_messages = await create_prompt(
                 stack=extracted_params.stack,
                 input_mode=extracted_params.input_mode,
                 generation_type=extracted_params.generation_type,
@@ -435,7 +490,7 @@ class PromptCreationStage:
 
             print_prompt_summary(prompt_messages, truncate=False)
 
-            return prompt_messages, image_cache
+            return prompt_messages
         except Exception:
             await self.throw_error(
                 "Error assembling prompt. Contact support at support@picoapps.xyz"
@@ -448,7 +503,10 @@ class MockResponseStage:
 
     def __init__(
         self,
-        send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[
+            [MessageType, str | None, int, Dict[str, Any] | None, str | None],
+            Coroutine[Any, Any, None],
+        ],
     ):
         self.send_message = send_message
 
@@ -459,7 +517,7 @@ class MockResponseStage:
         """Generate mock response for testing"""
 
         async def process_chunk(content: str, variantIndex: int):
-            await self.send_message("chunk", content, variantIndex)
+            await self.send_message("chunk", content, variantIndex, None, None)
 
         completion_results = [
             await mock_completion(process_chunk, input_mode=input_mode)
@@ -467,8 +525,14 @@ class MockResponseStage:
         completions = [result["code"] for result in completion_results]
 
         # Send the complete variant back to the client
-        await self.send_message("setCode", completions[0], 0)
-        await self.send_message("variantComplete", "Variant generation complete", 0)
+        await self.send_message("setCode", completions[0], 0, None, None)
+        await self.send_message(
+            "variantComplete",
+            "Variant generation complete",
+            0,
+            None,
+            None,
+        )
 
         return completions
 
@@ -498,20 +562,19 @@ class PostProcessingStage:
         # Note: WebSocket closing is handled by the caller
 
 
-class ParallelGenerationStage:
-    """Handles parallel variant generation with independent processing for each variant"""
+class AgenticGenerationStage:
+    """Handles agent tool-calling generation for each variant."""
 
     def __init__(
         self,
-        send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]],
+        send_message: Callable[[MessageType, str | None, int, Dict[str, Any] | None, str | None], Coroutine[Any, Any, None]],
         openai_api_key: str | None,
         openai_base_url: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
         should_generate_images: bool,
-        input_mode: InputMode,
-        generation_type: Literal["create", "update"],
-        prompt: PromptContent,
+        file_state: Dict[str, str] | None,
+        option_codes: List[str] | None,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -519,148 +582,77 @@ class ParallelGenerationStage:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
-        self.input_mode = input_mode
-        self.generation_type = generation_type
-        self.prompt = prompt
+        self.file_state = file_state
+        self.option_codes = option_codes or []
 
     async def process_variants(
         self,
         variant_models: List[Llm],
         prompt_messages: List[ChatCompletionMessageParam],
-        image_cache: Dict[str, str],
-        params: Dict[str, str],
     ) -> Dict[int, str]:
-        """Process all variants in parallel and return completions"""
-        tasks = self._create_generation_tasks(variant_models, prompt_messages, params)
-
-        # Dictionary to track variant tasks and their status
-        variant_tasks: Dict[int, asyncio.Task[Completion]] = {}
-        variant_completions: Dict[int, str] = {}
-
-        # Create tasks for each variant
-        for index, task in enumerate(tasks):
-            variant_task = asyncio.create_task(task)
-            variant_tasks[index] = variant_task
-
-        # Process each variant independently
-        variant_processors = [
-            self._process_variant_completion(
-                index, task, variant_models[index], image_cache, variant_completions
+        tasks: List[asyncio.Task[str]] = []
+        for index, model in enumerate(variant_models):
+            tasks.append(
+                asyncio.create_task(
+                    self._run_variant(index, model, prompt_messages)
+                )
             )
-            for index, task in variant_tasks.items()
-        ]
 
-        # Wait for all variants to complete
-        await asyncio.gather(*variant_processors, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        variant_completions: Dict[int, str] = {}
+        for index, result in enumerate(results):
+            if isinstance(result, BaseException):
+                print(f"Variant {index + 1} failed: {result}")
+                continue
+            if result:
+                variant_completions[index] = result
 
         return variant_completions
 
-    def _create_generation_tasks(
+    async def _run_variant(
         self,
-        variant_models: List[Llm],
-        prompt_messages: List[ChatCompletionMessageParam],
-        params: Dict[str, str],
-    ) -> List[Coroutine[Any, Any, Completion]]:
-        """Create generation tasks for each variant model"""
-        tasks: List[Coroutine[Any, Any, Completion]] = []
-
-        # Check if this is a video create request
-        is_video_create = (
-            self.input_mode == "video" and self.generation_type == "create"
-        )
-
-        for index, model in enumerate(variant_models):
-            # Video create mode: use video-specific Gemini streaming
-            if is_video_create and model in GEMINI_MODELS:
-                video_data_url = self.prompt.get("images", [None])[0]
-                if not video_data_url:
-                    raise Exception("Video mode requires a video to be provided")
-
-                video_bytes, video_mime_type = get_video_bytes_and_mime_type(
-                    video_data_url
-                )
-                print(
-                    f"Using Gemini for video generation (video size: {len(video_bytes)} bytes)"
-                )
-
-                tasks.append(
-                    stream_gemini_response_video(
-                        video_bytes=video_bytes,
-                        video_mime_type=video_mime_type,
-                        system_prompt=GEMINI_VIDEO_PROMPT,
-                        api_key=self.gemini_api_key,
-                        callback=lambda x, i=index: self._process_chunk(x, i),
-                        model=model,
-                        thinking_callback=lambda x, i=index: self._process_thinking(
-                            x, i
-                        ),
-                    )
-                )
-            elif model in OPENAI_MODELS:
-                if self.openai_api_key is None:
-                    raise Exception("OpenAI API key is missing.")
-
-                tasks.append(
-                    self._stream_openai_with_error_handling(
-                        prompt_messages,
-                        model_name=model.value,
-                        index=index,
-                    )
-                )
-            elif self.gemini_api_key and model in GEMINI_MODELS:
-                tasks.append(
-                    stream_gemini_response(
-                        prompt_messages,
-                        api_key=self.gemini_api_key,
-                        callback=lambda x, i=index: self._process_chunk(x, i),
-                        model=model,
-                        thinking_callback=lambda x, i=index: self._process_thinking(
-                            x, i
-                        ),
-                    )
-                )
-            elif model in ANTHROPIC_MODELS:
-                if self.anthropic_api_key is None:
-                    raise Exception("Anthropic API key is missing.")
-
-                tasks.append(
-                    stream_claude_response(
-                        prompt_messages,
-                        api_key=self.anthropic_api_key,
-                        callback=lambda x, i=index: self._process_chunk(x, i),
-                        model_name=model.value,
-                        thinking_callback=lambda x, i=index: self._process_thinking(
-                            x, i
-                        ),
-                    )
-                )
-
-        return tasks
-
-    async def _process_chunk(self, content: str, variant_index: int):
-        """Process streaming chunks"""
-        await self.send_message("chunk", content, variant_index)
-
-    async def _process_thinking(self, content: str, variant_index: int):
-        """Process thinking/reasoning content"""
-        await self.send_message("thinking", content, variant_index)
-
-    async def _stream_openai_with_error_handling(
-        self,
-        prompt_messages: List[ChatCompletionMessageParam],
-        model_name: str,
         index: int,
-    ) -> Completion:
-        """Wrap OpenAI streaming with specific error handling"""
+        model: Llm,
+        prompt_messages: List[ChatCompletionMessageParam],
+    ) -> str:
         try:
-            assert self.openai_api_key is not None
-            return await stream_openai_response(
-                prompt_messages,
-                api_key=self.openai_api_key,
-                base_url=self.openai_base_url,
-                callback=lambda x: self._process_chunk(x, index),
-                model_name=model_name,
+            async def send_runner_message(
+                type: str,
+                value: str | None,
+                variant_index: int,
+                data: Dict[str, Any] | None,
+                event_id: str | None,
+            ) -> None:
+                await self.send_message(
+                    cast(MessageType, type),
+                    value,
+                    variant_index,
+                    data,
+                    event_id,
+                )
+
+            runner = AgenticRunner(
+                send_message=send_runner_message,
+                variant_index=index,
+                openai_api_key=self.openai_api_key,
+                openai_base_url=self.openai_base_url,
+                anthropic_api_key=self.anthropic_api_key,
+                gemini_api_key=self.gemini_api_key,
+                should_generate_images=self.should_generate_images,
+                initial_file_state=self.file_state,
+                option_codes=self.option_codes,
             )
+            completion = await runner.run(model, prompt_messages)
+            if completion:
+                await self.send_message("setCode", completion, index, None, None)
+            await self.send_message(
+                "variantComplete",
+                "Variant generation complete",
+                index,
+                None,
+                None,
+            )
+            return completion
         except openai.AuthenticationError as e:
             print(f"[VARIANT {index + 1}] OpenAI Authentication failed", e)
             error_message = (
@@ -672,8 +664,8 @@ class ParallelGenerationStage:
                     else ""
                 )
             )
-            await self.send_message("variantError", error_message, index)
-            raise VariantErrorAlreadySent(e)
+            await self.send_message("variantError", error_message, index, None, None)
+            return ""
         except openai.NotFoundError as e:
             print(f"[VARIANT {index + 1}] OpenAI Model not found", e)
             error_message = (
@@ -687,8 +679,8 @@ class ParallelGenerationStage:
                     else ""
                 )
             )
-            await self.send_message("variantError", error_message, index)
-            raise VariantErrorAlreadySent(e)
+            await self.send_message("variantError", error_message, index, None, None)
+            return ""
         except openai.RateLimitError as e:
             print(f"[VARIANT {index + 1}] OpenAI Rate limit exceeded", e)
             error_message = (
@@ -699,85 +691,13 @@ class ParallelGenerationStage:
                     else ""
                 )
             )
-            await self.send_message("variantError", error_message, index)
-            raise VariantErrorAlreadySent(e)
-
-    async def _perform_image_generation(
-        self,
-        completion: str,
-        image_cache: dict[str, str],
-    ):
-        """Generate images for the completion if needed"""
-        if not self.should_generate_images:
-            return completion
-
-        replicate_api_key = REPLICATE_API_KEY
-        if replicate_api_key:
-            image_generation_model = "flux"
-            api_key = replicate_api_key
-        else:
-            if not self.openai_api_key:
-                print(
-                    "No OpenAI API key and Replicate key found. Skipping image generation."
-                )
-                return completion
-            image_generation_model = "dalle3"
-            api_key = self.openai_api_key
-
-        print("Generating images with model: ", image_generation_model)
-
-        return await generate_images(
-            completion,
-            api_key=api_key,
-            base_url=self.openai_base_url,
-            image_cache=image_cache,
-            model=image_generation_model,
-        )
-
-    async def _process_variant_completion(
-        self,
-        index: int,
-        task: asyncio.Task[Completion],
-        model: Llm,
-        image_cache: Dict[str, str],
-        variant_completions: Dict[int, str],
-    ):
-        """Process a single variant completion including image generation"""
-        try:
-            completion = await task
-
-            print(f"{model.value} completion took {completion['duration']:.2f} seconds")
-            variant_completions[index] = completion["code"]
-
-            try:
-                # Process images for this variant
-                processed_html = await self._perform_image_generation(
-                    completion["code"],
-                    image_cache,
-                )
-                # Extract HTML content
-                processed_html = extract_html_content(processed_html)
-
-                # Send the complete variant back to the client
-                await self.send_message("setCode", processed_html, index)
-                await self.send_message(
-                    "variantComplete",
-                    "Variant generation complete",
-                    index,
-                )
-            except Exception as inner_e:
-                # If websocket is closed or other error during post-processing
-                print(f"Post-processing error for variant {index + 1}: {inner_e}")
-                # We still keep the completion in variant_completions
-
+            await self.send_message("variantError", error_message, index, None, None)
+            return ""
         except Exception as e:
-            # Handle any errors that occurred during generation
             print(f"Error in variant {index + 1}: {e}")
             traceback.print_exception(type(e), e, e.__traceback__)
-
-            # Only send error message if it hasn't been sent already
-            if not isinstance(e, VariantErrorAlreadySent):
-                await self.send_message("variantError", str(e), index)
+            await self.send_message("variantError", str(e), index, None, None)
+            return ""
 
 
 # Pipeline Middleware Implementations
@@ -855,11 +775,17 @@ class PromptCreationMiddleware(Middleware):
     ) -> None:
         prompt_creator = PromptCreationStage(context.throw_error)
         assert context.extracted_params is not None
-        context.prompt_messages, context.image_cache = (
-            await prompt_creator.create_prompt(
-                context.extracted_params,
-            )
+        context.prompt_messages = await prompt_creator.create_prompt(
+            context.extracted_params,
         )
+        if context.prompt_messages:
+            first_message = cast(Dict[str, Any], context.prompt_messages[0])
+            first_content = first_message.get("content")
+            if first_content:
+                first_message["content"] = apply_tool_instructions(
+                    str(first_content),
+                    context.extracted_params.should_generate_images,
+                )
 
         await next_func()
 
@@ -890,27 +816,28 @@ class CodeGenerationMiddleware(Middleware):
                     anthropic_api_key=context.extracted_params.anthropic_api_key,
                     gemini_api_key=GEMINI_API_KEY,
                 )
+                await context.send_message(
+                    "variantModels",
+                    None,
+                    0,
+                    {"models": [model.value for model in context.variant_models]},
+                    None,
+                )
 
-                # Generate code for all variants (handles video mode internally)
-                generation_stage = ParallelGenerationStage(
+                generation_stage = AgenticGenerationStage(
                     send_message=context.send_message,
                     openai_api_key=context.extracted_params.openai_api_key,
                     openai_base_url=context.extracted_params.openai_base_url,
                     anthropic_api_key=context.extracted_params.anthropic_api_key,
                     gemini_api_key=GEMINI_API_KEY,
                     should_generate_images=context.extracted_params.should_generate_images,
-                    input_mode=context.extracted_params.input_mode,
-                    generation_type=context.extracted_params.generation_type,
-                    prompt=context.extracted_params.prompt,
+                    file_state=context.extracted_params.file_state,
+                    option_codes=context.extracted_params.option_codes,
                 )
 
-                context.variant_completions = (
-                    await generation_stage.process_variants(
-                        variant_models=context.variant_models,
-                        prompt_messages=context.prompt_messages,
-                        image_cache=context.image_cache,
-                        params=context.params,
-                    )
+                context.variant_completions = await generation_stage.process_variants(
+                    variant_models=context.variant_models,
+                    prompt_messages=context.prompt_messages,
                 )
 
                 # Check if all variants failed

@@ -2,10 +2,10 @@ from typing import Union, Any, cast
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
 from custom_types import InputMode
-from image_generation.core import create_alt_url_mapping
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
 from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
+from prompts.claude_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
 
 
@@ -20,10 +20,6 @@ For mobile screenshots, do not include the device frame or browser chrome; focus
 the actual UI mockups.
 """
 
-SVG_USER_PROMPT = """
-Generate code for a SVG that looks exactly like the provided screenshot(s).
-"""
-
 
 async def create_prompt(
     stack: Stack,
@@ -32,9 +28,9 @@ async def create_prompt(
     prompt: PromptContent,
     history: list[dict[str, Any]],
     is_imported_from_code: bool,
-) -> tuple[list[ChatCompletionMessageParam], dict[str, str]]:
+) -> list[ChatCompletionMessageParam]:
 
-    image_cache: dict[str, str] = {}
+    prompt_messages: list[ChatCompletionMessageParam] = []
 
     # If this generation started off with imported code, we need to assemble the prompt differently
     if is_imported_from_code:
@@ -53,19 +49,26 @@ async def create_prompt(
         elif input_mode == "text":
             prompt_messages = assemble_text_prompt(prompt["text"], stack)
         elif input_mode == "video":
-            # For video mode initial creation, prompt is handled by VideoGenerationStage
-            # which sends the video directly to Gemini with its own prompt
             if generation_type == "create":
-                # Return empty prompt - actual generation is handled by VideoGenerationStage
-                prompt_messages = []
+                video_urls = prompt.get("images", [])
+                if not video_urls:
+                    raise ValueError("Video mode requires a video to be provided")
+                video_url = video_urls[0]
+                prompt_messages = assemble_video_prompt(
+                    video_data_url=video_url,
+                    text_prompt=prompt.get("text", ""),
+                )
             else:
                 # For video mode updates, use the screenshot system prompt
                 # since we're now working with the generated code, not the video
                 prompt_messages = [
-                    {
-                        "role": "system",
-                        "content": SYSTEM_PROMPTS[stack],
-                    }
+                    cast(
+                        ChatCompletionMessageParam,
+                        {
+                            "role": "system",
+                            "content": SYSTEM_PROMPTS[stack],
+                        },
+                    )
                 ]
         else:
             # Default to image mode for backward compatibility
@@ -80,9 +83,7 @@ async def create_prompt(
                 message = create_message_from_history_item(item, role)
                 prompt_messages.append(message)
 
-            image_cache = create_alt_url_mapping(history[-2]["text"])
-
-    return prompt_messages, image_cache
+    return prompt_messages
 
 
 def create_message_from_history_item(
@@ -136,12 +137,7 @@ def assemble_imported_code_prompt(
     code: str, stack: Stack
 ) -> list[ChatCompletionMessageParam]:
     system_content = IMPORTED_CODE_SYSTEM_PROMPTS[stack]
-
-    user_content = (
-        "Here is the code of the app: " + code
-        if stack != "svg"
-        else "Here is the code of the SVG: " + code
-    )
+    user_content = "Here is the code of the app: " + code
 
     return [
         {
@@ -157,7 +153,7 @@ def assemble_prompt(
     text_prompt: str = "",
 ) -> list[ChatCompletionMessageParam]:
     system_content = SYSTEM_PROMPTS[stack]
-    user_prompt = USER_PROMPT if stack != "svg" else SVG_USER_PROMPT
+    user_prompt = USER_PROMPT
 
     # Append optional text instructions if provided
     if text_prompt.strip():
@@ -204,5 +200,36 @@ def assemble_text_prompt(
         {
             "role": "user",
             "content": "Generate UI for " + text_prompt,
+        },
+    ]
+
+
+def assemble_video_prompt(
+    video_data_url: str,
+    text_prompt: str = "",
+) -> list[ChatCompletionMessageParam]:
+    user_text = "Analyze this video and generate the code."
+    if text_prompt.strip():
+        user_text = user_text + "\n\nAdditional instructions: " + text_prompt
+
+    user_content: list[ChatCompletionContentPartParam] = [
+        {
+            "type": "image_url",
+            "image_url": {"url": video_data_url, "detail": "high"},
+        },
+        {
+            "type": "text",
+            "text": user_text,
+        },
+    ]
+
+    return [
+        {
+            "role": "system",
+            "content": GEMINI_VIDEO_PROMPT,
+        },
+        {
+            "role": "user",
+            "content": user_content,
         },
     ]
