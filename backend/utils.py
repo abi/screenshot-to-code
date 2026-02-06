@@ -12,7 +12,7 @@ def format_prompt_summary(prompt_messages: List[ChatCompletionMessageParam], tru
     parts: list[str] = []
     for message in prompt_messages:
         role = message["role"]
-        content = message["content"]
+        content = message.get("content")
         text = ""
         image_count = 0
 
