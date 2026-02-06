@@ -10,8 +10,10 @@ Python environment:
 Testing policy:
 
 - Always run backend tests after every code change: `cd backend && poetry run pytest`.
+- Always run type checking after every code change: `cd backend && poetry run pyright`.
+- Type checking policy: no new warnings in changed files (`pyright`).
 
-Additional checks based on what you changed:
+## Frontend
 
 - Frontend: `cd frontend && yarn lint`
 
