@@ -4,7 +4,7 @@ from google import genai
 from google.genai import types
 
 from llm import Llm
-from agent.streaming.providers.gemini.transform import (
+from agent.providers.gemini.transform import (
     get_gemini_api_model_name,
     get_thinking_level_for_model,
 )

@@ -44,7 +44,7 @@ Keep video generation, but route it through the agent runner:
 
 ## File/Module Split
 - `agent/runner.py`: orchestration + shared stream loop.
-- `agent/streaming/`: provider adapters (openai, responses, anthropic, gemini).
+- `agent/providers/`: provider adapters (openai, responses, anthropic, gemini).
 - `agent/tools.py`: tool definitions, serialization, and execution.
 - `agent/state.py`: file state + seeding utilities.
 

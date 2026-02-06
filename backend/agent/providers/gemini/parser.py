@@ -4,7 +4,7 @@ from typing import List
 
 from google.genai import types
 
-from agent.streaming.types import EventSink, StepResult, StreamEvent
+from agent.providers.types import EventSink, StepResult, StreamEvent
 from agent.tools import ToolCall
 
 

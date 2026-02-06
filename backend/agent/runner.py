@@ -16,7 +16,7 @@ from llm import (
 )
 
 from agent.state import AgentFileState, seed_file_state_from_messages
-from agent.streaming import (
+from agent.providers import (
     AnthropicAdapter,
     ExecutedToolCall,
     GeminiAdapter,

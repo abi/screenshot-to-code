@@ -5,17 +5,17 @@ from google import genai
 from google.genai import types
 from openai.types.chat import ChatCompletionMessageParam
 
-from agent.streaming.providers.gemini.parser import (
+from agent.providers.gemini.parser import (
     GeminiParseState,
     build_step_result,
     parse_chunk,
 )
-from agent.streaming.providers.gemini.stream import (
+from agent.providers.gemini.stream import (
     create_generate_config,
     create_stream,
 )
-from agent.streaming.providers.gemini.transform import convert_message_to_gemini_content
-from agent.streaming.types import EventSink, ExecutedToolCall, StepResult
+from agent.providers.gemini.transform import convert_message_to_gemini_content
+from agent.providers.types import EventSink, ExecutedToolCall, StepResult
 from llm import Llm
 
 

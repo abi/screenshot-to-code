@@ -5,16 +5,16 @@ from typing import Any, Dict, List
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
-from agent.streaming.providers.openai.parser import (
+from agent.providers.openai.parser import (
     OpenAIResponsesParseState,
     build_step_result,
     parse_event,
 )
-from agent.streaming.providers.openai.stream import create_responses_stream
-from agent.streaming.providers.openai.transform import (
+from agent.providers.openai.stream import create_responses_stream
+from agent.providers.openai.transform import (
     convert_message_to_responses_input,
 )
-from agent.streaming.types import EventSink, ExecutedToolCall, StepResult
+from agent.providers.types import EventSink, ExecutedToolCall, StepResult
 from llm import Llm
 
 

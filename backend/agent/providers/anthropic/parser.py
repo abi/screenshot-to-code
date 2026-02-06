@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
-from agent.streaming.types import EventSink, StreamEvent
+from agent.providers.types import EventSink, StreamEvent
 from agent.tools import ToolCall
 
 

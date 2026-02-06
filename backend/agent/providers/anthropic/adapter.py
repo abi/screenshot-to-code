@@ -4,16 +4,16 @@ from typing import Any, Dict, List
 from anthropic import AsyncAnthropic
 from openai.types.chat import ChatCompletionMessageParam
 
-from agent.streaming.providers.anthropic.parser import (
+from agent.providers.anthropic.parser import (
     AnthropicParseState,
     extract_tool_calls,
     parse_stream_event,
 )
-from agent.streaming.providers.anthropic.stream import create_stream_context
-from agent.streaming.providers.anthropic.transform import (
+from agent.providers.anthropic.stream import create_stream_context
+from agent.providers.anthropic.transform import (
     convert_openai_messages_to_claude,
 )
-from agent.streaming.types import EventSink, ExecutedToolCall, StepResult
+from agent.providers.types import EventSink, ExecutedToolCall, StepResult
 from llm import Llm
 
 

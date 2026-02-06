@@ -3,9 +3,9 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
 from agent.state import ensure_str
-from agent.streaming.types import EventSink, StepResult, StreamEvent
+from agent.providers.types import EventSink, StepResult, StreamEvent
 from agent.tools import ToolCall, parse_json_arguments
-from agent.streaming.providers.openai.transform import get_event_attr
+from agent.providers.openai.transform import get_event_attr
 
 
 @dataclass
