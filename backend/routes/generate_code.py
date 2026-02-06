@@ -479,7 +479,7 @@ class PromptCreationStage:
     ) -> List[ChatCompletionMessageParam]:
         """Create prompt messages"""
         try:
-            prompt_messages, _ = await create_prompt(
+            prompt_messages = await create_prompt(
                 stack=extracted_params.stack,
                 input_mode=extracted_params.input_mode,
                 generation_type=extracted_params.generation_type,

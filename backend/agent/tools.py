@@ -8,7 +8,7 @@ from google.genai import types
 
 from codegen.utils import extract_html_content
 from config import REPLICATE_API_KEY
-from image_generation.core import process_tasks
+from image_generation.generation import process_tasks
 from image_generation.replicate import remove_background
 
 from agent.state import AgentFileState, ensure_str

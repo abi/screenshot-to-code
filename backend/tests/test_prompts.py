@@ -14,7 +14,6 @@ from prompts.types import Stack
 # Type definitions for test structures
 class ExpectedResult(TypedDict):
     messages: List[ChatCompletionMessageParam]
-    image_cache: Dict[str, str]
 
 
 def assert_structure_match(actual: object, expected: object, path: str = "") -> None:
@@ -97,7 +96,7 @@ class TestCreatePrompt:
 
         with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await create_prompt(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -127,11 +126,10 @@ class TestCreatePrompt:
                         ],
                     },
                 ],
-                "image_cache": {},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
 
@@ -153,11 +151,9 @@ class TestCreatePrompt:
         # Mock the system prompts and image cache function
         mock_system_prompts = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
 
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), patch(
-            "prompts.create_alt_url_mapping", return_value={"mock": "cache"}
-        ):
+        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await create_prompt(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -191,11 +187,10 @@ class TestCreatePrompt:
                     {"role": "assistant", "content": "<html>Updated code</html>"},
                     {"role": "user", "content": "Add a header"},
                 ],
-                "image_cache": {"mock": "cache"},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -218,7 +213,7 @@ class TestCreatePrompt:
         
         with patch('prompts.TEXT_SYSTEM_PROMPTS', mock_text_system_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await create_prompt(
                 stack=self.TEST_STACK,
                 input_mode="text",
                 generation_type=params["generationType"],
@@ -239,11 +234,10 @@ class TestCreatePrompt:
                         "content": f"Generate UI for {text_description}"
                     }
                 ],
-                "image_cache": {}
             }
             
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -270,10 +264,9 @@ class TestCreatePrompt:
             self.TEST_STACK: "Mock Text System Prompt"
         }
         
-        with patch('prompts.TEXT_SYSTEM_PROMPTS', mock_text_system_prompts), \
-             patch('prompts.create_alt_url_mapping', return_value={"text": "cache"}):
+        with patch('prompts.TEXT_SYSTEM_PROMPTS', mock_text_system_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await create_prompt(
                 stack=self.TEST_STACK,
                 input_mode="text",
                 generation_type=params["generationType"],
@@ -310,11 +303,10 @@ class TestCreatePrompt:
                         "content": "Now add a navigation menu"
                     }
                 ],
-                "image_cache": {"text": "cache"}
             }
             
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -336,7 +328,7 @@ class TestCreatePrompt:
         }
 
         # Call the function
-        messages, image_cache = await create_prompt(
+        messages = await create_prompt(
             stack=self.TEST_STACK,
             input_mode="video",
             generation_type=params["generationType"],
@@ -365,11 +357,10 @@ class TestCreatePrompt:
                     ],
                 },
             ],
-            "image_cache": {}
         }
 
         # Assert the structure matches
-        actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+        actual: ExpectedResult = {"messages": messages}
         assert_structure_match(actual, expected)
 
 
@@ -391,10 +382,9 @@ class TestCreatePrompt:
         # Mock the system prompts and image cache function
         mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
 
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), \
-             patch("prompts.create_alt_url_mapping", return_value={"mock": "cache"}):
+        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await create_prompt(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -442,11 +432,10 @@ class TestCreatePrompt:
                     },
                     {"role": "assistant", "content": "<html>Code with button</html>"},
                 ],
-                "image_cache": {"mock": "cache"},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -468,10 +457,9 @@ class TestCreatePrompt:
         # Mock the system prompts and image cache function
         mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
 
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), \
-             patch("prompts.create_alt_url_mapping", return_value={"mock": "cache"}):
+        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await create_prompt(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -526,11 +514,10 @@ class TestCreatePrompt:
                     },
                     {"role": "assistant", "content": "<html>Styled code</html>"},
                 ],
-                "image_cache": {"mock": "cache"},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -550,10 +537,9 @@ class TestCreatePrompt:
         # Mock the system prompts and image cache function
         mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
 
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), \
-             patch("prompts.create_alt_url_mapping", return_value={}):
+        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await create_prompt(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -586,11 +572,10 @@ class TestCreatePrompt:
                     {"role": "user", "content": "Make it blue"},  # Text-only message
                     {"role": "assistant", "content": "<html>Blue code</html>"},
                 ],
-                "image_cache": {},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -615,7 +600,7 @@ class TestCreatePrompt:
 
         with patch("prompts.IMPORTED_CODE_SYSTEM_PROMPTS", mock_imported_prompts):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await create_prompt(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -649,9 +634,8 @@ class TestCreatePrompt:
                     },
                     {"role": "assistant", "content": "<html>Updated code</html>"},
                 ],
-                "image_cache": {},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)

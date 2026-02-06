@@ -2,7 +2,6 @@ from typing import Union, Any, cast
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
 from custom_types import InputMode
-from image_generation.core import create_alt_url_mapping
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
 from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
@@ -29,9 +28,8 @@ async def create_prompt(
     prompt: PromptContent,
     history: list[dict[str, Any]],
     is_imported_from_code: bool,
-) -> tuple[list[ChatCompletionMessageParam], dict[str, str]]:
+) -> list[ChatCompletionMessageParam]:
 
-    image_cache: dict[str, str] = {}
     prompt_messages: list[ChatCompletionMessageParam] = []
 
     # If this generation started off with imported code, we need to assemble the prompt differently
@@ -85,9 +83,7 @@ async def create_prompt(
                 message = create_message_from_history_item(item, role)
                 prompt_messages.append(message)
 
-            image_cache = create_alt_url_mapping(history[-2]["text"])
-
-    return prompt_messages, image_cache
+    return prompt_messages
 
 
 def create_message_from_history_item(
