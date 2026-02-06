@@ -9,7 +9,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from agentic.streaming.types import EventSink, ExecutedToolCall, StepResult, StreamEvent
 from agentic.tools import ToolCall
 from llm import Llm
-from models.gemini import (
+from agentic.streaming.providers.gemini.transform import (
     convert_message_to_gemini_content,
     get_gemini_api_model_name,
     get_thinking_level_for_model,

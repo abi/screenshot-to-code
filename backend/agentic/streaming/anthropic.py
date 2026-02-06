@@ -8,7 +8,9 @@ from openai.types.chat import ChatCompletionMessageParam
 from agentic.streaming.types import EventSink, ExecutedToolCall, StepResult, StreamEvent
 from agentic.tools import ToolCall
 from llm import Llm
-from models.claude import convert_openai_messages_to_claude
+from agentic.streaming.providers.anthropic.transform import (
+    convert_openai_messages_to_claude,
+)
 
 
 THINKING_MODELS = {
