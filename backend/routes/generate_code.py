@@ -414,28 +414,28 @@ class ModelSelectionStage:
                     "Video mode requires a Gemini API key. "
                     "Please add GEMINI_API_KEY to backend/.env or in the settings dialog"
                 )
-            return [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, Llm.GEMINI_3_PRO_PREVIEW_HIGH]
+            return [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, Llm.GEMINI_3_PRO_PREVIEW_LOW]
 
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key and openai_api_key:
             models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
                 Llm.CLAUDE_OPUS_4_6,
                 Llm.GPT_5_2_CODEX_HIGH,
             ]
         elif gemini_api_key and anthropic_api_key:
             models = [
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
                 Llm.CLAUDE_OPUS_4_6,
                 Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
                 Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-                Llm.GEMINI_3_PRO_PREVIEW_LOW,
             ]
         elif gemini_api_key and openai_api_key:
             models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
                 Llm.GPT_5_2_CODEX_HIGH,
                 Llm.GPT_5_2_CODEX_MEDIUM,
             ]
@@ -447,10 +447,10 @@ class ModelSelectionStage:
             ]
         elif gemini_api_key:
             models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
                 Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
                 Llm.GEMINI_3_PRO_PREVIEW_LOW,
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
             ]
         elif anthropic_api_key:
             models = [Llm.CLAUDE_OPUS_4_6, Llm.CLAUDE_4_5_SONNET_2025_09_29]

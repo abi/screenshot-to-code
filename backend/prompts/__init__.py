@@ -5,7 +5,7 @@ from custom_types import InputMode
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPT
 from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
-from prompts.claude_prompts import GEMINI_VIDEO_PROMPT
+from prompts.video_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
 
 

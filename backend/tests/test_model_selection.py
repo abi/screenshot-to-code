@@ -14,7 +14,7 @@ class TestModelSelectionAllKeys:
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_create(self):
-        """All keys: Claude Opus 4.6, GPT 5.2 Codex (high), Gemini 3 Flash (high), Gemini 3 Pro (high)"""
+        """All keys: first two options are Gemini 3 Flash (minimal) and Gemini 3 Pro (low)."""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -24,8 +24,8 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-            Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+            Llm.GEMINI_3_PRO_PREVIEW_LOW,
             Llm.CLAUDE_OPUS_4_6,
             Llm.GPT_5_2_CODEX_HIGH,
         ]
@@ -43,10 +43,27 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-            Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+            Llm.GEMINI_3_PRO_PREVIEW_LOW,
             Llm.CLAUDE_OPUS_4_6,
             Llm.GPT_5_2_CODEX_HIGH,
+        ]
+        assert models == expected
+
+    @pytest.mark.asyncio
+    async def test_video_create_prefers_gemini_minimal_then_low(self):
+        """Video create always uses two Gemini variants in fixed order."""
+        models = await self.model_selector.select_models(
+            generation_type="create",
+            input_mode="video",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+        )
+
+        expected = [
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+            Llm.GEMINI_3_PRO_PREVIEW_LOW,
         ]
         assert models == expected
 
