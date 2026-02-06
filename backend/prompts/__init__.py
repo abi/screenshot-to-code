@@ -3,7 +3,7 @@ from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentP
 
 from custom_types import InputMode
 from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
-from prompts.screenshot_system_prompts import SYSTEM_PROMPTS
+from prompts.screenshot_system_prompts import SYSTEM_PROMPT
 from prompts.text_prompts import SYSTEM_PROMPTS as TEXT_SYSTEM_PROMPTS
 from prompts.claude_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
@@ -66,7 +66,7 @@ async def create_prompt(
                         ChatCompletionMessageParam,
                         {
                             "role": "system",
-                            "content": SYSTEM_PROMPTS[stack],
+                            "content": SYSTEM_PROMPT,
                         },
                     )
                 ]
@@ -152,7 +152,7 @@ def assemble_prompt(
     stack: Stack,
     text_prompt: str = "",
 ) -> list[ChatCompletionMessageParam]:
-    system_content = SYSTEM_PROMPTS[stack]
+    system_content = SYSTEM_PROMPT
     user_prompt = USER_PROMPT
 
     # Append optional text instructions if provided

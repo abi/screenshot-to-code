@@ -97,10 +97,7 @@ class TestCreatePromptImageSupport:
             ]
         }
 
-        # Mock the system prompts and image cache function
-        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
-
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
+        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await create_prompt(
                 stack=self.TEST_STACK,
@@ -177,10 +174,7 @@ class TestCreatePromptImageSupport:
             ]
         }
 
-        # Mock the system prompts and image cache function
-        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
-
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
+        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await create_prompt(
                 stack=self.TEST_STACK,

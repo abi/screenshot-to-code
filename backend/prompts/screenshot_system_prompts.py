@@ -1,7 +1,4 @@
-from prompts.types import SystemPrompts
-
-
-HTML_TAILWIND_SYSTEM_PROMPT = """
+SYSTEM_PROMPT = """
 You are an expert frontend developer.
 You particularly specialize in taking screenshots and then replicating them exactly in code as single page apps 
 using Tailwind, HTML and JS.
@@ -84,12 +81,3 @@ Tooling instructions:
 - Use retrieve_option to fetch the full HTML for a specific option (1-based option_number) when a user references another option.
 - Any non-tool output should be short, user-facing chat updates.
 """
-
-SYSTEM_PROMPTS = SystemPrompts(
-    html_css=HTML_TAILWIND_SYSTEM_PROMPT,
-    html_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
-    react_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
-    bootstrap=HTML_TAILWIND_SYSTEM_PROMPT,
-    ionic_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
-    vue_tailwind=HTML_TAILWIND_SYSTEM_PROMPT,
-)
