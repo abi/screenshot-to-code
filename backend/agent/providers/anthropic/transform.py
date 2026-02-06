@@ -2,8 +2,7 @@ import copy
 from typing import Any, Dict, List, Tuple, cast
 
 from openai.types.chat import ChatCompletionMessageParam
-
-from image_processing.utils import process_image
+from agent.providers.anthropic.image_processing import process_image
 
 
 def convert_openai_messages_to_claude(
