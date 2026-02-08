@@ -219,7 +219,7 @@ class TestCreatePrompt:
                     },
                     {
                         "role": "user",
-                        "content": f"Generate UI for {text_description}"
+                        "content": f"<CONTAINS:Generate UI for {text_description}>"
                     }
                 ],
             }
@@ -266,7 +266,7 @@ class TestCreatePrompt:
                     },
                     {
                         "role": "user",
-                        "content": f"Generate UI for {text_description}"
+                        "content": f"<CONTAINS:Generate UI for {text_description}>"
                     },
                     {
                         "role": "assistant",
@@ -566,12 +566,7 @@ class TestCreatePrompt:
             ]
         }
 
-        # Mock the imported code system prompts
-        mock_imported_prompts: Dict[str, str] = {
-            self.TEST_STACK: "Mock Imported Code System Prompt"
-        }
-
-        with patch("prompts.IMPORTED_CODE_SYSTEM_PROMPTS", mock_imported_prompts):
+        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await create_prompt(
                 stack=self.TEST_STACK,
@@ -587,7 +582,7 @@ class TestCreatePrompt:
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Mock Imported Code System Prompt\n Here is the code of the app: <html>Original imported code</html>",
+                        "content": "<CONTAINS:continuing from an imported codebase>",
                     },
                     {
                         "role": "user",
@@ -605,10 +600,48 @@ class TestCreatePrompt:
                             },
                         ],
                     },
-                    {"role": "assistant", "content": "<html>Updated code</html>"},
                 ],
             }
 
             # Assert the structure matches
+            actual: ExpectedResult = {"messages": messages}
+            assert_structure_match(actual, expected)
+
+    @pytest.mark.asyncio
+    async def test_imported_code_update_prefers_history_text_over_prompt_images(self) -> None:
+        """Imported-code updates should not lose text instructions when prompt only has images."""
+        params: Dict[str, Any] = {
+            "isImportedFromCode": True,
+            "generationType": "update",
+            "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
+            "history": [
+                {"text": "<html>Original imported code</html>", "images": []},
+                {"text": "Make the header blue", "images": []},
+            ],
+        }
+
+        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+            messages = await create_prompt(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type=params["generationType"],
+                prompt=params["prompt"],
+                history=params.get("history", []),
+                is_imported_from_code=params.get("isImportedFromCode", False),
+            )
+
+            expected: ExpectedResult = {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "<CONTAINS:continuing from an imported codebase>",
+                    },
+                    {
+                        "role": "user",
+                        "content": "Make the header blue",
+                    },
+                ],
+            }
+
             actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)

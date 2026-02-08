@@ -1,8 +1,7 @@
-from typing import Union, Any, cast
+from typing import Any, cast
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionContentPartParam
 
 from custom_types import InputMode
-from prompts.imported_code_prompts import IMPORTED_CODE_SYSTEM_PROMPTS
 from prompts.screenshot_system_prompts import SYSTEM_PROMPT
 from prompts.video_prompts import GEMINI_VIDEO_PROMPT
 from prompts.types import Stack, PromptContent
@@ -19,6 +18,14 @@ For mobile screenshots, do not include the device frame or browser chrome; focus
 the actual UI mockups.
 """
 
+IMPORTED_CODE_INSTRUCTIONS = """
+You are continuing from an imported codebase. Follow these instructions while updating it:
+
+- Do not add comments in the code such as "<!-- Add other navigation links as needed -->" or "<!-- ... other news items ... -->" in place of writing the full code. WRITE THE FULL CODE.
+- Repeat elements as needed. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+"""
+
 
 async def create_prompt(
     stack: Stack,
@@ -33,12 +40,13 @@ async def create_prompt(
 
     # If this generation started off with imported code, we need to assemble the prompt differently
     if is_imported_from_code:
-        original_imported_code = history[0]["text"]
-        prompt_messages = assemble_imported_code_prompt(original_imported_code, stack)
-        for index, item in enumerate(history[1:]):
-            role = "user" if index % 2 == 0 else "assistant"
-            message = create_message_from_history_item(item, role)
-            prompt_messages.append(message)
+        original_imported_code = history[0]["text"] if history else ""
+        imported_user_prompt = get_imported_code_user_prompt(prompt, history)
+        prompt_messages = assemble_imported_code_prompt(
+            original_imported_code,
+            stack,
+            imported_user_prompt,
+        )
     else:
         # Assemble the prompt for non-imported code
         if input_mode == "image":
@@ -133,17 +141,82 @@ def create_message_from_history_item(
 
 
 def assemble_imported_code_prompt(
-    code: str, stack: Stack
+    code: str,
+    stack: Stack,
+    user_prompt: PromptContent,
 ) -> list[ChatCompletionMessageParam]:
-    system_content = IMPORTED_CODE_SYSTEM_PROMPTS[stack]
-    user_content = "Here is the code of the app: " + code
+    system_content = (
+        SYSTEM_PROMPT.strip()
+        + "\n\n"
+        + IMPORTED_CODE_INSTRUCTIONS.strip()
+        + f"\n\nSelected stack: {stack}."
+        + "\n\nThe current app code is provided below. Update it per the request."
+        + f"\n\n{code}"
+    )
 
     return [
         {
             "role": "system",
-            "content": system_content + "\n " + user_content,
-        }
+            "content": system_content,
+        },
+        create_message_from_history_item(
+            {
+                "text": user_prompt.get("text", ""),
+                "images": user_prompt.get("images", []),
+            },
+            "user",
+        ),
     ]
+
+
+def get_imported_code_user_prompt(
+    prompt: PromptContent,
+    history: list[dict[str, Any]],
+) -> PromptContent:
+    prompt_text = prompt.get("text", "")
+    prompt_images = prompt.get("images", [])
+    normalized_prompt_images: list[str] = []
+    if isinstance(prompt_images, list):
+        raw_prompt_images = cast(list[object], prompt_images)
+        for image in raw_prompt_images:
+            if isinstance(image, str):
+                normalized_prompt_images.append(image)
+
+    # Preferred path: if prompt has text, treat it as the latest user instruction.
+    if prompt_text.strip():
+        return {
+            "text": prompt_text,
+            "images": normalized_prompt_images,
+        }
+
+    # Backward-compatibility path: recover latest user turn from imported-code history.
+    for index in range(len(history) - 1, 0, -1):
+        if index % 2 == 1:
+            item = history[index]
+            text = item.get("text", "")
+            images = item.get("images", [])
+            normalized_images: list[str] = []
+            if isinstance(images, list):
+                raw_images = cast(list[object], images)
+                for image in raw_images:
+                    if isinstance(image, str):
+                        normalized_images.append(image)
+            return {
+                "text": text if isinstance(text, str) else "",
+                "images": normalized_images,
+            }
+
+    # Final fallback: if prompt only has images, keep them so visual references are not lost.
+    if normalized_prompt_images:
+        return {
+            "text": "",
+            "images": normalized_prompt_images,
+        }
+
+    return {
+        "text": "Update the imported code according to the latest request.",
+        "images": [],
+    }
 
 
 def assemble_prompt(

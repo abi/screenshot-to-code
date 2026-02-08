@@ -230,12 +230,7 @@ class TestCreatePromptImageSupport:
             ]
         }
 
-        # Mock the imported code system prompts
-        mock_imported_prompts: Dict[str, str] = {
-            self.TEST_STACK: "Mock Imported Code System Prompt"
-        }
-
-        with patch("prompts.IMPORTED_CODE_SYSTEM_PROMPTS", mock_imported_prompts):
+        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await create_prompt(
                 stack=self.TEST_STACK,
@@ -251,7 +246,7 @@ class TestCreatePromptImageSupport:
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Mock Imported Code System Prompt\n Here is the code of the app: <html>Original imported code</html>",
+                        "content": "<CONTAINS:continuing from an imported codebase>",
                     },
                     {
                         "role": "user",
@@ -269,7 +264,6 @@ class TestCreatePromptImageSupport:
                             },
                         ],
                     },
-                    {"role": "assistant", "content": "<html>Updated code</html>"},
                 ],
             }
 
