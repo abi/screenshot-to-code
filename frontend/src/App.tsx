@@ -30,8 +30,8 @@ import { FeedbackFAB } from "./components/feedback/FeedbackFAB";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 
-// Temporary kill switch for feedback call UI. Set to true to re-enable.
-const SHOW_FEEDBACK_CALL_UI = false;
+// Temporary kill switch for feedback call UI.
+const SHOW_FEEDBACK_CALL_UI = true;
 
 interface Props {
   navbarComponent?: JSX.Element;
