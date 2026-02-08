@@ -8,10 +8,10 @@ interface Props {
 }
 
 const EXAMPLE_PROMPTS = [
-  "A cozy cafe menu board with seasonal specials",
-  "A minimalist portfolio with case studies and a contact section",
-  "A fintech savings app dashboard with balances and goals",
-  "A travel itinerary planner with map and daily schedule",
+  "An ecommerce homepage for eco-friendly skincare with product grid, reviews, and newsletter signup",
+  "A portfolio site for a product designer with case studies, process steps, and contact",
+  "A mobile fitness app dashboard with workout plan, progress ring, and quick-start buttons",
+  "A music streaming app with now-playing, recommended playlists, and recent listens",
 ];
 
 function TextTab({ doCreateFromText }: Props) {
