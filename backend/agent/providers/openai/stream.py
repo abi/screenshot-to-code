@@ -17,17 +17,11 @@ async def create_responses_stream(
         "tools": tools,
         "tool_choice": "auto",
         "stream": True,
-        "max_output_tokens": 30000,
+        "max_output_tokens": 50000,
     }
 
     reasoning_effort = get_openai_reasoning_effort(model)
     if reasoning_effort:
-        params["reasoning"] = {"effort": reasoning_effort}
+        params["reasoning"] = {"effort": reasoning_effort, "summary": "auto"}
 
-    responses_client = getattr(client, "responses", None)
-    if responses_client is None:
-        raise Exception(
-            "OpenAI SDK is too old for GPT-5.2 Codex. Please upgrade the 'openai' package to a version that supports the Responses API."
-        )
-
-    return await responses_client.create(**params)  # type: ignore
+    return await client.responses.create(**params)  # type: ignore
