@@ -63,10 +63,13 @@ function Sidebar({
   const { inputMode, referenceImages, head, commits } = useProjectStore();
   const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
 
-  const viewedCode =
-    head && commits[head]
-      ? commits[head].variants[commits[head].selectedVariantIndex].code
-      : "";
+  const currentCommit = head ? commits[head] : null;
+
+  const viewedCode = currentCommit
+    ? currentCommit.variants[currentCommit.selectedVariantIndex].code
+    : "";
+
+  const isFirstGeneration = currentCommit?.type === "ai_create";
 
   // Check if the currently selected variant is complete
   const isSelectedVariantComplete =
@@ -213,27 +216,41 @@ function Sidebar({
                           ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
                           : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       }`}
-                      title={inSelectAndEditMode ? "Exit selection mode" : "Select and update"}
+                      title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
                     >
                       <LuMousePointerClick className="w-[18px] h-[18px]" />
                     </button>
                   )}
-                  <button
-                    onClick={regenerate}
-                    className="p-2 rounded-lg transition-colors text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                    title="Regenerate"
-                  >
-                    <LuRefreshCw className="w-[18px] h-[18px]" />
-                  </button>
+                  {isFirstGeneration && (
+                    <button
+                      onClick={regenerate}
+                      className="p-2 rounded-lg transition-colors text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      title="Regenerate from scratch"
+                    >
+                      <LuRefreshCw className="w-[18px] h-[18px]" />
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={() => doUpdate(updateInstruction)}
-                  className="p-2 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors update-btn"
+                  disabled={!updateInstruction.trim()}
+                  className={`p-2 rounded-lg transition-colors update-btn ${
+                    updateInstruction.trim()
+                      ? "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
+                      : "bg-gray-200 dark:bg-zinc-700 text-gray-400 dark:text-zinc-500 cursor-not-allowed"
+                  }`}
                   title="Send"
                 >
                   <LuArrowUp className="w-[18px] h-[18px]" strokeWidth={2.5} />
                 </button>
               </div>
+
+              {/* Select and edit instructions */}
+              {inSelectAndEditMode && (
+                <div className="px-4 pb-3 text-xs text-gray-500 dark:text-zinc-400">
+                  Click any element in the preview to select it, then describe your changes above.
+                </div>
+              )}
 
               {isDragging && (
                 <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-xl flex items-center justify-center pointer-events-none z-10">
@@ -245,68 +262,68 @@ function Sidebar({
         )}
 
       {/* Reference image display */}
-      <div className="flex gap-x-2 mt-2">
-        {referenceImages.length > 0 && (
-          <div className="flex flex-col">
-            <div
-              className={classNames("relative w-[340px]", {
-                scanning: appState === AppState.CODING,
-              })}
-            >
-              {inputMode === "image" && (
-                <div className="w-[340px] rounded-md border border-gray-200 bg-white p-2">
-                  <div className="rounded-md border border-gray-100 bg-gray-50 p-1">
-                    <img
-                      className="w-full max-h-[360px] object-contain rounded"
-                      src={referenceImages[activeReferenceIndex] || referenceImages[0]}
-                      alt={`Reference ${activeReferenceIndex + 1}`}
-                    />
-                  </div>
-                  {referenceImages.length > 1 && (
-                    <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                      {referenceImages.map((image, index) => (
-                        <button
-                          key={`${image}-${index}`}
-                          type="button"
-                          onClick={() => setActiveReferenceIndex(index)}
-                          className={`h-14 w-14 rounded border overflow-hidden flex-shrink-0 ${
-                            activeReferenceIndex === index
-                              ? "border-blue-500 ring-2 ring-blue-200"
-                              : "border-gray-200"
-                          }`}
-                          aria-label={`View reference ${index + 1}`}
-                        >
-                          <img
-                            className="h-full w-full object-cover"
-                            src={image}
-                            alt={`Reference thumbnail ${index + 1}`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  )}
+      {referenceImages.length > 0 && (
+        <div className="mt-3">
+          <div className="text-xs font-medium text-gray-400 dark:text-zinc-500 uppercase tracking-wide mb-2">
+            {inputMode === "video"
+              ? "Original Video"
+              : referenceImages.length > 1
+                ? `Reference (${activeReferenceIndex + 1}/${referenceImages.length})`
+                : "Reference"}
+          </div>
+          <div
+            className={classNames("relative", {
+              scanning: appState === AppState.CODING,
+            })}
+          >
+            {inputMode === "image" && (
+              <>
+                <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-zinc-700">
+                  <img
+                    className="w-full max-h-[280px] object-contain bg-gray-50 dark:bg-zinc-800"
+                    src={referenceImages[activeReferenceIndex] || referenceImages[0]}
+                    alt={`Reference ${activeReferenceIndex + 1}`}
+                  />
                 </div>
-              )}
-              {inputMode === "video" && (
+                {referenceImages.length > 1 && (
+                  <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+                    {referenceImages.map((image, index) => (
+                      <button
+                        key={`${image}-${index}`}
+                        type="button"
+                        onClick={() => setActiveReferenceIndex(index)}
+                        className={`h-10 w-10 rounded-md overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                          activeReferenceIndex === index
+                            ? "border-blue-500"
+                            : "border-transparent hover:border-gray-300 dark:hover:border-zinc-600"
+                        }`}
+                        aria-label={`View reference ${index + 1}`}
+                      >
+                        <img
+                          className="h-full w-full object-cover"
+                          src={image}
+                          alt={`Reference thumbnail ${index + 1}`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+            {inputMode === "video" && (
+              <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-zinc-700">
                 <video
                   muted
                   autoPlay
                   loop
-                  className="w-[340px] border border-gray-200 rounded-md"
+                  className="w-full"
                   src={referenceImages[0]}
                 />
-              )}
-            </div>
-            <div className="text-gray-400 uppercase text-sm text-center mt-1">
-              {inputMode === "video"
-                ? "Original Video"
-                : referenceImages.length > 1
-                  ? `Original Screenshots (${activeReferenceIndex + 1}/${referenceImages.length})`
-                  : "Original Screenshot"}
-            </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
     </>
   );
