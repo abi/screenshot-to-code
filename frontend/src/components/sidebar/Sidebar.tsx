@@ -1,4 +1,3 @@
-import classNames from "classnames";
 import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
@@ -60,8 +59,7 @@ function Sidebar({
     }
   }, [updateImages, setUpdateImages]);
 
-  const { inputMode, referenceImages, head, commits } = useProjectStore();
-  const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
+  const { head, commits } = useProjectStore();
 
   const currentCommit = head ? commits[head] : null;
 
@@ -106,17 +104,6 @@ function Sidebar({
     setIsErrorExpanded(false);
   }, [head, commits[head || ""]?.selectedVariantIndex]);
 
-  useEffect(() => {
-    if (activeReferenceIndex >= referenceImages.length) {
-      setActiveReferenceIndex(0);
-    }
-  }, [activeReferenceIndex, referenceImages.length]);
-
-  useEffect(() => {
-    if (referenceImages.length > 0) {
-      setActiveReferenceIndex(0);
-    }
-  }, [referenceImages]);
 
   return (
     <>
@@ -261,69 +248,6 @@ function Sidebar({
           </div>
         )}
 
-      {/* Reference image display */}
-      {referenceImages.length > 0 && (
-        <div className="mt-3">
-          <div className="text-xs font-medium text-gray-400 dark:text-zinc-500 uppercase tracking-wide mb-2">
-            {inputMode === "video"
-              ? "Original Video"
-              : referenceImages.length > 1
-                ? `Reference (${activeReferenceIndex + 1}/${referenceImages.length})`
-                : "Reference"}
-          </div>
-          <div
-            className={classNames("relative", {
-              scanning: appState === AppState.CODING,
-            })}
-          >
-            {inputMode === "image" && (
-              <>
-                <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-zinc-700">
-                  <img
-                    className="w-full max-h-[280px] object-contain bg-gray-50 dark:bg-zinc-800"
-                    src={referenceImages[activeReferenceIndex] || referenceImages[0]}
-                    alt={`Reference ${activeReferenceIndex + 1}`}
-                  />
-                </div>
-                {referenceImages.length > 1 && (
-                  <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
-                    {referenceImages.map((image, index) => (
-                      <button
-                        key={`${image}-${index}`}
-                        type="button"
-                        onClick={() => setActiveReferenceIndex(index)}
-                        className={`h-10 w-10 rounded-md overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                          activeReferenceIndex === index
-                            ? "border-blue-500"
-                            : "border-transparent hover:border-gray-300 dark:hover:border-zinc-600"
-                        }`}
-                        aria-label={`View reference ${index + 1}`}
-                      >
-                        <img
-                          className="h-full w-full object-cover"
-                          src={image}
-                          alt={`Reference thumbnail ${index + 1}`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-            {inputMode === "video" && (
-              <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-zinc-700">
-                <video
-                  muted
-                  autoPlay
-                  loop
-                  className="w-full"
-                  src={referenceImages[0]}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
     </>
   );

@@ -6,7 +6,8 @@ import {
   FaMobile,
   FaCode,
 } from "react-icons/fa";
-import { LuExternalLink, LuRefreshCw } from "react-icons/lu";
+import { LuExternalLink, LuImage, LuRefreshCw } from "react-icons/lu";
+import { useState } from "react";
 import { AppState, Settings } from "../../types";
 import CodeTab from "./CodeTab";
 import { Button } from "../ui/button";
@@ -33,7 +34,8 @@ interface Props {
 
 function PreviewPane({ doUpdate, reset, settings }: Props) {
   const { appState } = useAppStore();
-  const { inputMode, head, commits } = useProjectStore();
+  const { inputMode, referenceImages, head, commits } = useProjectStore();
+  const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
 
   const currentCommit = head && commits[head] ? commits[head] : "";
   const currentCode = currentCommit
@@ -81,6 +83,11 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
               <TabsTrigger value="code" title="Code" data-testid="tab-code">
                 <FaCode />
               </TabsTrigger>
+              {referenceImages.length > 0 && (
+                <TabsTrigger value="reference" title="Reference Image">
+                  <LuImage />
+                </TabsTrigger>
+              )}
             </TabsList>
             <Button
               onClick={() => openInNewTab(previewCode)}
@@ -124,12 +131,57 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
           />
         </TabsContent>
         <TabsContent value="code">
-          <CodeTab 
-            code={previewCode} 
-            setCode={() => {}} 
-            settings={settings} 
+          <CodeTab
+            code={previewCode}
+            setCode={() => {}}
+            settings={settings}
           />
         </TabsContent>
+        {referenceImages.length > 0 && (
+          <TabsContent value="reference">
+            <div className="flex flex-col items-center gap-4 p-4">
+              {inputMode === "video" ? (
+                <video
+                  muted
+                  autoPlay
+                  loop
+                  className="max-w-full max-h-[80vh] rounded-lg border border-gray-200 dark:border-zinc-700"
+                  src={referenceImages[0]}
+                />
+              ) : (
+                <>
+                  <img
+                    className="max-w-full max-h-[80vh] object-contain rounded-lg border border-gray-200 dark:border-zinc-700"
+                    src={referenceImages[activeReferenceIndex] || referenceImages[0]}
+                    alt={`Reference ${activeReferenceIndex + 1}`}
+                  />
+                  {referenceImages.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto">
+                      {referenceImages.map((image, index) => (
+                        <button
+                          key={`${image}-${index}`}
+                          type="button"
+                          onClick={() => setActiveReferenceIndex(index)}
+                          className={`h-12 w-12 rounded-md overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                            activeReferenceIndex === index
+                              ? "border-blue-500"
+                              : "border-transparent hover:border-gray-300 dark:hover:border-zinc-600"
+                          }`}
+                        >
+                          <img
+                            className="h-full w-full object-cover"
+                            src={image}
+                            alt={`Reference thumbnail ${index + 1}`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
