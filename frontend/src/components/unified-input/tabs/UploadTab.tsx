@@ -5,6 +5,8 @@ import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
 import { Button } from "../../ui/button";
 import { ScreenRecorderState } from "../../../types";
 import ScreenRecorder from "../../recording/ScreenRecorder";
+import OutputSettingsSection from "../../settings/OutputSettingsSection";
+import { Stack } from "../../../lib/stacks";
 
 function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,9 +46,11 @@ interface Props {
     inputMode: "image" | "video",
     textPrompt?: string
   ) => void;
+  stack: Stack;
+  setStack: (stack: Stack) => void;
 }
 
-function UploadTab({ doCreate }: Props) {
+function UploadTab({ doCreate, stack, setStack }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadedDataUrls, setUploadedDataUrls] = useState<string[]>([]);
   const [uploadedInputMode, setUploadedInputMode] = useState<
@@ -474,6 +478,13 @@ function UploadTab({ doCreate }: Props) {
             </div>
           )}
 
+          <div className="w-full max-w-md">
+            <OutputSettingsSection
+              stack={stack}
+              setStack={setStack}
+            />
+          </div>
+
           <div className="flex flex-col items-center gap-1 w-full max-w-md">
             <Button
               onClick={handleGenerate}
@@ -501,6 +512,8 @@ function UploadTab({ doCreate }: Props) {
             screenRecorderState={screenRecorderState}
             setScreenRecorderState={setScreenRecorderState}
             generateCode={handleScreenRecorderGenerate}
+            stack={stack}
+            setStack={setStack}
           />
         </div>
       )}

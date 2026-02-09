@@ -2,9 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
 import toast from "react-hot-toast";
+import OutputSettingsSection from "../../settings/OutputSettingsSection";
+import { Stack } from "../../../lib/stacks";
 
 interface Props {
   doCreateFromText: (text: string) => void;
+  stack: Stack;
+  setStack: (stack: Stack) => void;
 }
 
 const EXAMPLE_PROMPTS = [
@@ -14,7 +18,7 @@ const EXAMPLE_PROMPTS = [
   "A music streaming app with now-playing, recommended playlists, and recent listens",
 ];
 
-function TextTab({ doCreateFromText }: Props) {
+function TextTab({ doCreateFromText, stack, setStack }: Props) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -98,6 +102,11 @@ function TextTab({ doCreateFromText }: Props) {
                 ))}
               </div>
             </div>
+
+            <OutputSettingsSection
+              stack={stack}
+              setStack={setStack}
+            />
 
             <Button
               onClick={handleGenerate}

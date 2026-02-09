@@ -3,6 +3,8 @@ import { HTTP_BACKEND_URL } from "../../../config";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { toast } from "react-hot-toast";
+import OutputSettingsSection from "../../settings/OutputSettingsSection";
+import { Stack } from "../../../lib/stacks";
 
 interface Props {
   screenshotOneApiKey: string | null;
@@ -11,9 +13,11 @@ interface Props {
     inputMode: "image" | "video",
     textPrompt?: string
   ) => void;
+  stack: Stack;
+  setStack: (stack: Stack) => void;
 }
 
-function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
+function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
 
@@ -97,6 +101,11 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
               className="w-full"
               data-testid="url-input"
             />
+            <OutputSettingsSection
+              stack={stack}
+              setStack={setStack}
+            />
+
             <Button
               onClick={takeScreenshot}
               disabled={isLoading}

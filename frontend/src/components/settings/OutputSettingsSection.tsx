@@ -18,7 +18,7 @@ interface Props {
 function OutputSettingsSection({
   stack,
   setStack,
-  label = "Generating:",
+  label = "Stack:",
   shouldDisableUpdates = false,
 }: Props) {
   return (

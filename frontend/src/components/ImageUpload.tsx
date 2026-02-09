@@ -3,6 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import ScreenRecorder from "./recording/ScreenRecorder";
 import { ScreenRecorderState } from "../types";
+import { Stack } from "../lib/stacks";
 
 const baseStyle = {
   flex: 1,
@@ -71,9 +72,11 @@ interface Props {
     textPrompt?: string
   ) => void;
   onUploadStateChange?: (hasUpload: boolean) => void;
+  stack: Stack;
+  setStack: (stack: Stack) => void;
 }
 
-function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
+function ImageUpload({ setReferenceImages, onUploadStateChange, stack, setStack }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadedDataUrls, setUploadedDataUrls] = useState<string[]>([]);
   const [uploadedInputMode, setUploadedInputMode] = useState<
@@ -310,6 +313,8 @@ function ImageUpload({ setReferenceImages, onUploadStateChange }: Props) {
           screenRecorderState={screenRecorderState}
           setScreenRecorderState={setScreenRecorderState}
           generateCode={handleScreenRecorderGenerate}
+          stack={stack}
+          setStack={setStack}
         />
       )}
     </section>

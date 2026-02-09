@@ -18,7 +18,6 @@ import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import Sidebar from "./components/sidebar/Sidebar";
 import PreviewPane from "./components/preview/PreviewPane";
-import { GenerationSettings } from "./components/settings/GenerationSettings";
 import StartPane from "./components/start-pane/StartPane";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
@@ -541,9 +540,6 @@ function App() {
             <SettingsDialog settings={settings} setSettings={setSettings} />
           </div>
 
-          {/* Generation settings like stack and model */}
-          <GenerationSettings settings={settings} setSettings={setSettings} />
-
           {/* Show tip link until coding is complete */}
           {/* {appState !== AppState.CODE_READY && <TipLink />} */}
 
@@ -569,6 +565,7 @@ function App() {
             doCreateFromText={doCreateFromText}
             importFromCode={importFromCode}
             settings={settings}
+            setSettings={setSettings}
           />
         )}
 
