@@ -53,8 +53,8 @@ MessageType = Literal[
     "toolStart",
     "toolResult",
 ]
-from prompts import create_prompt
-from prompts.types import Stack, PromptContent
+from prompts.builders import build_prompt_messages
+from prompts.prompt_types import Stack, PromptContent
 from agent.runner import AgenticRunner
 
 # from utils import pprint_prompt
@@ -472,13 +472,13 @@ class PromptCreationStage:
     def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
         self.throw_error = throw_error
 
-    async def create_prompt(
+    async def build_prompt_messages(
         self,
         extracted_params: ExtractedParams,
     ) -> List[ChatCompletionMessageParam]:
         """Create prompt messages"""
         try:
-            prompt_messages = await create_prompt(
+            prompt_messages = await build_prompt_messages(
                 stack=extracted_params.stack,
                 input_mode=extracted_params.input_mode,
                 generation_type=extracted_params.generation_type,
@@ -774,7 +774,7 @@ class PromptCreationMiddleware(Middleware):
     ) -> None:
         prompt_creator = PromptCreationStage(context.throw_error)
         assert context.extracted_params is not None
-        context.prompt_messages = await prompt_creator.create_prompt(
+        context.prompt_messages = await prompt_creator.build_prompt_messages(
             context.extracted_params,
         )
         await next_func()

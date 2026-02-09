@@ -8,8 +8,8 @@ from openai.types.chat import ChatCompletionMessageParam
 sys.modules["moviepy"] = MagicMock()
 sys.modules["moviepy.editor"] = MagicMock()
 
-from prompts import create_prompt
-from prompts.types import Stack
+from prompts.builders import build_prompt_messages
+from prompts.prompt_types import Stack
 
 # Type definitions for test structures
 class ExpectedResult(TypedDict):
@@ -91,9 +91,9 @@ class TestCreatePrompt:
             "generationType": "create",
         }
 
-        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
-            messages = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -145,9 +145,9 @@ class TestCreatePrompt:
             ],
         }
 
-        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
-            messages = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -199,9 +199,9 @@ class TestCreatePrompt:
             },
             "generationType": "create"
         }
-        with patch('prompts.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
+        with patch('prompts.builders.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
             # Call the function
-            messages = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="text",
                 generation_type=params["generationType"],
@@ -246,9 +246,9 @@ class TestCreatePrompt:
                 {"text": "Now add a navigation menu"}       # User's new request
             ]
         }
-        with patch('prompts.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
+        with patch('prompts.builders.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
             # Call the function
-            messages = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="text",
                 generation_type=params["generationType"],
@@ -310,7 +310,7 @@ class TestCreatePrompt:
         }
 
         # Call the function
-        messages = await create_prompt(
+        messages = await build_prompt_messages(
             stack=self.TEST_STACK,
             input_mode="video",
             generation_type=params["generationType"],
@@ -361,9 +361,9 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
-            messages = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -433,9 +433,9 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
-            messages = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -510,9 +510,9 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
-            messages = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -566,9 +566,9 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
-            messages = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
@@ -620,8 +620,8 @@ class TestCreatePrompt:
             ],
         }
 
-        with patch("prompts.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
-            messages = await create_prompt(
+        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],

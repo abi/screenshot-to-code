@@ -6,14 +6,14 @@ from config import (
 )
 from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
 from agent.runner import AgenticRunner
-from prompts import assemble_prompt
-from prompts.types import Stack
+from prompts.builders import build_image_prompt_messages
+from prompts.prompt_types import Stack
 from openai.types.chat import ChatCompletionMessageParam
 from typing import Any
 
 
 async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> str:
-    prompt_messages = assemble_prompt([image_url], stack)
+    prompt_messages = build_image_prompt_messages([image_url], stack)
     async def send_message(
         _: str,
         __: str | None,

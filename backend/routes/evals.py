@@ -7,7 +7,7 @@ from typing import Set
 from evals.runner import run_image_evals
 from typing import List, Dict
 from llm import Llm
-from prompts.types import Stack
+from prompts.prompt_types import Stack
 from pathlib import Path
 
 router = APIRouter()
@@ -197,7 +197,7 @@ async def run_evals(request: RunEvalsRequest) -> List[str]:
 async def get_models():
     current_models = [model.value for model in Llm]
 
-    # Import Stack type from prompts.types and get all literal values
+    # Import Stack type from prompts.prompt_types and get all literal values
     available_stacks = list(Stack.__args__)
 
     return {"models": current_models, "stacks": available_stacks}

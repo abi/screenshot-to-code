@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 import time
 from llm import Llm
-from prompts.types import Stack
+from prompts.prompt_types import Stack
 from .core import generate_code_for_image
 from .utils import image_to_data_url
 from .config import EVALS_DIR
