@@ -54,7 +54,6 @@ MessageType = Literal[
     "toolResult",
 ]
 from prompts import create_prompt
-from prompts.agentic_instructions import apply_tool_instructions
 from prompts.types import Stack, PromptContent
 from agent.runner import AgenticRunner
 
@@ -778,15 +777,6 @@ class PromptCreationMiddleware(Middleware):
         context.prompt_messages = await prompt_creator.create_prompt(
             context.extracted_params,
         )
-        if context.prompt_messages:
-            first_message = cast(Dict[str, Any], context.prompt_messages[0])
-            first_content = first_message.get("content")
-            if first_content:
-                first_message["content"] = apply_tool_instructions(
-                    str(first_content),
-                    context.extracted_params.should_generate_images,
-                )
-
         await next_func()
 
 
