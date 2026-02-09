@@ -5,7 +5,6 @@ from openai.types.chat import ChatCompletionContentPartParam, ChatCompletionMess
 from custom_types import InputMode
 from prompts.prompt_types import PromptContent, Stack
 from prompts.system_prompt import SYSTEM_PROMPT
-from prompts.video_prompts import GEMINI_VIDEO_PROMPT
 
 
 USER_PROMPT = """

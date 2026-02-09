@@ -323,7 +323,7 @@ class TestCreatePrompt:
             "messages": [
                 {
                     "role": "system",
-                    "content": "<CONTAINS:You will be given a video of a user interacting>",
+                    "content": "<CONTAINS:You are an expert frontend developer.>",
                 },
                 {
                     "role": "user",
@@ -334,7 +334,7 @@ class TestCreatePrompt:
                         },
                         {
                             "type": "text",
-                            "text": "Analyze this video and generate the code.",
+                            "text": "<CONTAINS:Analyze this video and generate the code.>",
                         },
                     ],
                 },
