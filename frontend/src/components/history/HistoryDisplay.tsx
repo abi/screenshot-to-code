@@ -29,7 +29,7 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
   const renderedHistory = renderHistory(flatHistory);
 
   return renderedHistory.length === 0 ? null : (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       <h1 className="font-bold mb-2">Versions</h1>
       <ul className="space-y-0 flex flex-col-reverse">
         {renderedHistory.map((item, index) => (

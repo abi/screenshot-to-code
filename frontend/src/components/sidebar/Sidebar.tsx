@@ -9,7 +9,7 @@ import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeT
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useEffect, useRef, useState, useCallback } from "react";
-import HistoryDisplay from "../history/HistoryDisplay";
+
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import AgentActivity from "../agent/AgentActivity";
@@ -298,7 +298,6 @@ function Sidebar({
         )}
       </div>
 
-      <HistoryDisplay shouldDisableReverts={appState === AppState.CODING} />
     </>
   );
 }

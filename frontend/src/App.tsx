@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
-import SettingsDialog from "./components/settings/SettingsDialog";
 import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/messages/PicoBadge";
@@ -17,6 +16,8 @@ import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import Sidebar from "./components/sidebar/Sidebar";
+import IconStrip from "./components/sidebar/IconStrip";
+import HistoryDisplay from "./components/history/HistoryDisplay";
 import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
 import { Commit } from "./components/commits/types";
@@ -85,6 +86,8 @@ function App() {
   const lastThinkingEventIdRef = useRef<Record<number, string>>({});
   const lastAssistantEventIdRef = useRef<Record<number, string>>({});
   const lastToolEventIdRef = useRef<Record<number, string>>({});
+
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
@@ -523,6 +526,11 @@ function App() {
     setAppState(AppState.CODE_READY);
   }
 
+  const showContentPanel =
+    appState === AppState.CODING ||
+    appState === AppState.CODE_READY ||
+    isHistoryOpen;
+
   return (
     <div className="mt-2 dark:bg-black dark:text-white">
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
@@ -532,33 +540,66 @@ function App() {
           onOpenChange={handleTermDialogOpenChange}
         />
       )}
-      <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
-        <div className="sidebar-scrollbar-stable flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
-          {/* Header with access to settings */}
-          <div className="flex items-center justify-between mt-10 mb-2">
-            <h1 className="text-2xl ">Screenshot to Code</h1>
-            <SettingsDialog settings={settings} setSettings={setSettings} />
-          </div>
 
-          {/* Show tip link until coding is complete */}
-          {/* {appState !== AppState.CODE_READY && <TipLink />} */}
-
-          {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && <OnboardingNote />}
-
-          {/* Rest of the sidebar when we're not in the initial state */}
-          {(appState === AppState.CODING ||
-            appState === AppState.CODE_READY) && (
-            <Sidebar
-              showSelectAndEditFeature={showSelectAndEditFeature}
-              doUpdate={doUpdate}
-              regenerate={regenerate}
-              cancelCodeGeneration={cancelCodeGeneration}
-            />
-          )}
-        </div>
+      {/* Icon strip - always visible */}
+      <div className="lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-14 lg:flex-col">
+        <IconStrip
+          isHistoryOpen={isHistoryOpen}
+          showHistory={appState === AppState.CODING || appState === AppState.CODE_READY}
+          onToggleHistory={() => setIsHistoryOpen((prev) => !prev)}
+          onLogoClick={() => {
+            setIsHistoryOpen(false);
+          }}
+          settings={settings}
+          setSettings={setSettings}
+        />
       </div>
 
-      <main className="py-2 lg:pl-96">
+      {/* Content panel - shows sidebar or history */}
+      {showContentPanel && (
+        <div className="lg:fixed lg:inset-y-0 lg:left-14 lg:z-40 lg:flex lg:w-[calc(24rem-3.5rem)] lg:flex-col">
+          <div className="sidebar-scrollbar-stable flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+            {isHistoryOpen ? (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-lg font-semibold">History</h1>
+                  <button
+                    onClick={() => setIsHistoryOpen(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+                <HistoryDisplay
+                  shouldDisableReverts={appState === AppState.CODING}
+                />
+              </div>
+            ) : (
+              <>
+                {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && (
+                  <div className="mt-4">
+                    <OnboardingNote />
+                  </div>
+                )}
+
+                {(appState === AppState.CODING ||
+                  appState === AppState.CODE_READY) && (
+                  <Sidebar
+                    showSelectAndEditFeature={showSelectAndEditFeature}
+                    doUpdate={doUpdate}
+                    regenerate={regenerate}
+                    cancelCodeGeneration={cancelCodeGeneration}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <main
+        className={`py-2 ${showContentPanel ? "lg:pl-96" : "lg:pl-14"}`}
+      >
         {appState === AppState.INITIAL && (
           <StartPane
             doCreate={doCreate}
