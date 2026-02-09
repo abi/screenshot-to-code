@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { toast } from "react-hot-toast";
-import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
-import { Button } from "./ui/button";
+import { Cross2Icon } from "@radix-ui/react-icons";
+import { LuPlus } from "react-icons/lu";
 
 const MAX_UPDATE_IMAGES = 5;
 
@@ -117,31 +117,25 @@ function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
         onChange={handleFileInputChange}
         className="hidden"
       />
-      
-      {/* Image button styled to match other buttons */}
-      <Button
+      <button
         type="button"
-        variant="outline"
-        size="default"
         onClick={handleButtonClick}
-        className={`dark:text-white dark:bg-gray-700 h-10 px-3 ${
-          updateImages.length > 0 ? "border-blue-500" : ""
-        } relative`}
         disabled={isAtLimit}
+        className={`p-2 rounded-lg transition-colors ${
+          isAtLimit
+            ? "text-gray-300 dark:text-zinc-600 cursor-not-allowed"
+            : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+        }`}
         title={
           isAtLimit
             ? `Limit reached (${MAX_UPDATE_IMAGES})`
             : updateImages.length > 0
-              ? `Add up to ${remaining} more`
-              : `Add up to ${MAX_UPDATE_IMAGES}`
+              ? `Add images (${updateImages.length}/${MAX_UPDATE_IMAGES})`
+              : "Add images"
         }
       >
-        <ImageIcon className="h-4 w-4" />
-        {updateImages.length > 0 && (
-          <span className="ml-2 text-sm">{`${updateImages.length}/${MAX_UPDATE_IMAGES}`}</span>
-        )}
-      </Button>
-      
+        <LuPlus className="w-[18px] h-[18px]" />
+      </button>
     </div>
   );
 }

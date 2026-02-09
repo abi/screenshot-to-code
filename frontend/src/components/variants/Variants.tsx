@@ -176,6 +176,7 @@ function Variants() {
                   ? "bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-700"
                   : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
+              title={variant.model ? (CODE_GENERATION_MODEL_DESCRIPTIONS[variant.model as CodeGenerationModel]?.name || variant.model) : undefined}
               onClick={() => handleVariantClick(index)}
             >
               <div className="flex justify-between items-center mb-2">
@@ -192,13 +193,6 @@ function Variants() {
                   ⌥{index + 1}
                 </span>
               </div>
-              {variant.model && (
-                <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
-                  {CODE_GENERATION_MODEL_DESCRIPTIONS[
-                    variant.model as CodeGenerationModel
-                  ]?.name || variant.model}
-                </div>
-              )}
               <VariantThumbnail
                 code={variant.code}
                 isSelected={index === selectedVariantIndex}

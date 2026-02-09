@@ -3,12 +3,10 @@ import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import CodePreview from "../preview/CodePreview";
-import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
 // import TipLink from "../messages/TipLink";
-import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeToggleButton";
 import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { LuMousePointerClick, LuRefreshCw, LuArrowUp } from "react-icons/lu";
 
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
@@ -31,7 +29,7 @@ function Sidebar({
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages } = useAppStore();
+  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode } = useAppStore();
 
   // Helper function to convert file to data URL
   const fileToDataURL = (file: File): Promise<string> => {
@@ -174,7 +172,6 @@ function Sidebar({
           <div
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={(e) => {
-              // Only set to false if we're leaving the container entirely
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setIsDragging(false);
               }
@@ -182,55 +179,68 @@ function Sidebar({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
-            <div className="grid w-full gap-2 relative">
-              <UpdateImagePreview 
-                updateImages={updateImages} 
-                setUpdateImages={setUpdateImages} 
+            <div className="relative w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+              <UpdateImagePreview
+                updateImages={updateImages}
+                setUpdateImages={setUpdateImages}
               />
-              <Textarea
+              <textarea
                 ref={textareaRef}
                 placeholder="Tell the AI what to change..."
                 onChange={(e) => setUpdateInstruction(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
                     doUpdate(updateInstruction);
                   }
                 }}
                 value={updateInstruction}
                 data-testid="update-input"
+                rows={3}
+                className="w-full resize-none border-0 bg-transparent px-4 pt-3 pb-2 text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none"
               />
-              <div className="flex gap-2">
-                <Button
+              <div className="flex items-center justify-between px-3 pb-2">
+                <div className="flex items-center gap-1">
+                  <UpdateImageUpload
+                    updateImages={updateImages}
+                    setUpdateImages={setUpdateImages}
+                  />
+                  {showSelectAndEditFeature && (
+                    <button
+                      onClick={toggleInSelectAndEditMode}
+                      className={`p-2 rounded-lg transition-colors ${
+                        inSelectAndEditMode
+                          ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                          : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      }`}
+                      title={inSelectAndEditMode ? "Exit selection mode" : "Select and update"}
+                    >
+                      <LuMousePointerClick className="w-[18px] h-[18px]" />
+                    </button>
+                  )}
+                  <button
+                    onClick={regenerate}
+                    className="p-2 rounded-lg transition-colors text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    title="Regenerate"
+                  >
+                    <LuRefreshCw className="w-[18px] h-[18px]" />
+                  </button>
+                </div>
+                <button
                   onClick={() => doUpdate(updateInstruction)}
-                  className="dark:text-white dark:bg-gray-700 update-btn flex-1"
+                  className="p-2 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors update-btn"
+                  title="Send"
                 >
-                  Update <KeyboardShortcutBadge letter="enter" />
-                </Button>
-                <UpdateImageUpload 
-                  updateImages={updateImages} 
-                  setUpdateImages={setUpdateImages} 
-                />
+                  <LuArrowUp className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                </button>
               </div>
-              
-              {/* Drag overlay that covers the entire update area */}
+
               {isDragging && (
-                <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-md flex items-center justify-center pointer-events-none z-10">
+                <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-xl flex items-center justify-center pointer-events-none z-10">
                   <p className="text-blue-600 dark:text-blue-400 font-medium">Drop images here</p>
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-end gap-x-2 mt-2">
-              <Button
-                onClick={regenerate}
-                className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
-              >
-                🔄 Regenerate
-              </Button>
-              {showSelectAndEditFeature && <SelectAndEditModeToggleButton />}
-            </div>
-            {/* <div className="flex justify-end items-center mt-2">
-            <TipLink />
-          </div> */}
           </div>
         )}
 
