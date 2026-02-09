@@ -106,60 +106,64 @@ function Sidebar({
 
 
   return (
-    <>
-      <Variants />
+    <div className="flex flex-col h-full">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-6">
+        <Variants />
 
-      <AgentActivity />
+        <AgentActivity />
 
-      {/* Show code preview when coding and the selected variant is not complete */}
-      {appState === AppState.CODING && !isSelectedVariantComplete && (
-        <div className="flex flex-col">
-          <CodePreview code={viewedCode} />
+        {/* Show code preview when coding and the selected variant is not complete */}
+        {appState === AppState.CODING && !isSelectedVariantComplete && (
+          <div className="flex flex-col">
+            <CodePreview code={viewedCode} />
 
-          <div className="flex w-full">
-            <Button
-              onClick={cancelCodeGeneration}
-              className="w-full dark:text-white dark:bg-gray-700"
-            >
-              Cancel All Generations
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Show error message when selected option has an error */}
-      {isSelectedVariantError && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
-          <div className="text-red-800 text-sm">
-            <div className="font-medium mb-1">
-              This option failed to generate because
+            <div className="flex w-full">
+              <Button
+                onClick={cancelCodeGeneration}
+                className="w-full dark:text-white dark:bg-gray-700"
+              >
+                Cancel All Generations
+              </Button>
             </div>
-            {selectedVariantErrorMessage && (
-              <div className="mb-2">
-                <div className="text-red-700 bg-red-100 border border-red-300 rounded px-2 py-1 text-xs font-mono break-words">
-                  {selectedVariantErrorMessage.length > 200 && !isErrorExpanded
-                    ? `${selectedVariantErrorMessage.slice(0, 200)}...`
-                    : selectedVariantErrorMessage}
-                </div>
-                {selectedVariantErrorMessage.length > 200 && (
-                  <button
-                    onClick={() => setIsErrorExpanded(!isErrorExpanded)}
-                    className="text-red-600 text-xs underline mt-1 hover:text-red-800"
-                  >
-                    {isErrorExpanded ? "Show less" : "Show more"}
-                  </button>
-                )}
-              </div>
-            )}
-            <div>Switch to another option above to make updates.</div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Show update UI when app state is ready OR the selected variant is complete (but not errored) */}
+        {/* Show error message when selected option has an error */}
+        {isSelectedVariantError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
+            <div className="text-red-800 text-sm">
+              <div className="font-medium mb-1">
+                This option failed to generate because
+              </div>
+              {selectedVariantErrorMessage && (
+                <div className="mb-2">
+                  <div className="text-red-700 bg-red-100 border border-red-300 rounded px-2 py-1 text-xs font-mono break-words">
+                    {selectedVariantErrorMessage.length > 200 && !isErrorExpanded
+                      ? `${selectedVariantErrorMessage.slice(0, 200)}...`
+                      : selectedVariantErrorMessage}
+                  </div>
+                  {selectedVariantErrorMessage.length > 200 && (
+                    <button
+                      onClick={() => setIsErrorExpanded(!isErrorExpanded)}
+                      className="text-red-600 text-xs underline mt-1 hover:text-red-800"
+                    >
+                      {isErrorExpanded ? "Show less" : "Show more"}
+                    </button>
+                  )}
+                </div>
+              )}
+              <div>Switch to another option above to make updates.</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Pinned prompt box at bottom */}
       {(appState === AppState.CODE_READY || isSelectedVariantComplete) &&
         !isSelectedVariantError && (
           <div
+            className="shrink-0 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2"
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
@@ -186,8 +190,8 @@ function Sidebar({
                 }}
                 value={updateInstruction}
                 data-testid="update-input"
-                rows={3}
-                className="w-full resize-none border-0 bg-transparent px-4 pt-3 pb-2 text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none"
+                rows={1}
+                className="w-full resize-none border-0 bg-transparent px-4 pt-2.5 pb-1 text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none"
               />
               <div className="flex items-center justify-between px-3 pb-2">
                 <div className="flex items-center gap-1">
@@ -247,9 +251,7 @@ function Sidebar({
             </div>
           </div>
         )}
-
-
-    </>
+    </div>
   );
 }
 

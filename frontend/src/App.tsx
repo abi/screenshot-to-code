@@ -557,27 +557,28 @@ function App() {
 
       {/* Content panel - shows sidebar or history */}
       {showContentPanel && (
-        <div className="lg:fixed lg:inset-y-0 lg:left-14 lg:z-40 lg:flex lg:w-[calc(24rem-3.5rem)] lg:flex-col">
-          <div className="sidebar-scrollbar-stable flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
+        <div className="lg:fixed lg:inset-y-0 lg:left-14 lg:z-40 lg:flex lg:w-[calc(24rem-3.5rem)] lg:flex-col border-r border-gray-200 bg-white dark:bg-zinc-950 dark:text-white">
             {isHistoryOpen ? (
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h1 className="text-lg font-semibold">History</h1>
-                  <button
-                    onClick={() => setIsHistoryOpen(false)}
-                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm"
-                  >
-                    Close
-                  </button>
+              <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-6">
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h1 className="text-lg font-semibold">History</h1>
+                    <button
+                      onClick={() => setIsHistoryOpen(false)}
+                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <HistoryDisplay
+                    shouldDisableReverts={appState === AppState.CODING}
+                  />
                 </div>
-                <HistoryDisplay
-                  shouldDisableReverts={appState === AppState.CODING}
-                />
               </div>
             ) : (
               <>
                 {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && (
-                  <div className="mt-4">
+                  <div className="px-6 mt-4">
                     <OnboardingNote />
                   </div>
                 )}
@@ -593,7 +594,6 @@ function App() {
                 )}
               </>
             )}
-          </div>
         </div>
       )}
 
