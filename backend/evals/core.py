@@ -5,7 +5,7 @@ from config import (
     OPENAI_BASE_URL,
 )
 from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
-from agent.runner import AgenticRunner
+from agent.runner import Agent
 from prompts.builders import build_image_prompt_messages
 from prompts.prompt_types import Stack
 from openai.types.chat import ChatCompletionMessageParam
@@ -33,7 +33,7 @@ async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> s
 
     print(f"[EVALS] Using agent runner for model: {model.value}")
 
-    runner = AgenticRunner(
+    runner = Agent(
         send_message=send_message,
         variant_index=0,
         openai_api_key=OPENAI_API_KEY,

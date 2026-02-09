@@ -16,14 +16,12 @@ from config import (
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
     REPLICATE_API_KEY,
-    SHOULD_MOCK_AI_RESPONSE,
 )
 from custom_types import InputMode
 from llm import (
     Llm,
 )
 from fs_logging.core import write_logs
-from mock_llm import mock_completion
 from typing import (
     Any,
     Callable,
@@ -55,7 +53,7 @@ MessageType = Literal[
 ]
 from prompts.builders import build_prompt_messages
 from prompts.prompt_types import Stack, PromptContent
-from agent.runner import AgenticRunner
+from agent.runner import Agent
 
 # from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
@@ -497,45 +495,6 @@ class PromptCreationStage:
             raise
 
 
-class MockResponseStage:
-    """Handles mock AI responses for testing"""
-
-    def __init__(
-        self,
-        send_message: Callable[
-            [MessageType, str | None, int, Dict[str, Any] | None, str | None],
-            Coroutine[Any, Any, None],
-        ],
-    ):
-        self.send_message = send_message
-
-    async def generate_mock_response(
-        self,
-        input_mode: InputMode,
-    ) -> List[str]:
-        """Generate mock response for testing"""
-
-        async def process_chunk(content: str, variantIndex: int):
-            await self.send_message("chunk", content, variantIndex, None, None)
-
-        completion_results = [
-            await mock_completion(process_chunk, input_mode=input_mode)
-        ]
-        completions = [result["code"] for result in completion_results]
-
-        # Send the complete variant back to the client
-        await self.send_message("setCode", completions[0], 0, None, None)
-        await self.send_message(
-            "variantComplete",
-            "Variant generation complete",
-            0,
-            None,
-            None,
-        )
-
-        return completions
-
-
 class PostProcessingStage:
     """Handles post-processing after code generation completes"""
 
@@ -630,7 +589,7 @@ class AgenticGenerationStage:
                     event_id,
                 )
 
-            runner = AgenticRunner(
+            runner = Agent(
                 send_message=send_runner_message,
                 variant_index=index,
                 openai_api_key=self.openai_api_key,
@@ -786,69 +745,61 @@ class CodeGenerationMiddleware(Middleware):
     async def process(
         self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
     ) -> None:
-        if SHOULD_MOCK_AI_RESPONSE:
-            # Use mock response for testing
-            mock_stage = MockResponseStage(context.send_message)
+        try:
             assert context.extracted_params is not None
-            context.completions = await mock_stage.generate_mock_response(
-                context.extracted_params.input_mode
+
+            # Select models (handles video mode internally)
+            model_selector = ModelSelectionStage(context.throw_error)
+            context.variant_models = await model_selector.select_models(
+                generation_type=context.extracted_params.generation_type,
+                input_mode=context.extracted_params.input_mode,
+                openai_api_key=context.extracted_params.openai_api_key,
+                anthropic_api_key=context.extracted_params.anthropic_api_key,
+                gemini_api_key=GEMINI_API_KEY,
             )
-        else:
-            try:
-                assert context.extracted_params is not None
+            await context.send_message(
+                "variantModels",
+                None,
+                0,
+                {"models": [model.value for model in context.variant_models]},
+                None,
+            )
 
-                # Select models (handles video mode internally)
-                model_selector = ModelSelectionStage(context.throw_error)
-                context.variant_models = await model_selector.select_models(
-                    generation_type=context.extracted_params.generation_type,
-                    input_mode=context.extracted_params.input_mode,
-                    openai_api_key=context.extracted_params.openai_api_key,
-                    anthropic_api_key=context.extracted_params.anthropic_api_key,
-                    gemini_api_key=GEMINI_API_KEY,
+            generation_stage = AgenticGenerationStage(
+                send_message=context.send_message,
+                openai_api_key=context.extracted_params.openai_api_key,
+                openai_base_url=context.extracted_params.openai_base_url,
+                anthropic_api_key=context.extracted_params.anthropic_api_key,
+                gemini_api_key=GEMINI_API_KEY,
+                should_generate_images=context.extracted_params.should_generate_images,
+                file_state=context.extracted_params.file_state,
+                option_codes=context.extracted_params.option_codes,
+            )
+
+            context.variant_completions = await generation_stage.process_variants(
+                variant_models=context.variant_models,
+                prompt_messages=context.prompt_messages,
+            )
+
+            # Check if all variants failed
+            if len(context.variant_completions) == 0:
+                await context.throw_error(
+                    "Error generating code. Please contact support."
                 )
-                await context.send_message(
-                    "variantModels",
-                    None,
-                    0,
-                    {"models": [model.value for model in context.variant_models]},
-                    None,
-                )
-
-                generation_stage = AgenticGenerationStage(
-                    send_message=context.send_message,
-                    openai_api_key=context.extracted_params.openai_api_key,
-                    openai_base_url=context.extracted_params.openai_base_url,
-                    anthropic_api_key=context.extracted_params.anthropic_api_key,
-                    gemini_api_key=GEMINI_API_KEY,
-                    should_generate_images=context.extracted_params.should_generate_images,
-                    file_state=context.extracted_params.file_state,
-                    option_codes=context.extracted_params.option_codes,
-                )
-
-                context.variant_completions = await generation_stage.process_variants(
-                    variant_models=context.variant_models,
-                    prompt_messages=context.prompt_messages,
-                )
-
-                # Check if all variants failed
-                if len(context.variant_completions) == 0:
-                    await context.throw_error(
-                        "Error generating code. Please contact support."
-                    )
-                    return  # Don't continue the pipeline
-
-                # Convert to list format
-                context.completions = []
-                for i in range(len(context.variant_models)):
-                    if i in context.variant_completions:
-                        context.completions.append(context.variant_completions[i])
-                    else:
-                        context.completions.append("")
-
-            except Exception as e:
-                print(f"[GENERATE_CODE] Unexpected error: {e}")
-                await context.throw_error(f"An unexpected error occurred: {str(e)}")
                 return  # Don't continue the pipeline
+
+            # Convert to list format
+            context.completions = []
+            for i in range(len(context.variant_models)):
+                if i in context.variant_completions:
+                    context.completions.append(context.variant_completions[i])
+                else:
+                    context.completions.append("")
+
+        except Exception as e:
+            print(f"[GENERATE_CODE] Unexpected error: {e}")
+            await context.throw_error(f"An unexpected error occurred: {str(e)}")
+            return  # Don't continue the pipeline
 
         await next_func()
 

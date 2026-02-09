@@ -37,7 +37,7 @@ from agent.tools import (
 )
 
 
-class AgenticRunner:
+class Agent:
     def __init__(
         self,
         send_message: Callable[
