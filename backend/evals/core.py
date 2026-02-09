@@ -7,28 +7,13 @@ from config import (
 from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
 from agent.runner import AgenticRunner
 from prompts import assemble_prompt
-from prompts.agentic_instructions import apply_tool_instructions
 from prompts.types import Stack
 from openai.types.chat import ChatCompletionMessageParam
-from typing import Any, cast
+from typing import Any
 
 
 async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> str:
     prompt_messages = assemble_prompt([image_url], stack)
-    if prompt_messages:
-        first_message = cast(dict[str, Any], prompt_messages[0])
-        first_content = first_message.get("content")
-        if first_content:
-            first_message["content"] = apply_tool_instructions(
-                str(first_content),
-                should_generate_images=True,
-            )
-    return await generate_code_core(prompt_messages, model)
-
-
-async def generate_code_core(
-    prompt_messages: list[ChatCompletionMessageParam], model: Llm
-) -> str:
     async def send_message(
         _: str,
         __: str | None,
