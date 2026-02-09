@@ -261,7 +261,23 @@ def build_video_prompt_messages(
     video_data_url: str,
     text_prompt: str = "",
 ) -> list[ChatCompletionMessageParam]:
-    user_text = "Analyze this video and generate the code."
+    user_text = """
+    You have been given a video of a user interacting with a web app. You need to re-create the same app exactly such that the same user interactions will produce the same results in the app you build.
+
+    - Watch the entire video carefully and understand all the user interactions and UI state changes.
+    - Make sure the app looks exactly like what you see in the video.
+    - Pay close attention to background color, text color, font size, font family,
+    padding, margin, border, etc. Match the colors and sizes exactly.
+    - For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
+    - Put image URLs in HTML (hide / unhide as needed). Do not put image URLs within JavaScript because our parser cannot extract them from JavaScript.
+    - If some functionality requires a backend call, just mock the data instead.
+    - MAKE THE APP FUNCTIONAL using JavaScript. Allow the user to interact with the app and get the same behavior as shown in the video.
+    - Use SVGs and interactive 3D elements if needed to match the functionality shown in the video.
+
+    Analyze this video and generate the code.
+    
+    Selected stack: HTML, jQuery and Tailwind CSS.
+    """
     if text_prompt.strip():
         user_text = user_text + "\n\nAdditional instructions: " + text_prompt
 
@@ -279,7 +295,7 @@ def build_video_prompt_messages(
     return [
         {
             "role": "system",
-            "content": GEMINI_VIDEO_PROMPT,
+            "content": SYSTEM_PROMPT,
         },
         {
             "role": "user",
