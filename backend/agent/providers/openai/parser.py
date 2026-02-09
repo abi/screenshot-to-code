@@ -14,6 +14,8 @@ class OpenAIResponsesParseState:
     tool_calls: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     item_to_call_id: Dict[str, str] = field(default_factory=dict)
     output_items_by_index: Dict[int, Dict[str, Any]] = field(default_factory=dict)
+    saw_reasoning_summary_text_delta: bool = False
+    last_emitted_reasoning_summary_part: str = ""
 
 
 async def parse_event(
@@ -48,6 +50,8 @@ async def parse_event(
     ):
         delta = get_event_attr(event, "delta", "")
         if delta:
+            if event_type == "response.reasoning_summary_text.delta":
+                state.saw_reasoning_summary_text_delta = True
             await on_event(StreamEvent(type="thinking_delta", text=delta))
         return
 
@@ -55,9 +59,14 @@ async def parse_event(
         "response.reasoning_summary_part.added",
         "response.reasoning_summary_part.done",
     ):
+        # Some models emit both summary text deltas and full summary parts.
+        # If we've already streamed summary deltas, skip full-part emissions to avoid duplication.
+        if state.saw_reasoning_summary_text_delta:
+            return
         part = get_event_attr(event, "part") or {}
         text = get_event_attr(part, "text", "")
-        if text:
+        if text and text != state.last_emitted_reasoning_summary_part:
+            state.last_emitted_reasoning_summary_part = text
             await on_event(StreamEvent(type="thinking_delta", text=text))
         return
 
