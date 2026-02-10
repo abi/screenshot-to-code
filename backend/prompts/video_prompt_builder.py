@@ -15,8 +15,7 @@ def build_video_prompt_messages(
     - Make sure the app looks exactly like what you see in the video.
     - Pay close attention to background color, text color, font size, font family,
     padding, margin, border, etc. Match the colors and sizes exactly.
-    - For images, use placeholder images from https://placehold.co and include a detailed description of the image in the alt text so that an image generation AI can generate the image later.
-    - Put image URLs in HTML (hide / unhide as needed). Do not put image URLs within JavaScript because our parser cannot extract them from JavaScript.
+    - If there are images in the app, generate images using the generate_images tool.
     - If some functionality requires a backend call, just mock the data instead.
     - MAKE THE APP FUNCTIONAL using JavaScript. Allow the user to interact with the app and get the same behavior as shown in the video.
     - Use SVGs and interactive 3D elements if needed to match the functionality shown in the video.
