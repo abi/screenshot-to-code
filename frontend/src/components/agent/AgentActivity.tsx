@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useProjectStore } from "../../store/project-store";
+import { useAppStore } from "../../store/app-store";
+import { AppState } from "../../types";
 import {
   AgentEvent,
   AgentEventStatus,
@@ -20,12 +22,6 @@ import {
 } from "react-icons/bs";
 import ReactMarkdown from "react-markdown";
 
-function getPreview(text: string): string {
-  const cleaned = text.replace(/\s+/g, " ").trim();
-  if (!cleaned) return "";
-  if (cleaned.length <= 140) return cleaned;
-  return `${cleaned.slice(0, 140)}...`;
-}
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -147,43 +143,6 @@ function getEventTitle(event: AgentEvent): string {
   return "Activity";
 }
 
-function getToolSummary(event: AgentEvent): string | null {
-  if (event.type !== "tool") return null;
-  const output = event.output as any;
-  if (output?.error) {
-    return `Error: ${output.error}`;
-  }
-  if (event.toolName === "create_file") {
-    const path = output?.path ?? "index.html";
-    const length = output?.contentLength;
-    return length ? `Created ${path} · ${length} chars` : `Created ${path}`;
-  }
-  if (event.toolName === "edit_file") {
-    const edits = Array.isArray(output?.edits) ? output.edits.length : 0;
-    return edits ? `${edits} edit${edits > 1 ? "s" : ""} applied` : "Edits applied";
-  }
-  if (event.toolName === "generate_images") {
-    const images = Array.isArray(output?.images) ? output.images.length : 0;
-    return images
-      ? `${images} image${images > 1 ? "s" : ""} generated`
-      : "Images generated";
-  }
-  if (event.toolName === "remove_background") {
-    return output?.result_url ? "Background removed successfully" : "Processing image";
-  }
-  if (event.toolName === "retrieve_option") {
-    const optionNumber = output?.option_number;
-    const length = output?.contentLength;
-    if (optionNumber && length) {
-      return `Retrieved option ${optionNumber} · ${length} chars`;
-    }
-    if (optionNumber) {
-      return `Retrieved option ${optionNumber}`;
-    }
-    return "Retrieved option";
-  }
-  return "Tool completed";
-}
 
 function renderToolDetails(event: AgentEvent) {
   if (!event.input && !event.output) return null;
@@ -421,8 +380,15 @@ function AgentEventCard({
 
   const isExpanded =
     (event.type !== "thinking" && event.status === "running") || expanded;
-  const preview = useMemo(() => getPreview(event.content || ""), [event.content]);
-  const toolSummary = useMemo(() => getToolSummary(event), [event]);
+
+  if (event.type === "assistant") {
+    if (!event.content) return null;
+    return (
+      <div className="py-1 text-sm text-gray-700 dark:text-gray-300 prose prose-sm dark:prose-invert max-w-none">
+        <ReactMarkdown>{event.content}</ReactMarkdown>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -447,22 +413,15 @@ function AgentEventCard({
           )}
         </div>
       </button>
-      {isExpanded ? (
+      {isExpanded && (
         <div className="px-3 pb-3">
-          {event.type !== "tool" && event.content && (
+          {event.type === "thinking" && event.content && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <ReactMarkdown>{event.content}</ReactMarkdown>
             </div>
           )}
           {event.type === "tool" && renderToolDetails(event)}
         </div>
-      ) : (
-        event.type !== "thinking" &&
-        (event.type === "tool" ? toolSummary : preview) && (
-          <div className="px-3 pb-2 text-xs text-gray-500 dark:text-gray-400">
-            {event.type === "tool" ? toolSummary : preview}
-          </div>
-        )
       )}
     </div>
   );
@@ -470,6 +429,8 @@ function AgentEventCard({
 
 function AgentActivity() {
   const { head, commits, latestCommitHash } = useProjectStore();
+  const [stepsExpanded, setStepsExpanded] = useState(false);
+  const appState = useAppStore((s) => s.appState);
 
   const currentCommit = head ? commits[head] : null;
   const selectedVariant = currentCommit
@@ -480,7 +441,6 @@ function AgentActivity() {
   const lastAssistantId = [...events]
     .reverse()
     .find((event) => event.type === "assistant")?.id;
-  const hasRunning = events.some((event) => event.status === "running");
   const totalDuration = formatTotalDuration(events);
 
   const isLatestCommit = head === latestCommitHash;
@@ -488,23 +448,66 @@ function AgentActivity() {
     return null;
   }
 
+  const isDone = appState !== AppState.CODING;
+  const stepEvents = events.filter((e) => e.type === "tool" || e.type === "thinking");
+  const assistantEvents = events.filter((e) => e.type === "assistant");
+
   return (
-    <div className="space-y-2 mb-3">
-      <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2">
-        <div className="text-xs uppercase tracking-wide text-gray-400">
-          Agent activity
-        </div>
-        <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-          {hasRunning ? "Time so far" : "Total time"} {totalDuration || "--"}
-        </div>
-      </div>
-      {events.map((event) => (
-        <AgentEventCard
-          key={event.id}
-          event={event}
-          autoExpand={event.type === "assistant" && event.id === lastAssistantId}
-        />
-      ))}
+    <div className="space-y-1 mb-3">
+      {isDone ? (
+        <>
+          {/* Collapsed steps summary */}
+          <button
+            onClick={() => setStepsExpanded((prev) => !prev)}
+            className="w-full flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2 text-left"
+          >
+            {stepsExpanded ? (
+              <BsChevronDown className="text-gray-400 text-xs" />
+            ) : (
+              <BsChevronRight className="text-gray-400 text-xs" />
+            )}
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {stepEvents.length} step{stepEvents.length !== 1 ? "s" : ""}
+            </span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">
+              {totalDuration || "--"}
+            </span>
+          </button>
+          {stepsExpanded && (
+            <div className="space-y-1">
+              {stepEvents.map((event) => (
+                <AgentEventCard key={event.id} event={event} />
+              ))}
+            </div>
+          )}
+          {/* Assistant responses always visible */}
+          {assistantEvents.map((event) => (
+            <AgentEventCard
+              key={event.id}
+              event={event}
+              autoExpand={event.id === lastAssistantId}
+            />
+          ))}
+        </>
+      ) : (
+        <>
+          <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2">
+            <div className="text-xs uppercase tracking-wide text-gray-400">
+              Agent activity
+            </div>
+            <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+              Time so far {totalDuration || "--"}
+            </div>
+          </div>
+          {events.map((event) => (
+            <AgentEventCard
+              key={event.id}
+              event={event}
+              autoExpand={event.type === "assistant" && event.id === lastAssistantId}
+            />
+          ))}
+        </>
+      )}
     </div>
   );
 }
