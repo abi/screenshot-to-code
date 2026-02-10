@@ -323,7 +323,7 @@ class TestCreatePrompt:
             "messages": [
                 {
                     "role": "system",
-                    "content": "<CONTAINS:You are an expert frontend developer.>",
+                    "content": "<CONTAINS:You are a coding agent that's an expert at building front-ends.>",
                 },
                 {
                     "role": "user",

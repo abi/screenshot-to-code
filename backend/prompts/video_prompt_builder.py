@@ -1,12 +1,14 @@
 from openai.types.chat import ChatCompletionContentPartParam, ChatCompletionMessageParam
+from prompts.prompt_types import Stack
 from prompts import system_prompt
 
 
 def build_video_prompt_messages(
     video_data_url: str,
+    stack: Stack,
     text_prompt: str,
 ) -> list[ChatCompletionMessageParam]:
-    user_text = """
+    user_text = f"""
     You have been given a video of a user interacting with a web app. You need to re-create the same app exactly such that the same user interactions will produce the same results in the app you build.
 
     - Watch the entire video carefully and understand all the user interactions and UI state changes.
@@ -21,7 +23,7 @@ def build_video_prompt_messages(
 
     Analyze this video and generate the code.
     
-    Selected stack: HTML, jQuery and Tailwind CSS.
+    Selected stack: {stack}.
     """
     if text_prompt.strip():
         user_text = user_text + "\n\nAdditional instructions: " + text_prompt

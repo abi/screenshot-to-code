@@ -18,6 +18,7 @@ Selected stack: {stack}.
 - Make sure to make it look modern and sleek.
 - Use modern, professional fonts and colors.
 - Follow UX best practices."""
+
     return [
         {
             "role": "system",

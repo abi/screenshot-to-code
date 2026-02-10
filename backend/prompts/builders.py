@@ -58,6 +58,7 @@ async def build_prompt_messages(
                 video_url = video_urls[0]
                 prompt_messages = build_video_prompt_messages(
                     video_data_url=video_url,
+                    stack=stack,
                     text_prompt=prompt.get("text", ""),
                 )
             else:
