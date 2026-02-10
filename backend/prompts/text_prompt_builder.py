@@ -8,6 +8,16 @@ def build_text_prompt_messages(
     text_prompt: str,
     stack: Stack,
 ) -> list[ChatCompletionMessageParam]:
+
+    USER_PROMPT = f"""
+Generate UI for {text_prompt}.
+Selected stack: {stack}.
+
+# Instructions
+
+- Make sure to make it look modern and sleek.
+- Use modern, professional fonts and colors.
+- Follow UX best practices."""
     return [
         {
             "role": "system",
@@ -15,12 +25,6 @@ def build_text_prompt_messages(
         },
         {
             "role": "user",
-            "content": f"""
-            - Make sure to make it look modern and sleek.
-            - Use modern, professional fonts and colors.
-            - Follow UX best practices.
-            Selected stack: {stack}.
-            Generate UI for {text_prompt}.
-            """,
+            "content": USER_PROMPT,
         },
     ]
