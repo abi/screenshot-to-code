@@ -467,10 +467,7 @@ function AgentActivity() {
               <BsChevronRight className="text-gray-400 text-xs" />
             )}
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {stepEvents.length} step{stepEvents.length !== 1 ? "s" : ""}
-            </span>
-            <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">
-              {totalDuration || "--"}
+              Worked through {stepEvents.length} step{stepEvents.length !== 1 ? "s" : ""}{totalDuration ? ` in ${totalDuration}` : ""}
             </span>
           </button>
           {stepsExpanded && (

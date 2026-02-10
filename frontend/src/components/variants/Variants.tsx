@@ -8,7 +8,7 @@ import {
 } from "../../lib/models";
 
 const IFRAME_WIDTH = 1280;
-const IFRAME_HEIGHT = 400;
+const IFRAME_HEIGHT = 550;
 
 interface VariantThumbnailProps {
   code: string;
@@ -112,8 +112,8 @@ function Variants() {
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-white dark:bg-zinc-950 pt-2 pb-2 -mx-6 px-6">
-      <div className="grid grid-cols-2 gap-1">
+    <div className="pt-2 pb-1">
+      <div className="flex gap-1.5">
         {variants.map((variant, index) => {
           let statusColor = "bg-gray-300 dark:bg-gray-600";
           if (variant.status === "complete") statusColor = "bg-green-500";
@@ -122,15 +122,19 @@ function Variants() {
           return (
             <div
               key={index}
-              className={`p-1 border rounded cursor-pointer ${
+              className={`flex-1 min-w-0 rounded cursor-pointer overflow-hidden ${
                 index === selectedVariantIndex
-                  ? "bg-blue-50 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700"
-                  : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700"
+                  ? "ring-2 ring-blue-400 dark:ring-blue-500"
+                  : "ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600"
               }`}
               title={variant.model ? (CODE_GENERATION_MODEL_DESCRIPTIONS[variant.model as CodeGenerationModel]?.name || variant.model) : undefined}
               onClick={() => handleVariantClick(index)}
             >
-              <div className="flex justify-between items-center mb-0.5">
+              <VariantThumbnail
+                code={variant.code}
+                isSelected={index === selectedVariantIndex}
+              />
+              <div className="flex items-center px-1.5 py-0.5 bg-white dark:bg-zinc-900">
                 <span className="flex items-center text-[10px] text-gray-500 dark:text-gray-400">
                   <span className={`w-1.5 h-1.5 rounded-full mr-1 ${statusColor}`} />
                   Option {index + 1}
@@ -140,14 +144,7 @@ function Variants() {
                     </div>
                   )}
                 </span>
-                <span className="text-[9px] text-gray-400 dark:text-gray-500 font-mono">
-                  ⌥{index + 1}
-                </span>
               </div>
-              <VariantThumbnail
-                code={variant.code}
-                isSelected={index === selectedVariantIndex}
-              />
             </div>
           );
         })}

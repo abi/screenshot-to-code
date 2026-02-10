@@ -108,9 +108,7 @@ function Sidebar({
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-6">
-        <Variants />
-
+      <div className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4">
         <AgentActivity />
 
         {/* Show code preview when coding and the selected variant is not complete */}
@@ -159,11 +157,11 @@ function Sidebar({
         )}
       </div>
 
-      {/* Pinned prompt box at bottom */}
+      {/* Pinned bottom: prompt box + option selector */}
       {(appState === AppState.CODE_READY || isSelectedVariantComplete) &&
         !isSelectedVariantError && (
           <div
-            className="shrink-0 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2"
+            className="shrink-0 bg-white dark:bg-zinc-950 px-4 py-2"
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
@@ -251,6 +249,9 @@ function Sidebar({
             </div>
           </div>
         )}
+      <div className="shrink-0 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 pb-2">
+        <Variants />
+      </div>
     </div>
   );
 }

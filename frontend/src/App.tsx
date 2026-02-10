@@ -557,7 +557,7 @@ function App() {
 
       {/* Content panel - shows sidebar or history */}
       {showContentPanel && (
-        <div className="lg:fixed lg:inset-y-0 lg:left-14 lg:z-40 lg:flex lg:w-[calc(24rem-3.5rem)] lg:flex-col border-r border-gray-200 bg-white dark:bg-zinc-950 dark:text-white">
+        <div className="lg:fixed lg:inset-y-0 lg:left-14 lg:z-40 lg:flex lg:w-[calc(28rem-3.5rem)] lg:flex-col border-r border-gray-200 bg-white dark:bg-zinc-950 dark:text-white">
             {isHistoryOpen ? (
               <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-6">
                 <div className="mt-4">
@@ -598,7 +598,7 @@ function App() {
       )}
 
       <main
-        className={`py-2 ${showContentPanel ? "lg:pl-96" : "lg:pl-14"}`}
+        className={`py-2 ${showContentPanel ? "lg:pl-[28rem]" : "lg:pl-14"}`}
       >
         {appState === AppState.INITIAL && (
           <StartPane
