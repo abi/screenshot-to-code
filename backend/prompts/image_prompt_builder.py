@@ -10,17 +10,23 @@ def build_image_prompt_messages(
 ) -> list[ChatCompletionMessageParam]:
     user_prompt = f"""
 Generate code for a web page that looks exactly like the provided screenshot(s).
-If multiple screenshots are provided, organize them meaningfully. If they appear to be
-different pages in a website, make them distinct pages and link them. If they look like
-different tabs or views in an app, connect them with appropriate navigation. If they
-appear unrelated, create a scaffold that separates them into "Screenshot 1", "Screenshot 2",
-"Screenshot 3", etc. so it is easy to navigate.
-For mobile screenshots, do not include the device frame or browser chrome; focus only on
-the actual UI mockups.
 
 Selected stack: {stack}
-""".strip()
 
+## Replication instructions
+
+- Make sure the app looks exactly like the screenshot.
+- Pay close attention to background color, text color, font size, font family, 
+padding, margin, border, etc. Match the colors and sizes exactly.
+- Use the exact text from the screenshot.
+- Repeat elements as needed to match the screenshot. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
+- For images, generate images using the generate_images tool.
+
+## Multiple screenshots
+
+If multiple screenshots are provided, organize them meaningfully. If they appear to be different pages in a website, make them distinct pages and link them. If they look like different tabs or views in an app, connect them with appropriate navigation. If they appear unrelated, create a scaffold that separates them into "Screenshot 1", "Screenshot 2", "Screenshot 3", etc. so it is easy to navigate. For mobile screenshots, do not include the device frame or browser chrome; focus only on the actual UI mockups."""
+
+    # Add additional instructions provided by the user
     if text_prompt.strip():
         user_prompt = f"{user_prompt}\n\nAdditional instructions: {text_prompt}"
 
