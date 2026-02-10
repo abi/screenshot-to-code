@@ -91,7 +91,7 @@ class TestCreatePrompt:
             "generationType": "create",
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -145,7 +145,7 @@ class TestCreatePrompt:
             ],
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -199,7 +199,7 @@ class TestCreatePrompt:
             },
             "generationType": "create"
         }
-        with patch('prompts.builders.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
+        with patch('prompts.system_prompt.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -246,7 +246,7 @@ class TestCreatePrompt:
                 {"text": "Now add a navigation menu"}       # User's new request
             ]
         }
-        with patch('prompts.builders.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
+        with patch('prompts.system_prompt.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -361,7 +361,7 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -433,7 +433,7 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -510,7 +510,7 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -566,7 +566,7 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -620,7 +620,7 @@ class TestCreatePrompt:
             ],
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",

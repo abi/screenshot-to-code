@@ -97,7 +97,7 @@ class TestCreatePromptImageSupport:
             ]
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -174,7 +174,7 @@ class TestCreatePromptImageSupport:
             ]
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -230,7 +230,7 @@ class TestCreatePromptImageSupport:
             ]
         }
 
-        with patch("prompts.builders.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
