@@ -48,15 +48,15 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
       : currentCode;
 
   return (
-    <div className="ml-4">
-      <Tabs defaultValue="desktop">
-        <div className="flex justify-between mr-8 mb-4">
+    <div className="flex-1 flex flex-col min-h-0">
+      <Tabs defaultValue="desktop" className="flex-1 flex flex-col min-h-0">
+        <div className="flex items-center justify-between px-4 py-2 shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
           <div className="flex items-center gap-x-2">
             {appState === AppState.CODE_READY && (
               <>
                 <Button
                   onClick={reset}
-                  className="flex items-center ml-4 gap-x-2 dark:text-white dark:bg-gray-700"
+                  className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
                 >
                   <FaUndo />
                   Reset
@@ -64,7 +64,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                 <Button
                   onClick={() => downloadCode(previewCode)}
                   variant="secondary"
-                  className="flex items-center gap-x-2 mr-4 dark:text-white dark:bg-gray-700 download-btn"
+                  className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 download-btn"
                   data-testid="download-code"
                 >
                   <FaDownload /> Download Code
@@ -116,21 +116,21 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
             </Button>
           </div>
         </div>
-        <TabsContent value="desktop">
+        <TabsContent value="desktop" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
           <PreviewComponent
             code={previewCode}
             device="desktop"
             doUpdate={doUpdate}
           />
         </TabsContent>
-        <TabsContent value="mobile">
+        <TabsContent value="mobile" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
           <PreviewComponent
             code={previewCode}
             device="mobile"
             doUpdate={doUpdate}
           />
         </TabsContent>
-        <TabsContent value="code">
+        <TabsContent value="code" className="flex-1 min-h-0 mt-0 overflow-auto">
           <CodeTab
             code={previewCode}
             setCode={() => {}}
@@ -138,7 +138,7 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
           />
         </TabsContent>
         {referenceImages.length > 0 && (
-          <TabsContent value="reference">
+          <TabsContent value="reference" className="flex-1 min-h-0 mt-0 overflow-auto">
             <div className="flex flex-col items-center gap-4 p-4">
               {inputMode === "video" ? (
                 <video

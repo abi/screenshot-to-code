@@ -154,7 +154,10 @@
   * {
     @apply border-border;
   }
+  html, body, #root {
+    @apply h-full;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground m-0;
   }
 }

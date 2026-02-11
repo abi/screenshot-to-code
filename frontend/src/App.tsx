@@ -532,7 +532,7 @@ function App() {
     isHistoryOpen;
 
   return (
-    <div className="mt-2 dark:bg-black dark:text-white">
+    <div className={`dark:bg-black dark:text-white ${appState === AppState.CODING || appState === AppState.CODE_READY ? "h-screen overflow-hidden" : ""}`}>
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
@@ -599,7 +599,7 @@ function App() {
       )}
 
       <main
-        className={`py-2 ${showContentPanel ? "lg:pl-[28rem]" : "lg:pl-16"}`}
+        className={`${showContentPanel ? "lg:pl-[28rem] h-full flex flex-col" : "lg:pl-16"}`}
       >
         {appState === AppState.INITIAL && (
           <StartPane

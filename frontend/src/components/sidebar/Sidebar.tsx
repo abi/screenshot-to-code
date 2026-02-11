@@ -116,8 +116,7 @@ function Sidebar({
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable content */}
-      <div className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4 flex flex-col">
-        <div className="mt-auto" />
+      <div className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4">
         <AgentActivity />
 
         {/* Regenerate button for first generation */}
