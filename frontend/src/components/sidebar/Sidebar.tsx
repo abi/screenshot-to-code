@@ -105,6 +105,19 @@ function Sidebar({
       <div className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4">
         <AgentActivity />
 
+        {/* Regenerate button for first generation */}
+        {isFirstGeneration && (appState === AppState.CODE_READY || isSelectedVariantComplete) && !isSelectedVariantError && (
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={regenerate}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <LuRefreshCw className="w-3.5 h-3.5" />
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Show cancel button when coding */}
         {appState === AppState.CODING && !isSelectedVariantComplete && (
           <div className="flex w-full">
@@ -198,15 +211,6 @@ function Sidebar({
                       title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
                     >
                       <LuMousePointerClick className="w-[18px] h-[18px]" />
-                    </button>
-                  )}
-                  {isFirstGeneration && (
-                    <button
-                      onClick={regenerate}
-                      className="p-2 rounded-lg transition-colors text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      title="Regenerate from scratch"
-                    >
-                      <LuRefreshCw className="w-[18px] h-[18px]" />
                     </button>
                   )}
                 </div>
