@@ -542,22 +542,23 @@ function App() {
       )}
 
       {/* Icon strip - always visible */}
-      <div className="lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-14 lg:flex-col">
+      <div className="lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-16 lg:flex-col">
         <IconStrip
           isHistoryOpen={isHistoryOpen}
+          isEditorOpen={!isHistoryOpen}
           showHistory={appState === AppState.CODING || appState === AppState.CODE_READY}
+          showEditor={appState === AppState.CODING || appState === AppState.CODE_READY}
           onToggleHistory={() => setIsHistoryOpen((prev) => !prev)}
-          onLogoClick={() => {
-            setIsHistoryOpen(false);
-          }}
+          onToggleEditor={() => setIsHistoryOpen(false)}
+          onLogoClick={() => setIsHistoryOpen(false)}
           settings={settings}
           setSettings={setSettings}
         />
       </div>
 
-      {/* Content panel - shows sidebar or history */}
+      {/* Content panel - shows sidebar, history, or editor */}
       {showContentPanel && (
-        <div className="lg:fixed lg:inset-y-0 lg:left-14 lg:z-40 lg:flex lg:w-[calc(28rem-3.5rem)] lg:flex-col border-r border-gray-200 bg-white dark:bg-zinc-950 dark:text-white">
+        <div className="lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col border-r border-gray-200 bg-white dark:bg-zinc-950 dark:text-white">
             {isHistoryOpen ? (
               <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-6">
                 <div className="mt-4">
@@ -598,7 +599,7 @@ function App() {
       )}
 
       <main
-        className={`py-2 ${showContentPanel ? "lg:pl-[28rem]" : "lg:pl-14"}`}
+        className={`py-2 ${showContentPanel ? "lg:pl-[28rem]" : "lg:pl-16"}`}
       >
         {appState === AppState.INITIAL && (
           <StartPane

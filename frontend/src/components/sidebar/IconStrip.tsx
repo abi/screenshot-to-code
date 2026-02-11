@@ -1,11 +1,14 @@
-import { LuClock, LuSettings } from "react-icons/lu";
+import { LuClock, LuCode, LuSettings } from "react-icons/lu";
 import SettingsDialog from "../settings/SettingsDialog";
 import { Settings } from "../../types";
 
 interface IconStripProps {
   isHistoryOpen: boolean;
+  isEditorOpen: boolean;
   showHistory: boolean;
+  showEditor: boolean;
   onToggleHistory: () => void;
+  onToggleEditor: () => void;
   onLogoClick: () => void;
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
@@ -13,19 +16,21 @@ interface IconStripProps {
 
 function IconStrip({
   isHistoryOpen,
+  isEditorOpen,
   showHistory,
+  showEditor,
   onToggleHistory,
+  onToggleEditor,
   onLogoClick,
   settings,
   setSettings,
 }: IconStripProps) {
   return (
-    <div className="flex h-full flex-col items-center w-14 py-5 gap-y-1 border-r border-gray-200 bg-gray-50 dark:bg-zinc-900 dark:border-zinc-800">
+    <div className="flex h-full flex-col items-center w-16 py-4 gap-y-3 border-r border-gray-200 bg-gray-50 dark:bg-zinc-900 dark:border-zinc-800">
       {/* Logo */}
       <button
         onClick={onLogoClick}
-        className="mb-4 rounded-lg p-1 transition-colors hover:bg-gray-200/70 dark:hover:bg-zinc-800"
-        title="Home"
+        className="mb-2 rounded-lg p-1 transition-colors hover:bg-gray-200/70 dark:hover:bg-zinc-800"
       >
         <img
           src="/favicon/main.png"
@@ -34,18 +39,33 @@ function IconStrip({
         />
       </button>
 
+      {/* Editor */}
+      {showEditor && (
+        <button
+          onClick={onToggleEditor}
+          className={`flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 transition-colors ${
+            isEditorOpen
+              ? "bg-gray-200 dark:bg-zinc-700 text-gray-900 dark:text-white"
+              : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/70 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-gray-200"
+          }`}
+        >
+          <LuCode className="w-[18px] h-[18px]" />
+          <span className="text-[10px] leading-none">Editor</span>
+        </button>
+      )}
+
       {/* History */}
       {showHistory && (
         <button
           onClick={onToggleHistory}
-          className={`p-2.5 rounded-lg transition-colors ${
+          className={`flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 transition-colors ${
             isHistoryOpen
               ? "bg-gray-200 dark:bg-zinc-700 text-gray-900 dark:text-white"
               : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/70 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-gray-200"
           }`}
-          title="History"
         >
           <LuClock className="w-[18px] h-[18px]" />
+          <span className="text-[10px] leading-none">History</span>
         </button>
       )}
 
@@ -58,10 +78,10 @@ function IconStrip({
         setSettings={setSettings}
         trigger={
           <button
-            className="p-2.5 rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-200/70 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-gray-200"
-            title="Settings"
+            className="flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-200/70 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-gray-200"
           >
             <LuSettings className="w-[18px] h-[18px]" />
+            <span className="text-[10px] leading-none">Settings</span>
           </button>
         }
       />
