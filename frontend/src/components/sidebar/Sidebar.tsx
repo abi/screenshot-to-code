@@ -174,6 +174,21 @@ function Sidebar({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
+            {/* Select and edit instructions card */}
+            {inSelectAndEditMode && (
+              <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <LuMousePointerClick className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 shrink-0" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Click any element in the preview to edit it</span>
+                </div>
+                <button
+                  onClick={toggleInSelectAndEditMode}
+                  className="shrink-0 ml-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                >
+                  Exit
+                </button>
+              </div>
+            )}
             <div className="relative w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
               <UpdateImagePreview
                 updateImages={updateImages}
@@ -227,13 +242,6 @@ function Sidebar({
                   <LuArrowUp className="w-[18px] h-[18px]" strokeWidth={2.5} />
                 </button>
               </div>
-
-              {/* Select and edit instructions */}
-              {inSelectAndEditMode && (
-                <div className="px-4 pb-3 text-xs text-gray-500 dark:text-zinc-400">
-                  Click any element in the preview to select it, then describe your changes above.
-                </div>
-              )}
 
               {isDragging && (
                 <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-xl flex items-center justify-center pointer-events-none z-10">
