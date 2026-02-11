@@ -89,7 +89,6 @@ function App() {
   const lastToolEventIdRef = useRef<Record<number, string>>({});
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
     settings.generatedCodeConfig === Stack.HTML_CSS;
@@ -614,7 +613,7 @@ function App() {
         )}
 
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
-          <PreviewPane doUpdate={doUpdate} reset={reset} settings={settings} />
+          <PreviewPane doUpdate={doUpdate} reset={reset} settings={settings} onOpenVersions={() => setIsHistoryOpen(true)} />
         )}
       </main>
     </div>

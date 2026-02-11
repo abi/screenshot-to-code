@@ -6,8 +6,8 @@ import {
   FaMobile,
   FaCode,
 } from "react-icons/fa";
-import { LuExternalLink, LuImage, LuRefreshCw } from "react-icons/lu";
-import { useState } from "react";
+import { LuChevronLeft, LuChevronRight, LuExternalLink, LuImage, LuRefreshCw } from "react-icons/lu";
+import { useMemo, useState } from "react";
 import { AppState, Settings } from "../../types";
 import CodeTab from "./CodeTab";
 import { Button } from "../ui/button";
@@ -30,12 +30,24 @@ interface Props {
   doUpdate: (instruction: string) => void;
   reset: () => void;
   settings: Settings;
+  onOpenVersions: () => void;
 }
 
-function PreviewPane({ doUpdate, reset, settings }: Props) {
+function PreviewPane({ doUpdate, reset, settings, onOpenVersions }: Props) {
   const { appState } = useAppStore();
-  const { inputMode, referenceImages, head, commits } = useProjectStore();
+  const { inputMode, referenceImages, head, commits, setHead } = useProjectStore();
   const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
+
+  // Sorted commit list for version navigation
+  const sortedCommits = useMemo(() =>
+    Object.values(commits).sort(
+      (a, b) => new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
+    ), [commits]);
+
+  const currentVersionIndex = sortedCommits.findIndex(c => c.hash === head);
+  const totalVersions = sortedCommits.length;
+  const canGoPrev = currentVersionIndex > 0;
+  const canGoNext = currentVersionIndex < totalVersions - 1;
 
   const currentCommit = head && commits[head] ? commits[head] : "";
   const currentCode = currentCommit
@@ -63,15 +75,47 @@ function PreviewPane({ doUpdate, reset, settings }: Props) {
                 </Button>
                 <Button
                   onClick={() => downloadCode(previewCode)}
-                  variant="secondary"
-                  className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 download-btn"
+                  variant="ghost"
+                  size="icon"
+                  title="Download Code"
+                  className="download-btn"
                   data-testid="download-code"
                 >
-                  <FaDownload /> Download Code
+                  <FaDownload />
                 </Button>
               </>
             )}
           </div>
+          {/* Version navigation */}
+          {totalVersions > 0 && (
+            <div className="flex items-center gap-1">
+              <Button
+                onClick={() => canGoPrev && setHead(sortedCommits[currentVersionIndex - 1].hash)}
+                variant="ghost"
+                size="icon"
+                title="Previous version"
+                className={`h-7 w-7 ${canGoPrev ? "" : "invisible"}`}
+              >
+                <LuChevronLeft className="w-4 h-4" />
+              </Button>
+              <button
+                onClick={onOpenVersions}
+                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-1.5 py-0.5 rounded tabular-nums"
+                title="View all versions"
+              >
+                v{currentVersionIndex + 1}
+              </button>
+              <Button
+                onClick={() => canGoNext && setHead(sortedCommits[currentVersionIndex + 1].hash)}
+                variant="ghost"
+                size="icon"
+                title="Next version"
+                className={`h-7 w-7 ${canGoNext ? "" : "invisible"}`}
+              >
+                <LuChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
           <div className="flex items-center">
             <TabsList>
               <TabsTrigger value="desktop" title="Desktop" data-testid="tab-desktop">

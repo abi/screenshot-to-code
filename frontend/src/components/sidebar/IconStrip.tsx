@@ -54,7 +54,7 @@ function IconStrip({
         </button>
       )}
 
-      {/* History */}
+      {/* Versions */}
       {showHistory && (
         <button
           onClick={onToggleHistory}
