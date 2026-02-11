@@ -23,6 +23,7 @@ function Sidebar({
   cancelCodeGeneration,
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const middlePaneRef = useRef<HTMLDivElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -60,6 +61,7 @@ function Sidebar({
   const { head, commits } = useProjectStore();
 
   const currentCommit = head ? commits[head] : null;
+  const selectedVariantIndex = currentCommit?.selectedVariantIndex ?? 0;
 
   const isFirstGeneration = currentCommit?.type === "ai_create";
 
@@ -112,6 +114,14 @@ function Sidebar({
     setIsErrorExpanded(false);
   }, [head, commits[head || ""]?.selectedVariantIndex]);
 
+  useEffect(() => {
+    if (!middlePaneRef.current) return;
+    requestAnimationFrame(() => {
+      if (!middlePaneRef.current) return;
+      middlePaneRef.current.scrollTop = middlePaneRef.current.scrollHeight;
+    });
+  }, [head, selectedVariantIndex]);
+
 
   return (
     <div className="flex flex-col h-full">
@@ -120,7 +130,10 @@ function Sidebar({
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4">
+      <div
+        ref={middlePaneRef}
+        className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4"
+      >
         <AgentActivity />
 
         {/* Regenerate button for first generation */}
