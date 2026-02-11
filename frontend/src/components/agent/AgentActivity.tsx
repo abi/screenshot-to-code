@@ -144,7 +144,7 @@ function getEventTitle(event: AgentEvent): string {
 }
 
 
-function renderToolDetails(event: AgentEvent) {
+function renderToolDetails(event: AgentEvent, variantCode?: string) {
   if (!event.input && !event.output) return null;
 
   const renderJson = (data: unknown) => {
@@ -190,27 +190,10 @@ function renderToolDetails(event: AgentEvent) {
           )}
         </div>
       )}
-      {event.toolName === "create_file" && !hasError && (
-        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3">
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-wide text-gray-400">
-              File
-            </div>
-            {output?.contentLength && (
-              <div className="text-xs text-gray-500">
-                {output.contentLength} characters
-              </div>
-            )}
-          </div>
-          <div className="mt-1 text-sm font-medium text-gray-800 dark:text-gray-100">
-            {output?.path ?? "index.html"}
-          </div>
-          {output?.preview && (
-            <pre className="mt-2 rounded bg-gray-50 dark:bg-gray-800 p-2 text-xs text-gray-700 dark:text-gray-200 line-clamp-4 overflow-hidden">
-              {output.preview}
-            </pre>
-          )}
-        </div>
+      {event.toolName === "create_file" && !hasError && variantCode && (
+        <pre className="rounded-md bg-gray-50 dark:bg-gray-800 p-2 text-xs text-gray-700 dark:text-gray-200 overflow-auto max-h-60 whitespace-pre-wrap break-all">
+          {variantCode}
+        </pre>
       )}
 
       {event.toolName === "edit_file" && edits && !hasError && (
@@ -366,9 +349,11 @@ function renderToolDetails(event: AgentEvent) {
 function AgentEventCard({
   event,
   autoExpand,
+  variantCode,
 }: {
   event: AgentEvent;
   autoExpand?: boolean;
+  variantCode?: string;
 }) {
   const [expanded, setExpanded] = useState(Boolean(autoExpand));
 
@@ -420,7 +405,7 @@ function AgentEventCard({
               <ReactMarkdown>{event.content}</ReactMarkdown>
             </div>
           )}
-          {event.type === "tool" && renderToolDetails(event)}
+          {event.type === "tool" && renderToolDetails(event, variantCode)}
         </div>
       )}
     </div>
@@ -437,6 +422,7 @@ function AgentActivity() {
     ? currentCommit.variants[currentCommit.selectedVariantIndex]
     : null;
 
+  const variantCode = selectedVariant?.code || "";
   const events = selectedVariant?.agentEvents || [];
   const lastAssistantId = [...events]
     .reverse()
@@ -473,7 +459,7 @@ function AgentActivity() {
           {stepsExpanded && (
             <div className="space-y-1">
               {stepEvents.map((event) => (
-                <AgentEventCard key={event.id} event={event} />
+                <AgentEventCard key={event.id} event={event} variantCode={event.toolName === "create_file" ? variantCode : undefined} />
               ))}
             </div>
           )}
@@ -501,6 +487,7 @@ function AgentActivity() {
               key={event.id}
               event={event}
               autoExpand={event.type === "assistant" && event.id === lastAssistantId}
+              variantCode={event.toolName === "create_file" ? variantCode : undefined}
             />
           ))}
         </>
