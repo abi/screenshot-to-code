@@ -1,6 +1,5 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import {
-  FaUndo,
   FaDownload,
   FaDesktop,
   FaMobile,
@@ -28,12 +27,11 @@ function openInNewTab(code: string) {
 
 interface Props {
   doUpdate: (instruction: string) => void;
-  reset: () => void;
   settings: Settings;
   onOpenVersions: () => void;
 }
 
-function PreviewPane({ doUpdate, reset, settings, onOpenVersions }: Props) {
+function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
   const { appState } = useAppStore();
   const { inputMode, referenceImages, head, commits, setHead } = useProjectStore();
   const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
@@ -66,13 +64,6 @@ function PreviewPane({ doUpdate, reset, settings, onOpenVersions }: Props) {
           <div className="flex items-center gap-x-2">
             {appState === AppState.CODE_READY && (
               <>
-                <Button
-                  onClick={reset}
-                  className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700"
-                >
-                  <FaUndo />
-                  Reset
-                </Button>
                 <Button
                   onClick={() => downloadCode(previewCode)}
                   variant="ghost"

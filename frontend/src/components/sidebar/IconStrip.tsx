@@ -1,4 +1,4 @@
-import { LuClock, LuCode, LuSettings } from "react-icons/lu";
+import { LuClock, LuCode, LuSettings, LuPlus } from "react-icons/lu";
 import SettingsDialog from "../settings/SettingsDialog";
 import { Settings } from "../../types";
 
@@ -10,6 +10,7 @@ interface IconStripProps {
   onToggleHistory: () => void;
   onToggleEditor: () => void;
   onLogoClick: () => void;
+  onNewProject: () => void;
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
 }
@@ -22,6 +23,7 @@ function IconStrip({
   onToggleHistory,
   onToggleEditor,
   onLogoClick,
+  onNewProject,
   settings,
   setSettings,
 }: IconStripProps) {
@@ -68,6 +70,15 @@ function IconStrip({
           <span className="text-[10px] leading-none">Versions</span>
         </button>
       )}
+
+      <button
+        onClick={onNewProject}
+        className="flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 transition-colors text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+        title="Start a new project"
+      >
+        <LuPlus className="w-[18px] h-[18px]" />
+        <span className="text-[10px] leading-none">New</span>
+      </button>
 
       {/* Spacer pushes settings to bottom */}
       <div className="flex-1" />

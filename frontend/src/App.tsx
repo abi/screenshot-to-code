@@ -551,6 +551,10 @@ function App() {
           onToggleHistory={() => setIsHistoryOpen((prev) => !prev)}
           onToggleEditor={() => setIsHistoryOpen(false)}
           onLogoClick={() => setIsHistoryOpen(false)}
+          onNewProject={() => {
+            reset();
+            setIsHistoryOpen(false);
+          }}
           settings={settings}
           setSettings={setSettings}
         />
@@ -613,7 +617,7 @@ function App() {
         )}
 
         {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
-          <PreviewPane doUpdate={doUpdate} reset={reset} settings={settings} onOpenVersions={() => setIsHistoryOpen(true)} />
+          <PreviewPane doUpdate={doUpdate} settings={settings} onOpenVersions={() => setIsHistoryOpen(true)} />
         )}
       </main>
     </div>
