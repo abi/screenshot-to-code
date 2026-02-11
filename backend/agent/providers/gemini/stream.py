@@ -13,8 +13,8 @@ from agent.providers.gemini.transform import (
 def create_generate_config(model: Llm, system_prompt: str, tools: List[types.Tool]) -> Any:
     thinking_level = get_thinking_level_for_model(model)
     return types.GenerateContentConfig(
-        temperature=0,
-        max_output_tokens=30000,
+        temperature=1.0,
+        max_output_tokens=50000,
         system_instruction=system_prompt,
         thinking_config=types.ThinkingConfig(
             thinking_level=cast(Any, thinking_level),
