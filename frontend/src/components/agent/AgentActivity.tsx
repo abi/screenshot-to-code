@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useProjectStore } from "../../store/project-store";
 import { useAppStore } from "../../store/app-store";
 import { AppState } from "../../types";
@@ -18,7 +18,35 @@ import {
   BsFiles,
 } from "react-icons/bs";
 import ReactMarkdown from "react-markdown";
+import { Light as SyntaxHighlighterBase } from "react-syntax-highlighter";
+import html from "react-syntax-highlighter/dist/esm/languages/hljs/xml";
+import { vs2015 } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
+SyntaxHighlighterBase.registerLanguage("html", html);
+const SyntaxHighlighter = SyntaxHighlighterBase as any;
+
+function CodePreviewBlock({ code, isGenerating }: { code: string; isGenerating: boolean }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isGenerating && containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [code, isGenerating]);
+
+  return (
+    <div ref={containerRef} className="max-h-60 overflow-auto rounded-md">
+      <SyntaxHighlighter
+        language="html"
+        style={vs2015}
+        customStyle={{ margin: 0, padding: "0.5rem", fontSize: "0.75rem", borderRadius: "0.375rem" }}
+        wrapLongLines
+      >
+        {code}
+      </SyntaxHighlighter>
+    </div>
+  );
+}
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -162,9 +190,7 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
         </div>
       )}
       {event.toolName === "create_file" && !hasError && variantCode && (
-        <pre className="rounded-md bg-gray-50 dark:bg-gray-800 p-2 text-xs text-gray-700 dark:text-gray-200 overflow-auto max-h-60 whitespace-pre-wrap break-all">
-          {variantCode}
-        </pre>
+        <CodePreviewBlock code={variantCode} isGenerating={event.status === "running"} />
       )}
 
       {event.toolName === "edit_file" && edits && !hasError && (

@@ -1,8 +1,6 @@
 import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
-import CodePreview from "../preview/CodePreview";
-// import TipLink from "../messages/TipLink";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { LuMousePointerClick, LuRefreshCw, LuArrowUp } from "react-icons/lu";
@@ -63,10 +61,6 @@ function Sidebar({
 
   const currentCommit = head ? commits[head] : null;
 
-  const viewedCode = currentCommit
-    ? currentCommit.variants[currentCommit.selectedVariantIndex].code
-    : "";
-
   const isFirstGeneration = currentCommit?.type === "ai_create";
 
   // Check if the currently selected variant is complete
@@ -111,19 +105,15 @@ function Sidebar({
       <div className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4">
         <AgentActivity />
 
-        {/* Show code preview when coding and the selected variant is not complete */}
+        {/* Show cancel button when coding */}
         {appState === AppState.CODING && !isSelectedVariantComplete && (
-          <div className="flex flex-col">
-            <CodePreview code={viewedCode} />
-
-            <div className="flex w-full">
-              <Button
-                onClick={cancelCodeGeneration}
-                className="w-full dark:text-white dark:bg-gray-700"
-              >
-                Cancel All Generations
-              </Button>
-            </div>
+          <div className="flex w-full">
+            <Button
+              onClick={cancelCodeGeneration}
+              className="w-full dark:text-white dark:bg-gray-700"
+            >
+              Cancel All Generations
+            </Button>
           </div>
         )}
 
