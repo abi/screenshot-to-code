@@ -61,22 +61,25 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
     <div className="flex-1 flex flex-col min-h-0">
       <Tabs defaultValue="desktop" className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between px-4 py-2 shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-          <div className="flex items-center gap-x-2">
-            {appState === AppState.CODE_READY && (
-              <>
-                <Button
-                  onClick={() => downloadCode(previewCode)}
-                  variant="ghost"
-                  size="icon"
-                  title="Download Code"
-                  className="download-btn"
-                  data-testid="download-code"
-                >
-                  <FaDownload />
-                </Button>
-              </>
-            )}
+          <div className="flex items-center">
+            <TabsList>
+              <TabsTrigger value="desktop" title="Desktop" data-testid="tab-desktop">
+                <FaDesktop />
+              </TabsTrigger>
+              <TabsTrigger value="mobile" title="Mobile" data-testid="tab-mobile">
+                <FaMobile />
+              </TabsTrigger>
+              <TabsTrigger value="code" title="Code" data-testid="tab-code">
+                <FaCode />
+              </TabsTrigger>
+              {referenceImages.length > 0 && (
+                <TabsTrigger value="reference" title="Reference Image">
+                  <LuImage />
+                </TabsTrigger>
+              )}
+            </TabsList>
           </div>
+
           {/* Version navigation */}
           {totalVersions > 0 && (
             <div className="flex items-center gap-1">
@@ -107,28 +110,26 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
               </Button>
             </div>
           )}
-          <div className="flex items-center">
-            <TabsList>
-              <TabsTrigger value="desktop" title="Desktop" data-testid="tab-desktop">
-                <FaDesktop />
-              </TabsTrigger>
-              <TabsTrigger value="mobile" title="Mobile" data-testid="tab-mobile">
-                <FaMobile />
-              </TabsTrigger>
-              <TabsTrigger value="code" title="Code" data-testid="tab-code">
-                <FaCode />
-              </TabsTrigger>
-              {referenceImages.length > 0 && (
-                <TabsTrigger value="reference" title="Reference Image">
-                  <LuImage />
-                </TabsTrigger>
-              )}
-            </TabsList>
+
+          <div className="flex items-center gap-1">
+            {appState === AppState.CODE_READY && (
+              <Button
+                onClick={() => downloadCode(previewCode)}
+                variant="ghost"
+                size="icon"
+                title="Download Code"
+                className="h-9 w-9"
+                data-testid="download-code"
+              >
+                <FaDownload />
+              </Button>
+            )}
             <Button
               onClick={() => openInNewTab(previewCode)}
               variant="ghost"
               size="icon"
               title="Open in New Tab"
+              className="h-9 w-9"
             >
               <LuExternalLink />
             </Button>
@@ -146,6 +147,7 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
               variant="ghost"
               size="icon"
               title="Refresh Preview"
+              className="h-9 w-9"
             >
               <LuRefreshCw />
             </Button>
