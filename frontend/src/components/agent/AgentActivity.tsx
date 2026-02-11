@@ -274,54 +274,54 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
       )}
 
       {event.toolName === "remove_background" && !hasError && (
-        <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="text-xs text-gray-500 mb-2">Before</div>
-              {output?.image_url ? (
+        <div>
+          {/* While running: show the source image */}
+          {event.status === "running" && (input?.image_url || output?.image_url) && (
+            <img
+              src={input?.image_url || output?.image_url}
+              alt="Original image"
+              className="w-full rounded object-cover"
+              loading="lazy"
+            />
+          )}
+          {/* After complete: before/after side by side */}
+          {event.status !== "running" && output?.image_url && (
+            <div className="flex gap-2">
+              <div className="w-1/2">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Before</div>
                 <img
                   src={output.image_url}
                   alt="Original image"
-                  className="w-full max-w-[120px] rounded-md border border-gray-200 dark:border-gray-700"
+                  className="w-full rounded object-cover"
                   loading="lazy"
                 />
-              ) : (
-                <div className="h-20 w-20 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
-                  N/A
-                </div>
-              )}
-            </div>
-            <div className="text-gray-400 text-xl">→</div>
-            <div className="flex-1">
-              <div className="text-xs text-gray-500 mb-2">After</div>
-              {output?.result_url ? (
-                <div className="relative">
-                  <div
-                    className="absolute inset-0 rounded-md max-w-[120px]"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)",
-                      backgroundSize: "10px 10px",
-                      backgroundPosition: "0 0, 0 5px, 5px -5px, -5px 0px",
-                    }}
-                  />
-                  <img
-                    src={output.result_url}
-                    alt="Background removed"
-                    className="relative w-full max-w-[120px] rounded-md border border-gray-200 dark:border-gray-700"
-                    loading="lazy"
-                  />
-                </div>
-              ) : (
-                <div className="h-20 w-20 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
-                  N/A
-                </div>
-              )}
-            </div>
-          </div>
-          {output?.result_url && (
-            <div className="text-xs text-gray-500 mt-3 truncate">
-              {output.result_url}
+              </div>
+              <div className="w-1/2">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">After</div>
+                {output?.result_url ? (
+                  <div className="relative">
+                    <div
+                      className="absolute inset-0 rounded"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)",
+                        backgroundSize: "10px 10px",
+                        backgroundPosition: "0 0, 0 5px, 5px -5px, -5px 0px",
+                      }}
+                    />
+                    <img
+                      src={output.result_url}
+                      alt="Background removed"
+                      className="relative w-full rounded"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                    Failed
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
