@@ -65,7 +65,7 @@ function IconStrip({
           }`}
         >
           <LuClock className="w-[18px] h-[18px]" />
-          <span className="text-[10px] leading-none">History</span>
+          <span className="text-[10px] leading-none">Versions</span>
         </button>
       )}
 

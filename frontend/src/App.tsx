@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
+import { LuChevronLeft } from "react-icons/lu";
 // import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
@@ -560,15 +561,16 @@ function App() {
       {showContentPanel && (
         <div className="lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col border-r border-gray-200 bg-white dark:bg-zinc-950 dark:text-white">
             {isHistoryOpen ? (
-              <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-6">
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h1 className="text-lg font-semibold">History</h1>
+              <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-4">
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <h2 className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Versions</h2>
                     <button
                       onClick={() => setIsHistoryOpen(false)}
-                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm"
+                      className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                     >
-                      Close
+                      <LuChevronLeft className="w-3.5 h-3.5" />
+                      Back to editor
                     </button>
                   </div>
                   <HistoryDisplay
