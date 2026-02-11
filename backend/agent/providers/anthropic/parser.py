@@ -1,9 +1,9 @@
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any, Dict, List, cast
 
 from agent.providers.types import EventSink, StreamEvent
-from agent.tools import ToolCall
+from agent.tools import ToolCall, parse_json_arguments
 
 
 @dataclass
@@ -83,11 +83,21 @@ def extract_tool_calls(final_message: Any) -> List[ToolCall]:
         for block in final_message.content:
             if block.type != "tool_use":
                 continue
+            raw_input = getattr(block, "input", {})
+            args: Dict[str, Any]
+            if isinstance(raw_input, dict):
+                args = cast(Dict[str, Any], raw_input)
+            else:
+                parsed, error = parse_json_arguments(raw_input)
+                if error:
+                    args = {"INVALID_JSON": str(raw_input)}
+                else:
+                    args = parsed
             tool_calls.append(
                 ToolCall(
                     id=block.id,
                     name=block.name,
-                    arguments=block.input,
+                    arguments=args,
                 )
             )
     return tool_calls

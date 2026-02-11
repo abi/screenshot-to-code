@@ -345,6 +345,7 @@ def serialize_anthropic_tools(
         {
             "name": tool.name,
             "description": tool.description,
+            "eager_input_streaming": True,
             "input_schema": _copy_schema(tool.parameters),
         }
         for tool in tools
@@ -437,6 +438,17 @@ class AgentToolbox:
         self.option_codes = option_codes or []
 
     async def execute(self, tool_call: ToolCall) -> ToolExecutionResult:
+        if "INVALID_JSON" in tool_call.arguments:
+            invalid_json = ensure_str(tool_call.arguments.get("INVALID_JSON"))
+            return ToolExecutionResult(
+                ok=False,
+                result={
+                    "error": "Tool arguments were invalid JSON.",
+                    "INVALID_JSON": invalid_json,
+                },
+                summary={"error": "Invalid JSON tool arguments"},
+            )
+
         if tool_call.name == "create_file":
             return self._create_file(tool_call.arguments)
         if tool_call.name == "edit_file":

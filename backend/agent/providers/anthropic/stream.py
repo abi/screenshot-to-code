@@ -34,14 +34,4 @@ def create_stream_context(
     else:
         stream_kwargs["temperature"] = 0.0
 
-    if hasattr(client, "beta") and hasattr(client.beta, "messages"):
-        stream_client = client.beta.messages
-    else:
-        stream_client = client.messages
-
-    try:
-        stream_kwargs_with_betas = dict(stream_kwargs)
-        stream_kwargs_with_betas["betas"] = ["fine-grained-tool-streaming-2025-05-14"]
-        return stream_client.stream(**stream_kwargs_with_betas)
-    except TypeError:
-        return stream_client.stream(**stream_kwargs)
+    return client.messages.stream(**stream_kwargs)
