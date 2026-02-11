@@ -115,6 +115,10 @@ function Sidebar({
 
   return (
     <div className="flex flex-col h-full">
+      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2">
+        <Variants />
+      </div>
+
       {/* Scrollable content */}
       <div className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4">
         <AgentActivity />
@@ -268,9 +272,6 @@ function Sidebar({
             </div>
           </div>
         )}
-      <div className="shrink-0 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 pb-2">
-        <Variants />
-      </div>
     </div>
   );
 }
