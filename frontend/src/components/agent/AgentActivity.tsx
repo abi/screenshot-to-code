@@ -387,12 +387,9 @@ function AgentEventCard({
         className="w-full flex items-center gap-2 py-1.5 text-left text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
       >
         {getEventIcon(event.type, event.toolName)}
-        <span className="text-sm flex-1">
+        <span className={`text-sm flex-1 ${event.status === "running" ? "active-step-shimmer" : ""}`}>
           {getEventTitle(event)}
         </span>
-        {event.status === "running" && (
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-        )}
         {isExpanded ? (
           <BsChevronDown className="text-xs shrink-0" />
         ) : (
