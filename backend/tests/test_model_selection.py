@@ -14,7 +14,7 @@ class TestModelSelectionAllKeys:
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_create(self):
-        """All keys: first two options are Gemini 3 Flash (minimal) and Gemini 3 Pro (low)."""
+        """All keys: first two options are Gemini 3 Flash (minimal)."""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -25,7 +25,7 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GEMINI_3_PRO_PREVIEW_LOW,
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.CLAUDE_OPUS_4_6,
             Llm.GPT_5_2_CODEX_HIGH,
         ]
@@ -44,7 +44,7 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GEMINI_3_PRO_PREVIEW_LOW,
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.CLAUDE_OPUS_4_6,
             Llm.GPT_5_2_CODEX_HIGH,
         ]
