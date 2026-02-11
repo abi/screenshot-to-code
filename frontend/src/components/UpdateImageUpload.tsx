@@ -28,28 +28,21 @@ export function UpdateImagePreview({ updateImages, setUpdateImages }: Props) {
 
   if (updateImages.length === 0) return null;
 
-  const remaining = Math.max(0, MAX_UPDATE_IMAGES - updateImages.length);
-  const isAtLimit = remaining === 0;
-
   return (
-    <div className="mb-2">
-      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-        <span>{`Reference images: ${updateImages.length}/${MAX_UPDATE_IMAGES}`}</span>
-        <span>{isAtLimit ? "Limit reached" : `${remaining} remaining`}</span>
-      </div>
-      <div className="flex gap-2 overflow-x-auto py-2">
+    <div className="px-3 pt-3">
+      <div className="flex gap-2 overflow-x-auto pb-2">
         {updateImages.map((image, index) => (
           <div key={index} className="relative flex-shrink-0 group">
             <img
               src={image}
               alt={`Reference ${index + 1}`}
-              className="h-12 w-12 object-cover rounded border border-gray-200 dark:border-gray-600"
+              className="h-14 w-14 rounded-lg border border-gray-200 object-cover shadow-sm dark:border-zinc-700"
             />
             <button
               onClick={() => removeImage(index)}
-              className="absolute -top-1 -right-1 h-4 w-4 bg-gray-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-white bg-gray-900 text-white opacity-0 shadow transition-opacity group-hover:opacity-100 hover:bg-red-600 dark:border-zinc-900"
             >
-              <Cross2Icon className="h-2 w-2" />
+              <Cross2Icon className="h-2.5 w-2.5" />
             </button>
           </div>
         ))}
@@ -124,14 +117,12 @@ function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
         className={`p-2 rounded-lg transition-colors ${
           isAtLimit
             ? "text-gray-300 dark:text-zinc-600 cursor-not-allowed"
-            : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+            : "text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
         }`}
         title={
           isAtLimit
             ? `Limit reached (${MAX_UPDATE_IMAGES})`
-            : updateImages.length > 0
-              ? `Add images (${updateImages.length}/${MAX_UPDATE_IMAGES})`
-              : "Add images"
+            : "Add images"
         }
       >
         <LuPlus className="w-[18px] h-[18px]" />

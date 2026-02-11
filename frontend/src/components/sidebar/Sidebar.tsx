@@ -4,6 +4,7 @@ import { AppState } from "../../types";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { LuMousePointerClick, LuRefreshCw, LuArrowUp } from "react-icons/lu";
+import { toast } from "react-hot-toast";
 
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
@@ -15,6 +16,8 @@ interface SidebarProps {
   regenerate: () => void;
   cancelCodeGeneration: () => void;
 }
+
+const MAX_UPDATE_IMAGES = 5;
 
 function Sidebar({
   showSelectAndEditFeature,
@@ -39,24 +42,45 @@ function Sidebar({
     });
   };
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const files = Array.from(e.dataTransfer.files).filter(file => 
-      file.type === 'image/png' || file.type === 'image/jpeg'
-    );
-    
-    if (files.length > 0) {
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+
+      const files = Array.from(e.dataTransfer.files).filter(
+        (file) => file.type === "image/png" || file.type === "image/jpeg"
+      );
+
+      if (files.length === 0) return;
+
       try {
-        const newImagePromises = files.map(file => fileToDataURL(file));
+        if (updateImages.length >= MAX_UPDATE_IMAGES) {
+          toast.error(
+            `You’ve reached the limit of ${MAX_UPDATE_IMAGES} reference images. Remove one to add another.`
+          );
+          return;
+        }
+
+        const remainingSlots = MAX_UPDATE_IMAGES - updateImages.length;
+        let filesToAdd = files;
+        if (filesToAdd.length > remainingSlots) {
+          toast.error(
+            `Only ${remainingSlots} more image${
+              remainingSlots === 1 ? "" : "s"
+            } will be added to stay within the ${MAX_UPDATE_IMAGES}-image limit.`
+          );
+          filesToAdd = filesToAdd.slice(0, remainingSlots);
+        }
+
+        const newImagePromises = filesToAdd.map((file) => fileToDataURL(file));
         const newImages = await Promise.all(newImagePromises);
         setUpdateImages([...updateImages, ...newImages]);
       } catch (error) {
-        console.error('Error reading files:', error);
+        console.error("Error reading files:", error);
       }
-    }
-  }, [updateImages, setUpdateImages]);
+    },
+    [updateImages, setUpdateImages]
+  );
 
   const { head, commits } = useProjectStore();
 
@@ -220,7 +244,7 @@ function Sidebar({
                 </button>
               </div>
             )}
-            <div className="relative w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+            <div className="relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:ring-white/5">
               <UpdateImagePreview
                 updateImages={updateImages}
                 setUpdateImages={setUpdateImages}
@@ -241,10 +265,10 @@ function Sidebar({
                 value={updateInstruction}
                 data-testid="update-input"
                 rows={1}
-                className="w-full resize-none border-0 bg-transparent px-4 pt-2.5 pb-1 text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none max-h-40"
+                className="max-h-40 w-full resize-none border-0 bg-transparent px-4 pb-2 pt-3 text-[15px] leading-6 text-gray-800 placeholder:text-gray-400 focus:outline-none dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
-              <div className="flex items-center justify-between px-3 pb-2">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2.5 dark:border-zinc-800">
+                <div className="flex items-center gap-1.5">
                   <UpdateImageUpload
                     updateImages={updateImages}
                     setUpdateImages={setUpdateImages}
@@ -252,10 +276,10 @@ function Sidebar({
                   {showSelectAndEditFeature && (
                     <button
                       onClick={toggleInSelectAndEditMode}
-                      className={`p-2 rounded-lg transition-colors ${
+                      className={`rounded-lg p-2 transition-colors ${
                         inSelectAndEditMode
-                          ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                          : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                          ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                          : "bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
                       }`}
                       title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
                     >
@@ -266,10 +290,10 @@ function Sidebar({
                 <button
                   onClick={() => doUpdate(updateInstruction)}
                   disabled={!updateInstruction.trim()}
-                  className={`p-2 rounded-lg transition-colors update-btn ${
+                  className={`rounded-xl p-2.5 transition-colors update-btn ${
                     updateInstruction.trim()
-                      ? "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
-                      : "bg-gray-200 dark:bg-zinc-700 text-gray-400 dark:text-zinc-500 cursor-not-allowed"
+                      ? "bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                      : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-zinc-700 dark:text-zinc-500"
                   }`}
                   title="Send"
                 >
