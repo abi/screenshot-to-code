@@ -4,15 +4,12 @@ import { useAppStore } from "../../store/app-store";
 import { AppState } from "../../types";
 import {
   AgentEvent,
-  AgentEventStatus,
   AgentEventType,
 } from "../commits/types";
 import {
   BsChatDots,
   BsChevronDown,
   BsChevronRight,
-  BsCheckCircle,
-  BsXCircle,
   BsLightbulb,
   BsFileEarmarkPlus,
   BsPencilSquare,
@@ -55,32 +52,6 @@ function formatTotalDuration(events: AgentEvent[]): string {
   return totalMs > 0 ? formatDurationMs(totalMs) : "";
 }
 
-function getStatusTone(status: AgentEventStatus) {
-  if (status === "running") {
-    return "border-emerald-300 bg-emerald-50/80 dark:border-emerald-600 dark:bg-emerald-900/20";
-  }
-  if (status === "error") {
-    return "border-red-300 bg-red-50/80 dark:border-red-600 dark:bg-red-900/20";
-  }
-  return "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/40";
-}
-
-function renderStatusIcon(status: AgentEventStatus) {
-  if (status === "running") {
-    return (
-      <span className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-xs text-emerald-600 dark:text-emerald-400">
-          running
-        </span>
-      </span>
-    );
-  }
-  if (status === "error") {
-    return <BsXCircle className="text-red-500" />;
-  }
-  return <BsCheckCircle className="text-emerald-600" />;
-}
 
 function getEventIcon(type: AgentEventType, toolName?: string) {
   if (type === "thinking") {
@@ -376,30 +347,26 @@ function AgentEventCard({
   }
 
   return (
-    <div
-      className={`rounded-xl border ${getStatusTone(event.status)} transition-shadow`}
-    >
+    <div>
       <button
         onClick={() => setExpanded((prev) => !prev)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left"
+        className="w-full flex items-center gap-2 py-1.5 text-left text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
       >
-        <div className="flex items-center gap-2">
-          {getEventIcon(event.type, event.toolName)}
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
-            {getEventTitle(event)}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {renderStatusIcon(event.status)}
-          {isExpanded ? (
-            <BsChevronDown className="text-gray-400" />
-          ) : (
-            <BsChevronRight className="text-gray-400" />
-          )}
-        </div>
+        {isExpanded ? (
+          <BsChevronDown className="text-xs shrink-0" />
+        ) : (
+          <BsChevronRight className="text-xs shrink-0" />
+        )}
+        {getEventIcon(event.type, event.toolName)}
+        <span className="text-sm">
+          {getEventTitle(event)}
+        </span>
+        {event.status === "running" && (
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+        )}
       </button>
       {isExpanded && (
-        <div className="px-3 pb-3">
+        <div className="pl-7 pb-2">
           {event.type === "thinking" && event.content && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <ReactMarkdown>{event.content}</ReactMarkdown>
