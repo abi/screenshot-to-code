@@ -1,11 +1,17 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import {
-  FaDownload,
   FaDesktop,
   FaMobile,
   FaCode,
 } from "react-icons/fa";
-import { LuChevronLeft, LuChevronRight, LuExternalLink, LuImage, LuRefreshCw } from "react-icons/lu";
+import {
+  LuChevronLeft,
+  LuChevronRight,
+  LuExternalLink,
+  LuImage,
+  LuRefreshCw,
+  LuDownload,
+} from "react-icons/lu";
 import { useMemo, useState } from "react";
 import { AppState, Settings } from "../../types";
 import CodeTab from "./CodeTab";
@@ -121,7 +127,7 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
                 className="h-9 w-9"
                 data-testid="download-code"
               >
-                <FaDownload />
+                <LuDownload />
               </Button>
             )}
             <Button

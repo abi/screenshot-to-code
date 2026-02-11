@@ -89,6 +89,7 @@ function App() {
   const lastToolEventIdRef = useRef<Record<number, string>>({});
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [mobilePane, setMobilePane] = useState<"preview" | "chat">("preview");
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
     settings.generatedCodeConfig === Stack.HTML_CSS;
@@ -530,9 +531,18 @@ function App() {
     appState === AppState.CODING ||
     appState === AppState.CODE_READY ||
     isHistoryOpen;
+  const isCodingOrReady =
+    appState === AppState.CODING || appState === AppState.CODE_READY;
+  const showMobileChatPane = showContentPanel && mobilePane === "chat";
 
   return (
-    <div className={`dark:bg-black dark:text-white ${appState === AppState.CODING || appState === AppState.CODE_READY ? "h-screen overflow-hidden" : ""}`}>
+    <div
+      className={`dark:bg-black dark:text-white ${
+        appState === AppState.CODING || appState === AppState.CODE_READY
+          ? "flex h-dvh flex-col overflow-hidden lg:block lg:h-screen"
+          : "min-h-screen"
+      }`}
+    >
       {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
@@ -542,27 +552,73 @@ function App() {
       )}
 
       {/* Icon strip - always visible */}
-      <div className="lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-16 lg:flex-col">
+      <div
+        className="sticky top-0 z-50 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-16 lg:flex-col"
+      >
         <IconStrip
           isHistoryOpen={isHistoryOpen}
           isEditorOpen={!isHistoryOpen}
-          showHistory={appState === AppState.CODING || appState === AppState.CODE_READY}
-          showEditor={appState === AppState.CODING || appState === AppState.CODE_READY}
-          onToggleHistory={() => setIsHistoryOpen((prev) => !prev)}
-          onToggleEditor={() => setIsHistoryOpen(false)}
-          onLogoClick={() => setIsHistoryOpen(false)}
+          showHistory={isCodingOrReady}
+          showEditor={isCodingOrReady}
+          onToggleHistory={() => {
+            setIsHistoryOpen((prev) => !prev);
+            setMobilePane("chat");
+          }}
+          onToggleEditor={() => {
+            setIsHistoryOpen(false);
+            setMobilePane("preview");
+          }}
+          onLogoClick={() => {
+            setIsHistoryOpen(false);
+            setMobilePane("preview");
+          }}
           onNewProject={() => {
             reset();
             setIsHistoryOpen(false);
+            setMobilePane("preview");
           }}
           settings={settings}
           setSettings={setSettings}
         />
       </div>
 
+      {isCodingOrReady && (
+        <div className="border-b border-gray-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
+          <div className="grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-zinc-800">
+            <button
+              onClick={() => {
+                setIsHistoryOpen(false);
+                setMobilePane("preview");
+              }}
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                mobilePane === "preview"
+                  ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-700 dark:text-white"
+                  : "text-gray-500 dark:text-zinc-400"
+              }`}
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => setMobilePane("chat")}
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                mobilePane === "chat"
+                  ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-700 dark:text-white"
+                  : "text-gray-500 dark:text-zinc-400"
+              }`}
+            >
+              Chat
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Content panel - shows sidebar, history, or editor */}
       {showContentPanel && (
-        <div className="lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col border-r border-gray-200 bg-white dark:bg-zinc-950 dark:text-white">
+        <div
+          className={`border-b border-gray-200 bg-white dark:bg-zinc-950 dark:text-white lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col lg:border-b-0 lg:border-r ${
+            showMobileChatPane ? "block" : "hidden lg:flex"
+          }`}
+        >
             {isHistoryOpen ? (
               <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-4">
                 <div className="mt-3">
@@ -604,7 +660,11 @@ function App() {
       )}
 
       <main
-        className={`${showContentPanel ? "lg:pl-[28rem] h-full flex flex-col" : "lg:pl-16"}`}
+        className={`${
+          showContentPanel
+            ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
+            : "lg:pl-16"
+        } ${isCodingOrReady && mobilePane === "chat" ? "hidden lg:flex" : ""}`}
       >
         {appState === AppState.INITIAL && (
           <StartPane
@@ -616,8 +676,15 @@ function App() {
           />
         )}
 
-        {(appState === AppState.CODING || appState === AppState.CODE_READY) && (
-          <PreviewPane doUpdate={doUpdate} settings={settings} onOpenVersions={() => setIsHistoryOpen(true)} />
+        {isCodingOrReady && (
+          <PreviewPane
+            doUpdate={doUpdate}
+            settings={settings}
+            onOpenVersions={() => {
+              setIsHistoryOpen(true);
+              setMobilePane("chat");
+            }}
+          />
         )}
       </main>
     </div>
