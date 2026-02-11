@@ -83,6 +83,15 @@ function Sidebar({
     commits[head] &&
     commits[head].variants[commits[head].selectedVariantIndex].errorMessage;
 
+  // Auto-resize textarea to fit content
+  const autoResize = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
+    }
+  }, []);
+
   // Focus on the update instruction textarea when a variant is complete
   useEffect(() => {
     if (
@@ -92,6 +101,11 @@ function Sidebar({
       textareaRef.current.focus();
     }
   }, [appState, isSelectedVariantComplete]);
+
+  // Reset textarea height when instruction changes externally (e.g., cleared after submit)
+  useEffect(() => {
+    autoResize();
+  }, [updateInstruction, autoResize]);
 
   // Reset error expanded state when variant changes
   useEffect(() => {
@@ -198,7 +212,10 @@ function Sidebar({
               <textarea
                 ref={textareaRef}
                 placeholder="Tell the AI what to change..."
-                onChange={(e) => setUpdateInstruction(e.target.value)}
+                onChange={(e) => {
+                  setUpdateInstruction(e.target.value);
+                  autoResize();
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -208,7 +225,7 @@ function Sidebar({
                 value={updateInstruction}
                 data-testid="update-input"
                 rows={1}
-                className="w-full resize-none border-0 bg-transparent px-4 pt-2.5 pb-1 text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none"
+                className="w-full resize-none border-0 bg-transparent px-4 pt-2.5 pb-1 text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none max-h-40"
               />
               <div className="flex items-center justify-between px-3 pb-2">
                 <div className="flex items-center gap-1">

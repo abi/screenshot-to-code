@@ -45,8 +45,8 @@ function IconStrip({
           onClick={onToggleEditor}
           className={`flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 transition-colors ${
             isEditorOpen
-              ? "bg-gray-200 dark:bg-zinc-700 text-gray-900 dark:text-white"
-              : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/70 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-gray-200"
+              ? "text-gray-900 dark:text-white"
+              : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           }`}
         >
           <LuCode className="w-[18px] h-[18px]" />
@@ -60,8 +60,8 @@ function IconStrip({
           onClick={onToggleHistory}
           className={`flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 transition-colors ${
             isHistoryOpen
-              ? "bg-gray-200 dark:bg-zinc-700 text-gray-900 dark:text-white"
-              : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/70 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-gray-200"
+              ? "text-gray-900 dark:text-white"
+              : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           }`}
         >
           <LuClock className="w-[18px] h-[18px]" />
@@ -78,7 +78,7 @@ function IconStrip({
         setSettings={setSettings}
         trigger={
           <button
-            className="flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-200/70 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-gray-200"
+            className="flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 transition-colors text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <LuSettings className="w-[18px] h-[18px]" />
             <span className="text-[10px] leading-none">Settings</span>
