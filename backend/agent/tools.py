@@ -405,7 +405,7 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
         if isinstance(prompts, list):
             return {
                 "count": len(prompts),
-                "prompts": [summarize_text(ensure_str(p), 140) for p in prompts],
+                "prompts": [ensure_str(p) for p in prompts],
             }
 
     if tool_call.name == "remove_background":
@@ -619,7 +619,7 @@ class AgentToolbox:
         }
         summary_items = [
             {
-                "prompt": summarize_text(prompt, 160),
+                "prompt": prompt,
                 "url": url,
                 "status": "ok" if url else "error",
             }

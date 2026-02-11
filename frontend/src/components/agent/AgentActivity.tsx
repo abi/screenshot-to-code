@@ -123,9 +123,13 @@ function getEventTitle(event: AgentEvent): string {
       return event.status === "running" ? "Editing file" : "Edited file";
     }
     if (event.toolName === "generate_images") {
-      return event.status === "running"
-        ? "Generating images"
-        : "Generated images";
+      const input = event.input as any;
+      const output = event.output as any;
+      const count = output?.images?.length || input?.count || 0;
+      if (event.status === "running") {
+        return count ? `Generating ${count} image${count !== 1 ? "s" : ""}` : "Generating images";
+      }
+      return count ? `Generated ${count} image${count !== 1 ? "s" : ""}` : "Generated images";
     }
     if (event.toolName === "remove_background") {
       return event.status === "running"
@@ -165,6 +169,7 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
   };
 
   const output = event.output as any;
+  const input = event.input as any;
   const hasError = Boolean(output?.error);
   const images =
     output && Array.isArray(output.images) ? (output.images as Array<any>) : null;
@@ -227,41 +232,44 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
         </div>
       )}
 
-      {event.toolName === "generate_images" && images && !hasError && (
-        <div className="space-y-2">
-          {images.map((item, index) => (
-            <div
-              key={`${item.prompt}-${index}`}
-              className="flex items-start gap-3 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3"
-            >
-              {item.url ? (
-                <img
-                  src={item.url}
-                  alt={item.prompt || `Generated image ${index + 1}`}
-                  className="h-16 w-16 rounded-md object-cover border border-gray-200 dark:border-gray-700"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="h-16 w-16 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
-                  N/A
+      {event.toolName === "generate_images" && !hasError && (
+        <div>
+          {/* While running: show prompts with dividers */}
+          {event.status === "running" && input?.prompts && Array.isArray(input.prompts) && (
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {input.prompts.map((prompt: string, index: number) => (
+                <div key={index} className="text-xs text-gray-600 dark:text-gray-400 py-1.5">
+                  {prompt}
                 </div>
-              )}
-              <div className="flex-1">
-                <div className="text-xs text-gray-500">Prompt</div>
-                <div className="text-sm text-gray-700 dark:text-gray-100">
-                  {item.prompt}
-                </div>
-                {item.url && (
-                  <div className="text-xs text-gray-500 mt-1 truncate">
-                    {item.url}
-                  </div>
-                )}
-              </div>
-              <div className="text-xs text-gray-500">
-                {item.status === "ok" ? "✓" : "⚠"}
-              </div>
+              ))}
             </div>
-          ))}
+          )}
+          {/* After complete: 50/50 image left, prompt right */}
+          {event.status !== "running" && images && (
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {images.map((item, index) => (
+                <div key={`${item.prompt}-${index}`} className="flex gap-3 py-2">
+                  <div className="w-1/2 shrink-0">
+                    {item.url ? (
+                      <img
+                        src={item.url}
+                        alt={item.prompt || `Generated image ${index + 1}`}
+                        className="w-full rounded object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                        Failed
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-1/2 text-xs text-gray-600 dark:text-gray-400 self-center">
+                    {item.prompt}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -392,7 +400,7 @@ function AgentEventCard({
         )}
       </button>
       {isExpanded && (
-        <div className="pl-7 pb-2">
+        <div className="pb-2">
           {event.type === "thinking" && event.content && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <ReactMarkdown>{event.content}</ReactMarkdown>
