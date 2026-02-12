@@ -112,41 +112,55 @@
 .active-step-shimmer {
   background: linear-gradient(
     90deg,
-    #9ca3af 0%,
-    #9ca3af 46%,
-    #111827 50%,
-    #9ca3af 54%,
-    #9ca3af 100%
+    #374151 0%,
+    #374151 27%,
+    #6b7280 29%,
+    #f3f4f6 30%,
+    #6b7280 31%,
+    #374151 33%,
+    #374151 67%,
+    #6b7280 69%,
+    #f3f4f6 70%,
+    #6b7280 71%,
+    #374151 73%,
+    #374151 100%
   );
-  background-size: 500% 100%;
+  background-size: 240% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: searchlight 2.5s ease-in-out infinite;
+  animation: searchlight 5.5s linear infinite;
 }
 
 :is(.dark) .active-step-shimmer {
   background: linear-gradient(
     90deg,
-    #9ca3af 0%,
-    #9ca3af 46%,
-    #f3f4f6 50%,
-    #9ca3af 54%,
-    #9ca3af 100%
+    #94a3b8 0%,
+    #94a3b8 27%,
+    #cbd5e1 29%,
+    #ffffff 30%,
+    #cbd5e1 31%,
+    #94a3b8 33%,
+    #94a3b8 67%,
+    #cbd5e1 69%,
+    #ffffff 70%,
+    #cbd5e1 71%,
+    #94a3b8 73%,
+    #94a3b8 100%
   );
-  background-size: 500% 100%;
+  background-size: 240% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: searchlight 2.5s ease-in-out infinite;
+  animation: searchlight 5.5s linear infinite;
 }
 
 @keyframes searchlight {
   0% {
-    background-position: 200% center;
+    background-position: 140% center;
   }
   100% {
-    background-position: -200% center;
+    background-position: -40% center;
   }
 }
 
