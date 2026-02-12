@@ -12,7 +12,8 @@ from agent.tools import ToolCall
 class GeminiParseState:
     assistant_text: str = ""
     tool_calls: List[ToolCall] = field(default_factory=list)
-    function_call_parts: List[types.Part] = field(default_factory=list)
+    model_parts: List[types.Part] = field(default_factory=list)
+    model_role: str = "model"
 
 
 async def parse_chunk(
@@ -27,13 +28,19 @@ async def parse_chunk(
     if not candidate_content or not candidate_content.parts:
         return
 
+    if candidate_content.role:
+        state.model_role = candidate_content.role
+
     for part in candidate_content.parts:
+        # Preserve each model part as streamed so thought signatures remain
+        # attached to their original parts for the next turn.
+        state.model_parts.append(part)
+
         if getattr(part, "thought", False) and part.text:
             await on_event(StreamEvent(type="thinking_delta", text=part.text))
             continue
 
         if part.function_call:
-            state.function_call_parts.append(part)
             args = part.function_call.args or {}
             tool_id = part.function_call.id or f"tool-{uuid.uuid4().hex[:6]}"
             tool_name = part.function_call.name or "unknown_tool"
@@ -62,8 +69,13 @@ async def parse_chunk(
 
 
 def build_step_result(state: GeminiParseState) -> StepResult:
+    model_content = (
+        types.Content(role=state.model_role, parts=state.model_parts)
+        if state.model_parts
+        else None
+    )
     return StepResult(
         assistant_text=state.assistant_text,
         tool_calls=state.tool_calls,
-        provider_state={"function_call_parts": state.function_call_parts},
+        provider_state={"model_content": model_content},
     )

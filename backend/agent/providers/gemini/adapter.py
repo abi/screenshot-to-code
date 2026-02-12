@@ -1,5 +1,5 @@
 # pyright: reportUnknownVariableType=false
-from typing import Any, Dict, List, cast
+from typing import List
 
 from google import genai
 from google.genai import types
@@ -60,17 +60,13 @@ class GeminiAdapter:
         step_result: StepResult,
         executed_tool_calls: list[ExecutedToolCall],
     ) -> None:
-        function_call_parts = cast(
-            List[types.Part],
-            ((step_result.provider_state or {}).get("function_call_parts") or []),
-        )
+        model_content = (step_result.provider_state or {}).get("model_content")
+        if not isinstance(model_content, types.Content) or not model_content.parts:
+            raise ValueError(
+                "Gemini step is missing model_content. Cannot append tool results without the original model turn."
+            )
 
-        model_parts: List[Any] = []
-        if step_result.assistant_text:
-            model_parts.append({"text": step_result.assistant_text})  # type: ignore
-        model_parts.extend(function_call_parts)
-
-        self._contents.append(types.Content(role="model", parts=model_parts))
+        self._contents.append(model_content)
 
         tool_result_parts: List[types.Part] = []
         for executed in executed_tool_calls:
