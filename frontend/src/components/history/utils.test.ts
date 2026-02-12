@@ -1,4 +1,4 @@
-import { extractHistory, renderHistory } from "./utils";
+import { renderHistory } from "./utils";
 import { Commit, CommitHash } from "../commits/types";
 
 const basicLinearHistory: Record<CommitHash, Commit> = {
@@ -8,7 +8,7 @@ const basicLinearHistory: Record<CommitHash, Commit> = {
     isCommitted: false,
     type: "ai_create",
     parentHash: null,
-    variants: [{ code: "<html>1. create</html>" }],
+    variants: [{ code: "<html>1. create</html>", history: [] }],
     selectedVariantIndex: 0,
     inputs: { text: "", images: [""] },
   },
@@ -18,7 +18,7 @@ const basicLinearHistory: Record<CommitHash, Commit> = {
     isCommitted: false,
     type: "ai_edit",
     parentHash: "0",
-    variants: [{ code: "<html>2. edit with better icons</html>" }],
+    variants: [{ code: "<html>2. edit with better icons</html>", history: [] }],
     selectedVariantIndex: 0,
     inputs: { text: "use better icons", images: [] },
   },
@@ -28,7 +28,7 @@ const basicLinearHistory: Record<CommitHash, Commit> = {
     isCommitted: false,
     type: "ai_edit",
     parentHash: "1",
-    variants: [{ code: "<html>3. edit with better icons and red text</html>" }],
+    variants: [{ code: "<html>3. edit with better icons and red text</html>", history: [] }],
     selectedVariantIndex: 0,
     inputs: { text: "make text red", images: [] },
   },
@@ -41,7 +41,7 @@ const basicLinearHistoryWithCode: Record<CommitHash, Commit> = {
     isCommitted: false,
     type: "code_create",
     parentHash: null,
-    variants: [{ code: "<html>1. create</html>" }],
+    variants: [{ code: "<html>1. create</html>", history: [] }],
     selectedVariantIndex: 0,
     inputs: null,
   },
@@ -57,105 +57,14 @@ const basicBranchingHistory: Record<CommitHash, Commit> = {
     type: "ai_edit",
     parentHash: "1",
     variants: [
-      { code: "<html>4. edit with better icons and green text</html>" },
+      { code: "<html>4. edit with better icons and green text</html>", history: [] },
     ],
     selectedVariantIndex: 0,
     inputs: { text: "make text green", images: [] },
   },
 };
 
-const longerBranchingHistory: Record<CommitHash, Commit> = {
-  ...basicBranchingHistory,
-  "4": {
-    hash: "4",
-    dateCreated: new Date(),
-    isCommitted: false,
-    type: "ai_edit",
-    parentHash: "3",
-    variants: [
-      { code: "<html>5. edit with better icons and green, bold text</html>" },
-    ],
-    selectedVariantIndex: 0,
-    inputs: { text: "make text bold", images: [] },
-  },
-};
-
-const basicBadHistory: Record<CommitHash, Commit> = {
-  "0": {
-    hash: "0",
-    dateCreated: new Date(),
-    isCommitted: false,
-    type: "ai_create",
-    parentHash: null,
-    variants: [{ code: "<html>1. create</html>" }],
-    selectedVariantIndex: 0,
-    inputs: { text: "", images: [""] },
-  },
-  "1": {
-    hash: "1",
-    dateCreated: new Date(),
-    isCommitted: false,
-    type: "ai_edit",
-    parentHash: "2", // <- Bad parent hash
-    variants: [{ code: "<html>2. edit with better icons</html>" }],
-    selectedVariantIndex: 0,
-    inputs: { text: "use better icons", images: [] },
-  },
-};
-
 describe("History Utils", () => {
-  test("should correctly extract the history tree", () => {
-    expect(extractHistory("2", basicLinearHistory)).toEqual([
-      { text: "<html>1. create</html>", images: [] },
-      { text: "use better icons", images: [] },
-      { text: "<html>2. edit with better icons</html>", images: [] },
-      { text: "make text red", images: [] },
-      { text: "<html>3. edit with better icons and red text</html>", images: [] },
-    ]);
-
-    expect(extractHistory("0", basicLinearHistory)).toEqual([
-      { text: "<html>1. create</html>", images: [] },
-    ]);
-
-    // Test branching
-    expect(extractHistory("3", basicBranchingHistory)).toEqual([
-      { text: "<html>1. create</html>", images: [] },
-      { text: "use better icons", images: [] },
-      { text: "<html>2. edit with better icons</html>", images: [] },
-      { text: "make text green", images: [] },
-      { text: "<html>4. edit with better icons and green text</html>", images: [] },
-    ]);
-
-    expect(extractHistory("4", longerBranchingHistory)).toEqual([
-      { text: "<html>1. create</html>", images: [] },
-      { text: "use better icons", images: [] },
-      { text: "<html>2. edit with better icons</html>", images: [] },
-      { text: "make text green", images: [] },
-      { text: "<html>4. edit with better icons and green text</html>", images: [] },
-      { text: "make text bold", images: [] },
-      {
-        text: "<html>5. edit with better icons and green, bold text</html>",
-        images: [],
-      },
-    ]);
-
-    expect(extractHistory("2", longerBranchingHistory)).toEqual([
-      { text: "<html>1. create</html>", images: [] },
-      { text: "use better icons", images: [] },
-      { text: "<html>2. edit with better icons</html>", images: [] },
-      { text: "make text red", images: [] },
-      { text: "<html>3. edit with better icons and red text</html>", images: [] },
-    ]);
-
-    // Errors
-
-    // Bad hash
-    expect(() => extractHistory("100", basicLinearHistory)).toThrow();
-
-    // Bad tree
-    expect(() => extractHistory("1", basicBadHistory)).toThrow();
-  });
-
   test("should correctly render the history tree", () => {
     expect(renderHistory(Object.values(basicLinearHistory))).toEqual([
       {

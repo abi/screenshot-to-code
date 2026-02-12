@@ -4,7 +4,12 @@ from typing import cast
 
 from openai.types.chat import ChatCompletionMessageParam
 
-from utils import format_prompt_summary, print_prompt_summary
+from utils import (
+    format_prompt_preview,
+    format_prompt_summary,
+    print_prompt_preview,
+    print_prompt_summary,
+)
 
 
 def test_format_prompt_summary():
@@ -127,3 +132,44 @@ def test_print_prompt_summary_no_truncate():
     # Check that full content is shown
     assert "shown in full when truncate=False" in output
     assert "..." not in output
+
+
+def test_format_prompt_preview_collapses_long_content():
+    long_code = "<html>\n" + ("x" * 800) + "\n</html>"
+    messages = [
+        {"role": "system", "content": "short"},
+        {"role": "assistant", "content": long_code},
+    ]
+
+    preview = format_prompt_preview(
+        cast(list[ChatCompletionMessageParam], messages), max_chars_per_message=120
+    )
+
+    assert "1. SYSTEM" in preview
+    assert "2. ASSISTANT" in preview
+    assert "[collapsed " in preview
+
+
+def test_print_prompt_preview():
+    messages = [
+        {"role": "system", "content": "System message"},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "User request"},
+                {"type": "image_url", "image_url": {"url": "data:image/png;base64,AAA"}},
+            ],
+        },
+    ]
+
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+
+    print_prompt_preview(cast(list[ChatCompletionMessageParam], messages))
+
+    sys.stdout = sys.__stdout__
+
+    output = captured_output.getvalue()
+    assert "PROMPT PREVIEW" in output
+    assert "1. SYSTEM" in output
+    assert "2. USER [1 media]" in output

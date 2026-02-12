@@ -1,18 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
-import { AppState, CodeGenerationParams, EditorTheme, Settings } from "./types";
+import { AppState, EditorTheme, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/messages/PicoBadge";
 import { OnboardingNote } from "./components/messages/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
-import { extractHistory } from "./components/history/utils";
 import toast from "react-hot-toast";
+import { nanoid } from "nanoid";
 import { Stack } from "./lib/stacks";
 import { CodeGenerationModel } from "./lib/models";
 import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import { LuChevronLeft } from "react-icons/lu";
+import {
+  buildAssistantHistoryMessage,
+  buildUserHistoryMessage,
+  cloneVariantHistory,
+  GenerationRequest,
+  registerAssetIds,
+  toRequestHistory,
+} from "./lib/prompt-history";
 // import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
@@ -35,6 +43,8 @@ function App() {
     setReferenceImages,
     initialPrompt,
     setInitialPrompt,
+    upsertPromptAssets,
+    resetPromptAssets,
 
     head,
     commits,
@@ -48,6 +58,7 @@ function App() {
     updateVariantStatus,
     resizeVariants,
     setVariantModels,
+    appendVariantHistoryMessage,
     startAgentEvent,
     appendAgentEventContent,
     finishAgentEvent,
@@ -109,6 +120,8 @@ function App() {
     }
   }, [settings.generatedCodeConfig, setSettings]);
 
+  const getAssetsById = () => useProjectStore.getState().assetsById;
+
   // Functions
   const reset = () => {
     setAppState(AppState.INITIAL);
@@ -119,6 +132,7 @@ function App() {
 
     resetCommits();
     resetHead();
+    resetPromptAssets();
 
     // Inputs
     setInputMode("image");
@@ -176,39 +190,51 @@ function App() {
     }
   };
 
-  function doGenerateCode(params: CodeGenerationParams) {
+  function doGenerateCode(params: GenerationRequest) {
     // Reset the execution console
     resetExecutionConsoles();
 
     // Set the app state to coding during generation
     setAppState(AppState.CODING);
 
+    const { variantHistory, ...requestParams } = params;
+
     // Merge settings with params
-    const updatedParams = { ...params, ...settings };
+    const updatedParams = { ...requestParams, ...settings };
 
     // Create variants dynamically - start with 4 to handle most cases
     // Backend will use however many it needs (typically 3)
     const baseCommitObject = {
       variants: Array(4)
         .fill(null)
-        .map(() => ({ code: "" })),
+        .map(() => ({
+          code: "",
+          history: cloneVariantHistory(variantHistory),
+        })),
     };
 
+    const latestHistoryMessage =
+      requestParams.history && requestParams.history.length > 0
+        ? requestParams.history[requestParams.history.length - 1]
+        : null;
+
     const commitInputObject =
-      params.generationType === "create"
+      requestParams.generationType === "create"
         ? {
             ...baseCommitObject,
             type: "ai_create" as const,
             parentHash: null,
-            inputs: params.prompt,
+            inputs: requestParams.prompt,
           }
         : {
             ...baseCommitObject,
             type: "ai_edit" as const,
             parentHash: head,
-            inputs: params.history
-              ? params.history[params.history.length - 1]
-              : { text: "", images: [] },
+            inputs: {
+              text: latestHistoryMessage?.text || "",
+              images: latestHistoryMessage?.images || [],
+              videos: latestHistoryMessage?.videos || [],
+            },
           };
 
     // Create a new commit and set it as the head
@@ -232,6 +258,16 @@ function App() {
       onVariantComplete: (variantIndex) => {
         console.log(`Variant ${variantIndex} complete event received`);
         updateVariantStatus(commit.hash, variantIndex, "complete");
+        const currentCode =
+          useProjectStore.getState().commits[commit.hash]?.variants[variantIndex]
+            ?.code || "";
+        if (currentCode.trim().length > 0) {
+          appendVariantHistoryMessage(
+            commit.hash,
+            variantIndex,
+            buildAssistantHistoryMessage(currentCode)
+          );
+        }
         const lastThinking = lastThinkingEventIdRef.current[variantIndex];
         if (lastThinking) {
           finishAgentEvent(commit.hash, variantIndex, lastThinking, {
@@ -395,12 +431,40 @@ function App() {
 
     // Kick off the code generation
     if (referenceImages.length > 0) {
-      const images =
+      const media =
         inputMode === "video" ? [referenceImages[0]] : referenceImages;
+      const imageAssetIds =
+        inputMode === "image"
+          ? registerAssetIds(
+              "image",
+              media,
+              getAssetsById,
+              upsertPromptAssets,
+              nanoid
+            )
+          : [];
+      const videoAssetIds =
+        inputMode === "video"
+          ? registerAssetIds(
+              "video",
+              media,
+              getAssetsById,
+              upsertPromptAssets,
+              nanoid
+            )
+          : [];
+      const variantHistory = [
+        buildUserHistoryMessage(textPrompt, imageAssetIds, videoAssetIds),
+      ];
       doGenerateCode({
         generationType: "create",
         inputMode,
-        prompt: { text: textPrompt, images },
+        prompt: {
+          text: textPrompt,
+          images: inputMode === "image" ? media : [],
+          videos: inputMode === "video" ? media : [],
+        },
+        variantHistory,
       });
     }
   }
@@ -414,7 +478,8 @@ function App() {
     doGenerateCode({
       generationType: "create",
       inputMode: "text",
-      prompt: { text, images: [] },
+      prompt: { text, images: [], videos: [] },
+      variantHistory: [buildUserHistoryMessage(text)],
     });
   }
 
@@ -442,16 +507,6 @@ function App() {
       (variant) => variant.code || ""
     );
 
-    let historyTree;
-    try {
-      historyTree = extractHistory(head, commits);
-    } catch {
-      toast.error(
-        "Version history is invalid. This shouldn't happen. Please contact support or open a Github issue."
-      );
-      throw new Error("Invalid version history");
-    }
-
     let modifiedUpdateInstruction = updateInstruction;
 
     // Send in a reference to the selected element if it exists
@@ -462,21 +517,39 @@ function App() {
         selectedElement.outerHTML;
     }
 
-    const updatedHistory = [
-      ...historyTree,
-      { text: modifiedUpdateInstruction, images: updateImages },
+    const selectedVariant = currentCommit.variants[currentCommit.selectedVariantIndex];
+    const baseVariantHistory =
+      selectedVariant.history.length > 0
+        ? selectedVariant.history
+        : currentCode.trim().length > 0
+          ? [buildAssistantHistoryMessage(currentCode)]
+          : [];
+    const updateImageAssetIds = registerAssetIds(
+      "image",
+      updateImages,
+      getAssetsById,
+      upsertPromptAssets,
+      nanoid
+    );
+    const updatedVariantHistory = [
+      ...cloneVariantHistory(baseVariantHistory),
+      buildUserHistoryMessage(modifiedUpdateInstruction, updateImageAssetIds),
     ];
+    const updatedHistory = toRequestHistory(updatedVariantHistory, getAssetsById);
 
     doGenerateCode({
       generationType: "update",
       inputMode,
       prompt:
         inputMode === "text"
-          ? { text: initialPrompt, images: [] }
-          : { text: "", images: [referenceImages[0]] },
+          ? { text: initialPrompt, images: [], videos: [] }
+          : inputMode === "video"
+            ? { text: "", images: [], videos: [referenceImages[0]] }
+            : { text: "", images: [referenceImages[0]], videos: [] },
       history: updatedHistory,
       isImportedFromCode,
       optionCodes,
+      variantHistory: updatedVariantHistory,
       fileState: currentCode
         ? {
             path: "index.html",
@@ -517,7 +590,7 @@ function App() {
     const commit = createCommit({
       type: "code_create",
       parentHash: null,
-      variants: [{ code }],
+      variants: [{ code, history: [buildAssistantHistoryMessage(code)] }],
       inputs: null,
     });
     addCommit(commit);

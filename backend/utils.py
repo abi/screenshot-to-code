@@ -1,5 +1,6 @@
 import copy
 import json
+import textwrap
 from typing import List
 from openai.types.chat import ChatCompletionMessageParam
 
@@ -71,6 +72,99 @@ def print_prompt_summary(prompt_messages: List[ChatCompletionMessageParam], trun
             if current_line:
                 print(f"│ {current_line:<{max_length}} │")
     
+    print("└─" + "─" * max_length + "─┘")
+    print()
+
+
+def _collapse_preview_text(text: str, max_chars: int = 280) -> str:
+    trimmed = text.strip()
+    if not trimmed:
+        return "(no text)"
+
+    looks_like_code = any(
+        marker in trimmed for marker in ("```", "<html", "<!DOCTYPE", "function ", "class ")
+    )
+    normalized = trimmed if looks_like_code else " ".join(trimmed.split())
+
+    if len(normalized) <= max_chars:
+        return normalized
+
+    head_len = max_chars // 2
+    tail_len = max_chars // 4
+    head = normalized[:head_len].rstrip()
+    tail = normalized[-tail_len:].lstrip()
+    omitted = max(0, len(normalized) - len(head) - len(tail))
+    return f"{head} ... [collapsed {omitted} chars] ... {tail}"
+
+
+def format_prompt_preview(
+    prompt_messages: List[ChatCompletionMessageParam],
+    max_chars_per_message: int = 280,
+) -> str:
+    parts: list[str] = []
+    for idx, message in enumerate(prompt_messages):
+        role = str(message.get("role", "unknown")).upper()
+        content = message.get("content")
+        text_chunks: list[str] = []
+        media_count = 0
+
+        if isinstance(content, list):
+            for item in content:
+                if not isinstance(item, dict):
+                    continue
+                item_type = item.get("type")
+                if item_type == "image_url":
+                    media_count += 1
+                elif item_type == "text":
+                    item_text = item.get("text")
+                    if isinstance(item_text, str):
+                        text_chunks.append(item_text)
+        else:
+            text_chunks.append("" if content is None else str(content))
+
+        preview_text = _collapse_preview_text(
+            "\n".join(text_chunks), max_chars=max_chars_per_message
+        )
+        media_suffix = f" [{media_count} media]" if media_count else ""
+        parts.append(f"{idx + 1}. {role}{media_suffix}")
+        wrapped_preview = textwrap.wrap(
+            preview_text, width=100, break_long_words=False, break_on_hyphens=False
+        )
+        if wrapped_preview:
+            for line in wrapped_preview:
+                parts.append(f"   {line}")
+        else:
+            parts.append("   (no text)")
+
+    return "\n".join(parts)
+
+
+def print_prompt_preview(prompt_messages: List[ChatCompletionMessageParam]) -> None:
+    preview = format_prompt_preview(prompt_messages)
+    lines = preview.split("\n")
+    max_length = max(len(line) for line in lines) if lines else 20
+    max_length = max(20, min(120, max_length))
+
+    title = "PROMPT PREVIEW"
+    max_length = max(max_length, len(title) + 4)
+
+    print("┌─" + "─" * max_length + "─┐")
+    title_padding = (max_length - len(title)) // 2
+    print(
+        f"│ {' ' * title_padding}{title}{' ' * (max_length - len(title) - title_padding)} │"
+    )
+    print("├─" + "─" * max_length + "─┤")
+
+    for line in lines:
+        if len(line) <= max_length:
+            print(f"│ {line:<{max_length}} │")
+        else:
+            wrapped = textwrap.wrap(
+                line, width=max_length, break_long_words=False, break_on_hyphens=False
+            )
+            for wrapped_line in wrapped:
+                print(f"│ {wrapped_line:<{max_length}} │")
+
     print("└─" + "─" * max_length + "─┘")
     print()
 

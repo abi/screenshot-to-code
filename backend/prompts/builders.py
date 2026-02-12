@@ -1,10 +1,10 @@
-from typing import Any, cast
+from typing import cast
 
 from openai.types.chat import ChatCompletionContentPartParam, ChatCompletionMessageParam
 
 from custom_types import InputMode
 from prompts.image_prompt_builder import build_image_prompt_messages
-from prompts.prompt_types import PromptContent, Stack
+from prompts.prompt_types import PromptContent, PromptHistoryMessage, Stack
 from prompts import system_prompt
 from prompts.text_prompt_builder import build_text_prompt_messages
 from prompts.video_prompt_builder import build_video_prompt_messages
@@ -23,19 +23,32 @@ async def build_prompt_messages(
     input_mode: InputMode,
     generation_type: str,
     prompt: PromptContent,
-    history: list[dict[str, Any]],
+    history: list[PromptHistoryMessage],
     is_imported_from_code: bool,
 ) -> list[ChatCompletionMessageParam]:
     prompt_messages: list[ChatCompletionMessageParam] = []
 
     if is_imported_from_code:
-        original_imported_code = history[0]["text"] if history else ""
+        original_imported_code = ""
+        for message in history:
+            if message["role"] == "assistant":
+                original_imported_code = message["text"]
+                break
         imported_user_prompt = resolve_imported_code_user_prompt(prompt, history)
         prompt_messages = build_imported_code_prompt_messages(
             original_imported_code,
             stack,
             imported_user_prompt,
         )
+    elif generation_type == "update":
+        prompt_messages = [
+            cast(
+                ChatCompletionMessageParam,
+                {"role": "system", "content": system_prompt.SYSTEM_PROMPT},
+            )
+        ]
+        for item in history:
+            prompt_messages.append(build_history_message(item))
     else:
         if input_mode == "image":
             image_urls = prompt.get("images", [])
@@ -51,23 +64,18 @@ async def build_prompt_messages(
                 stack=stack,
             )
         elif input_mode == "video":
-            if generation_type == "create":
+            video_urls = prompt.get("videos", [])
+            if not video_urls:
+                # Backward compatibility for older frontend payloads.
                 video_urls = prompt.get("images", [])
-                if not video_urls:
-                    raise ValueError("Video mode requires a video to be provided")
-                video_url = video_urls[0]
-                prompt_messages = build_video_prompt_messages(
-                    video_data_url=video_url,
-                    stack=stack,
-                    text_prompt=prompt.get("text", ""),
-                )
-            else:
-                prompt_messages = [
-                    cast(
-                        ChatCompletionMessageParam,
-                        {"role": "system", "content": system_prompt.SYSTEM_PROMPT},
-                    )
-                ]
+            if not video_urls:
+                raise ValueError("Video mode requires a video to be provided")
+            video_url = video_urls[0]
+            prompt_messages = build_video_prompt_messages(
+                video_data_url=video_url,
+                stack=stack,
+                text_prompt=prompt.get("text", ""),
+            )
         else:
             image_urls = prompt.get("images", [])
             text_prompt = prompt.get("text", "")
@@ -77,33 +85,30 @@ async def build_prompt_messages(
                 text_prompt=text_prompt,
             )
 
-        if generation_type == "update":
-            for index, item in enumerate(history):
-                role = "assistant" if index % 2 == 0 else "user"
-                message = build_history_message(item, role)
-                prompt_messages.append(message)
-
     return prompt_messages
 
 
-def build_history_message(
-    item: dict[str, Any], role: str
-) -> ChatCompletionMessageParam:
-    if role == "user" and item.get("images") and len(item["images"]) > 0:
+def build_history_message(item: PromptHistoryMessage) -> ChatCompletionMessageParam:
+    role = item["role"]
+    image_urls = item.get("images", [])
+    video_urls = item.get("videos", [])
+    media_urls = [*image_urls, *video_urls]
+
+    if role == "user" and len(media_urls) > 0:
         user_content: list[ChatCompletionContentPartParam] = []
 
-        for image_url in item["images"]:
+        for media_url in media_urls:
             user_content.append(
                 {
                     "type": "image_url",
-                    "image_url": {"url": image_url, "detail": "high"},
+                    "image_url": {"url": media_url, "detail": "high"},
                 }
             )
 
         user_content.append(
             {
                 "type": "text",
-                "text": item["text"],
+                "text": item.get("text", ""),
             }
         )
 
@@ -119,7 +124,7 @@ def build_history_message(
         ChatCompletionMessageParam,
         {
             "role": role,
-            "content": item["text"],
+            "content": item.get("text", ""),
         },
     )
 
@@ -145,56 +150,47 @@ def build_imported_code_prompt_messages(
         },
         build_history_message(
             {
+                "role": "user",
                 "text": user_prompt.get("text", ""),
                 "images": user_prompt.get("images", []),
-            },
-            "user",
+                "videos": user_prompt.get("videos", []),
+            }
         ),
     ]
 
 
 def resolve_imported_code_user_prompt(
     prompt: PromptContent,
-    history: list[dict[str, Any]],
+    history: list[PromptHistoryMessage],
 ) -> PromptContent:
     prompt_text = prompt.get("text", "")
     prompt_images = prompt.get("images", [])
-    normalized_prompt_images: list[str] = []
-    if isinstance(prompt_images, list):
-        raw_prompt_images = cast(list[object], prompt_images)
-        for image in raw_prompt_images:
-            if isinstance(image, str):
-                normalized_prompt_images.append(image)
+    prompt_videos = prompt.get("videos", [])
 
     if prompt_text.strip():
         return {
             "text": prompt_text,
-            "images": normalized_prompt_images,
+            "images": prompt_images,
+            "videos": prompt_videos,
         }
 
-    for index in range(len(history) - 1, 0, -1):
-        if index % 2 == 1:
-            item = history[index]
-            text = item.get("text", "")
-            images = item.get("images", [])
-            normalized_images: list[str] = []
-            if isinstance(images, list):
-                raw_images = cast(list[object], images)
-                for image in raw_images:
-                    if isinstance(image, str):
-                        normalized_images.append(image)
+    for item in reversed(history):
+        if item["role"] == "user":
             return {
-                "text": text if isinstance(text, str) else "",
-                "images": normalized_images,
+                "text": item["text"],
+                "images": item.get("images", []),
+                "videos": item.get("videos", []),
             }
 
-    if normalized_prompt_images:
+    if prompt_images or prompt_videos:
         return {
             "text": "",
-            "images": normalized_prompt_images,
+            "images": prompt_images,
+            "videos": prompt_videos,
         }
 
     return {
         "text": "Update the imported code according to the latest request.",
         "images": [],
+        "videos": [],
     }

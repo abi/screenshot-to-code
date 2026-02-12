@@ -34,7 +34,7 @@ from typing import (
 )
 from openai.types.chat import ChatCompletionMessageParam
 
-from utils import print_prompt_summary
+from utils import print_prompt_preview
 
 # WebSocket message types
 MessageType = Literal[
@@ -52,7 +52,8 @@ MessageType = Literal[
     "toolResult",
 ]
 from prompts.builders import build_prompt_messages
-from prompts.prompt_types import Stack, PromptContent
+from prompts.request_parsing import parse_prompt_content, parse_prompt_history
+from prompts.prompt_types import PromptContent, PromptHistoryMessage, Stack
 from agent.runner import Agent
 
 # from utils import pprint_prompt
@@ -220,7 +221,7 @@ class ExtractedParams:
     openai_base_url: str | None
     generation_type: Literal["create", "update"]
     prompt: PromptContent
-    history: List[Dict[str, Any]]
+    history: List[PromptHistoryMessage]
     is_imported_from_code: bool
     file_state: Dict[str, str] | None
     option_codes: List[str]
@@ -280,25 +281,12 @@ class ParameterExtractionStage:
         generation_type = cast(Literal["create", "update"], generation_type)
 
         # Extract prompt content
-        prompt: PromptContent = {"text": "", "images": []}
-        raw_prompt = params.get("prompt")
-        if isinstance(raw_prompt, dict):
-            text = raw_prompt.get("text")
-            images = raw_prompt.get("images")
-            prompt = {
-                "text": text if isinstance(text, str) else "",
-                "images": [img for img in images if isinstance(img, str)]
-                if isinstance(images, list)
-                else [],
-            }
+        prompt: PromptContent = parse_prompt_content(params.get("prompt"))
 
         # Extract history (default to empty list)
-        history: List[Dict[str, Any]] = []
-        raw_history = params.get("history")
-        if isinstance(raw_history, list):
-            for item in raw_history:
-                if isinstance(item, dict):
-                    history.append(item)
+        history: List[PromptHistoryMessage] = parse_prompt_history(
+            params.get("history")
+        )
 
         # Extract imported code flag
         is_imported_from_code = bool(params.get("isImportedFromCode", False))
@@ -484,8 +472,7 @@ class PromptCreationStage:
                 history=extracted_params.history,
                 is_imported_from_code=extracted_params.is_imported_from_code,
             )
-
-            print_prompt_summary(prompt_messages, truncate=False)
+            print_prompt_preview(prompt_messages)
 
             return prompt_messages
         except Exception:

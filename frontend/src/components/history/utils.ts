@@ -1,36 +1,4 @@
-import { Commit, CommitHash, CommitType } from "../commits/types";
-import { PromptContent } from "../../types";
-
-export function extractHistory(
-  hash: CommitHash,
-  commits: Record<CommitHash, Commit>
-): PromptContent[] {
-  const flatHistory: PromptContent[] = [];
-
-  let currentCommitHash: CommitHash | null = hash;
-  while (currentCommitHash !== null) {
-    const commit: Commit | null = commits[currentCommitHash];
-
-    if (commit) {
-      flatHistory.unshift({
-        text: commit.variants[commit.selectedVariantIndex].code,
-        images: [],
-      });
-
-      // For edits, add the prompt to the history
-      if (commit.type === "ai_edit") {
-        flatHistory.unshift(commit.inputs);
-      }
-
-      // Move to the parent of the current item
-      currentCommitHash = commit.parentHash;
-    } else {
-      throw new Error("Malformed history: missing parent index");
-    }
-  }
-
-  return flatHistory;
-}
+import { Commit, CommitType } from "../commits/types";
 
 function displayHistoryItemType(itemType: CommitType) {
   switch (itemType) {

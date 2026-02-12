@@ -1,3 +1,5 @@
+import { PromptContent, PromptMessageRole } from "../../types";
+
 export type CommitHash = string;
 
 export type VariantStatus = "generating" | "complete" | "cancelled" | "error";
@@ -17,8 +19,16 @@ export type AgentEvent = {
   endedAt?: number;
 };
 
+export type VariantHistoryMessage = {
+  role: PromptMessageRole;
+  text: string;
+  imageAssetIds: string[];
+  videoAssetIds: string[];
+};
+
 export type Variant = {
   code: string;
+  history: VariantHistoryMessage[];
   status?: VariantStatus;
   errorMessage?: string;
   thinking?: string;
@@ -38,8 +48,6 @@ export type BaseCommit = {
 };
 
 export type CommitType = "ai_create" | "ai_edit" | "code_create";
-
-import { PromptContent } from "../../types";
 
 export type AiCreateCommit = BaseCommit & {
   type: "ai_create";
