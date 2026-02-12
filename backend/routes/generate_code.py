@@ -416,9 +416,9 @@ class ModelSelectionStage:
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key and openai_api_key:
             models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                Llm.CLAUDE_OPUS_4_6,
+                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+                Llm.GEMINI_3_PRO_PREVIEW_LOW,
+                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
                 Llm.GPT_5_2_CODEX_HIGH,
             ]
         elif gemini_api_key and anthropic_api_key:
