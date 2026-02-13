@@ -1,6 +1,6 @@
 from typing import List, cast
 
-from prompts.prompt_types import PromptContent, PromptHistoryMessage
+from prompts.prompt_types import PromptHistoryMessage, UserTurnInput
 
 
 def _to_string_list(value: object) -> List[str]:
@@ -10,7 +10,7 @@ def _to_string_list(value: object) -> List[str]:
     return [item for item in raw_list if isinstance(item, str)]
 
 
-def parse_prompt_content(raw_prompt: object) -> PromptContent:
+def parse_prompt_content(raw_prompt: object) -> UserTurnInput:
     if not isinstance(raw_prompt, dict):
         return {"text": "", "images": [], "videos": []}
 

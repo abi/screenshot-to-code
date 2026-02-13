@@ -51,9 +51,9 @@ MessageType = Literal[
     "toolStart",
     "toolResult",
 ]
-from prompts.builders import build_prompt_messages
+from prompts.pipeline import build_prompt_messages
 from prompts.request_parsing import parse_prompt_content, parse_prompt_history
-from prompts.prompt_types import PromptContent, PromptHistoryMessage, Stack
+from prompts.prompt_types import PromptHistoryMessage, Stack, UserTurnInput
 from agent.runner import Agent
 
 # from utils import pprint_prompt
@@ -220,7 +220,7 @@ class ExtractedParams:
     anthropic_api_key: str | None
     openai_base_url: str | None
     generation_type: Literal["create", "update"]
-    prompt: PromptContent
+    prompt: UserTurnInput
     history: List[PromptHistoryMessage]
     file_state: Dict[str, str] | None
     option_codes: List[str]
@@ -280,7 +280,7 @@ class ParameterExtractionStage:
         generation_type = cast(Literal["create", "update"], generation_type)
 
         # Extract prompt content
-        prompt: PromptContent = parse_prompt_content(params.get("prompt"))
+        prompt: UserTurnInput = parse_prompt_content(params.get("prompt"))
 
         # Extract history (default to empty list)
         history: List[PromptHistoryMessage] = parse_prompt_history(

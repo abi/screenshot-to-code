@@ -1,14 +1,15 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import sys
-from typing import Any, Dict, List, TypedDict
+from typing import Any, Dict, List, TypedDict, cast
 from openai.types.chat import ChatCompletionMessageParam
 
 # Mock moviepy before importing prompts
 sys.modules["moviepy"] = MagicMock()
 sys.modules["moviepy.editor"] = MagicMock()
 
-from prompts.builders import build_prompt_messages
+from prompts.pipeline import build_prompt_messages
+from prompts.plan import derive_prompt_construction_plan
 from prompts.prompt_types import Stack
 
 # Type definitions for test structures
@@ -81,6 +82,36 @@ class TestCreatePrompt:
     RESULT_IMAGE_URL: str = "data:image/png;base64,result_image_data"
     MOCK_SYSTEM_PROMPT: str = "Mock HTML Tailwind system prompt"
     TEST_STACK: Stack = "html_tailwind"
+
+    def test_plan_create_uses_create_from_input(self) -> None:
+        plan = derive_prompt_construction_plan(
+            stack=self.TEST_STACK,
+            input_mode="image",
+            generation_type="create",
+            history=[],
+            file_state=None,
+        )
+        assert plan["construction_strategy"] == "create_from_input"
+
+    def test_plan_update_with_history_uses_history_strategy(self) -> None:
+        plan = derive_prompt_construction_plan(
+            stack=self.TEST_STACK,
+            input_mode="image",
+            generation_type="update",
+            history=[{"role": "user", "text": "change", "images": [], "videos": []}],
+            file_state=None,
+        )
+        assert plan["construction_strategy"] == "update_from_history"
+
+    def test_plan_update_without_history_uses_file_snapshot_strategy(self) -> None:
+        plan = derive_prompt_construction_plan(
+            stack=self.TEST_STACK,
+            input_mode="image",
+            generation_type="update",
+            history=[],
+            file_state={"path": "index.html", "content": "<html></html>"},
+        )
+        assert plan["construction_strategy"] == "update_from_file_snapshot"
 
     @pytest.mark.asyncio
     async def test_image_mode_create_single_image(self) -> None:
@@ -280,7 +311,8 @@ class TestCreatePrompt:
         params: Dict[str, Any] = {
             "prompt": {
                 "text": "",
-                "images": [video_data_url]
+                "images": [],
+                "videos": [video_data_url],
             },
             "generationType": "create"
         }
@@ -319,6 +351,22 @@ class TestCreatePrompt:
         # Assert the structure matches
         actual: ExpectedResult = {"messages": messages}
         assert_structure_match(actual, expected)
+
+    @pytest.mark.asyncio
+    async def test_create_raises_on_unsupported_input_mode(self) -> None:
+        params: Dict[str, Any] = {
+            "prompt": {"text": "", "images": [self.TEST_IMAGE_URL], "videos": []},
+            "generationType": "create",
+        }
+
+        with pytest.raises(ValueError, match="Unsupported input mode: audio"):
+            await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode=cast(Any, "audio"),
+                generation_type=params["generationType"],
+                prompt=params["prompt"],
+                history=[],
+            )
 
 
     @pytest.mark.asyncio

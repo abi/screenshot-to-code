@@ -1,8 +1,8 @@
 from typing import List, Literal, TypedDict
 
 
-class PromptContent(TypedDict):
-    """Unified structure for prompt text and images."""
+class UserTurnInput(TypedDict):
+    """Normalized current user turn payload from the request."""
 
     text: str
     images: List[str]
@@ -18,6 +18,13 @@ class PromptHistoryMessage(TypedDict):
     videos: List[str]
 
 
+PromptConstructionStrategy = Literal[
+    "create_from_input",
+    "update_from_history",
+    "update_from_file_snapshot",
+]
+
+
 Stack = Literal[
     "html_css",
     "html_tailwind",
@@ -26,3 +33,12 @@ Stack = Literal[
     "ionic_tailwind",
     "vue_tailwind",
 ]
+
+
+class PromptConstructionPlan(TypedDict):
+    """Derived plan used by prompt builders to choose a single construction path."""
+
+    generation_type: Literal["create", "update"]
+    input_mode: Literal["image", "video", "text"]
+    stack: Stack
+    construction_strategy: PromptConstructionStrategy

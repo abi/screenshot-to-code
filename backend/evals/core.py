@@ -6,7 +6,7 @@ from config import (
 )
 from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
 from agent.runner import Agent
-from prompts.image_prompt_builder import build_image_prompt_messages
+from prompts.create.image import build_image_prompt_messages
 from prompts.prompt_types import Stack
 from openai.types.chat import ChatCompletionMessageParam
 from typing import Any
