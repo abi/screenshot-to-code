@@ -222,7 +222,6 @@ class ExtractedParams:
     generation_type: Literal["create", "update"]
     prompt: PromptContent
     history: List[PromptHistoryMessage]
-    is_imported_from_code: bool
     file_state: Dict[str, str] | None
     option_codes: List[str]
 
@@ -288,9 +287,6 @@ class ParameterExtractionStage:
             params.get("history")
         )
 
-        # Extract imported code flag
-        is_imported_from_code = bool(params.get("isImportedFromCode", False))
-
         # Extract file state for agent edits
         raw_file_state = params.get("fileState")
         file_state: Dict[str, str] | None = None
@@ -321,7 +317,6 @@ class ParameterExtractionStage:
             generation_type=generation_type,
             prompt=prompt,
             history=history,
-            is_imported_from_code=is_imported_from_code,
             file_state=file_state,
             option_codes=option_codes,
         )
@@ -470,7 +465,7 @@ class PromptCreationStage:
                 generation_type=extracted_params.generation_type,
                 prompt=extracted_params.prompt,
                 history=extracted_params.history,
-                is_imported_from_code=extracted_params.is_imported_from_code,
+                file_state=extracted_params.file_state,
             )
             print_prompt_preview(prompt_messages)
 

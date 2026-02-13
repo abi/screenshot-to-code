@@ -13,8 +13,6 @@ interface ProjectStore {
   // Inputs
   inputMode: "image" | "video" | "text";
   setInputMode: (mode: "image" | "video" | "text") => void;
-  isImportedFromCode: boolean;
-  setIsImportedFromCode: (imported: boolean) => void;
   referenceImages: string[];
   setReferenceImages: (images: string[]) => void;
   initialPrompt: string;
@@ -88,8 +86,6 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   // Inputs and their setters
   inputMode: "image",
   setInputMode: (mode) => set({ inputMode: mode }),
-  isImportedFromCode: false,
-  setIsImportedFromCode: (imported) => set({ isImportedFromCode: imported }),
   referenceImages: [],
   setReferenceImages: (images) => set({ referenceImages: images }),
   initialPrompt: "",

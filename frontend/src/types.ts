@@ -58,7 +58,6 @@ export interface CodeGenerationParams {
   inputMode: "image" | "video" | "text";
   prompt: PromptContent;
   history?: PromptHistoryMessage[];
-  isImportedFromCode?: boolean;
   fileState?: {
     path: string;
     content: string;

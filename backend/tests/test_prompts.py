@@ -99,7 +99,6 @@ class TestCreatePrompt:
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure
@@ -153,7 +152,6 @@ class TestCreatePrompt:
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure
@@ -191,7 +189,6 @@ class TestCreatePrompt:
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
             
             # Define expected structure
@@ -238,7 +235,6 @@ class TestCreatePrompt:
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
             
             # Define expected structure
@@ -296,7 +292,6 @@ class TestCreatePrompt:
             generation_type=params["generationType"],
             prompt=params["prompt"],
             history=params.get("history", []),
-            is_imported_from_code=params.get("isImportedFromCode", False),
         )
 
         expected: ExpectedResult = {
@@ -349,7 +344,6 @@ class TestCreatePrompt:
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure
@@ -405,7 +399,6 @@ class TestCreatePrompt:
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure
@@ -466,7 +459,6 @@ class TestCreatePrompt:
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure - should be text-only messages
@@ -484,38 +476,32 @@ class TestCreatePrompt:
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
-    async def test_imported_code_update_with_images_in_history(self) -> None:
-        """Test imported code flow with images in update history."""
-        # Setup test data
+    async def test_update_bootstraps_from_file_state_when_history_is_empty(self) -> None:
+        """Update should synthesize a user message from fileState + prompt when history is empty."""
         ref_image_url: str = "data:image/png;base64,ref_image"
         params: Dict[str, Any] = {
-            "isImportedFromCode": True,
             "generationType": "update",
-            "history": [
-                {"role": "assistant", "text": "<html>Original imported code</html>", "images": [], "videos": []},
-                {"role": "user", "text": "Update with this reference", "images": [ref_image_url], "videos": []},
-                {"role": "assistant", "text": "<html>Updated code</html>", "images": [], "videos": []},
-            ]
+            "prompt": {"text": "Make the header blue", "images": [ref_image_url], "videos": []},
+            "history": [],
+            "fileState": {
+                "path": "index.html",
+                "content": "<html>Original imported code</html>",
+            },
         }
 
         with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
-            # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
-                prompt=params.get("prompt", {"text": "", "images": [], "videos": []}),
-                history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
+                prompt=params["prompt"],
+                history=params["history"],
+                file_state=params["fileState"],
             )
 
-            # Define expected structure
             expected: ExpectedResult = {
                 "messages": [
-                    {
-                        "role": "system",
-                        "content": "<CONTAINS:continuing from an imported codebase>",
-                    },
+                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
                     {
                         "role": "user",
                         "content": [
@@ -528,52 +514,35 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "Update with this reference",
+                                "text": "<CONTAINS:<current_file path=\"index.html\">>",
                             },
                         ],
                     },
                 ],
             }
 
-            # Assert the structure matches
             actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
+            user_content = messages[1].get("content")
+            assert isinstance(user_content, list)
+            text_part = next(
+                (part for part in user_content if isinstance(part, dict) and part.get("type") == "text"),
+                None,
+            )
+            assert isinstance(text_part, dict)
+            synthesized_text = text_part.get("text", "")
+            assert isinstance(synthesized_text, str)
+            assert "<html>Original imported code</html>" in synthesized_text
+            assert "<change_request>" in synthesized_text
+            assert "Make the header blue" in synthesized_text
 
     @pytest.mark.asyncio
-    async def test_imported_code_update_prefers_history_text_over_prompt_images(self) -> None:
-        """Imported-code updates should not lose text instructions when prompt only has images."""
-        params: Dict[str, Any] = {
-            "isImportedFromCode": True,
-            "generationType": "update",
-            "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
-            "history": [
-                {"role": "assistant", "text": "<html>Original imported code</html>", "images": [], "videos": []},
-                {"role": "user", "text": "Make the header blue", "images": [], "videos": []},
-            ],
-        }
-
-        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
-            messages = await build_prompt_messages(
+    async def test_update_requires_history_or_file_state(self) -> None:
+        with pytest.raises(ValueError):
+            await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
-                generation_type=params["generationType"],
-                prompt=params["prompt"],
-                history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
+                generation_type="update",
+                prompt={"text": "Change title", "images": [], "videos": []},
+                history=[],
             )
-
-            expected: ExpectedResult = {
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "<CONTAINS:continuing from an imported codebase>",
-                    },
-                    {
-                        "role": "user",
-                        "content": "Make the header blue",
-                    },
-                ],
-            }
-
-            actual: ExpectedResult = {"messages": messages}
-            assert_structure_match(actual, expected)

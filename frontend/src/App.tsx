@@ -37,8 +37,6 @@ function App() {
     // Inputs
     inputMode,
     setInputMode,
-    isImportedFromCode,
-    setIsImportedFromCode,
     referenceImages,
     setReferenceImages,
     initialPrompt,
@@ -137,7 +135,6 @@ function App() {
     // Inputs
     setInputMode("image");
     setReferenceImages([]);
-    setIsImportedFromCode(false);
   };
 
   const regenerate = () => {
@@ -217,6 +214,11 @@ function App() {
       requestParams.history && requestParams.history.length > 0
         ? requestParams.history[requestParams.history.length - 1]
         : null;
+    const latestUpdateInput = latestHistoryMessage ?? {
+      text: requestParams.prompt.text,
+      images: requestParams.prompt.images,
+      videos: requestParams.prompt.videos ?? [],
+    };
 
     const commitInputObject =
       requestParams.generationType === "create"
@@ -231,9 +233,9 @@ function App() {
             type: "ai_edit" as const,
             parentHash: head,
             inputs: {
-              text: latestHistoryMessage?.text || "",
-              images: latestHistoryMessage?.images || [],
-              videos: latestHistoryMessage?.videos || [],
+              text: latestUpdateInput.text,
+              images: latestUpdateInput.images,
+              videos: latestUpdateInput.videos,
             },
           };
 
@@ -518,12 +520,7 @@ function App() {
     }
 
     const selectedVariant = currentCommit.variants[currentCommit.selectedVariantIndex];
-    const baseVariantHistory =
-      selectedVariant.history.length > 0
-        ? selectedVariant.history
-        : currentCode.trim().length > 0
-          ? [buildAssistantHistoryMessage(currentCode)]
-          : [];
+    const baseVariantHistory = selectedVariant.history;
     const updateImageAssetIds = registerAssetIds(
       "image",
       updateImages,
@@ -535,19 +532,21 @@ function App() {
       ...cloneVariantHistory(baseVariantHistory),
       buildUserHistoryMessage(modifiedUpdateInstruction, updateImageAssetIds),
     ];
-    const updatedHistory = toRequestHistory(updatedVariantHistory, getAssetsById);
+    const shouldBootstrapFromFileState =
+      baseVariantHistory.length === 0 && currentCode.trim().length > 0;
+    const updatedHistory = shouldBootstrapFromFileState
+      ? []
+      : toRequestHistory(updatedVariantHistory, getAssetsById);
 
     doGenerateCode({
       generationType: "update",
       inputMode,
-      prompt:
-        inputMode === "text"
-          ? { text: initialPrompt, images: [], videos: [] }
-          : inputMode === "video"
-            ? { text: "", images: [], videos: [referenceImages[0]] }
-            : { text: "", images: [referenceImages[0]], videos: [] },
+      prompt: {
+        text: modifiedUpdateInstruction,
+        images: updateImages,
+        videos: [],
+      },
       history: updatedHistory,
-      isImportedFromCode,
       optionCodes,
       variantHistory: updatedVariantHistory,
       fileState: currentCode
@@ -580,9 +579,6 @@ function App() {
     // Reset any existing state
     reset();
 
-    // Set input state
-    setIsImportedFromCode(true);
-
     // Set up this project
     setStack(stack);
 
@@ -590,7 +586,7 @@ function App() {
     const commit = createCommit({
       type: "code_create",
       parentHash: null,
-      variants: [{ code, history: [buildAssistantHistoryMessage(code)] }],
+      variants: [{ code, history: [] }],
       inputs: null,
     });
     addCommit(commit);
