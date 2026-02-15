@@ -3,7 +3,7 @@ from prompts.create.image import build_image_prompt_messages
 from prompts.create.text import build_text_prompt_messages
 from prompts.create.video import build_video_prompt_messages
 from prompts.prompt_types import Stack, UserTurnInput
-from prompts.render import Prompt
+from prompts.message_builder import Prompt
 
 
 def build_create_prompt_from_input(

@@ -188,9 +188,15 @@ class TestCreatePrompt:
             # Define expected structure
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
+                    {
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
+                    },
                     {"role": "assistant", "content": "<html>Initial code</html>"},
-                    {"role": "user", "content": "Make the background blue"},
+                    {
+                        "role": "user",
+                        "content": f"Selected stack: {self.TEST_STACK}.\n\nMake the background blue",
+                    },
                     {"role": "assistant", "content": "<html>Updated code</html>"},
                     {"role": "user", "content": "Add a header"},
                 ],
@@ -273,7 +279,7 @@ class TestCreatePrompt:
                 "messages": [
                     {
                         "role": "system",
-                        "content": self.MOCK_SYSTEM_PROMPT
+                        "content": self.MOCK_SYSTEM_PROMPT,
                     },
                     {
                         "role": "assistant",
@@ -281,7 +287,7 @@ class TestCreatePrompt:
                     },
                     {
                         "role": "user",
-                        "content": "Add a sidebar"
+                        "content": f"Selected stack: {self.TEST_STACK}.\n\nAdd a sidebar",
                     },
                     {
                         "role": "assistant",
@@ -397,7 +403,10 @@ class TestCreatePrompt:
             # Define expected structure
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
+                    {
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
+                    },
                     {"role": "assistant", "content": "<html>Initial code</html>"},
                     {
                         "role": "user",
@@ -411,7 +420,7 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "Add a button",
+                                "text": f"Selected stack: {self.TEST_STACK}.\n\nAdd a button",
                             },
                         ],
                     },
@@ -452,7 +461,10 @@ class TestCreatePrompt:
             # Define expected structure
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
+                    {
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
+                    },
                     {"role": "assistant", "content": "<html>Initial code</html>"},
                     {
                         "role": "user",
@@ -473,7 +485,7 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "Style like these examples",
+                                "text": f"Selected stack: {self.TEST_STACK}.\n\nStyle like these examples",
                             },
                         ],
                     },
@@ -512,9 +524,15 @@ class TestCreatePrompt:
             # Define expected structure - should be text-only messages
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
+                    {
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
+                    },
                     {"role": "assistant", "content": "<html>Initial code</html>"},
-                    {"role": "user", "content": "Make it blue"},  # Text-only message
+                    {
+                        "role": "user",
+                        "content": f"Selected stack: {self.TEST_STACK}.\n\nMake it blue",
+                    },  # Text-only message
                     {"role": "assistant", "content": "<html>Blue code</html>"},
                 ],
             }
@@ -549,7 +567,10 @@ class TestCreatePrompt:
 
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
+                    {
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
+                    },
                     {
                         "role": "user",
                         "content": [
@@ -580,6 +601,7 @@ class TestCreatePrompt:
             assert isinstance(text_part, dict)
             synthesized_text = text_part.get("text", "")
             assert isinstance(synthesized_text, str)
+            assert f"Selected stack: {self.TEST_STACK}." in synthesized_text
             assert "<html>Original imported code</html>" in synthesized_text
             assert "<change_request>" in synthesized_text
             assert "Make the header blue" in synthesized_text
@@ -593,4 +615,24 @@ class TestCreatePrompt:
                 generation_type="update",
                 prompt={"text": "Change title", "images": [], "videos": []},
                 history=[],
+            )
+
+    @pytest.mark.asyncio
+    async def test_update_history_requires_user_message(self) -> None:
+        with pytest.raises(
+            ValueError, match="Update history must include at least one user message"
+        ):
+            await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type="update",
+                prompt={"text": "Change title", "images": [], "videos": []},
+                history=[
+                    {
+                        "role": "assistant",
+                        "text": "<html>Code only</html>",
+                        "images": [],
+                        "videos": [],
+                    }
+                ],
             )
