@@ -18,3 +18,8 @@ Testing policy:
 - Frontend: `cd frontend && yarn lint`
 
 If changes touch both, run both sets.
+
+## Prompt formatting
+
+- Prefer triple-quoted strings (`"""..."""`) for multi-line prompt text.
+- For interpolated multi-line prompts, prefer a single triple-quoted f-string over concatenated string fragments.

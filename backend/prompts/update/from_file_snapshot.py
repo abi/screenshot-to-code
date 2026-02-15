@@ -14,16 +14,17 @@ def build_update_prompt_from_file_snapshot(
 ) -> Prompt:
     path = file_state.get("path", "index.html")
     request_text = prompt.get("text", "").strip() or "Apply the requested update."
-    bootstrap_text = (
-        f"Selected stack: {stack}.\n\n"
-        "You are editing an existing file.\n\n"
-        f'<current_file path="{path}">\n'
-        f'{file_state["content"]}\n'
-        "</current_file>\n\n"
-        "<change_request>\n"
-        f"{request_text}\n"
-        "</change_request>"
-    )
+    bootstrap_text = f"""Selected stack: {stack}.
+
+You are editing an existing file.
+
+<current_file path="{path}">
+{file_state["content"]}
+</current_file>
+
+<change_request>
+{request_text}
+</change_request>"""
     return [
         cast(
             ChatCompletionMessageParam,
