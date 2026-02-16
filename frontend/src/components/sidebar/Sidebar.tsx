@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import AgentActivity from "../agent/AgentActivity";
+import Spinner from "../core/Spinner";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -29,6 +30,7 @@ function Sidebar({
   const middlePaneRef = useRef<HTMLDivElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode } = useAppStore();
 
@@ -86,6 +88,16 @@ function Sidebar({
 
   const currentCommit = head ? commits[head] : null;
   const selectedVariantIndex = currentCommit?.selectedVariantIndex ?? 0;
+  const selectedVariant = currentCommit?.variants[selectedVariantIndex];
+  const selectedVariantEvents = selectedVariant?.agentEvents ?? [];
+  const showWorkingIndicator =
+    appState === AppState.CODING && selectedVariantEvents.length === 0;
+  const requestStartMs = currentCommit?.dateCreated
+    ? new Date(currentCommit.dateCreated).getTime()
+    : undefined;
+  const elapsedSeconds = requestStartMs
+    ? Math.max(1, Math.round((nowMs - requestStartMs) / 1000))
+    : undefined;
 
   const isFirstGeneration = currentCommit?.type === "ai_create";
 
@@ -146,6 +158,12 @@ function Sidebar({
     });
   }, [head, selectedVariantIndex]);
 
+  useEffect(() => {
+    if (appState !== AppState.CODING) return;
+    const intervalId = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, [appState]);
+
 
   return (
     <div className="flex flex-col h-full">
@@ -158,6 +176,22 @@ function Sidebar({
         ref={middlePaneRef}
         className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4"
       >
+        {showWorkingIndicator && (
+          <div className="mb-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <div className="scale-75">
+                  <Spinner />
+                </div>
+                <span>Working...</span>
+              </div>
+              <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                Time so far {elapsedSeconds ? `${elapsedSeconds}s` : "--"}
+              </div>
+            </div>
+          </div>
+        )}
+
         <AgentActivity />
 
         {/* Regenerate button for first generation */}

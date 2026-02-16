@@ -21,6 +21,7 @@ import ReactMarkdown from "react-markdown";
 import { Light as SyntaxHighlighterBase } from "react-syntax-highlighter";
 import html from "react-syntax-highlighter/dist/esm/languages/hljs/xml";
 import { vs2015 } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import Spinner from "../core/Spinner";
 
 SyntaxHighlighterBase.registerLanguage("html", html);
 const SyntaxHighlighter = SyntaxHighlighterBase as any;
@@ -78,6 +79,11 @@ function formatTotalDuration(events: AgentEvent[]): string {
     return acc + duration;
   }, 0);
   return totalMs > 0 ? formatDurationMs(totalMs) : "";
+}
+
+function formatElapsedSince(timestampMs: number | undefined, nowMs: number): string {
+  if (!isFiniteNumber(timestampMs)) return "";
+  return formatDurationMs(Math.max(0, nowMs - timestampMs));
 }
 
 
@@ -413,7 +419,14 @@ function AgentEventCard({
 function AgentActivity() {
   const { head, commits, latestCommitHash } = useProjectStore();
   const [stepsExpanded, setStepsExpanded] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const appState = useAppStore((s) => s.appState);
+
+  useEffect(() => {
+    if (appState !== AppState.CODING) return;
+    const intervalId = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, [appState]);
 
   const currentCommit = head ? commits[head] : null;
   const selectedVariant = currentCommit
@@ -426,6 +439,10 @@ function AgentActivity() {
     .reverse()
     .find((event) => event.type === "assistant")?.id;
   const totalDuration = formatTotalDuration(events);
+  const requestStartMs = currentCommit?.dateCreated
+    ? new Date(currentCommit.dateCreated).getTime()
+    : undefined;
+  const runningDuration = formatElapsedSince(requestStartMs, nowMs);
 
   const isLatestCommit = head === latestCommitHash;
   if (!isLatestCommit || events.length === 0) {
@@ -473,11 +490,14 @@ function AgentActivity() {
       ) : (
         <>
           <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2">
-            <div className="text-xs uppercase tracking-wide text-gray-400">
-              Agent activity
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <div className="scale-75">
+                <Spinner />
+              </div>
+              <span>Working...</span>
             </div>
             <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-              Time so far {totalDuration || "--"}
+              Time so far {runningDuration || "--"}
             </div>
           </div>
           {events.map((event) => (
