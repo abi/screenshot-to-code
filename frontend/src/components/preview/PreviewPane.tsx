@@ -161,7 +161,7 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
                 className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-1.5 py-0.5 rounded tabular-nums"
                 title="View all versions"
               >
-                v{currentVersionIndex + 1}
+                Version {currentVersionIndex + 1}
               </button>
               <Button
                 onClick={() => canGoNext && setHead(sortedCommits[currentVersionIndex + 1].hash)}
