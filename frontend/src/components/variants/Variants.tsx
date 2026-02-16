@@ -135,15 +135,15 @@ function Variants() {
                 isSelected={index === selectedVariantIndex}
               />
               <div className="flex items-center px-1.5 py-0.5 bg-white dark:bg-zinc-900">
-                <span className="flex items-center text-[10px] text-gray-500 dark:text-gray-400">
+                <span className="inline-flex min-w-0 items-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
                   <span className={`w-1.5 h-1.5 rounded-full mr-1 ${statusColor}`} />
                   Option {index + 1}
-                  {variant.status === "generating" && (
-                    <div className="scale-50 ml-0.5">
-                      <Spinner />
-                    </div>
-                  )}
                 </span>
+                {variant.status === "generating" && (
+                  <div className="ml-auto shrink-0 scale-50">
+                    <Spinner />
+                  </div>
+                )}
               </div>
             </div>
           );

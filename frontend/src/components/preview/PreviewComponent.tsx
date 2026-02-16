@@ -7,13 +7,20 @@ interface Props {
   code: string;
   device: "mobile" | "desktop";
   doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
+  onScaleChange?: (scale: number) => void;
+  viewMode?: "fit" | "actual";
 }
 
 const MOBILE_VIEWPORT_WIDTH = 375;
-const MOBILE_VIEWPORT_HEIGHT = 812;
-const DESKTOP_VIEWPORT_WIDTH = 1366;
+export const DESKTOP_VIEWPORT_WIDTH = 1366;
 
-function PreviewComponent({ code, device, doUpdate }: Props) {
+function PreviewComponent({
+  code,
+  device,
+  doUpdate,
+  onScaleChange,
+  viewMode,
+}: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -23,6 +30,7 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
   // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
   const [scale, setScale] = useState(1);
+  const activeMode = viewMode ?? "fit";
   const handleIframeClick = useCallback((event: MouseEvent) => {
     setClickEvent(event);
   }, []);
@@ -38,10 +46,14 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
       const viewportHeight = wrapper.clientHeight;
 
       if (device === "desktop") {
-        const scaleValue = Math.min(1, viewportWidth / DESKTOP_VIEWPORT_WIDTH);
+        const scaleValue =
+          activeMode === "fit"
+            ? Math.min(1, viewportWidth / DESKTOP_VIEWPORT_WIDTH)
+            : 1;
         const iframeHeight = scaleValue > 0 ? viewportHeight / scaleValue : viewportHeight;
 
         setScale(scaleValue);
+        onScaleChange?.(scaleValue);
         iframe.style.width = `${DESKTOP_VIEWPORT_WIDTH}px`;
         iframe.style.height = `${iframeHeight}px`;
         iframe.style.transform = `scale(${scaleValue})`;
@@ -49,16 +61,11 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
         return;
       }
 
-      const scaleValue = Math.min(
-        1,
-        viewportWidth / MOBILE_VIEWPORT_WIDTH,
-        viewportHeight / MOBILE_VIEWPORT_HEIGHT
-      );
-
-      setScale(scaleValue);
+      setScale(1);
+      onScaleChange?.(1);
       iframe.style.width = `${MOBILE_VIEWPORT_WIDTH}px`;
-      iframe.style.height = `${MOBILE_VIEWPORT_HEIGHT}px`;
-      iframe.style.transform = `scale(${scaleValue})`;
+      iframe.style.height = `${viewportHeight}px`;
+      iframe.style.transform = "scale(1)";
       iframe.style.transformOrigin = "top left";
     };
 
@@ -73,7 +80,7 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
       window.removeEventListener("resize", updateScale);
       resizeObserver.disconnect();
     };
-  }, [device]);
+  }, [activeMode, device, onScaleChange]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -106,15 +113,17 @@ function PreviewComponent({ code, device, doUpdate }: Props) {
 
   return (
     <div
-      className={`flex-1 min-h-0 relative overflow-hidden ${
+      className={`flex-1 min-h-0 relative ${
         device === "mobile"
-          ? "flex justify-center bg-gray-100 dark:bg-zinc-900"
-          : "flex justify-center"
+          ? "flex justify-center overflow-hidden bg-gray-100 dark:bg-zinc-900"
+          : activeMode === "fit"
+            ? "flex justify-center overflow-hidden"
+            : "overflow-auto"
       }`}
     >
       <div
         ref={wrapperRef}
-        className="w-full h-full"
+        className={`w-full h-full ${device === "mobile" ? "flex justify-center" : ""}`}
       >
         <iframe
           id={`preview-${device}`}

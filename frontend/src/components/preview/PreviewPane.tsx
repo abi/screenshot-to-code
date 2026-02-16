@@ -41,6 +41,9 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
   const { appState } = useAppStore();
   const { inputMode, referenceImages, head, commits, setHead } = useProjectStore();
   const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState("desktop");
+  const [desktopScale, setDesktopScale] = useState(1);
+  const [desktopViewMode, setDesktopViewMode] = useState<"fit" | "actual">("fit");
 
   // Sorted commit list for version navigation
   const sortedCommits = useMemo(() =>
@@ -65,9 +68,13 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <Tabs defaultValue="desktop" className="flex-1 flex flex-col min-h-0">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex-1 flex flex-col min-h-0"
+      >
         <div className="flex items-center justify-between px-4 py-2 shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <TabsList>
               <TabsTrigger value="desktop" title="Desktop" data-testid="tab-desktop">
                 <FaDesktop />
@@ -84,6 +91,57 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
                 </TabsTrigger>
               )}
             </TabsList>
+            {(activeTab === "desktop" || activeTab === "mobile") && (
+              <div className="hidden sm:inline-flex items-center gap-1.5">
+                {activeTab === "desktop" && (
+                  <div
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-1.5 py-1 text-[11px] font-medium text-gray-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                    title={desktopViewMode === "fit"
+                      ? "Resized to fit this pane."
+                      : "Rendering at 100% scale. Use Fit to resize to this pane."}
+                  >
+                    <div className="inline-flex items-center rounded-md bg-white p-0.5 ring-1 ring-gray-200 dark:bg-zinc-950 dark:ring-zinc-700">
+                      <button
+                        type="button"
+                        onClick={() => setDesktopViewMode("fit")}
+                        className={`rounded px-2 py-0.5 text-[11px] font-semibold transition-colors ${
+                          desktopViewMode === "fit"
+                            ? "bg-gray-900 text-white dark:bg-zinc-200 dark:text-zinc-900"
+                            : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                        }`}
+                      >
+                        Fit to pane
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDesktopViewMode("actual")}
+                        className={`rounded px-2 py-0.5 text-[11px] font-semibold transition-colors ${
+                          desktopViewMode === "actual"
+                            ? "bg-gray-900 text-white dark:bg-zinc-200 dark:text-zinc-900"
+                            : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                        }`}
+                      >
+                        Actual size
+                      </button>
+                    </div>
+                    {desktopViewMode === "fit" && desktopScale < 0.999 && (
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        Scaled: {Math.round(desktopScale * 100)}%
+                      </span>
+                    )}
+                  </div>
+                )}
+                <Button
+                  onClick={() => openInNewTab(previewCode)}
+                  variant="ghost"
+                  size="icon"
+                  title="Open in New Tab"
+                  className="h-8 w-8"
+                >
+                  <LuExternalLink />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Version navigation */}
@@ -131,15 +189,6 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
               </Button>
             )}
             <Button
-              onClick={() => openInNewTab(previewCode)}
-              variant="ghost"
-              size="icon"
-              title="Open in New Tab"
-              className="h-9 w-9"
-            >
-              <LuExternalLink />
-            </Button>
-            <Button
               onClick={() => {
                 const iframes = document.querySelectorAll("iframe");
                 iframes.forEach((iframe) => {
@@ -164,6 +213,8 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
             code={previewCode}
             device="desktop"
             doUpdate={doUpdate}
+            onScaleChange={setDesktopScale}
+            viewMode={desktopViewMode}
           />
         </TabsContent>
         <TabsContent value="mobile" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
@@ -171,6 +222,7 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
             code={previewCode}
             device="mobile"
             doUpdate={doUpdate}
+            viewMode="actual"
           />
         </TabsContent>
         <TabsContent value="code" className="flex-1 min-h-0 mt-0 overflow-auto">
