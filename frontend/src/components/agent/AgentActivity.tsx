@@ -418,7 +418,9 @@ function AgentEventCard({
 
 function AgentActivity() {
   const { head, commits, latestCommitHash } = useProjectStore();
-  const [stepsExpanded, setStepsExpanded] = useState(false);
+  const [stepsExpandedByVariant, setStepsExpandedByVariant] = useState<
+    Record<string, boolean>
+  >({});
   const [nowMs, setNowMs] = useState(() => Date.now());
   const appState = useAppStore((s) => s.appState);
 
@@ -432,6 +434,9 @@ function AgentActivity() {
   const selectedVariant = currentCommit
     ? currentCommit.variants[currentCommit.selectedVariantIndex]
     : null;
+  const selectedVariantStatus = selectedVariant?.status;
+  const variantUiKey =
+    currentCommit ? `${currentCommit.hash}:${currentCommit.selectedVariantIndex}` : "";
 
   const variantCode = selectedVariant?.code || "";
   const events = selectedVariant?.agentEvents || [];
@@ -449,7 +454,13 @@ function AgentActivity() {
     return null;
   }
 
-  const isDone = appState !== AppState.CODING;
+  const isDone =
+    selectedVariantStatus === "complete" ||
+    selectedVariantStatus === "error" ||
+    selectedVariantStatus === "cancelled";
+  const stepsExpanded = variantUiKey
+    ? Boolean(stepsExpandedByVariant[variantUiKey])
+    : false;
   const stepEvents = events.filter((e) => e.type === "tool" || e.type === "thinking");
   const assistantEvents = events.filter((e) => e.type === "assistant");
 
@@ -459,7 +470,12 @@ function AgentActivity() {
         <>
           {/* Collapsed steps summary */}
           <button
-            onClick={() => setStepsExpanded((prev) => !prev)}
+            onClick={() =>
+              setStepsExpandedByVariant((prev) => ({
+                ...prev,
+                [variantUiKey]: !prev[variantUiKey],
+              }))
+            }
             className="w-full flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2 text-left"
           >
             {stepsExpanded ? (
