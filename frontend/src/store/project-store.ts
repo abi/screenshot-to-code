@@ -410,7 +410,17 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         if (index !== numVariant) return variant;
         const events = variant.agentEvents || [];
         const updatedEvents = events.map((event) =>
-          event.id === eventId ? { ...event, ...updates } : event
+          event.id === eventId
+            ? {
+                ...event,
+                ...updates,
+                // Preserve the original terminal timestamp/status once set.
+                endedAt:
+                  event.endedAt !== undefined ? event.endedAt : updates.endedAt,
+                status:
+                  event.status !== "running" ? event.status : updates.status ?? event.status,
+              }
+            : event
         );
         return { ...variant, agentEvents: updatedEvents };
       });

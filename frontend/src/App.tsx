@@ -248,6 +248,36 @@ function App() {
     lastAssistantEventIdRef.current = {};
     lastToolEventIdRef.current = {};
 
+    const finishThinkingEvent = (variantIndex: number, status: "complete" | "error") => {
+      const eventId = lastThinkingEventIdRef.current[variantIndex];
+      if (!eventId) return;
+      finishAgentEvent(commit.hash, variantIndex, eventId, {
+        status,
+        endedAt: Date.now(),
+      });
+      delete lastThinkingEventIdRef.current[variantIndex];
+    };
+
+    const finishAssistantEvent = (variantIndex: number, status: "complete" | "error") => {
+      const eventId = lastAssistantEventIdRef.current[variantIndex];
+      if (!eventId) return;
+      finishAgentEvent(commit.hash, variantIndex, eventId, {
+        status,
+        endedAt: Date.now(),
+      });
+      delete lastAssistantEventIdRef.current[variantIndex];
+    };
+
+    const finishToolEvent = (variantIndex: number, status: "complete" | "error") => {
+      const eventId = lastToolEventIdRef.current[variantIndex];
+      if (!eventId) return;
+      finishAgentEvent(commit.hash, variantIndex, eventId, {
+        status,
+        endedAt: Date.now(),
+      });
+      delete lastToolEventIdRef.current[variantIndex];
+    };
+
     generateCode(wsRef, updatedParams, {
       onChange: (token, variantIndex) => {
         appendCommitCode(commit.hash, variantIndex, token);
@@ -270,54 +300,16 @@ function App() {
             buildAssistantHistoryMessage(currentCode)
           );
         }
-        const lastThinking = lastThinkingEventIdRef.current[variantIndex];
-        if (lastThinking) {
-          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
-            status: "complete",
-            endedAt: Date.now(),
-          });
-        }
-        const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
-        if (lastAssistant) {
-          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
-            status: "complete",
-            endedAt: Date.now(),
-          });
-        }
-        const lastTool = lastToolEventIdRef.current[variantIndex];
-        if (lastTool) {
-          finishAgentEvent(commit.hash, variantIndex, lastTool, {
-            status: "complete",
-            endedAt: Date.now(),
-          });
-          delete lastToolEventIdRef.current[variantIndex];
-        }
+        finishThinkingEvent(variantIndex, "complete");
+        finishAssistantEvent(variantIndex, "complete");
+        finishToolEvent(variantIndex, "complete");
       },
       onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);
         updateVariantStatus(commit.hash, variantIndex, "error", error);
-        const lastThinking = lastThinkingEventIdRef.current[variantIndex];
-        if (lastThinking) {
-          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
-            status: "error",
-            endedAt: Date.now(),
-          });
-        }
-        const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
-        if (lastAssistant) {
-          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
-            status: "error",
-            endedAt: Date.now(),
-          });
-        }
-        const lastTool = lastToolEventIdRef.current[variantIndex];
-        if (lastTool) {
-          finishAgentEvent(commit.hash, variantIndex, lastTool, {
-            status: "error",
-            endedAt: Date.now(),
-          });
-          delete lastToolEventIdRef.current[variantIndex];
-        }
+        finishThinkingEvent(variantIndex, "error");
+        finishAssistantEvent(variantIndex, "error");
+        finishToolEvent(variantIndex, "error");
       },
       onVariantCount: (count) => {
         console.log(`Backend is using ${count} variants`);
@@ -352,17 +344,11 @@ function App() {
         if (!eventId) return;
         const lastThinking = lastThinkingEventIdRef.current[variantIndex];
         if (lastThinking && lastThinking !== eventId) {
-          finishAgentEvent(commit.hash, variantIndex, lastThinking, {
-            status: "complete",
-            endedAt: Date.now(),
-          });
+          finishThinkingEvent(variantIndex, "complete");
         }
         const lastAssistant = lastAssistantEventIdRef.current[variantIndex];
         if (lastAssistant && lastAssistant !== eventId) {
-          finishAgentEvent(commit.hash, variantIndex, lastAssistant, {
-            status: "complete",
-            endedAt: Date.now(),
-          });
+          finishAssistantEvent(variantIndex, "complete");
         }
         startAgentEvent(commit.hash, variantIndex, {
           id: eventId,
@@ -389,29 +375,14 @@ function App() {
         cancelCodeGenerationAndReset(commit);
       },
       onComplete: () => {
-        const lastThinking = lastThinkingEventIdRef.current;
-        const lastAssistant = lastAssistantEventIdRef.current;
-        const lastTool = lastToolEventIdRef.current;
-        Object.keys(lastThinking).forEach((key) => {
-          const idx = Number(key);
-          finishAgentEvent(commit.hash, idx, lastThinking[idx], {
-            status: "complete",
-            endedAt: Date.now(),
-          });
+        Object.keys(lastThinkingEventIdRef.current).forEach((key) => {
+          finishThinkingEvent(Number(key), "complete");
         });
-        Object.keys(lastAssistant).forEach((key) => {
-          const idx = Number(key);
-          finishAgentEvent(commit.hash, idx, lastAssistant[idx], {
-            status: "complete",
-            endedAt: Date.now(),
-          });
+        Object.keys(lastAssistantEventIdRef.current).forEach((key) => {
+          finishAssistantEvent(Number(key), "complete");
         });
-        Object.keys(lastTool).forEach((key) => {
-          const idx = Number(key);
-          finishAgentEvent(commit.hash, idx, lastTool[idx], {
-            status: "complete",
-            endedAt: Date.now(),
-          });
+        Object.keys(lastToolEventIdRef.current).forEach((key) => {
+          finishToolEvent(Number(key), "complete");
         });
         setAppState(AppState.CODE_READY);
       },
