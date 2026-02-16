@@ -2,7 +2,7 @@ from openai.types.chat import ChatCompletionContentPartParam, ChatCompletionMess
 
 from prompts.prompt_types import Stack
 from prompts import system_prompt
-from prompts.policies import build_user_image_policy
+from prompts.policies import build_selected_stack_policy, build_user_image_policy
 
 def build_image_prompt_messages(
     image_data_urls: list[str],
@@ -11,10 +11,11 @@ def build_image_prompt_messages(
     image_generation_enabled: bool,
 ) -> list[ChatCompletionMessageParam]:
     image_policy = build_user_image_policy(image_generation_enabled)
+    selected_stack = build_selected_stack_policy(stack)
     user_prompt = f"""
 Generate code for a web page that looks exactly like the provided screenshot(s).
 
-Selected stack: {stack}
+{selected_stack}
 
 ## Replication instructions
 

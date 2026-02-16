@@ -1,3 +1,10 @@
+from prompts.prompt_types import Stack
+
+
+def build_selected_stack_policy(stack: Stack) -> str:
+    return f"Selected stack: {stack}."
+
+
 def build_user_image_policy(image_generation_enabled: bool) -> str:
     if image_generation_enabled:
         return (

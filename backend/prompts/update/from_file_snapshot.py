@@ -3,7 +3,7 @@ from typing import cast
 from openai.types.chat import ChatCompletionMessageParam
 
 from prompts import system_prompt
-from prompts.policies import build_user_image_policy
+from prompts.policies import build_selected_stack_policy, build_user_image_policy
 from prompts.prompt_types import Stack, UserTurnInput
 from prompts.message_builder import Prompt, build_history_message
 
@@ -16,8 +16,9 @@ def build_update_prompt_from_file_snapshot(
 ) -> Prompt:
     path = file_state.get("path", "index.html")
     request_text = prompt.get("text", "").strip() or "Apply the requested update."
+    selected_stack = build_selected_stack_policy(stack)
     image_policy = build_user_image_policy(image_generation_enabled)
-    bootstrap_text = f"""Selected stack: {stack}.
+    bootstrap_text = f"""{selected_stack}
 
 {image_policy}
 

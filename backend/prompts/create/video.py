@@ -1,7 +1,7 @@
 from openai.types.chat import ChatCompletionContentPartParam, ChatCompletionMessageParam
 from prompts.prompt_types import Stack
 from prompts import system_prompt
-from prompts.policies import build_user_image_policy
+from prompts.policies import build_selected_stack_policy, build_user_image_policy
 
 
 def build_video_prompt_messages(
@@ -11,6 +11,7 @@ def build_video_prompt_messages(
     image_generation_enabled: bool,
 ) -> list[ChatCompletionMessageParam]:
     image_policy = build_user_image_policy(image_generation_enabled)
+    selected_stack = build_selected_stack_policy(stack)
     user_text = f"""
     You have been given a video of a user interacting with a web app. You need to re-create the same app exactly such that the same user interactions will produce the same results in the app you build.
 
@@ -25,7 +26,7 @@ def build_video_prompt_messages(
 
     Analyze this video and generate the code.
     
-    Selected stack: {stack}.
+    {selected_stack}
     """
     if text_prompt.strip():
         user_text = user_text + "\n\nAdditional instructions: " + text_prompt

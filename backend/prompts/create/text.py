@@ -2,7 +2,7 @@ from openai.types.chat import ChatCompletionMessageParam
 
 from prompts.prompt_types import Stack
 from prompts import system_prompt
-from prompts.policies import build_user_image_policy
+from prompts.policies import build_selected_stack_policy, build_user_image_policy
 
 
 def build_text_prompt_messages(
@@ -11,10 +11,11 @@ def build_text_prompt_messages(
     image_generation_enabled: bool,
 ) -> list[ChatCompletionMessageParam]:
     image_policy = build_user_image_policy(image_generation_enabled)
+    selected_stack = build_selected_stack_policy(stack)
 
     USER_PROMPT = f"""
 Generate UI for {text_prompt}.
-Selected stack: {stack}.
+{selected_stack}
 
 # Instructions
 
