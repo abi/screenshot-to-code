@@ -29,6 +29,8 @@ export type VariantHistoryMessage = {
 export type Variant = {
   code: string;
   history: VariantHistoryMessage[];
+  requestStartedAt?: number;
+  completedAt?: number;
   status?: VariantStatus;
   errorMessage?: string;
   thinking?: string;

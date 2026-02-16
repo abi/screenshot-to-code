@@ -92,9 +92,11 @@ function Sidebar({
   const selectedVariantEvents = selectedVariant?.agentEvents ?? [];
   const showWorkingIndicator =
     appState === AppState.CODING && selectedVariantEvents.length === 0;
-  const requestStartMs = currentCommit?.dateCreated
-    ? new Date(currentCommit.dateCreated).getTime()
-    : undefined;
+  const requestStartMs =
+    selectedVariant?.requestStartedAt ??
+    (currentCommit?.dateCreated
+      ? new Date(currentCommit.dateCreated).getTime()
+      : undefined);
   const elapsedSeconds = requestStartMs
     ? Math.max(1, Math.round((nowMs - requestStartMs) / 1000))
     : undefined;

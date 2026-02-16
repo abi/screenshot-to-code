@@ -108,12 +108,15 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   latestCommitHash: null,
 
   addCommit: (commit: Commit) => {
+    const requestStartedAt = new Date(commit.dateCreated).getTime();
     // Initialize variant statuses as 'generating' and start thinking timer
     const commitsWithStatus = {
       ...commit,
       variants: commit.variants.map((variant) => ({
         ...variant,
         history: variant.history || [],
+        requestStartedAt:
+          variant.requestStartedAt ?? requestStartedAt,
         status: variant.status || ("generating" as VariantStatus),
         thinkingStartTime: Date.now(),
         agentEvents: [],
@@ -281,7 +284,15 @@ export const useProjectStore = create<ProjectStore>((set) => ({
             ...commit,
             variants: commit.variants.map((variant, index) =>
               index === numVariant 
-                ? { ...variant, status, errorMessage: status === 'error' ? errorMessage : undefined } 
+                ? {
+                    ...variant,
+                    status,
+                    completedAt:
+                      status === "generating"
+                        ? undefined
+                        : variant.completedAt ?? Date.now(),
+                    errorMessage: status === "error" ? errorMessage : undefined,
+                  }
                 : variant
             ),
           },
@@ -295,6 +306,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
 
       // Resize variants array to match backend count
       const currentVariants = commit.variants;
+      const requestStartedAt = new Date(commit.dateCreated).getTime();
       const seedHistory = currentVariants[0]?.history || [];
       const newVariants = Array(count).fill(null).map((_, index) => 
         currentVariants[index] || {
@@ -304,6 +316,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
             imageAssetIds: [...message.imageAssetIds],
             videoAssetIds: [...message.videoAssetIds],
           })),
+          requestStartedAt,
           status: "generating" as VariantStatus,
           agentEvents: [],
         }

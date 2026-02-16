@@ -69,21 +69,19 @@ function formatDuration(startedAt?: number, endedAt?: number): string {
   return formatDurationMs(endedAt - startedAt);
 }
 
-function formatTotalDuration(events: AgentEvent[]): string {
-  if (events.length === 0) return "";
-  const now = Date.now();
-  const totalMs = events.reduce((acc, event) => {
-    if (!isFiniteNumber(event.startedAt)) return acc;
-    const end = isFiniteNumber(event.endedAt) ? event.endedAt : now;
-    const duration = Math.max(0, end - event.startedAt);
-    return acc + duration;
-  }, 0);
-  return totalMs > 0 ? formatDurationMs(totalMs) : "";
-}
-
 function formatElapsedSince(timestampMs: number | undefined, nowMs: number): string {
   if (!isFiniteNumber(timestampMs)) return "";
   return formatDurationMs(Math.max(0, nowMs - timestampMs));
+}
+
+function formatVariantWallClockDuration(
+  requestStartedAt: number | undefined,
+  completedAt: number | undefined,
+  nowMs: number
+): string {
+  if (!isFiniteNumber(requestStartedAt)) return "";
+  const end = isFiniteNumber(completedAt) ? completedAt : nowMs;
+  return formatDurationMs(Math.max(0, end - requestStartedAt));
 }
 
 
@@ -443,11 +441,11 @@ function AgentActivity() {
   const lastAssistantId = [...events]
     .reverse()
     .find((event) => event.type === "assistant")?.id;
-  const totalDuration = formatTotalDuration(events);
-  const requestStartMs = currentCommit?.dateCreated
-    ? new Date(currentCommit.dateCreated).getTime()
-    : undefined;
-  const runningDuration = formatElapsedSince(requestStartMs, nowMs);
+  const requestStartMs =
+    selectedVariant?.requestStartedAt ??
+    (currentCommit?.dateCreated
+      ? new Date(currentCommit.dateCreated).getTime()
+      : undefined);
 
   const isLatestCommit = head === latestCommitHash;
   if (!isLatestCommit || events.length === 0) {
@@ -458,6 +456,12 @@ function AgentActivity() {
     selectedVariantStatus === "complete" ||
     selectedVariantStatus === "error" ||
     selectedVariantStatus === "cancelled";
+  const runningDuration = formatElapsedSince(requestStartMs, nowMs);
+  const variantDuration = formatVariantWallClockDuration(
+    requestStartMs,
+    selectedVariant?.completedAt,
+    nowMs
+  );
   const stepsExpanded = variantUiKey
     ? Boolean(stepsExpandedByVariant[variantUiKey])
     : false;
@@ -484,7 +488,7 @@ function AgentActivity() {
               <BsChevronRight className="text-gray-400 text-xs" />
             )}
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              Worked through {stepEvents.length} step{stepEvents.length !== 1 ? "s" : ""}{totalDuration ? ` in ${totalDuration}` : ""}
+              Worked through {stepEvents.length} step{stepEvents.length !== 1 ? "s" : ""}{variantDuration ? ` in ${variantDuration}` : ""}
             </span>
           </button>
           {stepsExpanded && (
