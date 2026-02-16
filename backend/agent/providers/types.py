@@ -1,36 +1,17 @@
-from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, List, Literal, Optional
+from agent.providers.base import (
+    EventSink,
+    ExecutedToolCall,
+    ProviderTurn,
+    StreamEvent,
+)
 
-from agent.tools import ToolCall, ToolExecutionResult
+# Backwards-compatible alias for older imports.
+StepResult = ProviderTurn
 
-
-StreamEventType = Literal[
-    "assistant_delta",
-    "thinking_delta",
-    "tool_call_delta",
+__all__ = [
+    "EventSink",
+    "ExecutedToolCall",
+    "ProviderTurn",
+    "StepResult",
+    "StreamEvent",
 ]
-
-
-@dataclass
-class StreamEvent:
-    type: StreamEventType
-    text: str = ""
-    tool_call_id: Optional[str] = None
-    tool_name: Optional[str] = None
-    tool_arguments: Any = None
-
-
-@dataclass
-class StepResult:
-    assistant_text: str
-    tool_calls: List[ToolCall]
-    provider_state: Any = None
-
-
-@dataclass
-class ExecutedToolCall:
-    tool_call: ToolCall
-    result: ToolExecutionResult
-
-
-EventSink = Callable[[StreamEvent], Awaitable[None]]

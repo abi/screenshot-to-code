@@ -1,6 +1,6 @@
 import pytest
 
-from agent.providers.openai.parser import OpenAIResponsesParseState, parse_event
+from agent.providers.openai import OpenAIResponsesParseState, parse_event
 from agent.providers.types import StreamEvent
 
 
