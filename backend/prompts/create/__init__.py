@@ -10,6 +10,7 @@ def build_create_prompt_from_input(
     input_mode: InputMode,
     stack: Stack,
     prompt: UserTurnInput,
+    image_generation_enabled: bool,
 ) -> Prompt:
     if input_mode == "image":
         image_urls = prompt.get("images", [])
@@ -18,11 +19,13 @@ def build_create_prompt_from_input(
             image_data_urls=image_urls,
             stack=stack,
             text_prompt=text_prompt,
+            image_generation_enabled=image_generation_enabled,
         )
     if input_mode == "text":
         return build_text_prompt_messages(
             text_prompt=prompt["text"],
             stack=stack,
+            image_generation_enabled=image_generation_enabled,
         )
     if input_mode == "video":
         video_urls = prompt.get("videos", [])
@@ -33,6 +36,7 @@ def build_create_prompt_from_input(
             video_data_url=video_url,
             stack=stack,
             text_prompt=prompt.get("text", ""),
+            image_generation_enabled=image_generation_enabled,
         )
     raise ValueError(f"Unsupported input mode: {input_mode}")
 

@@ -17,6 +17,7 @@ async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> s
         image_data_urls=[image_url],
         stack=stack,
         text_prompt="",
+        image_generation_enabled=True,
     )
     async def send_message(
         _: str,

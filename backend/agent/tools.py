@@ -230,8 +230,10 @@ def _retrieve_option_schema() -> Dict[str, Any]:
     }
 
 
-def canonical_tool_definitions() -> List[CanonicalToolDefinition]:
-    return [
+def canonical_tool_definitions(
+    image_generation_enabled: bool = True,
+) -> List[CanonicalToolDefinition]:
+    tools: List[CanonicalToolDefinition] = [
         CanonicalToolDefinition(
             name="create_file",
             description=(
@@ -248,31 +250,39 @@ def canonical_tool_definitions() -> List[CanonicalToolDefinition]:
             ),
             parameters=_edit_schema(),
         ),
-        CanonicalToolDefinition(
-            name="generate_images",
-            description=(
-                "Generate image URLs from prompts. Use to replace placeholder images. "
-                "You can pass multiple prompts at once."
-            ),
-            parameters=_image_schema(),
-        ),
-        CanonicalToolDefinition(
-            name="remove_background",
-            description=(
-                "Remove the background from an image. Returns a URL to the processed "
-                "image with transparent background."
-            ),
-            parameters=_remove_background_schema(),
-        ),
-        CanonicalToolDefinition(
-            name="retrieve_option",
-            description=(
-                "Retrieve the full HTML for a specific option (variant) so you can "
-                "reference it."
-            ),
-            parameters=_retrieve_option_schema(),
-        ),
     ]
+    if image_generation_enabled:
+        tools.append(
+            CanonicalToolDefinition(
+                name="generate_images",
+                description=(
+                    "Generate image URLs from prompts. Use to replace placeholder images. "
+                    "You can pass multiple prompts at once."
+                ),
+                parameters=_image_schema(),
+            )
+        )
+    tools.extend(
+        [
+            CanonicalToolDefinition(
+                name="remove_background",
+                description=(
+                    "Remove the background from an image. Returns a URL to the processed "
+                    "image with transparent background."
+                ),
+                parameters=_remove_background_schema(),
+            ),
+            CanonicalToolDefinition(
+                name="retrieve_option",
+                description=(
+                    "Retrieve the full HTML for a specific option (variant) so you can "
+                    "reference it."
+                ),
+                parameters=_retrieve_option_schema(),
+            ),
+        ]
+    )
+    return tools
 
 
 def _copy_schema(schema: Dict[str, Any]) -> Dict[str, Any]:

@@ -3,6 +3,7 @@ from typing import cast
 from openai.types.chat import ChatCompletionMessageParam
 
 from prompts import system_prompt
+from prompts.policies import build_user_image_policy
 from prompts.prompt_types import PromptHistoryMessage, Stack
 from prompts.message_builder import Prompt, build_history_message
 
@@ -10,6 +11,7 @@ from prompts.message_builder import Prompt, build_history_message
 def build_update_prompt_from_history(
     stack: Stack,
     history: list[PromptHistoryMessage],
+    image_generation_enabled: bool,
 ) -> Prompt:
     first_user_index = next(
         (index for index, item in enumerate(history) if item["role"] == "user"),
@@ -27,9 +29,12 @@ def build_update_prompt_from_history(
             },
         )
     ]
+    image_policy = build_user_image_policy(image_generation_enabled)
     for index, item in enumerate(history):
         if index == first_user_index:
-            stack_prefix = f"Selected stack: {stack}."
+            stack_prefix = f"""Selected stack: {stack}.
+
+{image_policy}"""
             user_text = item.get("text", "")
             prefixed_text = (
                 f"{stack_prefix}\n\n{user_text}" if user_text.strip() else stack_prefix

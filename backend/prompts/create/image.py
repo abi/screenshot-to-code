@@ -2,12 +2,15 @@ from openai.types.chat import ChatCompletionContentPartParam, ChatCompletionMess
 
 from prompts.prompt_types import Stack
 from prompts import system_prompt
+from prompts.policies import build_user_image_policy
 
 def build_image_prompt_messages(
     image_data_urls: list[str],
     stack: Stack,
     text_prompt: str,
+    image_generation_enabled: bool,
 ) -> list[ChatCompletionMessageParam]:
+    image_policy = build_user_image_policy(image_generation_enabled)
     user_prompt = f"""
 Generate code for a web page that looks exactly like the provided screenshot(s).
 
@@ -20,7 +23,7 @@ Selected stack: {stack}
 padding, margin, border, etc. Match the colors and sizes exactly.
 - Use the exact text from the screenshot.
 - Repeat elements as needed to match the screenshot. For example, if there are 15 items, the code should have 15 items. DO NOT LEAVE comments like "<!-- Repeat for each news item -->" or bad things will happen.
-- For images, generate images using the generate_images tool.
+- {image_policy}
 
 ## Multiple screenshots
 

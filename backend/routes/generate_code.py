@@ -466,6 +466,7 @@ class PromptCreationStage:
                 prompt=extracted_params.prompt,
                 history=extracted_params.history,
                 file_state=extracted_params.file_state,
+                image_generation_enabled=extracted_params.should_generate_images,
             )
             print_prompt_preview(prompt_messages)
 

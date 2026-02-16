@@ -59,6 +59,7 @@ class Agent:
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
+        self.should_generate_images = should_generate_images
 
         self.file_state = AgentFileState()
         if initial_file_state and initial_file_state.get("content"):
@@ -262,7 +263,9 @@ class Agent:
             raise Exception("OpenAI API key is missing.")
 
         client = AsyncOpenAI(api_key=self.openai_api_key, base_url=self.openai_base_url)
-        canonical_tools = canonical_tool_definitions()
+        canonical_tools = canonical_tool_definitions(
+            image_generation_enabled=self.should_generate_images
+        )
 
         try:
             tools = serialize_openai_responses_tools(canonical_tools)
@@ -285,7 +288,9 @@ class Agent:
             raise Exception("Anthropic API key is missing.")
 
         client = AsyncAnthropic(api_key=self.anthropic_api_key)
-        canonical_tools = canonical_tool_definitions()
+        canonical_tools = canonical_tool_definitions(
+            image_generation_enabled=self.should_generate_images
+        )
         tools = serialize_anthropic_tools(canonical_tools)
 
         try:
@@ -308,7 +313,9 @@ class Agent:
             raise Exception("Gemini API key is missing.")
 
         client = genai.Client(api_key=self.gemini_api_key)
-        canonical_tools = canonical_tool_definitions()
+        canonical_tools = canonical_tool_definitions(
+            image_generation_enabled=self.should_generate_images
+        )
         tools = serialize_gemini_tools(canonical_tools)
         adapter: ProviderAdapter = GeminiAdapter(
             client=client,

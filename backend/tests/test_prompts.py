@@ -82,6 +82,10 @@ class TestCreatePrompt:
     RESULT_IMAGE_URL: str = "data:image/png;base64,result_image_data"
     MOCK_SYSTEM_PROMPT: str = "Mock HTML Tailwind system prompt"
     TEST_STACK: Stack = "html_tailwind"
+    ENABLED_IMAGE_POLICY: str = (
+        "Image generation is enabled for this request. Use generate_images for "
+        "missing assets when needed."
+    )
 
     def test_plan_create_uses_create_from_input(self) -> None:
         plan = derive_prompt_construction_plan(
@@ -122,7 +126,10 @@ class TestCreatePrompt:
             "generationType": "create",
         }
 
-        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -159,6 +166,42 @@ class TestCreatePrompt:
             actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
+    @pytest.mark.asyncio
+    async def test_image_mode_create_with_image_generation_disabled(self) -> None:
+        params: Dict[str, Any] = {
+            "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
+            "generationType": "create",
+        }
+
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", new=self.MOCK_SYSTEM_PROMPT):
+            messages = await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type=params["generationType"],
+                prompt=params["prompt"],
+                history=[],
+                image_generation_enabled=False,
+            )
+
+        system_content = messages[0].get("content")
+        assert isinstance(system_content, str)
+        assert system_content == self.MOCK_SYSTEM_PROMPT
+
+        user_content = messages[1].get("content")
+        assert isinstance(user_content, list)
+        text_part = next(
+            (
+                part
+                for part in user_content
+                if isinstance(part, dict) and part.get("type") == "text"
+            ),
+            None,
+        )
+        assert isinstance(text_part, dict)
+        user_text = text_part.get("text")
+        assert isinstance(user_text, str)
+        assert "Image generation is disabled for this request. Do not call generate_images." in user_text
+
 
     @pytest.mark.asyncio
     async def test_image_mode_update_with_history(self) -> None:
@@ -175,7 +218,10 @@ class TestCreatePrompt:
             ],
         }
 
-        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -195,7 +241,11 @@ class TestCreatePrompt:
                     {"role": "assistant", "content": "<html>Initial code</html>"},
                     {
                         "role": "user",
-                        "content": f"Selected stack: {self.TEST_STACK}.\n\nMake the background blue",
+                        "content": (
+                            f"Selected stack: {self.TEST_STACK}.\n\n"
+                            f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                            "Make the background blue"
+                        ),
                     },
                     {"role": "assistant", "content": "<html>Updated code</html>"},
                     {"role": "user", "content": "Add a header"},
@@ -205,6 +255,32 @@ class TestCreatePrompt:
             # Assert the structure matches
             actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
+
+    @pytest.mark.asyncio
+    async def test_update_history_with_image_generation_disabled(self) -> None:
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", new=self.MOCK_SYSTEM_PROMPT):
+            messages = await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type="update",
+                prompt={"text": "", "images": [self.TEST_IMAGE_URL], "videos": []},
+                history=[
+                    {"role": "assistant", "text": "<html>Initial code</html>", "images": [], "videos": []},
+                    {"role": "user", "text": "Make the background blue", "images": [], "videos": []},
+                    {"role": "assistant", "text": "<html>Updated code</html>", "images": [], "videos": []},
+                ],
+                image_generation_enabled=False,
+            )
+
+        system_content = messages[0].get("content")
+        assert isinstance(system_content, str)
+        assert system_content == self.MOCK_SYSTEM_PROMPT
+
+        first_user_content = messages[2].get("content")
+        assert isinstance(first_user_content, str)
+        assert "Selected stack: html_tailwind." in first_user_content
+        assert "Image generation is disabled for this request. Do not call generate_images." in first_user_content
+        assert "Make the background blue" in first_user_content
 
     @pytest.mark.asyncio
     async def test_text_mode_create_generation(self) -> None:
@@ -218,7 +294,10 @@ class TestCreatePrompt:
             },
             "generationType": "create"
         }
-        with patch('prompts.system_prompt.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -264,7 +343,10 @@ class TestCreatePrompt:
                 {"role": "user", "text": "Now add a navigation menu", "images": [], "videos": []},
             ]
         }
-        with patch('prompts.system_prompt.SYSTEM_PROMPT', self.MOCK_SYSTEM_PROMPT):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -287,7 +369,11 @@ class TestCreatePrompt:
                     },
                     {
                         "role": "user",
-                        "content": f"Selected stack: {self.TEST_STACK}.\n\nAdd a sidebar",
+                        "content": (
+                            f"Selected stack: {self.TEST_STACK}.\n\n"
+                            f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                            "Add a sidebar"
+                        ),
                     },
                     {
                         "role": "assistant",
@@ -390,7 +476,10 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -420,7 +509,11 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": f"Selected stack: {self.TEST_STACK}.\n\nAdd a button",
+                                "text": (
+                                    f"Selected stack: {self.TEST_STACK}.\n\n"
+                                    f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                                    "Add a button"
+                                ),
                             },
                         ],
                     },
@@ -448,7 +541,10 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -485,7 +581,11 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": f"Selected stack: {self.TEST_STACK}.\n\nStyle like these examples",
+                                "text": (
+                                    f"Selected stack: {self.TEST_STACK}.\n\n"
+                                    f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                                    "Style like these examples"
+                                ),
                             },
                         ],
                     },
@@ -511,7 +611,10 @@ class TestCreatePrompt:
             ]
         }
 
-        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
@@ -531,7 +634,11 @@ class TestCreatePrompt:
                     {"role": "assistant", "content": "<html>Initial code</html>"},
                     {
                         "role": "user",
-                        "content": f"Selected stack: {self.TEST_STACK}.\n\nMake it blue",
+                        "content": (
+                            f"Selected stack: {self.TEST_STACK}.\n\n"
+                            f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                            "Make it blue"
+                        ),
                     },  # Text-only message
                     {"role": "assistant", "content": "<html>Blue code</html>"},
                 ],
@@ -555,7 +662,10 @@ class TestCreatePrompt:
             },
         }
 
-        with patch("prompts.system_prompt.SYSTEM_PROMPT", self.MOCK_SYSTEM_PROMPT):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
