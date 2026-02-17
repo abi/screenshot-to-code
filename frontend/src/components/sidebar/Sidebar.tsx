@@ -107,7 +107,7 @@ function Sidebar({
     [updateImages, setUpdateImages]
   );
 
-  const { head, commits } = useProjectStore();
+  const { head, commits, latestCommitHash } = useProjectStore();
 
   const currentCommit = head ? commits[head] : null;
   const latestChangeSummary = summarizeLatestChange(currentCommit);
@@ -268,7 +268,7 @@ function Sidebar({
         <AgentActivity />
 
         {/* Regenerate button for first generation */}
-        {isFirstGeneration && (appState === AppState.CODE_READY || isSelectedVariantComplete) && !isSelectedVariantError && (
+        {isFirstGeneration && head === latestCommitHash && (appState === AppState.CODE_READY || isSelectedVariantComplete) && !isSelectedVariantError && (
           <div className="flex justify-end mb-3">
             <button
               onClick={regenerate}
