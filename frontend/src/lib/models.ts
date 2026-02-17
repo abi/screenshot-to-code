@@ -1,11 +1,11 @@
 // Keep in sync with backend (llm.py)
 // Order here matches dropdown order
 export enum CodeGenerationModel {
+  CLAUDE_OPUS_4_6 = "claude-opus-4-6",
+  CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101",
+  CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929",
   GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
   GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)",
-  CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101",
-  CLAUDE_OPUS_4_6 = "claude-opus-4-6",
-  CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
   GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
   GEMINI_3_PRO_PREVIEW_HIGH = "gemini-3-pro-preview (high thinking)",

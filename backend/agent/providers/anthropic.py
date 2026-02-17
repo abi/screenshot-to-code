@@ -30,6 +30,9 @@ THINKING_MODELS = {
     Llm.CLAUDE_4_5_SONNET_2025_09_29.value,
     Llm.CLAUDE_4_5_OPUS_2025_11_01.value,
 }
+ADAPTIVE_THINKING_MODELS = {
+    Llm.CLAUDE_OPUS_4_6.value,
+}
 
 
 def _process_image(image_data_url: str) -> tuple[str, str]:
@@ -244,7 +247,12 @@ class AnthropicProviderSession(ProviderSession):
             "tools": self._tools,
         }
 
-        if self._model.value in THINKING_MODELS:
+        if self._model.value in ADAPTIVE_THINKING_MODELS:
+            stream_kwargs["thinking"] = {
+                "type": "adaptive",
+            }
+            stream_kwargs["output_config"] = {"effort": "max"}
+        elif self._model.value in THINKING_MODELS:
             stream_kwargs["thinking"] = {
                 "type": "enabled",
                 "budget_tokens": 10000,
