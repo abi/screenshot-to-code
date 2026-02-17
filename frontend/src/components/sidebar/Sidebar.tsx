@@ -253,7 +253,7 @@ function Sidebar({
       {(appState === AppState.CODE_READY || isSelectedVariantComplete) &&
         !isSelectedVariantError && (
           <div
-            className="shrink-0 bg-white dark:bg-zinc-950 px-4 py-2"
+            className="shrink-0 border-t border-gray-200 bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 px-4 py-4"
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
@@ -278,7 +278,7 @@ function Sidebar({
                 </button>
               </div>
             )}
-            <div className="relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:ring-white/5">
+            <div className="relative w-full overflow-hidden rounded-2xl border-2 border-violet-300 bg-white shadow-lg shadow-violet-100/60 transition-all focus-within:border-violet-500 focus-within:shadow-xl focus-within:shadow-violet-200/60 dark:border-violet-500/50 dark:bg-zinc-900 dark:shadow-violet-900/20 dark:focus-within:border-violet-400">
               <UpdateImagePreview
                 updateImages={updateImages}
                 setUpdateImages={setUpdateImages}
