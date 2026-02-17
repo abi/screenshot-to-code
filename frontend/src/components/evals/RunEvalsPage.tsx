@@ -25,6 +25,10 @@ interface EvalProgressEvent {
   success?: boolean;
   error?: string;
   output_files?: string[];
+  diff_mode?: boolean;
+  total_skipped_existing?: number;
+  model_tasks?: number;
+  model_skipped_existing?: number;
 }
 
 interface FailedTask {
@@ -39,6 +43,7 @@ function RunEvalsPage() {
   const [stacks, setStacks] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedStack, setSelectedStack] = useState<string>("html_tailwind");
+  const [diffMode, setDiffMode] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [showPaths, setShowPaths] = useState<boolean>(false);
   const [completedTasks, setCompletedTasks] = useState(0);
@@ -48,6 +53,7 @@ function RunEvalsPage() {
   const [lastProcessedFile, setLastProcessedFile] = useState<string>("");
   const [failedTasks, setFailedTasks] = useState(0);
   const [failedTaskDetails, setFailedTaskDetails] = useState<FailedTask[]>([]);
+  const [skippedExistingTasks, setSkippedExistingTasks] = useState(0);
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -85,6 +91,7 @@ function RunEvalsPage() {
       setLastProcessedFile("");
       setFailedTasks(0);
       setFailedTaskDetails([]);
+      setSkippedExistingTasks(0);
 
       const runFiles = filesToRun ?? selectedFiles;
 
@@ -97,6 +104,7 @@ function RunEvalsPage() {
           models: selectedModels,
           stack: selectedStack,
           files: runFiles,
+          diff_mode: diffMode,
         }),
       });
 
@@ -132,12 +140,21 @@ function RunEvalsPage() {
           if (event.type === "start") {
             const eventTotalTasks = event.total_tasks ?? 0;
             setTotalTasks(eventTotalTasks);
-            setStatusMessage("Starting evaluation run...");
+            setSkippedExistingTasks(event.total_skipped_existing ?? 0);
+            setStatusMessage(
+              event.diff_mode
+                ? `Starting diff run (${event.total_skipped_existing ?? 0} existing outputs skipped)...`
+                : "Starting evaluation run..."
+            );
             updateRunningTitle(0, eventTotalTasks);
           } else if (event.type === "model_start") {
             if (event.model) setCurrentModel(event.model);
             setStatusMessage(
-              `Running model ${event.model_index ?? 1}/${event.total_models ?? selectedModels.length}: ${event.model ?? "Unknown"}`
+              `Running model ${event.model_index ?? 1}/${event.total_models ?? selectedModels.length}: ${event.model ?? "Unknown"}${
+                diffMode && (event.model_skipped_existing ?? 0) > 0
+                  ? ` (${event.model_skipped_existing} skipped)`
+                  : ""
+              }`
             );
           } else if (event.type === "task_complete") {
             const globalCompleted = event.global_completed_tasks ?? 0;
@@ -242,6 +259,12 @@ function RunEvalsPage() {
                 {isRunning ? "Running..." : "Run Evals"}
               </Button>
             </div>
+
+            {diffMode && (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                Diff mode enabled: only input files missing outputs in today's model folders will run. Existing outputs are skipped and never overwritten.
+              </div>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-gray-100 pt-3">
               <div className="flex flex-col">
@@ -307,6 +330,12 @@ function RunEvalsPage() {
                     <span className="font-mono">{lastProcessedFile || "-"}</span>
                   </span>
                 </div>
+                {diffMode && (
+                  <div className="mt-2 text-xs text-emerald-700">
+                    Existing outputs skipped:{" "}
+                    <span className="font-medium">{skippedExistingTasks}</span>
+                  </div>
+                )}
                 {failedTaskDetails.length > 0 && (
                   <div className="mt-3 border-t border-gray-100 pt-3">
                     <div className="flex items-center justify-between mb-2">
@@ -424,6 +453,15 @@ function RunEvalsPage() {
                   </option>
                 ))}
               </select>
+              <label className="mt-3 flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={diffMode}
+                  onChange={(e) => setDiffMode(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span>Diff mode (only run missing outputs, no overwrite)</span>
+              </label>
             </div>
           </div>
 

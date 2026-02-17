@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from evals.utils import image_to_data_url
 from evals.config import EVALS_DIR
 from typing import Set
-from evals.runner import run_image_evals
+from evals.runner import run_image_evals, count_pending_eval_tasks
 from typing import List, Dict
 from llm import Llm
 from prompts.prompt_types import Stack
@@ -180,6 +180,7 @@ class RunEvalsRequest(BaseModel):
     models: List[str]
     stack: Stack
     files: List[str] = []  # Optional list of specific file paths to run evals on
+    diff_mode: bool = False
 
 
 @router.post("/run_evals", response_model=List[str])
@@ -189,7 +190,10 @@ async def run_evals(request: RunEvalsRequest) -> List[str]:
 
     for model in request.models:
         output_files = await run_image_evals(
-            model=model, stack=request.stack, input_files=request.files
+            model=model,
+            stack=request.stack,
+            input_files=request.files,
+            diff_mode=request.diff_mode,
         )
         all_output_files.extend(output_files)
 
@@ -210,8 +214,27 @@ async def run_evals_stream(request: RunEvalsRequest):
     if not request.models:
         raise HTTPException(status_code=400, detail="At least one model is required")
 
-    per_model_task_count = _count_eval_files(request.files)
-    total_tasks = per_model_task_count * len(request.models)
+    per_model_task_counts: Dict[str, int] = {}
+    per_model_skipped_existing: Dict[str, int] = {}
+    if request.diff_mode:
+        for model in request.models:
+            pending_tasks, skipped_tasks = count_pending_eval_tasks(
+                stack=request.stack,
+                model=model,
+                input_files=request.files,
+                n=N,
+                diff_mode=True,
+            )
+            per_model_task_counts[model] = pending_tasks
+            per_model_skipped_existing[model] = skipped_tasks
+    else:
+        per_model_task_count = _count_eval_files(request.files)
+        for model in request.models:
+            per_model_task_counts[model] = per_model_task_count
+            per_model_skipped_existing[model] = 0
+
+    total_tasks = sum(per_model_task_counts.values())
+    total_skipped_existing = sum(per_model_skipped_existing.values())
 
     async def event_generator():
         queue: asyncio.Queue[dict] = asyncio.Queue()
@@ -228,19 +251,25 @@ async def run_evals_stream(request: RunEvalsRequest):
                     {
                         "type": "start",
                         "total_models": len(request.models),
-                        "tasks_per_model": per_model_task_count,
+                        "tasks_per_model": per_model_task_counts,
                         "total_tasks": total_tasks,
                         "completed_tasks": 0,
+                        "diff_mode": request.diff_mode,
+                        "total_skipped_existing": total_skipped_existing,
                     }
                 )
 
                 for model_index, model in enumerate(request.models, start=1):
+                    model_task_count = per_model_task_counts.get(model, 0)
+                    model_skipped_existing = per_model_skipped_existing.get(model, 0)
                     await emit(
                         {
                             "type": "model_start",
                             "model": model,
                             "model_index": model_index,
                             "total_models": len(request.models),
+                            "model_tasks": model_task_count,
+                            "model_skipped_existing": model_skipped_existing,
                         }
                     )
 
@@ -261,10 +290,11 @@ async def run_evals_stream(request: RunEvalsRequest):
                         model=model,
                         stack=request.stack,
                         input_files=request.files,
+                        diff_mode=request.diff_mode,
                         progress_callback=on_progress,
                     )
                     all_output_files.extend(output_files)
-                    completed_offset += per_model_task_count
+                    completed_offset += model_task_count
 
                 await emit(
                     {

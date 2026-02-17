@@ -12,6 +12,49 @@ from .config import EVALS_DIR
 
 MAX_EVAL_RETRIES = 2
 
+
+def _resolve_eval_filenames(input_files: Optional[List[str]]) -> List[str]:
+    input_dir = EVALS_DIR + "/inputs"
+    if input_files and len(input_files) > 0:
+        return [os.path.basename(f) for f in input_files if f.endswith(".png")]
+    return [f for f in os.listdir(input_dir) if f.endswith(".png")]
+
+
+def _output_html_filename(original_filename: str, attempt_idx: int) -> str:
+    return f"{os.path.splitext(original_filename)[0]}_{attempt_idx}.html"
+
+
+def get_eval_output_subfolder(stack: Stack, model: str) -> str:
+    today = datetime.now().strftime("%b_%d_%Y")
+    output_dir = EVALS_DIR + "/outputs"
+    return os.path.join(output_dir, f"{today}_{model}_{stack}")
+
+
+def count_pending_eval_tasks(
+    stack: Stack,
+    model: str,
+    input_files: Optional[List[str]] = None,
+    n: int = 1,
+    diff_mode: bool = False,
+) -> Tuple[int, int]:
+    evals = _resolve_eval_filenames(input_files)
+    if not diff_mode:
+        return len(evals) * n, 0
+
+    output_subfolder = get_eval_output_subfolder(stack=stack, model=model)
+    pending_tasks = 0
+    skipped_existing_tasks = 0
+    for original_filename in evals:
+        for n_idx in range(n):
+            output_filename = _output_html_filename(original_filename, n_idx)
+            output_path = os.path.join(output_subfolder, output_filename)
+            if os.path.exists(output_path):
+                skipped_existing_tasks += 1
+            else:
+                pending_tasks += 1
+    return pending_tasks, skipped_existing_tasks
+
+
 async def generate_code_and_time(
     image_url: str,
     stack: Stack,
@@ -69,18 +112,11 @@ async def run_image_evals(
     model: Optional[str] = None,
     n: int = 1,
     input_files: Optional[List[str]] = None,
+    diff_mode: bool = False,
     progress_callback: Optional[Callable[[dict[str, Any]], Any | Awaitable[Any]]] = None,
 ) -> List[str]:
     INPUT_DIR = EVALS_DIR + "/inputs"
-    OUTPUT_DIR = EVALS_DIR + "/outputs"
-
-    # Get all evaluation image files
-    if input_files and len(input_files) > 0:
-        # Use the explicitly provided file list
-        evals = [os.path.basename(f) for f in input_files if f.endswith(".png")]
-    else:
-        # Use all PNG files from the input directory
-        evals = [f for f in os.listdir(INPUT_DIR) if f.endswith(".png")]
+    evals = _resolve_eval_filenames(input_files)
 
     if not stack:
         raise ValueError("No stack was provided")
@@ -97,9 +133,9 @@ async def run_image_evals(
     else:
         print(f"Running on all {len(evals)} files in {INPUT_DIR}")
 
-    today = datetime.now().strftime("%b_%d_%Y")
-    output_subfolder = os.path.join(
-        OUTPUT_DIR, f"{today}_{selected_model.value}_{stack}"
+    output_subfolder = get_eval_output_subfolder(
+        stack=stack,
+        model=selected_model.value,
     )
     os.makedirs(output_subfolder, exist_ok=True)
 
@@ -110,6 +146,7 @@ async def run_image_evals(
             Tuple[str, int, Optional[str], Optional[float], Optional[Exception], int],
         ]
     ] = []
+    skipped_existing_tasks = 0
     for original_filename in evals:
         # Handle both full paths and relative filenames
         if os.path.isabs(original_filename):
@@ -117,9 +154,17 @@ async def run_image_evals(
             original_filename = os.path.basename(original_filename)
         else:
             filepath = os.path.join(INPUT_DIR, original_filename)
-            
-        data_url = await image_to_data_url(filepath)
+
+        data_url: Optional[str] = None
         for n_idx in range(n):
+            output_filename = _output_html_filename(original_filename, n_idx)
+            output_path = os.path.join(output_subfolder, output_filename)
+            if diff_mode and os.path.exists(output_path):
+                skipped_existing_tasks += 1
+                continue
+
+            if data_url is None:
+                data_url = await image_to_data_url(filepath)
             current_model_for_task = (
                 selected_model if n_idx == 0 else Llm.GPT_4_1_2025_04_14
             )
@@ -131,6 +176,12 @@ async def run_image_evals(
                 attempt_idx=n_idx,
             )
             task_coroutines.append(coro)
+
+    if diff_mode and skipped_existing_tasks > 0:
+        print(
+            f"Diff mode: skipping {skipped_existing_tasks} existing outputs for "
+            f"{selected_model.value}"
+        )
 
     print(f"Processing {len(task_coroutines)} tasks...")
     total_tasks = len(task_coroutines)
