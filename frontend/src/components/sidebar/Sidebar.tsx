@@ -3,13 +3,15 @@ import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { LuMousePointerClick, LuRefreshCw, LuArrowUp } from "react-icons/lu";
+import { LuMousePointerClick, LuRefreshCw, LuArrowUp, LuX } from "react-icons/lu";
 import { toast } from "react-hot-toast";
 
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import AgentActivity from "../agent/AgentActivity";
 import WorkingPulse from "../core/WorkingPulse";
+import { Dialog, DialogPortal, DialogOverlay } from "../ui/dialog";
+import { Commit } from "../commits/types";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -19,6 +21,26 @@ interface SidebarProps {
 }
 
 const MAX_UPDATE_IMAGES = 5;
+
+function summarizeLatestChange(commit: Commit | null): string | null {
+  if (!commit) return null;
+  if (commit.type === "code_create") return "Imported existing code.";
+
+  const text = commit.inputs.text.trim();
+  if (text.length > 0) return text;
+
+  if (commit.type === "ai_create") {
+    return "Create";
+  }
+
+  if (commit.inputs.images.length > 1) {
+    return `Updated with ${commit.inputs.images.length} reference images.`;
+  }
+  if (commit.inputs.images.length === 1) {
+    return "Updated with one reference image.";
+  }
+  return "Updated code.";
+}
 
 function Sidebar({
   showSelectAndEditFeature,
@@ -31,6 +53,7 @@ function Sidebar({
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode } = useAppStore();
 
@@ -87,6 +110,15 @@ function Sidebar({
   const { head, commits } = useProjectStore();
 
   const currentCommit = head ? commits[head] : null;
+  const latestChangeSummary = summarizeLatestChange(currentCommit);
+  const latestChangeImages =
+    currentCommit && currentCommit.type !== "code_create"
+      ? currentCommit.inputs.images
+      : [];
+  const latestChangeVideos =
+    currentCommit && currentCommit.type !== "code_create"
+      ? currentCommit.inputs.videos ?? []
+      : [];
   const selectedVariantIndex = currentCommit?.selectedVariantIndex ?? 0;
   const selectedVariant = currentCommit?.variants[selectedVariantIndex];
   const selectedVariantEvents = selectedVariant?.agentEvents ?? [];
@@ -178,6 +210,47 @@ function Sidebar({
         ref={middlePaneRef}
         className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4"
       >
+        {latestChangeSummary && (
+          <div className="mb-4 flex flex-col items-end">
+            <div className="inline-block max-w-[85%] rounded-2xl rounded-br-md bg-violet-100 px-4 py-2.5 dark:bg-violet-900/30">
+              <p className="text-[15px] text-violet-950 dark:text-violet-100 break-words">
+                {latestChangeSummary}
+              </p>
+            </div>
+              {latestChangeImages.length > 0 && (
+                <div className="mt-2 flex gap-2 overflow-x-auto">
+                  {latestChangeImages.map((image, index) => (
+                    <button
+                      key={`${image.slice(0, 40)}-${index}`}
+                      onClick={() => setLightboxImage(image)}
+                      className="shrink-0 cursor-zoom-in overflow-hidden rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
+                    >
+                      <img
+                        src={image}
+                        alt={`Reference ${index + 1}`}
+                        className="h-24 object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+              {latestChangeVideos.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {latestChangeVideos.map((video, index) => (
+                    <video
+                      key={`${video.slice(0, 40)}-${index}`}
+                      src={video}
+                      className="w-full rounded-lg border border-gray-200 dark:border-zinc-700"
+                      controls
+                      preload="metadata"
+                    />
+                  ))}
+                </div>
+              )}
+          </div>
+        )}
+
         {showWorkingIndicator && (
           <div className="mb-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2">
             <div className="flex items-center justify-between">
@@ -343,6 +416,32 @@ function Sidebar({
             </div>
           </div>
         )}
+
+      {/* Image lightbox */}
+      <Dialog open={!!lightboxImage} onOpenChange={() => setLightboxImage(null)}>
+        <DialogPortal>
+          <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-8"
+            onClick={() => setLightboxImage(null)}
+          >
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute top-4 right-4 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors"
+            >
+              <LuX className="w-5 h-5" />
+            </button>
+            {lightboxImage && (
+              <img
+                src={lightboxImage}
+                alt="Reference image"
+                className="max-h-full max-w-full rounded-lg object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+          </div>
+        </DialogPortal>
+      </Dialog>
     </div>
   );
 }
