@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { HTTP_BACKEND_URL } from "../../config";
@@ -38,6 +38,7 @@ interface FailedTask {
 }
 
 function RunEvalsPage() {
+  const faviconFlashIntervalRef = useRef<number | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [models, setModels] = useState<string[]>([]);
   const [stacks, setStacks] = useState<string[]>([]);
@@ -68,8 +69,47 @@ function RunEvalsPage() {
   useEffect(() => {
     return () => {
       document.title = "Screenshot to Code";
+      if (faviconFlashIntervalRef.current !== null) {
+        window.clearInterval(faviconFlashIntervalRef.current);
+      }
     };
   }, []);
+
+  const setFavicon = (href: string) => {
+    const faviconEl = document.querySelector(
+      "link[rel='icon']"
+    ) as HTMLLinkElement | null;
+    if (faviconEl) {
+      faviconEl.href = href;
+    }
+  };
+
+  const stopFaviconFlash = () => {
+    if (faviconFlashIntervalRef.current !== null) {
+      window.clearInterval(faviconFlashIntervalRef.current);
+      faviconFlashIntervalRef.current = null;
+    }
+    setFavicon("/favicon/main.png");
+    window.removeEventListener("visibilitychange", stopWhenTabIsVisible);
+    window.removeEventListener("focus", stopWhenTabIsVisible);
+  };
+
+  const stopWhenTabIsVisible = () => {
+    if (document.visibilityState === "visible" && document.hasFocus()) {
+      stopFaviconFlash();
+    }
+  };
+
+  const flashFaviconOnComplete = () => {
+    stopFaviconFlash();
+    let useAlertIcon = false;
+    faviconFlashIntervalRef.current = window.setInterval(() => {
+      setFavicon(useAlertIcon ? "/favicon/coding.png" : "/favicon/main.png");
+      useAlertIcon = !useAlertIcon;
+    }, 450);
+    window.addEventListener("visibilitychange", stopWhenTabIsVisible);
+    window.addEventListener("focus", stopWhenTabIsVisible);
+  };
 
   const runEvals = async (filesToRun?: string[]) => {
     const updateRunningTitle = (completed: number, total: number) => {
@@ -92,6 +132,7 @@ function RunEvalsPage() {
       setFailedTasks(0);
       setFailedTaskDetails([]);
       setSkippedExistingTasks(0);
+      stopFaviconFlash();
 
       const runFiles = filesToRun ?? selectedFiles;
 
@@ -193,10 +234,12 @@ function RunEvalsPage() {
       }
 
       document.title = "✓ Evals Complete";
+      flashFaviconOnComplete();
     } catch (error) {
       console.error("Error running evals:", error);
       document.title = "❌ Eval Error";
       setStatusMessage("Evaluation run failed");
+      flashFaviconOnComplete();
       setTimeout(() => {
         document.title = "Screenshot to Code";
       }, 5000);
