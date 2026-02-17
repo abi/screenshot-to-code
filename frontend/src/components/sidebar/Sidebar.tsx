@@ -18,6 +18,7 @@ interface SidebarProps {
   doUpdate: (instruction: string) => void;
   regenerate: () => void;
   cancelCodeGeneration: () => void;
+  onOpenVersions: () => void;
 }
 
 const MAX_UPDATE_IMAGES = 5;
@@ -47,6 +48,7 @@ function Sidebar({
   doUpdate,
   regenerate,
   cancelCodeGeneration,
+  onOpenVersions,
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const middlePaneRef = useRef<HTMLDivElement>(null);
@@ -107,7 +109,7 @@ function Sidebar({
     [updateImages, setUpdateImages]
   );
 
-  const { head, commits, latestCommitHash } = useProjectStore();
+  const { head, commits, latestCommitHash, setHead } = useProjectStore();
 
   const currentCommit = head ? commits[head] : null;
   const latestChangeSummary = summarizeLatestChange(currentCommit);
@@ -134,6 +136,17 @@ function Sidebar({
     : undefined;
 
   const isFirstGeneration = currentCommit?.type === "ai_create";
+  const isViewingOlderVersion = head !== null && head !== latestCommitHash;
+
+  // Compute version number for the current head
+  const currentVersionNumber = (() => {
+    if (!head) return null;
+    const sorted = Object.values(commits).sort(
+      (a, b) => new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
+    );
+    const index = sorted.findIndex((c) => c.hash === head);
+    return index !== -1 ? index + 1 : null;
+  })();
 
   // Check if the currently selected variant is complete
   const isSelectedVariantComplete =
@@ -265,7 +278,29 @@ function Sidebar({
           </div>
         )}
 
-        <AgentActivity />
+        {isViewingOlderVersion && currentVersionNumber !== null ? (
+          <div className="mb-3 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50 px-4 py-3">
+            <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+              Viewing version {currentVersionNumber}
+            </p>
+            <div className="mt-2.5 flex gap-2">
+              <button
+                onClick={onOpenVersions}
+                className="flex-1 rounded-lg border border-gray-300 dark:border-zinc-600 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+              >
+                All versions
+              </button>
+              <button
+                onClick={() => latestCommitHash && setHead(latestCommitHash)}
+                className="flex-1 rounded-lg bg-gray-900 dark:bg-white px-3 py-1.5 text-xs font-medium text-white dark:text-black hover:bg-black dark:hover:bg-gray-200 transition-colors"
+              >
+                View latest
+              </button>
+            </div>
+          </div>
+        ) : (
+          <AgentActivity />
+        )}
 
         {/* Regenerate button for first generation */}
         {isFirstGeneration && head === latestCommitHash && (appState === AppState.CODE_READY || isSelectedVariantComplete) && !isSelectedVariantError && (

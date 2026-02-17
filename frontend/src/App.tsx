@@ -692,6 +692,10 @@ function App() {
                     doUpdate={doUpdate}
                     regenerate={regenerate}
                     cancelCodeGeneration={cancelCodeGeneration}
+                    onOpenVersions={() => {
+                      setIsHistoryOpen(true);
+                      setMobilePane("chat");
+                    }}
                   />
                 )}
               </>
