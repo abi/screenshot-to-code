@@ -55,6 +55,18 @@ from prompts.pipeline import build_prompt_messages
 from prompts.request_parsing import parse_prompt_content, parse_prompt_history
 from prompts.prompt_types import PromptHistoryMessage, Stack, UserTurnInput
 from agent.runner import Agent
+from routes.model_choice_sets import (
+    ALL_KEYS_MODELS_DEFAULT,
+    ALL_KEYS_MODELS_TEXT_CREATE,
+    ALL_KEYS_MODELS_UPDATE,
+    ANTHROPIC_ONLY_MODELS,
+    GEMINI_ANTHROPIC_MODELS,
+    GEMINI_OPENAI_MODELS,
+    GEMINI_ONLY_MODELS,
+    OPENAI_ANTHROPIC_MODELS,
+    OPENAI_ONLY_MODELS,
+    VIDEO_VARIANT_MODELS,
+)
 
 # from utils import pprint_prompt
 from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
@@ -394,63 +406,28 @@ class ModelSelectionStage:
                     "Video mode requires a Gemini API key. "
                     "Please add GEMINI_API_KEY to backend/.env or in the settings dialog"
                 )
-            return [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, Llm.GEMINI_3_PRO_PREVIEW_LOW]
+            return list(VIDEO_VARIANT_MODELS)
 
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key and openai_api_key:
             if input_mode == "text" and generation_type == "create":
-                models = [
-                    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                    Llm.GPT_5_2_CODEX_HIGH,
-                    Llm.CLAUDE_OPUS_4_6,
-                    Llm.GEMINI_3_PRO_PREVIEW_LOW,
-                ]
+                models = list(ALL_KEYS_MODELS_TEXT_CREATE)
             elif generation_type == "update":
-                models = [
-                    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                    Llm.GPT_5_2_CODEX_HIGH,
-                    Llm.CLAUDE_SONNET_4_6,
-                    Llm.GPT_5_2_CODEX_LOW,
-                ]
+                models = list(ALL_KEYS_MODELS_UPDATE)
             else:
-                models = [
-                    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                    Llm.GPT_5_2_CODEX_HIGH,
-                    Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-                    Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-                ]
+                models = list(ALL_KEYS_MODELS_DEFAULT)
         elif gemini_api_key and anthropic_api_key:
-            models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                Llm.GEMINI_3_PRO_PREVIEW_LOW,
-                Llm.CLAUDE_OPUS_4_6,
-                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-            ]
+            models = list(GEMINI_ANTHROPIC_MODELS)
         elif gemini_api_key and openai_api_key:
-            models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                Llm.GEMINI_3_PRO_PREVIEW_LOW,
-                Llm.GPT_5_2_CODEX_HIGH,
-                Llm.GPT_5_2_CODEX_MEDIUM,
-            ]
+            models = list(GEMINI_OPENAI_MODELS)
         elif openai_api_key and anthropic_api_key:
-            models = [
-                Llm.CLAUDE_OPUS_4_6,
-                Llm.GPT_5_2_CODEX_HIGH,
-                Llm.GPT_5_2_CODEX_MEDIUM,
-            ]
+            models = list(OPENAI_ANTHROPIC_MODELS)
         elif gemini_api_key:
-            models = [
-                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                Llm.GEMINI_3_PRO_PREVIEW_LOW,
-                Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-                Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-            ]
+            models = list(GEMINI_ONLY_MODELS)
         elif anthropic_api_key:
-            models = [Llm.CLAUDE_OPUS_4_6, Llm.CLAUDE_SONNET_4_6]
+            models = list(ANTHROPIC_ONLY_MODELS)
         elif openai_api_key:
-            models = [Llm.GPT_5_2_CODEX_HIGH, Llm.GPT_5_2_CODEX_MEDIUM]
+            models = list(OPENAI_ONLY_MODELS)
         else:
             raise Exception("No OpenAI or Anthropic key")
 
