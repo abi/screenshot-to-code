@@ -278,7 +278,7 @@ function Sidebar({
                 </button>
               </div>
             )}
-            <div className="relative w-full overflow-hidden rounded-2xl border-2 border-violet-300 bg-white shadow-lg shadow-violet-100/60 transition-all focus-within:border-violet-500 focus-within:shadow-xl focus-within:shadow-violet-200/60 dark:border-violet-500/50 dark:bg-zinc-900 dark:shadow-violet-900/20 dark:focus-within:border-violet-400">
+            <div className="relative w-full overflow-hidden rounded-2xl border-2 border-violet-300 bg-white transition-all focus-within:border-violet-500 dark:border-violet-500/50 dark:bg-zinc-900 dark:focus-within:border-violet-400">
               <UpdateImagePreview
                 updateImages={updateImages}
                 setUpdateImages={setUpdateImages}
@@ -299,10 +299,10 @@ function Sidebar({
                 value={updateInstruction}
                 data-testid="update-input"
                 rows={1}
-                className="max-h-40 w-full resize-none border-0 bg-transparent px-4 pb-2 pt-3 text-[15px] leading-6 text-gray-800 placeholder:text-gray-400 focus:outline-none dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                className="max-h-40 w-full resize-none border-0 bg-transparent px-4 pt-4 pb-6 text-[15px] leading-6 text-gray-800 placeholder:text-gray-400 focus:outline-none dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
-              <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2.5 dark:border-zinc-800">
-                <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between px-3 pb-3">
+                <div className="flex items-center gap-1">
                   <UpdateImageUpload
                     updateImages={updateImages}
                     setUpdateImages={setUpdateImages}
@@ -313,7 +313,7 @@ function Sidebar({
                       className={`rounded-lg p-2 transition-colors ${
                         inSelectAndEditMode
                           ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                          : "bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                       }`}
                       title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
                     >
@@ -324,9 +324,9 @@ function Sidebar({
                 <button
                   onClick={() => doUpdate(updateInstruction)}
                   disabled={!updateInstruction.trim()}
-                  className={`rounded-xl p-2.5 transition-colors update-btn ${
+                  className={`rounded-xl p-2 transition-colors update-btn ${
                     updateInstruction.trim()
-                      ? "bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                      ? "bg-violet-600 text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400"
                       : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-zinc-700 dark:text-zinc-500"
                   }`}
                   title="Send"
