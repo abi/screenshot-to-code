@@ -433,7 +433,7 @@ class ModelSelectionStage:
                 Llm.GEMINI_3_PRO_PREVIEW_HIGH,
             ]
         elif anthropic_api_key:
-            models = [Llm.CLAUDE_OPUS_4_6, Llm.CLAUDE_4_5_SONNET_2025_09_29]
+            models = [Llm.CLAUDE_OPUS_4_6, Llm.CLAUDE_SONNET_4_6]
         elif openai_api_key:
             models = [Llm.GPT_5_2_CODEX_HIGH, Llm.GPT_5_2_CODEX_MEDIUM]
         else:

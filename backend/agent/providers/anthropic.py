@@ -32,6 +32,7 @@ THINKING_MODELS = {
 }
 ADAPTIVE_THINKING_MODELS = {
     Llm.CLAUDE_OPUS_4_6.value,
+    Llm.CLAUDE_SONNET_4_6.value,
 }
 
 

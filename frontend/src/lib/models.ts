@@ -2,6 +2,7 @@
 // Order here matches dropdown order
 export enum CodeGenerationModel {
   CLAUDE_OPUS_4_6 = "claude-opus-4-6",
+  CLAUDE_SONNET_4_6 = "claude-sonnet-4-6",
   CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101",
   CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929",
   GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
@@ -26,6 +27,7 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "claude-opus-4-5-20251101": { name: "Claude Opus 4.5", inBeta: false },
   "claude-opus-4-6": { name: "Claude Opus 4.6", inBeta: false },
+  "claude-sonnet-4-6": { name: "Claude Sonnet 4.6", inBeta: false },
   "claude-sonnet-4-5-20250929": { name: "Claude Sonnet 4.5", inBeta: false },
   "gemini-3-flash-preview (high thinking)": {
     name: "Gemini 3 Flash (high)",

@@ -123,7 +123,7 @@ class TestModelSelectionAnthropicOnly:
 
     @pytest.mark.asyncio
     async def test_anthropic_only(self):
-        """Anthropic only: Claude Opus 4.6 and Claude Sonnet 4.5 cycling"""
+        """Anthropic only: Claude Opus 4.6 and Claude Sonnet 4.6 cycling"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -134,9 +134,9 @@ class TestModelSelectionAnthropicOnly:
 
         expected = [
             Llm.CLAUDE_OPUS_4_6,
-            Llm.CLAUDE_4_5_SONNET_2025_09_29,
+            Llm.CLAUDE_SONNET_4_6,
             Llm.CLAUDE_OPUS_4_6,
-            Llm.CLAUDE_4_5_SONNET_2025_09_29,
+            Llm.CLAUDE_SONNET_4_6,
         ]
         assert models == expected
 
