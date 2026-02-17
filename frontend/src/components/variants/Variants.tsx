@@ -113,7 +113,7 @@ function Variants() {
 
   return (
     <div className="pt-2 pb-1">
-      <div className="flex gap-1.5">
+      <div className="grid grid-cols-2 gap-2">
         {variants.map((variant, index) => {
           let statusColor = "bg-gray-300 dark:bg-gray-600";
           if (variant.status === "complete") statusColor = "bg-green-500";
@@ -122,7 +122,7 @@ function Variants() {
           return (
             <div
               key={index}
-              className={`flex-1 min-w-0 rounded cursor-pointer overflow-hidden ${
+              className={`w-full rounded cursor-pointer overflow-hidden ${
                 index === selectedVariantIndex
                   ? "ring-2 ring-blue-400 dark:ring-blue-500"
                   : "ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600"
@@ -134,13 +134,13 @@ function Variants() {
                 code={variant.code}
                 isSelected={index === selectedVariantIndex}
               />
-              <div className="flex items-center px-1.5 py-0.5 bg-white dark:bg-zinc-900">
-                <span className="inline-flex min-w-0 items-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  <span className={`w-1.5 h-1.5 rounded-full mr-1 ${statusColor}`} />
+              <div className="flex items-center px-2 py-1 bg-white dark:bg-zinc-900">
+                <span className="inline-flex min-w-0 items-center text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  <span className={`w-2 h-2 rounded-full mr-1.5 ${statusColor}`} />
                   Option {index + 1}
                 </span>
                 {variant.status === "generating" && (
-                  <div className="ml-auto shrink-0 scale-50">
+                  <div className="ml-auto shrink-0 scale-75">
                     <Spinner />
                   </div>
                 )}

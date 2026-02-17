@@ -387,8 +387,8 @@ class ModelSelectionStage:
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
-        # Video create mode requires Gemini - 2 variants for comparison
-        if input_mode == "video" and generation_type == "create":
+        # Video mode requires Gemini - 2 variants for comparison
+        if input_mode == "video":
             if not gemini_api_key:
                 raise Exception(
                     "Video mode requires a Gemini API key. "
@@ -693,11 +693,8 @@ class StatusBroadcastMiddleware(Middleware):
     ) -> None:
         # Determine variant count based on input mode
         assert context.extracted_params is not None
-        is_video_create = (
-            context.extracted_params.input_mode == "video"
-            and context.extracted_params.generation_type == "create"
-        )
-        num_variants = NUM_VARIANTS_VIDEO if is_video_create else NUM_VARIANTS
+        is_video_mode = context.extracted_params.input_mode == "video"
+        num_variants = NUM_VARIANTS_VIDEO if is_video_mode else NUM_VARIANTS
 
         # Tell frontend how many variants we're using
         await context.send_message("variantCount", str(num_variants), 0)

@@ -67,6 +67,23 @@ class TestModelSelectionAllKeys:
         ]
         assert models == expected
 
+    @pytest.mark.asyncio
+    async def test_video_update_prefers_gemini_minimal_then_low(self):
+        """Video update always uses the same two Gemini variants as video create."""
+        models = await self.model_selector.select_models(
+            generation_type="update",
+            input_mode="video",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+        )
+
+        expected = [
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+            Llm.GEMINI_3_PRO_PREVIEW_LOW,
+        ]
+        assert models == expected
+
 
 class TestModelSelectionOpenAIAnthropic:
     """Test model selection when only OpenAI and Anthropic keys are present."""

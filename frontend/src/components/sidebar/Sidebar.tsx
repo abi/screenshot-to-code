@@ -9,7 +9,7 @@ import { toast } from "react-hot-toast";
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import AgentActivity from "../agent/AgentActivity";
-import Spinner from "../core/Spinner";
+import WorkingPulse from "../core/WorkingPulse";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -182,9 +182,7 @@ function Sidebar({
           <div className="mb-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <div className="scale-75">
-                  <Spinner />
-                </div>
+                <WorkingPulse />
                 <span>Working...</span>
               </div>
               <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
