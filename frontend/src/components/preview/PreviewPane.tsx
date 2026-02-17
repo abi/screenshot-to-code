@@ -91,24 +91,31 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
                     <button
                       type="button"
                       onClick={() => setDesktopViewMode("fit")}
+                      title="Scale down to fit the screen"
                       className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                         desktopViewMode === "fit"
                           ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-600 dark:text-zinc-100"
                           : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                       }`}
                     >
-                      Fit {desktopScale < 1 ? `(${Math.round(desktopScale * 100)}%)` : ""}
+                      Scale
+                      {desktopScale < 1 && (
+                        <span className="ml-1 text-violet-600 dark:text-violet-300 font-bold">
+                          ({Math.round(desktopScale * 100)}%)
+                        </span>
+                      )}
                     </button>
                     <button
                       type="button"
                       onClick={() => setDesktopViewMode("actual")}
+                      title="View at original size (100%)"
                       className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                         desktopViewMode === "actual"
                           ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-600 dark:text-zinc-100"
                           : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                       }`}
                     >
-                      Actual
+                      100%
                     </button>
                   </div>
                 )}
