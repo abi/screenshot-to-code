@@ -24,8 +24,8 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GPT_5_2_CODEX_HIGH,
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+            Llm.GPT_5_2_CODEX_HIGH,
             Llm.GEMINI_3_PRO_PREVIEW_HIGH,
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
         ]
@@ -33,7 +33,7 @@ class TestModelSelectionAllKeys:
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_update(self):
-        """All keys update: Same models regardless of generation_type"""
+        """All keys update: uses edit-specific model mix."""
         models = await self.model_selector.select_models(
             generation_type="update",
             input_mode="image",
@@ -43,10 +43,10 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GPT_5_2_CODEX_HIGH,
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-            Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+            Llm.GPT_5_2_CODEX_HIGH,
+            Llm.CLAUDE_SONNET_4_6,
+            Llm.GPT_5_2_CODEX_LOW,
         ]
         assert models == expected
 
