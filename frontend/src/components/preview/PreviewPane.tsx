@@ -71,7 +71,7 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
         onValueChange={setActiveTab}
         className="flex-1 flex flex-col min-h-0"
       >
-        <div className="flex items-center justify-between px-4 py-2 shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+        <div className="relative flex items-center justify-between px-4 py-2 shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
           <div className="flex items-center gap-2">
             <TabsList>
               <TabsTrigger value="desktop" title="Desktop" data-testid="tab-desktop">
@@ -85,38 +85,31 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
               </TabsTrigger>
             </TabsList>
             {(activeTab === "desktop" || activeTab === "mobile") && (
-              <div className="hidden sm:inline-flex items-center gap-1.5">
+              <div className="hidden sm:inline-flex items-center gap-2">
                 {activeTab === "desktop" && (
-                  <div className="inline-flex items-center gap-2">
-                    <div className="inline-flex items-center rounded-lg bg-white p-0.5 ring-1 ring-gray-200 dark:bg-zinc-950 dark:ring-zinc-700">
-                      <button
-                        type="button"
-                        onClick={() => setDesktopViewMode("fit")}
-                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                          desktopViewMode === "fit"
-                            ? "bg-gray-900 text-white dark:bg-zinc-200 dark:text-zinc-900"
-                            : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-                        }`}
-                      >
-                        Fit to pane
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDesktopViewMode("actual")}
-                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                          desktopViewMode === "actual"
-                            ? "bg-gray-900 text-white dark:bg-zinc-200 dark:text-zinc-900"
-                            : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-                        }`}
-                      >
-                        Actual size
-                      </button>
-                    </div>
-                    {desktopViewMode === "fit" && desktopScale < 0.999 && (
-                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-700">
-                        {Math.round(desktopScale * 100)}%
-                      </span>
-                    )}
+                  <div className="inline-flex items-center rounded-lg bg-gray-100 p-1 dark:bg-zinc-800">
+                    <button
+                      type="button"
+                      onClick={() => setDesktopViewMode("fit")}
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                        desktopViewMode === "fit"
+                          ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-600 dark:text-zinc-100"
+                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                      }`}
+                    >
+                      Fit {desktopScale < 1 ? `(${Math.round(desktopScale * 100)}%)` : ""}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDesktopViewMode("actual")}
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                        desktopViewMode === "actual"
+                          ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-600 dark:text-zinc-100"
+                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                      }`}
+                    >
+                      Actual
+                    </button>
                   </div>
                 )}
                 <Button
@@ -134,31 +127,40 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
 
           {/* Version navigation */}
           {totalVersions > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center justify-center gap-1 bg-gray-100/50 dark:bg-zinc-800/50 rounded-full p-1 border border-gray-200/50 dark:border-zinc-700/50 backdrop-blur-sm">
               <Button
                 onClick={() => canGoPrev && setHead(sortedCommits[currentVersionIndex - 1].hash)}
                 variant="ghost"
                 size="icon"
                 title="Previous version"
-                className={`h-7 w-7 ${canGoPrev ? "" : "invisible"}`}
+                className={`h-6 w-6 rounded-full hover:bg-white dark:hover:bg-zinc-700 ${!canGoPrev ? "opacity-30 cursor-not-allowed" : ""}`}
+                disabled={!canGoPrev}
               >
-                <LuChevronLeft className="w-4 h-4" />
+                <LuChevronLeft className="w-3.5 h-3.5" />
               </Button>
-              <button
+              <div
                 onClick={onOpenVersions}
-                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-1.5 py-0.5 rounded tabular-nums"
+                className="flex items-center justify-center gap-2 px-1 cursor-pointer hover:opacity-70 transition-opacity w-32"
                 title="View all versions"
               >
-                Version {currentVersionIndex + 1}
-              </button>
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                  Version {currentVersionIndex + 1}
+                </span>
+                {currentVersionIndex === totalVersions - 1 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                    Latest
+                  </span>
+                )}
+              </div>
               <Button
                 onClick={() => canGoNext && setHead(sortedCommits[currentVersionIndex + 1].hash)}
                 variant="ghost"
                 size="icon"
                 title="Next version"
-                className={`h-7 w-7 ${canGoNext ? "" : "invisible"}`}
+                className={`h-6 w-6 rounded-full hover:bg-white dark:hover:bg-zinc-700 ${!canGoNext ? "opacity-30 cursor-not-allowed" : ""}`}
+                disabled={!canGoNext}
               >
-                <LuChevronRight className="w-4 h-4" />
+                <LuChevronRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           )}
