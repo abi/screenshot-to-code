@@ -10,6 +10,7 @@ from .core import generate_code_for_image
 from .utils import image_to_data_url
 from .config import EVALS_DIR
 
+MAX_EVAL_RETRIES = 2
 
 async def generate_code_and_time(
     image_url: str,
@@ -17,26 +18,50 @@ async def generate_code_and_time(
     model: Llm,
     original_input_filename: str,
     attempt_idx: int,
-) -> Tuple[str, int, Optional[str], Optional[float], Optional[Exception]]:
+) -> Tuple[str, int, Optional[str], Optional[float], Optional[Exception], int]:
     """
     Generates code for an image, measures the time taken, and returns identifiers
     along with success/failure status.
-    Returns a tuple: (original_input_filename, attempt_idx, content, duration, error_object)
+    Returns a tuple:
+    (original_input_filename, attempt_idx, content, duration, error_object, retries_used)
     content and duration are None if an error occurs during generation.
     """
-    start_time = time.perf_counter()
-    try:
-        content = await generate_code_for_image(
-            image_url=image_url, stack=stack, model=model
-        )
-        end_time = time.perf_counter()
-        duration = end_time - start_time
-        return original_input_filename, attempt_idx, content, duration, None
-    except Exception as e:
-        print(
-            f"Error during code generation for {original_input_filename} (attempt {attempt_idx}): {e}"
-        )
-        return original_input_filename, attempt_idx, None, None, e
+    retries_used = 0
+    while True:
+        start_time = time.perf_counter()
+        try:
+            content = await generate_code_for_image(
+                image_url=image_url, stack=stack, model=model
+            )
+            end_time = time.perf_counter()
+            duration = end_time - start_time
+            return (
+                original_input_filename,
+                attempt_idx,
+                content,
+                duration,
+                None,
+                retries_used,
+            )
+        except Exception as e:
+            if retries_used >= MAX_EVAL_RETRIES:
+                print(
+                    f"Error during code generation for {original_input_filename} "
+                    f"(attempt {attempt_idx}, retries exhausted): {e}"
+                )
+                return (
+                    original_input_filename,
+                    attempt_idx,
+                    None,
+                    None,
+                    e,
+                    retries_used,
+                )
+            retries_used += 1
+            print(
+                f"Retrying {original_input_filename} (attempt {attempt_idx}) "
+                f"{retries_used}/{MAX_EVAL_RETRIES} after error: {e}"
+            )
 
 
 async def run_image_evals(
@@ -82,7 +107,7 @@ async def run_image_evals(
         Coroutine[
             Any,
             Any,
-            Tuple[str, int, Optional[str], Optional[float], Optional[Exception]],
+            Tuple[str, int, Optional[str], Optional[float], Optional[Exception], int],
         ]
     ] = []
     for original_filename in evals:
@@ -124,9 +149,14 @@ async def run_image_evals(
 
     for future in asyncio.as_completed(task_coroutines):
         try:
-            task_orig_fn, task_attempt_idx, generated_content, time_taken, error_obj = (
-                await future
-            )
+            (
+                task_orig_fn,
+                task_attempt_idx,
+                generated_content,
+                time_taken,
+                error_obj,
+                retries_used,
+            ) = await future
             completed_tasks += 1
 
             output_html_filename_base = os.path.splitext(task_orig_fn)[0]
@@ -139,7 +169,9 @@ async def run_image_evals(
 
             if error_obj is not None:
                 failed_tasks_log.append(
-                    f"Input: {task_orig_fn}, Attempt: {task_attempt_idx}, OutputFile: {final_output_html_filename}, Error: Generation failed - {str(error_obj)}"
+                    f"Input: {task_orig_fn}, Attempt: {task_attempt_idx}, OutputFile: "
+                    f"{final_output_html_filename}, Retries: {retries_used}, "
+                    f"Error: Generation failed - {str(error_obj)}"
                 )
                 await emit_progress(
                     {
@@ -150,6 +182,7 @@ async def run_image_evals(
                         "attempt_idx": task_attempt_idx,
                         "success": False,
                         "error": str(error_obj),
+                        "retries_used": retries_used,
                     }
                 )
             elif generated_content is not None and time_taken is not None:
@@ -173,6 +206,7 @@ async def run_image_evals(
                             "success": True,
                             "output_file": final_output_html_filename,
                             "duration_seconds": time_taken,
+                            "retries_used": retries_used,
                         }
                     )
                 except Exception as e_write:

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { HTTP_BACKEND_URL } from "../../config";
@@ -23,7 +23,14 @@ interface EvalProgressEvent {
   global_total_tasks?: number;
   input_file?: string;
   success?: boolean;
+  error?: string;
   output_files?: string[];
+}
+
+interface FailedTask {
+  model: string;
+  inputFile: string;
+  error: string;
 }
 
 function RunEvalsPage() {
@@ -40,6 +47,7 @@ function RunEvalsPage() {
   const [statusMessage, setStatusMessage] = useState<string>("Idle");
   const [lastProcessedFile, setLastProcessedFile] = useState<string>("");
   const [failedTasks, setFailedTasks] = useState(0);
+  const [failedTaskDetails, setFailedTaskDetails] = useState<FailedTask[]>([]);
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -57,7 +65,7 @@ function RunEvalsPage() {
     };
   }, []);
 
-  const runEvals = async () => {
+  const runEvals = async (filesToRun?: string[]) => {
     const updateRunningTitle = (completed: number, total: number) => {
       if (total <= 0) {
         document.title = "Running Evals...";
@@ -76,6 +84,9 @@ function RunEvalsPage() {
       setStatusMessage("Preparing evaluation run...");
       setLastProcessedFile("");
       setFailedTasks(0);
+      setFailedTaskDetails([]);
+
+      const runFiles = filesToRun ?? selectedFiles;
 
       const response = await fetch(`${HTTP_BACKEND_URL}/run_evals_stream`, {
         method: "POST",
@@ -85,7 +96,7 @@ function RunEvalsPage() {
         body: JSON.stringify({
           models: selectedModels,
           stack: selectedStack,
-          files: selectedFiles,
+          files: runFiles,
         }),
       });
 
@@ -101,9 +112,13 @@ function RunEvalsPage() {
       const decoder = new TextDecoder();
       let bufferedText = "";
 
-      while (true) {
+      let streamDone = false;
+      while (!streamDone) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          streamDone = true;
+          continue;
+        }
 
         bufferedText += decoder.decode(value, { stream: true });
         const lines = bufferedText.split("\n");
@@ -131,6 +146,14 @@ function RunEvalsPage() {
             if (event.input_file) setLastProcessedFile(event.input_file);
             if (event.success === false) {
               setFailedTasks((prev) => prev + 1);
+              setFailedTaskDetails((prev) => [
+                ...prev,
+                {
+                  model: event.model ?? "unknown",
+                  inputFile: event.input_file ?? "unknown",
+                  error: event.error ?? "Unknown error",
+                },
+              ]);
             }
             setStatusMessage(
               event.success === false
@@ -178,9 +201,9 @@ function RunEvalsPage() {
     setSelectedModels(models);
   };
 
-  const handleFilesSelected = (files: string[]) => {
+  const handleFilesSelected = useCallback((files: string[]) => {
     setSelectedFiles(files);
-  };
+  }, []);
 
   // Format model list for display in the summary
   const formatModelList = () => {
@@ -191,6 +214,13 @@ function RunEvalsPage() {
   };
 
   const canRunEvals = selectedModels.length > 0 && selectedFiles.length > 0;
+  const failedFilesForRerun = Array.from(
+    new Set(failedTaskDetails.map((task) => task.inputFile).filter(Boolean))
+  );
+  const canRerunFailures =
+    !isRunning &&
+    selectedModels.length > 0 &&
+    failedFilesForRerun.length > 0;
   const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
@@ -205,7 +235,7 @@ function RunEvalsPage() {
               <h1 className="text-2xl font-bold">Run Evaluations</h1>
               
               <Button
-                onClick={runEvals}
+                onClick={() => void runEvals()}
                 disabled={isRunning || !canRunEvals}
                 className={`min-w-[120px] ${isRunning ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"}`}
               >
@@ -277,6 +307,41 @@ function RunEvalsPage() {
                     <span className="font-mono">{lastProcessedFile || "-"}</span>
                   </span>
                 </div>
+                {failedTaskDetails.length > 0 && (
+                  <div className="mt-3 border-t border-gray-100 pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-red-700">
+                        Failures ({failedTaskDetails.length})
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!canRerunFailures}
+                        onClick={() => void runEvals(failedFilesForRerun)}
+                        className="h-7 px-2 text-xs"
+                      >
+                        Re-run failures
+                      </Button>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto rounded-md border border-red-100 bg-red-50/40">
+                      <ul className="divide-y divide-red-100">
+                        {failedTaskDetails.map((task, index) => (
+                          <li key={`${task.model}-${task.inputFile}-${index}`} className="px-3 py-2 text-xs">
+                            <div className="font-medium text-red-800">
+                              {task.inputFile}
+                            </div>
+                            <div className="text-red-700">
+                              Model: <span className="font-mono">{task.model}</span>
+                            </div>
+                            <div className="text-red-700 break-words">
+                              Error: {task.error}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
