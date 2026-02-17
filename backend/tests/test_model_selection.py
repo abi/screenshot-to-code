@@ -24,8 +24,8 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.GPT_5_2_CODEX_HIGH,
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.GEMINI_3_PRO_PREVIEW_HIGH,
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
         ]
@@ -43,8 +43,8 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.GPT_5_2_CODEX_HIGH,
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.GEMINI_3_PRO_PREVIEW_HIGH,
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
         ]
