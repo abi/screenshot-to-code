@@ -252,7 +252,12 @@ class AnthropicProviderSession(ProviderSession):
             stream_kwargs["thinking"] = {
                 "type": "adaptive",
             }
-            stream_kwargs["output_config"] = {"effort": "max"}
+            effort = (
+                "high"
+                if self._model.value == Llm.CLAUDE_SONNET_4_6.value
+                else "max"
+            )
+            stream_kwargs["output_config"] = {"effort": effort}
         elif self._model.value in THINKING_MODELS:
             stream_kwargs["thinking"] = {
                 "type": "enabled",
