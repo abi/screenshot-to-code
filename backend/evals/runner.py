@@ -1,8 +1,9 @@
-from typing import Any, Coroutine, List, Optional, Tuple
+from typing import Any, Awaitable, Callable, Coroutine, List, Optional, Tuple
 import asyncio
 import os
 from datetime import datetime
 import time
+import inspect
 from llm import Llm
 from prompts.prompt_types import Stack
 from .core import generate_code_for_image
@@ -39,10 +40,11 @@ async def generate_code_and_time(
 
 
 async def run_image_evals(
-    stack: Optional[Stack] = None, 
-    model: Optional[str] = None, 
+    stack: Optional[Stack] = None,
+    model: Optional[str] = None,
     n: int = 1,
-    input_files: Optional[List[str]] = None
+    input_files: Optional[List[str]] = None,
+    progress_callback: Optional[Callable[[dict[str, Any]], Any | Awaitable[Any]]] = None,
 ) -> List[str]:
     INPUT_DIR = EVALS_DIR + "/inputs"
     OUTPUT_DIR = EVALS_DIR + "/outputs"
@@ -106,16 +108,26 @@ async def run_image_evals(
             task_coroutines.append(coro)
 
     print(f"Processing {len(task_coroutines)} tasks...")
+    total_tasks = len(task_coroutines)
+    completed_tasks = 0
 
     output_files: List[str] = []
     timing_data: List[str] = []
     failed_tasks_log: List[str] = []
+
+    async def emit_progress(event: dict[str, Any]) -> None:
+        if progress_callback is None:
+            return
+        maybe_awaitable = progress_callback(event)
+        if inspect.isawaitable(maybe_awaitable):
+            await maybe_awaitable
 
     for future in asyncio.as_completed(task_coroutines):
         try:
             task_orig_fn, task_attempt_idx, generated_content, time_taken, error_obj = (
                 await future
             )
+            completed_tasks += 1
 
             output_html_filename_base = os.path.splitext(task_orig_fn)[0]
             final_output_html_filename = (
@@ -129,6 +141,17 @@ async def run_image_evals(
                 failed_tasks_log.append(
                     f"Input: {task_orig_fn}, Attempt: {task_attempt_idx}, OutputFile: {final_output_html_filename}, Error: Generation failed - {str(error_obj)}"
                 )
+                await emit_progress(
+                    {
+                        "type": "task_complete",
+                        "completed_tasks": completed_tasks,
+                        "total_tasks": total_tasks,
+                        "input_file": task_orig_fn,
+                        "attempt_idx": task_attempt_idx,
+                        "success": False,
+                        "error": str(error_obj),
+                    }
+                )
             elif generated_content is not None and time_taken is not None:
                 try:
                     with open(output_html_filepath, "w") as file:
@@ -140,19 +163,65 @@ async def run_image_evals(
                     print(
                         f"Successfully processed and wrote {final_output_html_filename}"
                     )
+                    await emit_progress(
+                        {
+                            "type": "task_complete",
+                            "completed_tasks": completed_tasks,
+                            "total_tasks": total_tasks,
+                            "input_file": task_orig_fn,
+                            "attempt_idx": task_attempt_idx,
+                            "success": True,
+                            "output_file": final_output_html_filename,
+                            "duration_seconds": time_taken,
+                        }
+                    )
                 except Exception as e_write:
                     failed_tasks_log.append(
                         f"Input: {task_orig_fn}, Attempt: {task_attempt_idx}, OutputFile: {final_output_html_filename}, Error: Writing to file failed - {str(e_write)}"
                     )
+                    await emit_progress(
+                        {
+                            "type": "task_complete",
+                            "completed_tasks": completed_tasks,
+                            "total_tasks": total_tasks,
+                            "input_file": task_orig_fn,
+                            "attempt_idx": task_attempt_idx,
+                            "success": False,
+                            "error": str(e_write),
+                        }
+                    )
             else:
                 failed_tasks_log.append(
                     f"Input: {task_orig_fn}, Attempt: {task_attempt_idx}, OutputFile: {final_output_html_filename}, Error: Unknown issue - content or time_taken is None without explicit error."
+                )
+                await emit_progress(
+                    {
+                        "type": "task_complete",
+                        "completed_tasks": completed_tasks,
+                        "total_tasks": total_tasks,
+                        "input_file": task_orig_fn,
+                        "attempt_idx": task_attempt_idx,
+                        "success": False,
+                        "error": "Unknown issue during task processing.",
+                    }
                 )
 
         except Exception as e_as_completed:
             print(f"A task in as_completed failed unexpectedly: {e_as_completed}")
             failed_tasks_log.append(
                 f"Critical Error: A task processing failed - {str(e_as_completed)}"
+            )
+            completed_tasks += 1
+            await emit_progress(
+                {
+                    "type": "task_complete",
+                    "completed_tasks": completed_tasks,
+                    "total_tasks": total_tasks,
+                    "input_file": "unknown",
+                    "attempt_idx": -1,
+                    "success": False,
+                    "error": str(e_as_completed),
+                }
             )
 
     # Write timing data for successful tasks

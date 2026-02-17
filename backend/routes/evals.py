@@ -1,5 +1,8 @@
 import os
+import asyncio
+import json
 from fastapi import APIRouter, Query, Request, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from evals.utils import image_to_data_url
 from evals.config import EVALS_DIR
@@ -191,6 +194,100 @@ async def run_evals(request: RunEvalsRequest) -> List[str]:
         all_output_files.extend(output_files)
 
     return all_output_files
+
+
+def _count_eval_files(selected_files: List[str]) -> int:
+    if selected_files:
+        return len([f for f in selected_files if f.endswith(".png")])
+
+    input_dir = os.path.join(EVALS_DIR, "inputs")
+    return len([f for f in os.listdir(input_dir) if f.endswith(".png")])
+
+
+@router.post("/run_evals_stream")
+async def run_evals_stream(request: RunEvalsRequest):
+    """Run evaluations and stream progress events as newline-delimited JSON."""
+    if not request.models:
+        raise HTTPException(status_code=400, detail="At least one model is required")
+
+    per_model_task_count = _count_eval_files(request.files)
+    total_tasks = per_model_task_count * len(request.models)
+
+    async def event_generator():
+        queue: asyncio.Queue[dict] = asyncio.Queue()
+
+        async def emit(event: dict) -> None:
+            await queue.put(event)
+
+        async def run_all_models() -> None:
+            all_output_files: List[str] = []
+            completed_offset = 0
+
+            try:
+                await emit(
+                    {
+                        "type": "start",
+                        "total_models": len(request.models),
+                        "tasks_per_model": per_model_task_count,
+                        "total_tasks": total_tasks,
+                        "completed_tasks": 0,
+                    }
+                )
+
+                for model_index, model in enumerate(request.models, start=1):
+                    await emit(
+                        {
+                            "type": "model_start",
+                            "model": model,
+                            "model_index": model_index,
+                            "total_models": len(request.models),
+                        }
+                    )
+
+                    async def on_progress(event: dict) -> None:
+                        await emit(
+                            {
+                                **event,
+                                "model": model,
+                                "model_index": model_index,
+                                "total_models": len(request.models),
+                                "global_completed_tasks": completed_offset
+                                + event.get("completed_tasks", 0),
+                                "global_total_tasks": total_tasks,
+                            }
+                        )
+
+                    output_files = await run_image_evals(
+                        model=model,
+                        stack=request.stack,
+                        input_files=request.files,
+                        progress_callback=on_progress,
+                    )
+                    all_output_files.extend(output_files)
+                    completed_offset += per_model_task_count
+
+                await emit(
+                    {
+                        "type": "complete",
+                        "completed_tasks": total_tasks,
+                        "total_tasks": total_tasks,
+                        "output_files": all_output_files,
+                    }
+                )
+            except Exception as e:
+                await emit({"type": "error", "message": str(e)})
+            finally:
+                await emit({"type": "done"})
+
+        producer = asyncio.create_task(run_all_models())
+        while True:
+            event = await queue.get()
+            if event.get("type") == "done":
+                break
+            yield json.dumps(event) + "\n"
+        await producer
+
+    return StreamingResponse(event_generator(), media_type="application/x-ndjson")
 
 
 @router.get("/models", response_model=Dict[str, List[str]])

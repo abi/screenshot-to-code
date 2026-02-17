@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
+import { Progress } from "../ui/progress";
 import { HTTP_BACKEND_URL } from "../../config";
 import { BsCheckLg, BsChevronDown, BsChevronRight } from "react-icons/bs";
 import InputFileSelector from "./InputFileSelector";
@@ -10,6 +11,21 @@ interface ModelResponse {
   stacks: string[];
 }
 
+interface EvalProgressEvent {
+  type: "start" | "model_start" | "task_complete" | "complete" | "error";
+  message?: string;
+  model?: string;
+  model_index?: number;
+  total_models?: number;
+  completed_tasks?: number;
+  total_tasks?: number;
+  global_completed_tasks?: number;
+  global_total_tasks?: number;
+  input_file?: string;
+  success?: boolean;
+  output_files?: string[];
+}
+
 function RunEvalsPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [models, setModels] = useState<string[]>([]);
@@ -18,6 +34,12 @@ function RunEvalsPage() {
   const [selectedStack, setSelectedStack] = useState<string>("html_tailwind");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [showPaths, setShowPaths] = useState<boolean>(false);
+  const [completedTasks, setCompletedTasks] = useState(0);
+  const [totalTasks, setTotalTasks] = useState(0);
+  const [currentModel, setCurrentModel] = useState<string>("");
+  const [statusMessage, setStatusMessage] = useState<string>("Idle");
+  const [lastProcessedFile, setLastProcessedFile] = useState<string>("");
+  const [failedTasks, setFailedTasks] = useState(0);
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -36,11 +58,26 @@ function RunEvalsPage() {
   }, []);
 
   const runEvals = async () => {
+    const updateRunningTitle = (completed: number, total: number) => {
+      if (total <= 0) {
+        document.title = "Running Evals...";
+        return;
+      }
+      const percent = Math.round((completed / total) * 100);
+      document.title = `(${percent}%) Running Evals...`;
+    };
+
     try {
       setIsRunning(true);
       document.title = "Running Evals...";
+      setCompletedTasks(0);
+      setTotalTasks(0);
+      setCurrentModel("");
+      setStatusMessage("Preparing evaluation run...");
+      setLastProcessedFile("");
+      setFailedTasks(0);
 
-      const response = await fetch(`${HTTP_BACKEND_URL}/run_evals`, {
+      const response = await fetch(`${HTTP_BACKEND_URL}/run_evals_stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,13 +93,70 @@ function RunEvalsPage() {
         throw new Error("Failed to run evals");
       }
 
-      const outputFiles = await response.json();
-      console.log("Generated files:", outputFiles);
+      if (!response.body) {
+        throw new Error("No progress stream available");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let bufferedText = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        bufferedText += decoder.decode(value, { stream: true });
+        const lines = bufferedText.split("\n");
+        bufferedText = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          const event = JSON.parse(line) as EvalProgressEvent;
+
+          if (event.type === "start") {
+            const eventTotalTasks = event.total_tasks ?? 0;
+            setTotalTasks(eventTotalTasks);
+            setStatusMessage("Starting evaluation run...");
+            updateRunningTitle(0, eventTotalTasks);
+          } else if (event.type === "model_start") {
+            if (event.model) setCurrentModel(event.model);
+            setStatusMessage(
+              `Running model ${event.model_index ?? 1}/${event.total_models ?? selectedModels.length}: ${event.model ?? "Unknown"}`
+            );
+          } else if (event.type === "task_complete") {
+            const globalCompleted = event.global_completed_tasks ?? 0;
+            const globalTotal = event.global_total_tasks ?? totalTasks;
+            setCompletedTasks(globalCompleted);
+            if (event.input_file) setLastProcessedFile(event.input_file);
+            if (event.success === false) {
+              setFailedTasks((prev) => prev + 1);
+            }
+            setStatusMessage(
+              event.success === false
+                ? `Failed: ${event.input_file ?? "unknown file"}`
+                : `Processed: ${event.input_file ?? "unknown file"}`
+            );
+            updateRunningTitle(globalCompleted, globalTotal);
+          } else if (event.type === "complete") {
+            const finalCompleted = event.completed_tasks ?? completedTasks;
+            const finalTotal = event.total_tasks ?? totalTasks;
+            setCompletedTasks(finalCompleted);
+            setTotalTasks(finalTotal);
+            setStatusMessage("Evaluation run complete");
+            console.log("Generated files:", event.output_files ?? []);
+            updateRunningTitle(finalCompleted, finalTotal);
+          } else if (event.type === "error") {
+            throw new Error(event.message ?? "Eval run failed");
+          }
+        }
+      }
 
       document.title = "✓ Evals Complete";
     } catch (error) {
       console.error("Error running evals:", error);
       document.title = "❌ Eval Error";
+      setStatusMessage("Evaluation run failed");
       setTimeout(() => {
         document.title = "Screenshot to Code";
       }, 5000);
@@ -97,6 +191,7 @@ function RunEvalsPage() {
   };
 
   const canRunEvals = selectedModels.length > 0 && selectedFiles.length > 0;
+  const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
     <div>
@@ -156,6 +251,31 @@ function RunEvalsPage() {
                   <code className="ml-2 bg-gray-100 px-2 py-0.5 rounded">
                     backend/evals_data/outputs
                   </code>
+                </div>
+              </div>
+            )}
+
+            {(isRunning || totalTasks > 0) && (
+              <div className="border-t border-gray-100 pt-3">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="font-medium text-gray-700">{statusMessage}</span>
+                  <span className="text-gray-600">
+                    {completedTasks} / {totalTasks || "?"} tasks
+                  </span>
+                </div>
+                <Progress value={progressPercent} className="h-2 mb-2" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-gray-600">
+                  <span>
+                    Current model:{" "}
+                    <span className="font-mono">{currentModel || "-"}</span>
+                  </span>
+                  <span>
+                    Failures: <span className="font-medium">{failedTasks}</span>
+                  </span>
+                  <span className="truncate" title={lastProcessedFile}>
+                    Last file:{" "}
+                    <span className="font-mono">{lastProcessedFile || "-"}</span>
+                  </span>
                 </div>
               </div>
             )}
