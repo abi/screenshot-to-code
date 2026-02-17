@@ -26,8 +26,27 @@ class TestModelSelectionAllKeys:
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.GPT_5_2_CODEX_HIGH,
-            Llm.GEMINI_3_PRO_PREVIEW_HIGH,
-            Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+            Llm.CLAUDE_OPUS_4_6,
+            Llm.GEMINI_3_PRO_PREVIEW_LOW,
+        ]
+        assert models == expected
+
+    @pytest.mark.asyncio
+    async def test_gemini_anthropic_update_text(self):
+        """All keys text update: uses edit-specific model mix."""
+        models = await self.model_selector.select_models(
+            generation_type="update",
+            input_mode="text",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+        )
+
+        expected = [
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+            Llm.GPT_5_2_CODEX_HIGH,
+            Llm.CLAUDE_SONNET_4_6,
+            Llm.GPT_5_2_CODEX_LOW,
         ]
         assert models == expected
 

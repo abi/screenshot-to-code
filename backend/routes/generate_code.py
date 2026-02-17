@@ -398,7 +398,14 @@ class ModelSelectionStage:
 
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key and openai_api_key:
-            if generation_type == "update":
+            if input_mode == "text" and generation_type == "create":
+                models = [
+                    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                    Llm.GPT_5_2_CODEX_HIGH,
+                    Llm.CLAUDE_OPUS_4_6,
+                    Llm.GEMINI_3_PRO_PREVIEW_LOW,
+                ]
+            elif generation_type == "update":
                 models = [
                     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
                     Llm.GPT_5_2_CODEX_HIGH,
