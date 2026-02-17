@@ -44,7 +44,7 @@ function RunEvalsPage() {
   const [stacks, setStacks] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedStack, setSelectedStack] = useState<string>("html_tailwind");
-  const [diffMode, setDiffMode] = useState(false);
+  const [diffMode, setDiffMode] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [showPaths, setShowPaths] = useState<boolean>(false);
   const [completedTasks, setCompletedTasks] = useState(0);
