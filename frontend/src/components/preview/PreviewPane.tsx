@@ -8,7 +8,6 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuExternalLink,
-  LuImage,
   LuRefreshCw,
   LuDownload,
 } from "react-icons/lu";
@@ -39,8 +38,7 @@ interface Props {
 
 function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
   const { appState } = useAppStore();
-  const { inputMode, referenceImages, head, commits, setHead } = useProjectStore();
-  const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
+  const { inputMode, head, commits, setHead } = useProjectStore();
   const [activeTab, setActiveTab] = useState("desktop");
   const [desktopScale, setDesktopScale] = useState(1);
   const [desktopViewMode, setDesktopViewMode] = useState<"fit" | "actual">("fit");
@@ -85,26 +83,16 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
               <TabsTrigger value="code" title="Code" data-testid="tab-code">
                 <FaCode />
               </TabsTrigger>
-              {referenceImages.length > 0 && (
-                <TabsTrigger value="reference" title="Reference Image">
-                  <LuImage />
-                </TabsTrigger>
-              )}
             </TabsList>
             {(activeTab === "desktop" || activeTab === "mobile") && (
               <div className="hidden sm:inline-flex items-center gap-1.5">
                 {activeTab === "desktop" && (
-                  <div
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-1.5 py-1 text-[11px] font-medium text-gray-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
-                    title={desktopViewMode === "fit"
-                      ? "Resized to fit this pane."
-                      : "Rendering at 100% scale. Use Fit to resize to this pane."}
-                  >
-                    <div className="inline-flex items-center rounded-md bg-white p-0.5 ring-1 ring-gray-200 dark:bg-zinc-950 dark:ring-zinc-700">
+                  <div className="inline-flex items-center gap-2">
+                    <div className="inline-flex items-center rounded-lg bg-white p-0.5 ring-1 ring-gray-200 dark:bg-zinc-950 dark:ring-zinc-700">
                       <button
                         type="button"
                         onClick={() => setDesktopViewMode("fit")}
-                        className={`rounded px-2 py-0.5 text-[11px] font-semibold transition-colors ${
+                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                           desktopViewMode === "fit"
                             ? "bg-gray-900 text-white dark:bg-zinc-200 dark:text-zinc-900"
                             : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
@@ -115,7 +103,7 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
                       <button
                         type="button"
                         onClick={() => setDesktopViewMode("actual")}
-                        className={`rounded px-2 py-0.5 text-[11px] font-semibold transition-colors ${
+                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                           desktopViewMode === "actual"
                             ? "bg-gray-900 text-white dark:bg-zinc-200 dark:text-zinc-900"
                             : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
@@ -125,8 +113,8 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
                       </button>
                     </div>
                     {desktopViewMode === "fit" && desktopScale < 0.999 && (
-                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                        Scaled: {Math.round(desktopScale * 100)}%
+                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-700">
+                        {Math.round(desktopScale * 100)}%
                       </span>
                     )}
                   </div>
@@ -232,51 +220,6 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
             settings={settings}
           />
         </TabsContent>
-        {referenceImages.length > 0 && (
-          <TabsContent value="reference" className="flex-1 min-h-0 mt-0 overflow-auto">
-            <div className="flex flex-col items-center gap-4 p-4">
-              {inputMode === "video" ? (
-                <video
-                  muted
-                  autoPlay
-                  loop
-                  className="max-w-full max-h-[80vh] rounded-lg border border-gray-200 dark:border-zinc-700"
-                  src={referenceImages[0]}
-                />
-              ) : (
-                <>
-                  <img
-                    className="max-w-full max-h-[80vh] object-contain rounded-lg border border-gray-200 dark:border-zinc-700"
-                    src={referenceImages[activeReferenceIndex] || referenceImages[0]}
-                    alt={`Reference ${activeReferenceIndex + 1}`}
-                  />
-                  {referenceImages.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto">
-                      {referenceImages.map((image, index) => (
-                        <button
-                          key={`${image}-${index}`}
-                          type="button"
-                          onClick={() => setActiveReferenceIndex(index)}
-                          className={`h-12 w-12 rounded-md overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                            activeReferenceIndex === index
-                              ? "border-blue-500"
-                              : "border-transparent hover:border-gray-300 dark:hover:border-zinc-600"
-                          }`}
-                        >
-                          <img
-                            className="h-full w-full object-cover"
-                            src={image}
-                            alt={`Reference thumbnail ${index + 1}`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </TabsContent>
-        )}
       </Tabs>
     </div>
   );

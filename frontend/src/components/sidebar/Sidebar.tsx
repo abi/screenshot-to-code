@@ -279,20 +279,23 @@ function Sidebar({
         )}
 
         {isViewingOlderVersion && currentVersionNumber !== null ? (
-          <div className="mb-3 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50 px-4 py-3">
-            <p className="text-sm text-center text-gray-500 dark:text-gray-400">
-              Viewing version {currentVersionNumber}
+          <div className="mb-4 flex flex-col items-center py-6">
+            <p className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">
+              Version {currentVersionNumber}
             </p>
-            <div className="mt-2.5 flex gap-2">
+            <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+              You are viewing an older version
+            </p>
+            <div className="mt-4 flex gap-2">
               <button
                 onClick={onOpenVersions}
-                className="flex-1 rounded-lg border border-gray-300 dark:border-zinc-600 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                className="rounded-lg border border-gray-300 dark:border-zinc-600 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
               >
                 All versions
               </button>
               <button
                 onClick={() => latestCommitHash && setHead(latestCommitHash)}
-                className="flex-1 rounded-lg bg-gray-900 dark:bg-white px-3 py-1.5 text-xs font-medium text-white dark:text-black hover:bg-black dark:hover:bg-gray-200 transition-colors"
+                className="rounded-lg bg-gray-900 dark:bg-white px-4 py-2 text-sm font-medium text-white dark:text-black hover:bg-black dark:hover:bg-gray-200 transition-colors"
               >
                 View latest
               </button>
