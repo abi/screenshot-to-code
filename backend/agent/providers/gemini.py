@@ -38,15 +38,21 @@ def serialize_gemini_tools(tools: List[CanonicalToolDefinition]) -> List[types.T
 def _get_gemini_api_model_name(model: Llm) -> str:
     if model in [Llm.GEMINI_3_FLASH_PREVIEW_HIGH, Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL]:
         return "gemini-3-flash-preview"
+    if model in [Llm.GEMINI_3_1_PRO_PREVIEW_HIGH, Llm.GEMINI_3_1_PRO_PREVIEW_LOW]:
+        return "gemini-3.1-pro-preview"
     if model in [Llm.GEMINI_3_PRO_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_LOW]:
         return "gemini-3-pro-preview"
     return model.value
 
 
 def _get_thinking_level_for_model(model: Llm) -> str:
-    if model in [Llm.GEMINI_3_FLASH_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_HIGH]:
+    if model in [
+        Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+        Llm.GEMINI_3_PRO_PREVIEW_HIGH,
+        Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
+    ]:
         return "high"
-    if model == Llm.GEMINI_3_PRO_PREVIEW_LOW:
+    if model in [Llm.GEMINI_3_PRO_PREVIEW_LOW, Llm.GEMINI_3_1_PRO_PREVIEW_LOW]:
         return "low"
     if model == Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL:
         return "minimal"

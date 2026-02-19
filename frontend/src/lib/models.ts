@@ -11,6 +11,8 @@ export enum CodeGenerationModel {
   GPT_5_2_CODEX_XHIGH = "gpt-5.2-codex (xhigh thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
   GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
+  GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)",
+  GEMINI_3_1_PRO_PREVIEW_LOW = "gemini-3.1-pro-preview (low thinking)",
   GEMINI_3_PRO_PREVIEW_HIGH = "gemini-3-pro-preview (high thinking)",
   GEMINI_3_PRO_PREVIEW_LOW = "gemini-3-pro-preview (low thinking)",
 }
@@ -45,6 +47,14 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gemini-3-flash-preview (minimal thinking)": {
     name: "Gemini 3 Flash (minimal)",
+    inBeta: true,
+  },
+  "gemini-3.1-pro-preview (high thinking)": {
+    name: "Gemini 3.1 Pro (high)",
+    inBeta: true,
+  },
+  "gemini-3.1-pro-preview (low thinking)": {
+    name: "Gemini 3.1 Pro (low)",
     inBeta: true,
   },
   "gemini-3-pro-preview (high thinking)": {

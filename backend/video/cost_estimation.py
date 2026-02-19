@@ -46,6 +46,10 @@ GEMINI_PRICING = {
         "output_per_million": 3.00,  # including thinking tokens
     },
     # Gemini 3 Pro Preview
+    "gemini-3.1-pro-preview": {
+        "input_per_million": 2.00,
+        "output_per_million": 12.00,
+    },
     "gemini-3-pro-preview": {
         "input_per_million": 2.00,  # prompts <= 200k tokens
         "output_per_million": 12.00,  # including thinking tokens
@@ -56,6 +60,8 @@ GEMINI_PRICING = {
 def get_model_api_name(model: Llm) -> str:
     if model in [Llm.GEMINI_3_FLASH_PREVIEW_HIGH, Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL]:
         return "gemini-3-flash-preview"
+    elif model in [Llm.GEMINI_3_1_PRO_PREVIEW_HIGH, Llm.GEMINI_3_1_PRO_PREVIEW_LOW]:
+        return "gemini-3.1-pro-preview"
     elif model in [Llm.GEMINI_3_PRO_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_LOW]:
         return "gemini-3-pro-preview"
     return model.value

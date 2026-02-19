@@ -18,6 +18,8 @@ class Llm(Enum):
     # Gemini
     GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)"
     GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)"
+    GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)"
+    GEMINI_3_1_PRO_PREVIEW_LOW = "gemini-3.1-pro-preview (low thinking)"
     GEMINI_3_PRO_PREVIEW_HIGH = "gemini-3-pro-preview (high thinking)"
     GEMINI_3_PRO_PREVIEW_LOW = "gemini-3-pro-preview (low thinking)"
 
@@ -45,6 +47,8 @@ MODEL_PROVIDER: dict[Llm, str] = {
     # Gemini models
     Llm.GEMINI_3_FLASH_PREVIEW_HIGH: "gemini",
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL: "gemini",
+    Llm.GEMINI_3_1_PRO_PREVIEW_HIGH: "gemini",
+    Llm.GEMINI_3_1_PRO_PREVIEW_LOW: "gemini",
     Llm.GEMINI_3_PRO_PREVIEW_HIGH: "gemini",
     Llm.GEMINI_3_PRO_PREVIEW_LOW: "gemini",
 }
