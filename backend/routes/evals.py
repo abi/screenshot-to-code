@@ -1,13 +1,16 @@
 import os
+import asyncio
+import json
 from fastapi import APIRouter, Query, Request, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from evals.utils import image_to_data_url
 from evals.config import EVALS_DIR
 from typing import Set
-from evals.runner import run_image_evals
+from evals.runner import run_image_evals, count_pending_eval_tasks
 from typing import List, Dict
 from llm import Llm
-from prompts.types import Stack
+from prompts.prompt_types import Stack
 from pathlib import Path
 
 router = APIRouter()
@@ -177,6 +180,7 @@ class RunEvalsRequest(BaseModel):
     models: List[str]
     stack: Stack
     files: List[str] = []  # Optional list of specific file paths to run evals on
+    diff_mode: bool = False
 
 
 @router.post("/run_evals", response_model=List[str])
@@ -186,18 +190,141 @@ async def run_evals(request: RunEvalsRequest) -> List[str]:
 
     for model in request.models:
         output_files = await run_image_evals(
-            model=model, stack=request.stack, input_files=request.files
+            model=model,
+            stack=request.stack,
+            input_files=request.files,
+            diff_mode=request.diff_mode,
         )
         all_output_files.extend(output_files)
 
     return all_output_files
 
 
+def _count_eval_files(selected_files: List[str]) -> int:
+    if selected_files:
+        return len([f for f in selected_files if f.endswith(".png")])
+
+    input_dir = os.path.join(EVALS_DIR, "inputs")
+    return len([f for f in os.listdir(input_dir) if f.endswith(".png")])
+
+
+@router.post("/run_evals_stream")
+async def run_evals_stream(request: RunEvalsRequest):
+    """Run evaluations and stream progress events as newline-delimited JSON."""
+    if not request.models:
+        raise HTTPException(status_code=400, detail="At least one model is required")
+
+    per_model_task_counts: Dict[str, int] = {}
+    per_model_skipped_existing: Dict[str, int] = {}
+    if request.diff_mode:
+        for model in request.models:
+            pending_tasks, skipped_tasks = count_pending_eval_tasks(
+                stack=request.stack,
+                model=model,
+                input_files=request.files,
+                n=N,
+                diff_mode=True,
+            )
+            per_model_task_counts[model] = pending_tasks
+            per_model_skipped_existing[model] = skipped_tasks
+    else:
+        per_model_task_count = _count_eval_files(request.files)
+        for model in request.models:
+            per_model_task_counts[model] = per_model_task_count
+            per_model_skipped_existing[model] = 0
+
+    total_tasks = sum(per_model_task_counts.values())
+    total_skipped_existing = sum(per_model_skipped_existing.values())
+
+    async def event_generator():
+        queue: asyncio.Queue[dict] = asyncio.Queue()
+
+        async def emit(event: dict) -> None:
+            await queue.put(event)
+
+        async def run_all_models() -> None:
+            all_output_files: List[str] = []
+            completed_offset = 0
+
+            try:
+                await emit(
+                    {
+                        "type": "start",
+                        "total_models": len(request.models),
+                        "tasks_per_model": per_model_task_counts,
+                        "total_tasks": total_tasks,
+                        "completed_tasks": 0,
+                        "diff_mode": request.diff_mode,
+                        "total_skipped_existing": total_skipped_existing,
+                    }
+                )
+
+                for model_index, model in enumerate(request.models, start=1):
+                    model_task_count = per_model_task_counts.get(model, 0)
+                    model_skipped_existing = per_model_skipped_existing.get(model, 0)
+                    await emit(
+                        {
+                            "type": "model_start",
+                            "model": model,
+                            "model_index": model_index,
+                            "total_models": len(request.models),
+                            "model_tasks": model_task_count,
+                            "model_skipped_existing": model_skipped_existing,
+                        }
+                    )
+
+                    async def on_progress(event: dict) -> None:
+                        await emit(
+                            {
+                                **event,
+                                "model": model,
+                                "model_index": model_index,
+                                "total_models": len(request.models),
+                                "global_completed_tasks": completed_offset
+                                + event.get("completed_tasks", 0),
+                                "global_total_tasks": total_tasks,
+                            }
+                        )
+
+                    output_files = await run_image_evals(
+                        model=model,
+                        stack=request.stack,
+                        input_files=request.files,
+                        diff_mode=request.diff_mode,
+                        progress_callback=on_progress,
+                    )
+                    all_output_files.extend(output_files)
+                    completed_offset += model_task_count
+
+                await emit(
+                    {
+                        "type": "complete",
+                        "completed_tasks": total_tasks,
+                        "total_tasks": total_tasks,
+                        "output_files": all_output_files,
+                    }
+                )
+            except Exception as e:
+                await emit({"type": "error", "message": str(e)})
+            finally:
+                await emit({"type": "done"})
+
+        producer = asyncio.create_task(run_all_models())
+        while True:
+            event = await queue.get()
+            if event.get("type") == "done":
+                break
+            yield json.dumps(event) + "\n"
+        await producer
+
+    return StreamingResponse(event_generator(), media_type="application/x-ndjson")
+
+
 @router.get("/models", response_model=Dict[str, List[str]])
 async def get_models():
     current_models = [model.value for model in Llm]
 
-    # Import Stack type from prompts.types and get all literal values
+    # Import Stack type from prompts.prompt_types and get all literal values
     available_stacks = list(Stack.__args__)
 
     return {"models": current_models, "stacks": available_stacks}

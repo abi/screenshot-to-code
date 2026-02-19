@@ -2,19 +2,23 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
 import toast from "react-hot-toast";
+import OutputSettingsSection from "../../settings/OutputSettingsSection";
+import { Stack } from "../../../lib/stacks";
 
 interface Props {
   doCreateFromText: (text: string) => void;
+  stack: Stack;
+  setStack: (stack: Stack) => void;
 }
 
 const EXAMPLE_PROMPTS = [
-  "A cozy cafe menu board with seasonal specials",
-  "A minimalist portfolio with case studies and a contact section",
-  "A fintech savings app dashboard with balances and goals",
-  "A travel itinerary planner with map and daily schedule",
+  "An ecommerce homepage for eco-friendly skincare with product grid, reviews, and newsletter signup",
+  "A portfolio site for a product designer with case studies, process steps, and contact",
+  "A mobile fitness app dashboard with workout plan, progress ring, and quick-start buttons",
+  "A music streaming app with now-playing, recommended playlists, and recent listens",
 ];
 
-function TextTab({ doCreateFromText }: Props) {
+function TextTab({ doCreateFromText, stack, setStack }: Props) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -98,6 +102,11 @@ function TextTab({ doCreateFromText }: Props) {
                 ))}
               </div>
             </div>
+
+            <OutputSettingsSection
+              stack={stack}
+              setStack={setStack}
+            />
 
             <Button
               onClick={handleGenerate}

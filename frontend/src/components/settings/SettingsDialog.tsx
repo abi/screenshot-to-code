@@ -26,9 +26,12 @@ import {
 interface Props {
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
 }
 
-function SettingsDialog({ settings, setSettings }: Props) {
+function SettingsDialog({ settings, setSettings, open, onOpenChange, trigger }: Props) {
   const handleThemeChange = (theme: EditorTheme) => {
     setSettings((s) => ({
       ...s,
@@ -37,9 +40,9 @@ function SettingsDialog({ settings, setSettings }: Props) {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger>
-        <FaCog />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild={!!trigger}>
+        {trigger || <FaCog />}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

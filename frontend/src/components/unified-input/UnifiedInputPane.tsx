@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Stack } from "../../lib/stacks";
 import { Settings } from "../../types";
@@ -18,6 +18,7 @@ interface Props {
   doCreateFromText: (text: string) => void;
   importFromCode: (code: string, stack: Stack) => void;
   settings: Settings;
+  setSettings: React.Dispatch<React.SetStateAction<Settings>>;
 }
 
 type InputTab = "upload" | "url" | "text" | "import" | "history";
@@ -27,8 +28,16 @@ function UnifiedInputPane({
   doCreateFromText,
   importFromCode,
   settings,
+  setSettings,
 }: Props) {
   const [activeTab, setActiveTab] = useState<InputTab>("upload");
+
+  function setStack(stack: Stack) {
+    setSettings((prev: Settings) => ({
+      ...prev,
+      generatedCodeConfig: stack,
+    }));
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4">
@@ -87,18 +96,28 @@ function UnifiedInputPane({
         </TabsList>
 
         <TabsContent value="upload" className="mt-0">
-          <UploadTab doCreate={doCreate} />
+          <UploadTab
+            doCreate={doCreate}
+            stack={settings.generatedCodeConfig}
+            setStack={setStack}
+          />
         </TabsContent>
 
         <TabsContent value="url" className="mt-0">
           <UrlTab
             doCreate={doCreate}
             screenshotOneApiKey={settings.screenshotOneApiKey}
+            stack={settings.generatedCodeConfig}
+            setStack={setStack}
           />
         </TabsContent>
 
         <TabsContent value="text" className="mt-0">
-          <TextTab doCreateFromText={doCreateFromText} />
+          <TextTab
+            doCreateFromText={doCreateFromText}
+            stack={settings.generatedCodeConfig}
+            setStack={setStack}
+          />
         </TabsContent>
 
         <TabsContent value="import" className="mt-0">

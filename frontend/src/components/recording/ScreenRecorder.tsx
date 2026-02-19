@@ -4,6 +4,8 @@ import { ScreenRecorderState } from "../../types";
 import { blobToBase64DataUrl, getVideoDurationSecondsFromBlob } from "./utils";
 import fixWebmDuration from "webm-duration-fix";
 import toast from "react-hot-toast";
+import OutputSettingsSection from "../settings/OutputSettingsSection";
+import { Stack } from "../../lib/stacks";
 
 interface Props {
   screenRecorderState: ScreenRecorderState;
@@ -12,12 +14,16 @@ interface Props {
     referenceImages: string[],
     inputMode: "image" | "video"
   ) => void;
+  stack: Stack;
+  setStack: (stack: Stack) => void;
 }
 
 function ScreenRecorder({
   screenRecorderState,
   setScreenRecorderState,
   generateCode,
+  stack,
+  setStack,
 }: Props) {
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
@@ -128,7 +134,7 @@ function ScreenRecorder({
       )}
 
       {screenRecorderState === ScreenRecorderState.FINISHED && (
-        <div className="flex items-center flex-col gap-y-4">
+        <div className="flex items-center flex-col gap-y-4 w-full max-w-md">
           <div className="flex items-center mr-2 text-xl gap-x-1">
             <span>Screen Recording Captured.</span>
           </div>
@@ -137,20 +143,27 @@ function ScreenRecorder({
               muted
               autoPlay
               loop
-              className="w-[340px] border border-gray-200 rounded-md"
+              className="w-full border border-gray-200 rounded-md"
               src={screenRecordingDataUrl}
             />
           )}
-          <div className="flex gap-x-2">
+          <div className="w-full">
+            <OutputSettingsSection
+              stack={stack}
+              setStack={setStack}
+            />
+          </div>
+          <div className="flex gap-x-2 w-full">
             <Button
               variant="secondary"
+              className="flex-1"
               onClick={() =>
                 setScreenRecorderState(ScreenRecorderState.INITIAL)
               }
             >
               Re-record
             </Button>
-            <Button onClick={kickoffGeneration}>Generate</Button>
+            <Button className="flex-1" onClick={kickoffGeneration}>Generate</Button>
           </div>
         </div>
       )}

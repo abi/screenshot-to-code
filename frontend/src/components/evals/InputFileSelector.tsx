@@ -22,6 +22,10 @@ function InputFileSelector({ onFilesSelected }: InputFileSelectorProps) {
     fetchInputFiles();
   }, []);
 
+  useEffect(() => {
+    onFilesSelected(selectedFiles);
+  }, [selectedFiles, onFilesSelected]);
+
   const fetchInputFiles = async () => {
     setIsLoading(true);
     try {
@@ -36,7 +40,6 @@ function InputFileSelector({ onFilesSelected }: InputFileSelectorProps) {
       // By default, select all files
       const allFilePaths = data.map((file: InputFile) => file.path);
       setSelectedFiles(allFilePaths);
-      onFilesSelected(allFilePaths);
     } catch (error) {
       console.error("Error fetching input files:", error);
     } finally {
@@ -46,24 +49,19 @@ function InputFileSelector({ onFilesSelected }: InputFileSelectorProps) {
 
   const handleFileToggle = (filePath: string) => {
     setSelectedFiles((prev) => {
-      const newSelection = prev.includes(filePath)
+      return prev.includes(filePath)
         ? prev.filter((path) => path !== filePath)
         : [...prev, filePath];
-      
-      onFilesSelected(newSelection);
-      return newSelection;
     });
   };
 
   const handleSelectAll = () => {
     const allFilePaths = inputFiles.map((file) => file.path);
     setSelectedFiles(allFilePaths);
-    onFilesSelected(allFilePaths);
   };
 
   const handleClearAll = () => {
     setSelectedFiles([]);
-    onFilesSelected([]);
   };
 
   const toggleExpanded = () => {

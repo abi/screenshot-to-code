@@ -1,57 +1,52 @@
-from config import ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY
-from llm import Llm, ANTHROPIC_MODELS, GEMINI_MODELS
-from models import (
-    stream_claude_response,
-    stream_gemini_response,
-    stream_openai_response,
+from config import (
+    ANTHROPIC_API_KEY,
+    GEMINI_API_KEY,
+    OPENAI_API_KEY,
+    OPENAI_BASE_URL,
 )
-from prompts import assemble_prompt
-from prompts.types import Stack
+from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
+from agent.runner import Agent
+from prompts.create.image import build_image_prompt_messages
+from prompts.prompt_types import Stack
 from openai.types.chat import ChatCompletionMessageParam
+from typing import Any
 
 
 async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> str:
-    prompt_messages = assemble_prompt([image_url], stack)
-    return await generate_code_core(prompt_messages, model)
+    prompt_messages = build_image_prompt_messages(
+        image_data_urls=[image_url],
+        stack=stack,
+        text_prompt="",
+        image_generation_enabled=True,
+    )
+    async def send_message(
+        _: str,
+        __: str | None,
+        ___: int,
+        ____: dict[str, Any] | None = None,
+        _____: str | None = None,
+    ) -> None:
+        # Evals do not stream tool/assistant messages to a frontend.
+        return None
 
+    if model in ANTHROPIC_MODELS and not ANTHROPIC_API_KEY:
+        raise Exception("Anthropic API key not found")
+    if model in GEMINI_MODELS and not GEMINI_API_KEY:
+        raise Exception("Gemini API key not found")
+    if model in OPENAI_MODELS and not OPENAI_API_KEY:
+        raise Exception("OpenAI API key not found")
 
-async def generate_code_core(
-    prompt_messages: list[ChatCompletionMessageParam], model: Llm
-) -> str:
+    print(f"[EVALS] Using agent runner for model: {model.value}")
 
-    async def process_chunk(_: str):
-        pass
-
-    if model in ANTHROPIC_MODELS:
-        if not ANTHROPIC_API_KEY:
-            raise Exception("Anthropic API key not found")
-
-        completion = await stream_claude_response(
-            prompt_messages,
-            api_key=ANTHROPIC_API_KEY,
-            callback=lambda x: process_chunk(x),
-            model_name=model.value,
-        )
-    elif model in GEMINI_MODELS:
-        if not GEMINI_API_KEY:
-            raise Exception("Gemini API key not found")
-
-        completion = await stream_gemini_response(
-            prompt_messages,
-            api_key=GEMINI_API_KEY,
-            callback=lambda x: process_chunk(x),
-            model=model,
-        )
-    else:
-        if not OPENAI_API_KEY:
-            raise Exception("OpenAI API key not found")
-
-        completion = await stream_openai_response(
-            prompt_messages,
-            api_key=OPENAI_API_KEY,
-            base_url=None,
-            callback=lambda x: process_chunk(x),
-            model_name=model.value,
-        )
-
-    return completion["code"]
+    runner = Agent(
+        send_message=send_message,
+        variant_index=0,
+        openai_api_key=OPENAI_API_KEY,
+        openai_base_url=OPENAI_BASE_URL,
+        anthropic_api_key=ANTHROPIC_API_KEY,
+        gemini_api_key=GEMINI_API_KEY,
+        should_generate_images=True,
+        initial_file_state=None,
+        option_codes=None,
+    )
+    return await runner.run(model, prompt_messages)

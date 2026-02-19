@@ -20,8 +20,14 @@ type WebSocketResponse = {
     | "variantComplete"
     | "variantError"
     | "variantCount"
-    | "thinking";
-  value: string;
+    | "variantModels"
+    | "thinking"
+    | "assistant"
+    | "toolStart"
+    | "toolResult";
+  value?: string;
+  data?: any;
+  eventId?: string;
   variantIndex: number;
 };
 
@@ -32,7 +38,11 @@ interface CodeGenerationCallbacks {
   onVariantComplete: (variantIndex: number) => void;
   onVariantError: (variantIndex: number, error: string) => void;
   onVariantCount: (count: number) => void;
-  onThinking: (content: string, variantIndex: number) => void;
+  onVariantModels: (models: string[]) => void;
+  onThinking: (content: string, variantIndex: number, eventId?: string) => void;
+  onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
+  onToolStart: (data: any, variantIndex: number, eventId?: string) => void;
+  onToolResult: (data: any, variantIndex: number, eventId?: string) => void;
   onCancel: () => void;
   onComplete: () => void;
 }
@@ -55,22 +65,30 @@ export function generateCode(
   ws.addEventListener("message", async (event: MessageEvent) => {
     const response = JSON.parse(event.data) as WebSocketResponse;
     if (response.type === "chunk") {
-      callbacks.onChange(response.value, response.variantIndex);
+      callbacks.onChange(response.value || "", response.variantIndex);
     } else if (response.type === "status") {
-      callbacks.onStatusUpdate(response.value, response.variantIndex);
+      callbacks.onStatusUpdate(response.value || "", response.variantIndex);
     } else if (response.type === "setCode") {
-      callbacks.onSetCode(response.value, response.variantIndex);
+      callbacks.onSetCode(response.value || "", response.variantIndex);
     } else if (response.type === "variantComplete") {
       callbacks.onVariantComplete(response.variantIndex);
     } else if (response.type === "variantError") {
-      callbacks.onVariantError(response.variantIndex, response.value);
+      callbacks.onVariantError(response.variantIndex, response.value || "");
     } else if (response.type === "variantCount") {
-      callbacks.onVariantCount(parseInt(response.value));
+      callbacks.onVariantCount(parseInt(response.value || "1"));
+    } else if (response.type === "variantModels") {
+      callbacks.onVariantModels(response.data?.models || []);
     } else if (response.type === "thinking") {
-      callbacks.onThinking(response.value, response.variantIndex);
+      callbacks.onThinking(response.value || "", response.variantIndex, response.eventId);
+    } else if (response.type === "assistant") {
+      callbacks.onAssistant(response.value || "", response.variantIndex, response.eventId);
+    } else if (response.type === "toolStart") {
+      callbacks.onToolStart(response.data, response.variantIndex, response.eventId);
+    } else if (response.type === "toolResult") {
+      callbacks.onToolResult(response.data, response.variantIndex, response.eventId);
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
-      toast.error(response.value);
+      toast.error(response.value || ERROR_MESSAGE);
     }
   });
 

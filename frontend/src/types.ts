@@ -31,17 +31,38 @@ export enum ScreenRecorderState {
   FINISHED = "finished",
 }
 
+export type PromptMessageRole = "user" | "assistant";
+export type PromptAssetType = "image" | "video";
+
+export interface PromptAsset {
+  id: string;
+  type: PromptAssetType;
+  dataUrl: string;
+}
+
 export interface PromptContent {
   text: string;
   images: string[]; // Array of data URLs
+  videos?: string[]; // Array of data URLs
+}
+
+export interface PromptHistoryMessage {
+  role: PromptMessageRole;
+  text: string;
+  images: string[];
+  videos: string[];
 }
 
 export interface CodeGenerationParams {
   generationType: "create" | "update";
   inputMode: "image" | "video" | "text";
   prompt: PromptContent;
-  history?: PromptContent[];
-  isImportedFromCode?: boolean;
+  history?: PromptHistoryMessage[];
+  fileState?: {
+    path: string;
+    content: string;
+  };
+  optionCodes?: string[];
   authToken?: string;
 }
 

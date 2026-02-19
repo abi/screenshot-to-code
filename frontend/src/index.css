@@ -479,11 +479,105 @@ html {
   scrollbar-gutter: stable;
 }
 
+.active-step-shimmer {
+  background: linear-gradient(
+    90deg,
+    #374151 0%,
+    #374151 27%,
+    #6b7280 29%,
+    #f3f4f6 30%,
+    #6b7280 31%,
+    #374151 33%,
+    #374151 67%,
+    #6b7280 69%,
+    #f3f4f6 70%,
+    #6b7280 71%,
+    #374151 73%,
+    #374151 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: searchlight 5.5s linear infinite;
+}
+
+:is(.dark) .active-step-shimmer {
+  background: linear-gradient(
+    90deg,
+    #94a3b8 0%,
+    #94a3b8 27%,
+    #cbd5e1 29%,
+    #ffffff 30%,
+    #cbd5e1 31%,
+    #94a3b8 33%,
+    #94a3b8 67%,
+    #cbd5e1 69%,
+    #ffffff 70%,
+    #cbd5e1 71%,
+    #94a3b8 73%,
+    #94a3b8 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: searchlight 5.5s linear infinite;
+}
+
+/* Working indicator background motion */
+.working-indicator-bg {
+  background: linear-gradient(
+    90deg,
+    #f5f3ff 0%,
+    #ffffff 45%,
+    #ede9fe 55%,
+    #ffffff 100%
+  );
+  background-size: 220% 100%;
+  animation: workingGradientSlide 4s ease-in-out infinite;
+}
+
+:is(.dark) .working-indicator-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(76, 29, 149, 0.2) 0%,
+    rgba(24, 24, 27, 1) 45%,
+    rgba(76, 29, 149, 0.28) 55%,
+    rgba(24, 24, 27, 1) 100%
+  );
+  background-size: 220% 100%;
+}
+
+@keyframes workingGradientSlide {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes searchlight {
+  0% {
+    background-position: 140% center;
+  }
+  100% {
+    background-position: -40% center;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
   }
+  html, body, #root {
+    @apply h-full;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground m-0;
   }
 }

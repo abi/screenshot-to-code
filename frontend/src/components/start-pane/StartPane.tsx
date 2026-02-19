@@ -12,6 +12,7 @@ interface Props {
   doCreateFromText: (text: string) => void;
   importFromCode: (code: string, stack: Stack) => void;
   settings: Settings;
+  setSettings: React.Dispatch<React.SetStateAction<Settings>>;
 }
 
 const StartPane: React.FC<Props> = ({
@@ -19,6 +20,7 @@ const StartPane: React.FC<Props> = ({
   doCreateFromText,
   importFromCode,
   settings,
+  setSettings,
 }) => {
   return (
     <div className="flex flex-col justify-center items-center py-8">
@@ -27,6 +29,7 @@ const StartPane: React.FC<Props> = ({
         doCreateFromText={doCreateFromText}
         importFromCode={importFromCode}
         settings={settings}
+        setSettings={setSettings}
       />
     </div>
   );

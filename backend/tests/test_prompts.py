@@ -1,20 +1,20 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import sys
-from typing import Any, Dict, List, TypedDict
+from typing import Any, Dict, List, TypedDict, cast
 from openai.types.chat import ChatCompletionMessageParam
 
 # Mock moviepy before importing prompts
 sys.modules["moviepy"] = MagicMock()
 sys.modules["moviepy.editor"] = MagicMock()
 
-from prompts import create_prompt
-from prompts.types import Stack
+from prompts.pipeline import build_prompt_messages
+from prompts.plan import derive_prompt_construction_plan
+from prompts.prompt_types import Stack
 
 # Type definitions for test structures
 class ExpectedResult(TypedDict):
     messages: List[ChatCompletionMessageParam]
-    image_cache: Dict[str, str]
 
 
 def assert_structure_match(actual: object, expected: object, path: str = "") -> None:
@@ -82,6 +82,40 @@ class TestCreatePrompt:
     RESULT_IMAGE_URL: str = "data:image/png;base64,result_image_data"
     MOCK_SYSTEM_PROMPT: str = "Mock HTML Tailwind system prompt"
     TEST_STACK: Stack = "html_tailwind"
+    ENABLED_IMAGE_POLICY: str = (
+        "Image generation is enabled for this request. Use generate_images for "
+        "missing assets when needed."
+    )
+
+    def test_plan_create_uses_create_from_input(self) -> None:
+        plan = derive_prompt_construction_plan(
+            stack=self.TEST_STACK,
+            input_mode="image",
+            generation_type="create",
+            history=[],
+            file_state=None,
+        )
+        assert plan["construction_strategy"] == "create_from_input"
+
+    def test_plan_update_with_history_uses_history_strategy(self) -> None:
+        plan = derive_prompt_construction_plan(
+            stack=self.TEST_STACK,
+            input_mode="image",
+            generation_type="update",
+            history=[{"role": "user", "text": "change", "images": [], "videos": []}],
+            file_state=None,
+        )
+        assert plan["construction_strategy"] == "update_from_history"
+
+    def test_plan_update_without_history_uses_file_snapshot_strategy(self) -> None:
+        plan = derive_prompt_construction_plan(
+            stack=self.TEST_STACK,
+            input_mode="image",
+            generation_type="update",
+            history=[],
+            file_state={"path": "index.html", "content": "<html></html>"},
+        )
+        assert plan["construction_strategy"] == "update_from_file_snapshot"
 
     @pytest.mark.asyncio
     async def test_image_mode_create_single_image(self) -> None:
@@ -92,18 +126,17 @@ class TestCreatePrompt:
             "generationType": "create",
         }
 
-        # Mock the system prompts
-        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
-
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure
@@ -127,12 +160,47 @@ class TestCreatePrompt:
                         ],
                     },
                 ],
-                "image_cache": {},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
+
+    @pytest.mark.asyncio
+    async def test_image_mode_create_with_image_generation_disabled(self) -> None:
+        params: Dict[str, Any] = {
+            "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
+            "generationType": "create",
+        }
+
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", new=self.MOCK_SYSTEM_PROMPT):
+            messages = await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type=params["generationType"],
+                prompt=params["prompt"],
+                history=[],
+                image_generation_enabled=False,
+            )
+
+        system_content = messages[0].get("content")
+        assert isinstance(system_content, str)
+        assert system_content == self.MOCK_SYSTEM_PROMPT
+
+        user_content = messages[1].get("content")
+        assert isinstance(user_content, list)
+        text_part = next(
+            (
+                part
+                for part in user_content
+                if isinstance(part, dict) and part.get("type") == "text"
+            ),
+            None,
+        )
+        assert isinstance(text_part, dict)
+        user_text = text_part.get("text")
+        assert isinstance(user_text, str)
+        assert "Image generation is disabled for this request. Do not call generate_images." in user_text
 
 
     @pytest.mark.asyncio
@@ -143,60 +211,76 @@ class TestCreatePrompt:
             "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
             "generationType": "update",
             "history": [
-                {"text": "<html>Initial code</html>"},  # Assistant's initial code
-                {"text": "Make the background blue"},  # User's update request
-                {"text": "<html>Updated code</html>"},  # Assistant's response
-                {"text": "Add a header"},  # User's new request
+                {"role": "assistant", "text": "<html>Initial code</html>", "images": [], "videos": []},
+                {"role": "user", "text": "Make the background blue", "images": [], "videos": []},
+                {"role": "assistant", "text": "<html>Updated code</html>", "images": [], "videos": []},
+                {"role": "user", "text": "Add a header", "images": [], "videos": []},
             ],
         }
 
-        # Mock the system prompts and image cache function
-        mock_system_prompts = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
-
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), patch(
-            "prompts.create_alt_url_mapping", return_value={"mock": "cache"}
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
         ):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
                     {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": self.TEST_IMAGE_URL,
-                                    "detail": "high",
-                                },
-                            },
-                            {
-                                "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
-                            },
-                        ],
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
                     },
                     {"role": "assistant", "content": "<html>Initial code</html>"},
-                    {"role": "user", "content": "Make the background blue"},
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Selected stack: {self.TEST_STACK}.\n\n"
+                            f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                            "Make the background blue"
+                        ),
+                    },
                     {"role": "assistant", "content": "<html>Updated code</html>"},
                     {"role": "user", "content": "Add a header"},
                 ],
-                "image_cache": {"mock": "cache"},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
+
+    @pytest.mark.asyncio
+    async def test_update_history_with_image_generation_disabled(self) -> None:
+        with patch("prompts.system_prompt.SYSTEM_PROMPT", new=self.MOCK_SYSTEM_PROMPT):
+            messages = await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type="update",
+                prompt={"text": "", "images": [self.TEST_IMAGE_URL], "videos": []},
+                history=[
+                    {"role": "assistant", "text": "<html>Initial code</html>", "images": [], "videos": []},
+                    {"role": "user", "text": "Make the background blue", "images": [], "videos": []},
+                    {"role": "assistant", "text": "<html>Updated code</html>", "images": [], "videos": []},
+                ],
+                image_generation_enabled=False,
+            )
+
+        system_content = messages[0].get("content")
+        assert isinstance(system_content, str)
+        assert system_content == self.MOCK_SYSTEM_PROMPT
+
+        first_user_content = messages[2].get("content")
+        assert isinstance(first_user_content, str)
+        assert "Selected stack: html_tailwind." in first_user_content
+        assert "Image generation is disabled for this request. Do not call generate_images." in first_user_content
+        assert "Make the background blue" in first_user_content
 
     @pytest.mark.asyncio
     async def test_text_mode_create_generation(self) -> None:
@@ -210,21 +294,17 @@ class TestCreatePrompt:
             },
             "generationType": "create"
         }
-        
-        # Mock the text system prompts
-        mock_text_system_prompts: Dict[str, str] = {
-            self.TEST_STACK: "Mock Text System Prompt"
-        }
-        
-        with patch('prompts.TEXT_SYSTEM_PROMPTS', mock_text_system_prompts):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="text",
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
             
             # Define expected structure
@@ -232,18 +312,17 @@ class TestCreatePrompt:
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Mock Text System Prompt"
+                        "content": self.MOCK_SYSTEM_PROMPT
                     },
                     {
                         "role": "user",
-                        "content": f"Generate UI for {text_description}"
+                        "content": f"<CONTAINS:Generate UI for {text_description}>"
                     }
                 ],
-                "image_cache": {}
             }
             
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -258,28 +337,23 @@ class TestCreatePrompt:
             },
             "generationType": "update",
             "history": [
-                {"text": "<html>Initial dashboard</html>"},  # Assistant's initial code
-                {"text": "Add a sidebar"},                   # User's update request
-                {"text": "<html>Dashboard with sidebar</html>"},  # Assistant's response
-                {"text": "Now add a navigation menu"}       # User's new request
+                {"role": "assistant", "text": "<html>Initial dashboard</html>", "images": [], "videos": []},
+                {"role": "user", "text": "Add a sidebar", "images": [], "videos": []},
+                {"role": "assistant", "text": "<html>Dashboard with sidebar</html>", "images": [], "videos": []},
+                {"role": "user", "text": "Now add a navigation menu", "images": [], "videos": []},
             ]
         }
-        
-        # Mock the text system prompts and image cache function
-        mock_text_system_prompts: Dict[str, str] = {
-            self.TEST_STACK: "Mock Text System Prompt"
-        }
-        
-        with patch('prompts.TEXT_SYSTEM_PROMPTS', mock_text_system_prompts), \
-             patch('prompts.create_alt_url_mapping', return_value={"text": "cache"}):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="text",
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
             
             # Define expected structure
@@ -287,11 +361,7 @@ class TestCreatePrompt:
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Mock Text System Prompt"
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Generate UI for {text_description}"
+                        "content": self.MOCK_SYSTEM_PROMPT,
                     },
                     {
                         "role": "assistant",
@@ -299,7 +369,11 @@ class TestCreatePrompt:
                     },
                     {
                         "role": "user",
-                        "content": "Add a sidebar"
+                        "content": (
+                            f"Selected stack: {self.TEST_STACK}.\n\n"
+                            f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                            "Add a sidebar"
+                        ),
                     },
                     {
                         "role": "assistant",
@@ -310,50 +384,81 @@ class TestCreatePrompt:
                         "content": "Now add a navigation menu"
                     }
                 ],
-                "image_cache": {"text": "cache"}
             }
             
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
     async def test_video_mode_basic_prompt_creation(self) -> None:
         """Test basic video prompt creation in video mode.
 
-        For video mode with generation_type="create", the prompt is empty
-        because the actual generation is handled by VideoGenerationStage
-        which sends the video directly to Gemini.
+        For video mode with generation_type="create", we now assemble
+        a regular system+user prompt so video generation can run through
+        the agent runner path.
         """
         # Setup test data
         video_data_url: str = "data:video/mp4;base64,test_video_data"
         params: Dict[str, Any] = {
             "prompt": {
                 "text": "",
-                "images": [video_data_url]
+                "images": [],
+                "videos": [video_data_url],
             },
             "generationType": "create"
         }
 
         # Call the function
-        messages, image_cache = await create_prompt(
+        messages = await build_prompt_messages(
             stack=self.TEST_STACK,
             input_mode="video",
             generation_type=params["generationType"],
             prompt=params["prompt"],
             history=params.get("history", []),
-            is_imported_from_code=params.get("isImportedFromCode", False),
         )
 
-        # For video create mode, prompt is empty - actual generation handled by VideoGenerationStage
         expected: ExpectedResult = {
-            "messages": [],
-            "image_cache": {}
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "<CONTAINS:You are a coding agent that's an expert at building front-ends.>",
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": video_data_url, "detail": "high"},
+                        },
+                        {
+                            "type": "text",
+                            "text": "<CONTAINS:Analyze this video and generate the code.>",
+                        },
+                    ],
+                },
+            ],
         }
 
         # Assert the structure matches
-        actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+        actual: ExpectedResult = {"messages": messages}
         assert_structure_match(actual, expected)
+
+    @pytest.mark.asyncio
+    async def test_create_raises_on_unsupported_input_mode(self) -> None:
+        params: Dict[str, Any] = {
+            "prompt": {"text": "", "images": [self.TEST_IMAGE_URL], "videos": []},
+            "generationType": "create",
+        }
+
+        with pytest.raises(ValueError, match="Unsupported input mode: audio"):
+            await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode=cast(Any, "audio"),
+                generation_type=params["generationType"],
+                prompt=params["prompt"],
+                history=[],
+            )
 
 
     @pytest.mark.asyncio
@@ -365,46 +470,31 @@ class TestCreatePrompt:
             "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
             "generationType": "update",
             "history": [
-                {"text": "<html>Initial code</html>", "images": []},
-                {"text": "Add a button", "images": [reference_image_url]},
-                {"text": "<html>Code with button</html>", "images": []}
+                {"role": "assistant", "text": "<html>Initial code</html>", "images": [], "videos": []},
+                {"role": "user", "text": "Add a button", "images": [reference_image_url], "videos": []},
+                {"role": "assistant", "text": "<html>Code with button</html>", "images": [], "videos": []},
             ]
         }
 
-        # Mock the system prompts and image cache function
-        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
-
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), \
-             patch("prompts.create_alt_url_mapping", return_value={"mock": "cache"}):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
                     {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": self.TEST_IMAGE_URL,
-                                    "detail": "high",
-                                },
-                            },
-                            {
-                                "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
-                            },
-                        ],
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
                     },
                     {"role": "assistant", "content": "<html>Initial code</html>"},
                     {
@@ -419,17 +509,20 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "Add a button",
+                                "text": (
+                                    f"Selected stack: {self.TEST_STACK}.\n\n"
+                                    f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                                    "Add a button"
+                                ),
                             },
                         ],
                     },
                     {"role": "assistant", "content": "<html>Code with button</html>"},
                 ],
-                "image_cache": {"mock": "cache"},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -442,46 +535,31 @@ class TestCreatePrompt:
             "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
             "generationType": "update",
             "history": [
-                {"text": "<html>Initial code</html>", "images": []},
-                {"text": "Style like these examples", "images": [example1_url, example2_url]},
-                {"text": "<html>Styled code</html>", "images": []}
+                {"role": "assistant", "text": "<html>Initial code</html>", "images": [], "videos": []},
+                {"role": "user", "text": "Style like these examples", "images": [example1_url, example2_url], "videos": []},
+                {"role": "assistant", "text": "<html>Styled code</html>", "images": [], "videos": []},
             ]
         }
 
-        # Mock the system prompts and image cache function
-        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
-
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), \
-             patch("prompts.create_alt_url_mapping", return_value={"mock": "cache"}):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
                     {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": self.TEST_IMAGE_URL,
-                                    "detail": "high",
-                                },
-                            },
-                            {
-                                "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
-                            },
-                        ],
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
                     },
                     {"role": "assistant", "content": "<html>Initial code</html>"},
                     {
@@ -503,17 +581,20 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "Style like these examples",
+                                "text": (
+                                    f"Selected stack: {self.TEST_STACK}.\n\n"
+                                    f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                                    "Style like these examples"
+                                ),
                             },
                         ],
                     },
                     {"role": "assistant", "content": "<html>Styled code</html>"},
                 ],
-                "image_cache": {"mock": "cache"},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
@@ -524,95 +605,81 @@ class TestCreatePrompt:
             "prompt": {"text": "", "images": [self.TEST_IMAGE_URL]},
             "generationType": "update",
             "history": [
-                {"text": "<html>Initial code</html>", "images": []},
-                {"text": "Make it blue", "images": []},  # Explicit empty array
-                {"text": "<html>Blue code</html>", "images": []}
+                {"role": "assistant", "text": "<html>Initial code</html>", "images": [], "videos": []},
+                {"role": "user", "text": "Make it blue", "images": [], "videos": []},
+                {"role": "assistant", "text": "<html>Blue code</html>", "images": [], "videos": []},
             ]
         }
 
-        # Mock the system prompts and image cache function
-        mock_system_prompts: Dict[str, str] = {self.TEST_STACK: self.MOCK_SYSTEM_PROMPT}
-
-        with patch("prompts.SYSTEM_PROMPTS", mock_system_prompts), \
-             patch("prompts.create_alt_url_mapping", return_value={}):
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
             # Call the function
-            messages, image_cache = await create_prompt(
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
                 prompt=params["prompt"],
                 history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
             )
 
             # Define expected structure - should be text-only messages
             expected: ExpectedResult = {
                 "messages": [
-                    {"role": "system", "content": self.MOCK_SYSTEM_PROMPT},
                     {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": self.TEST_IMAGE_URL,
-                                    "detail": "high",
-                                },
-                            },
-                            {
-                                "type": "text",
-                                "text": "<CONTAINS:Generate code for a web page that looks exactly like the provided screenshot(s).>",
-                            },
-                        ],
+                        "role": "system",
+                        "content": self.MOCK_SYSTEM_PROMPT,
                     },
                     {"role": "assistant", "content": "<html>Initial code</html>"},
-                    {"role": "user", "content": "Make it blue"},  # Text-only message
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Selected stack: {self.TEST_STACK}.\n\n"
+                            f"{self.ENABLED_IMAGE_POLICY}\n\n"
+                            "Make it blue"
+                        ),
+                    },  # Text-only message
                     {"role": "assistant", "content": "<html>Blue code</html>"},
                 ],
-                "image_cache": {},
             }
 
             # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
 
     @pytest.mark.asyncio
-    async def test_imported_code_update_with_images_in_history(self) -> None:
-        """Test imported code flow with images in update history."""
-        # Setup test data
+    async def test_update_bootstraps_from_file_state_when_history_is_empty(self) -> None:
+        """Update should synthesize a user message from fileState + prompt when history is empty."""
         ref_image_url: str = "data:image/png;base64,ref_image"
         params: Dict[str, Any] = {
-            "isImportedFromCode": True,
             "generationType": "update",
-            "history": [
-                {"text": "<html>Original imported code</html>", "images": []},
-                {"text": "Update with this reference", "images": [ref_image_url]},
-                {"text": "<html>Updated code</html>", "images": []}
-            ]
+            "prompt": {"text": "Make the header blue", "images": [ref_image_url], "videos": []},
+            "history": [],
+            "fileState": {
+                "path": "index.html",
+                "content": "<html>Original imported code</html>",
+            },
         }
 
-        # Mock the imported code system prompts
-        mock_imported_prompts: Dict[str, str] = {
-            self.TEST_STACK: "Mock Imported Code System Prompt"
-        }
-
-        with patch("prompts.IMPORTED_CODE_SYSTEM_PROMPTS", mock_imported_prompts):
-            # Call the function
-            messages, image_cache = await create_prompt(
+        with patch(
+            "prompts.system_prompt.SYSTEM_PROMPT",
+            new=self.MOCK_SYSTEM_PROMPT,
+        ):
+            messages = await build_prompt_messages(
                 stack=self.TEST_STACK,
                 input_mode="image",
                 generation_type=params["generationType"],
-                prompt=params.get("prompt", {"text": "", "images": []}),
-                history=params.get("history", []),
-                is_imported_from_code=params.get("isImportedFromCode", False),
+                prompt=params["prompt"],
+                history=params["history"],
+                file_state=params["fileState"],
             )
 
-            # Define expected structure
             expected: ExpectedResult = {
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Mock Imported Code System Prompt\n Here is the code of the app: <html>Original imported code</html>",
+                        "content": self.MOCK_SYSTEM_PROMPT,
                     },
                     {
                         "role": "user",
@@ -626,15 +693,56 @@ class TestCreatePrompt:
                             },
                             {
                                 "type": "text",
-                                "text": "Update with this reference",
+                                "text": "<CONTAINS:<current_file path=\"index.html\">>",
                             },
                         ],
                     },
-                    {"role": "assistant", "content": "<html>Updated code</html>"},
                 ],
-                "image_cache": {},
             }
 
-            # Assert the structure matches
-            actual: ExpectedResult = {"messages": messages, "image_cache": image_cache}
+            actual: ExpectedResult = {"messages": messages}
             assert_structure_match(actual, expected)
+            user_content = messages[1].get("content")
+            assert isinstance(user_content, list)
+            text_part = next(
+                (part for part in user_content if isinstance(part, dict) and part.get("type") == "text"),
+                None,
+            )
+            assert isinstance(text_part, dict)
+            synthesized_text = text_part.get("text", "")
+            assert isinstance(synthesized_text, str)
+            assert f"Selected stack: {self.TEST_STACK}." in synthesized_text
+            assert "<html>Original imported code</html>" in synthesized_text
+            assert "<change_request>" in synthesized_text
+            assert "Make the header blue" in synthesized_text
+
+    @pytest.mark.asyncio
+    async def test_update_requires_history_or_file_state(self) -> None:
+        with pytest.raises(ValueError):
+            await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type="update",
+                prompt={"text": "Change title", "images": [], "videos": []},
+                history=[],
+            )
+
+    @pytest.mark.asyncio
+    async def test_update_history_requires_user_message(self) -> None:
+        with pytest.raises(
+            ValueError, match="Update history must include at least one user message"
+        ):
+            await build_prompt_messages(
+                stack=self.TEST_STACK,
+                input_mode="image",
+                generation_type="update",
+                prompt={"text": "Change title", "images": [], "videos": []},
+                history=[
+                    {
+                        "role": "assistant",
+                        "text": "<html>Code only</html>",
+                        "images": [],
+                        "videos": [],
+                    }
+                ],
+            )

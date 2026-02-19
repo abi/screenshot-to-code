@@ -4,17 +4,21 @@ import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@clerk/clerk-react";
+import OutputSettingsSection from "../../settings/OutputSettingsSection";
+import { Stack } from "../../../lib/stacks";
 
 interface Props {
   screenshotOneApiKey: string | null;
   doCreate: (
     urls: string[],
     inputMode: "image" | "video",
-    textPrompt?: string
+    textPrompt?: string,
   ) => void;
+  stack: Stack;
+  setStack: (stack: Stack) => void;
 }
 
-function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
+function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
   const { getToken } = useAuth();
@@ -23,7 +27,7 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
     if (!IS_RUNNING_ON_CLOUD && !screenshotOneApiKey) {
       toast.error(
         "Please add a ScreenshotOne API key in Settings. You can also upload screenshots directly in the Upload tab.",
-        { duration: 6000 }
+        { duration: 6000 },
       );
       return;
     }
@@ -62,7 +66,7 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
           errorDetail = "";
         }
         throw new Error(
-          `Failed to capture screenshot (${response.status}).${errorDetail}`
+          `Failed to capture screenshot (${response.status}).${errorDetail}`,
         );
       }
 
@@ -71,7 +75,7 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
     } catch (error) {
       console.error(error);
       toast.error(
-        "Failed to capture screenshot. Check console and backend logs for details."
+        "Failed to capture screenshot. Check console and backend logs for details.",
       );
     } finally {
       setIsLoading(false);
@@ -117,6 +121,8 @@ function UrlTab({ doCreate, screenshotOneApiKey }: Props) {
               className="w-full"
               data-testid="url-input"
             />
+            <OutputSettingsSection stack={stack} setStack={setStack} />
+
             <Button
               onClick={takeScreenshot}
               disabled={isLoading}

@@ -5,6 +5,8 @@ import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
 import { Button } from "../../ui/button";
 import { ScreenRecorderState } from "../../../types";
 import ScreenRecorder from "../../recording/ScreenRecorder";
+import OutputSettingsSection from "../../settings/OutputSettingsSection";
+import { Stack } from "../../../lib/stacks";
 
 function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,9 +46,11 @@ interface Props {
     inputMode: "image" | "video",
     textPrompt?: string
   ) => void;
+  stack: Stack;
+  setStack: (stack: Stack) => void;
 }
 
-function UploadTab({ doCreate }: Props) {
+function UploadTab({ doCreate, stack, setStack }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadedDataUrls, setUploadedDataUrls] = useState<string[]>([]);
   const [uploadedInputMode, setUploadedInputMode] = useState<
@@ -378,14 +382,16 @@ function UploadTab({ doCreate }: Props) {
                     ? "Limit reached"
                     : `${remainingSlots} remaining`}
                 </div>
-                <div className="mt-3 rounded-md border border-gray-100 bg-gray-50 p-2">
-                  {files[selectedIndex] && (
-                    <img
-                      src={files[selectedIndex].preview}
-                      alt={`Uploaded screenshot ${selectedIndex + 1}`}
-                      className="w-full max-h-[280px] object-contain rounded"
-                    />
-                  )}
+                <div className="mt-3 rounded-md border border-gray-100 bg-gray-50 p-2 overflow-hidden">
+                  <div className="flex h-[280px] w-full items-center justify-center overflow-hidden rounded bg-white">
+                    {files[selectedIndex] && (
+                      <img
+                        src={files[selectedIndex].preview}
+                        alt={`Uploaded screenshot ${selectedIndex + 1}`}
+                        className="h-auto w-auto max-h-full max-w-full object-contain"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
                   {files.map((file, index) => (
@@ -474,6 +480,13 @@ function UploadTab({ doCreate }: Props) {
             </div>
           )}
 
+          <div className="w-full max-w-md">
+            <OutputSettingsSection
+              stack={stack}
+              setStack={setStack}
+            />
+          </div>
+
           <div className="flex flex-col items-center gap-1 w-full max-w-md">
             <Button
               onClick={handleGenerate}
@@ -501,6 +514,8 @@ function UploadTab({ doCreate }: Props) {
             screenRecorderState={screenRecorderState}
             setScreenRecorderState={setScreenRecorderState}
             generateCode={handleScreenRecorderGenerate}
+            stack={stack}
+            setStack={setStack}
           />
         </div>
       )}

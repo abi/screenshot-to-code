@@ -73,12 +73,6 @@ Open http://localhost:5173 to use the app.
 
 If you prefer to run the backend on a different port, update VITE_WS_BACKEND_URL in `frontend/.env.local`
 
-For debugging purposes, if you don't want to waste GPT4-Vision credits, you can run the backend in mock mode (which streams a pre-recorded response):
-
-```bash
-MOCK=true poetry run uvicorn main:app --reload --port 7001
-```
-
 ## Docker
 
 If you have Docker installed on your system, in the root directory, run:
@@ -116,5 +110,4 @@ https://github.com/user-attachments/assets/a335a105-f9cc-40e6-ac6b-64e5390bfc21
 
 
 https://github.com/user-attachments/assets/205cb5c7-9c3c-438d-acd4-26dfe6e077e5
-
 

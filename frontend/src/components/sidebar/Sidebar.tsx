@@ -1,24 +1,55 @@
-import classNames from "classnames";
 import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
-import CodePreview from "../preview/CodePreview";
-import KeyboardShortcutBadge from "../core/KeyboardShortcutBadge";
-// import TipLink from "../messages/TipLink";
-import SelectAndEditModeToggleButton from "../select-and-edit/SelectAndEditModeToggleButton";
 import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
 import { useEffect, useRef, useState, useCallback } from "react";
-import HistoryDisplay from "../history/HistoryDisplay";
+import {
+  LuMousePointerClick,
+  LuRefreshCw,
+  LuArrowUp,
+  LuMinus,
+  LuPlus,
+  LuX,
+} from "react-icons/lu";
+import { toast } from "react-hot-toast";
+
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
-import ThinkingIndicator from "../thinking/ThinkingIndicator";
+import AgentActivity from "../agent/AgentActivity";
+import WorkingPulse from "../core/WorkingPulse";
+import { Dialog, DialogPortal, DialogOverlay } from "../ui/dialog";
+import { Commit } from "../commits/types";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
   doUpdate: (instruction: string) => void;
   regenerate: () => void;
   cancelCodeGeneration: () => void;
+  onOpenVersions: () => void;
+}
+
+const MAX_UPDATE_IMAGES = 5;
+const MIN_LIGHTBOX_ZOOM = 0.5;
+const MAX_LIGHTBOX_ZOOM = 6;
+
+function summarizeLatestChange(commit: Commit | null): string | null {
+  if (!commit) return null;
+  if (commit.type === "code_create") return "Imported existing code.";
+
+  const text = commit.inputs.text.trim();
+  if (text.length > 0) return text;
+
+  if (commit.type === "ai_create") {
+    return "Create";
+  }
+
+  if (commit.inputs.images.length > 1) {
+    return `Updated with ${commit.inputs.images.length} reference images.`;
+  }
+  if (commit.inputs.images.length === 1) {
+    return "Updated with one reference image.";
+  }
+  return "Updated code.";
 }
 
 function Sidebar({
@@ -26,12 +57,23 @@ function Sidebar({
   doUpdate,
   regenerate,
   cancelCodeGeneration,
+  onOpenVersions,
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const middlePaneRef = useRef<HTMLDivElement>(null);
+  const lightboxViewportRef = useRef<HTMLDivElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxZoom, setLightboxZoom] = useState(1);
+  const [lightboxNaturalSize, setLightboxNaturalSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [lightboxFitScale, setLightboxFitScale] = useState(1);
 
-  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages } = useAppStore();
+  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode } = useAppStore();
 
   // Helper function to convert file to data URL
   const fileToDataURL = (file: File): Promise<string> => {
@@ -43,32 +85,86 @@ function Sidebar({
     });
   };
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const files = Array.from(e.dataTransfer.files).filter(file => 
-      file.type === 'image/png' || file.type === 'image/jpeg'
-    );
-    
-    if (files.length > 0) {
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+
+      const files = Array.from(e.dataTransfer.files).filter(
+        (file) => file.type === "image/png" || file.type === "image/jpeg"
+      );
+
+      if (files.length === 0) return;
+
       try {
-        const newImagePromises = files.map(file => fileToDataURL(file));
+        if (updateImages.length >= MAX_UPDATE_IMAGES) {
+          toast.error(
+            `You’ve reached the limit of ${MAX_UPDATE_IMAGES} reference images. Remove one to add another.`
+          );
+          return;
+        }
+
+        const remainingSlots = MAX_UPDATE_IMAGES - updateImages.length;
+        let filesToAdd = files;
+        if (filesToAdd.length > remainingSlots) {
+          toast.error(
+            `Only ${remainingSlots} more image${
+              remainingSlots === 1 ? "" : "s"
+            } will be added to stay within the ${MAX_UPDATE_IMAGES}-image limit.`
+          );
+          filesToAdd = filesToAdd.slice(0, remainingSlots);
+        }
+
+        const newImagePromises = filesToAdd.map((file) => fileToDataURL(file));
         const newImages = await Promise.all(newImagePromises);
         setUpdateImages([...updateImages, ...newImages]);
       } catch (error) {
-        console.error('Error reading files:', error);
+        console.error("Error reading files:", error);
       }
-    }
-  }, [updateImages, setUpdateImages]);
+    },
+    [updateImages, setUpdateImages]
+  );
 
-  const { inputMode, referenceImages, head, commits } = useProjectStore();
-  const [activeReferenceIndex, setActiveReferenceIndex] = useState(0);
+  const { head, commits, latestCommitHash, setHead } = useProjectStore();
 
-  const viewedCode =
-    head && commits[head]
-      ? commits[head].variants[commits[head].selectedVariantIndex].code
-      : "";
+  const currentCommit = head ? commits[head] : null;
+  const latestChangeSummary = summarizeLatestChange(currentCommit);
+  const latestChangeImages =
+    currentCommit && currentCommit.type !== "code_create"
+      ? currentCommit.inputs.images
+      : [];
+  const latestChangeVideos =
+    currentCommit && currentCommit.type !== "code_create"
+      ? currentCommit.inputs.videos ?? []
+      : [];
+  const selectedVariantIndex = currentCommit?.selectedVariantIndex ?? 0;
+  const selectedVariant = currentCommit?.variants[selectedVariantIndex];
+  const selectedVariantEvents = selectedVariant?.agentEvents ?? [];
+  const showWorkingIndicator =
+    appState === AppState.CODING &&
+    selectedVariantEvents.length === 0 &&
+    head === latestCommitHash;
+  const requestStartMs =
+    selectedVariant?.requestStartedAt ??
+    (currentCommit?.dateCreated
+      ? new Date(currentCommit.dateCreated).getTime()
+      : undefined);
+  const elapsedSeconds = requestStartMs
+    ? Math.max(1, Math.round((nowMs - requestStartMs) / 1000))
+    : undefined;
+
+  const isFirstGeneration = currentCommit?.type === "ai_create";
+  const isViewingOlderVersion = head !== null && head !== latestCommitHash;
+
+  // Compute version number for the current head
+  const currentVersionNumber = (() => {
+    if (!head) return null;
+    const sorted = Object.values(commits).sort(
+      (a, b) => new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
+    );
+    const index = sorted.findIndex((c) => c.hash === head);
+    return index !== -1 ? index + 1 : null;
+  })();
 
   // Check if the currently selected variant is complete
   const isSelectedVariantComplete =
@@ -90,6 +186,15 @@ function Sidebar({
     commits[head] &&
     commits[head].variants[commits[head].selectedVariantIndex].errorMessage;
 
+  // Auto-resize textarea to fit content
+  const autoResize = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
+    }
+  }, []);
+
   // Focus on the update instruction textarea when a variant is complete
   useEffect(() => {
     if (
@@ -100,34 +205,205 @@ function Sidebar({
     }
   }, [appState, isSelectedVariantComplete]);
 
+  // Reset textarea height when instruction changes externally (e.g., cleared after submit)
+  useEffect(() => {
+    autoResize();
+  }, [updateInstruction, autoResize]);
+
   // Reset error expanded state when variant changes
   useEffect(() => {
     setIsErrorExpanded(false);
   }, [head, commits[head || ""]?.selectedVariantIndex]);
 
   useEffect(() => {
-    if (activeReferenceIndex >= referenceImages.length) {
-      setActiveReferenceIndex(0);
-    }
-  }, [activeReferenceIndex, referenceImages.length]);
+    if (!middlePaneRef.current) return;
+    requestAnimationFrame(() => {
+      if (!middlePaneRef.current) return;
+      middlePaneRef.current.scrollTop = middlePaneRef.current.scrollHeight;
+    });
+  }, [head, selectedVariantIndex]);
 
   useEffect(() => {
-    if (referenceImages.length > 0) {
-      setActiveReferenceIndex(0);
-    }
-  }, [referenceImages]);
+    if (appState !== AppState.CODING) return;
+    const intervalId = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, [appState]);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxImage(null);
+    setLightboxZoom(1);
+    setLightboxNaturalSize(null);
+    setLightboxFitScale(1);
+  }, []);
+
+  const openLightbox = useCallback((image: string) => {
+    setLightboxImage(image);
+    setLightboxZoom(1);
+    setLightboxNaturalSize(null);
+    setLightboxFitScale(1);
+  }, []);
+
+  const recomputeLightboxFitScale = useCallback(() => {
+    if (!lightboxViewportRef.current || !lightboxNaturalSize) return;
+
+    const viewportWidth = lightboxViewportRef.current.clientWidth;
+    const viewportHeight = lightboxViewportRef.current.clientHeight;
+    if (viewportWidth <= 0 || viewportHeight <= 0) return;
+
+    const fitScale = Math.min(
+      viewportWidth / lightboxNaturalSize.width,
+      viewportHeight / lightboxNaturalSize.height,
+      1
+    );
+    setLightboxFitScale(fitScale);
+  }, [lightboxNaturalSize]);
+
+  useEffect(() => {
+    if (!lightboxImage) return;
+    recomputeLightboxFitScale();
+
+    const handleResize = () => recomputeLightboxFitScale();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [lightboxImage, recomputeLightboxFitScale]);
+
+  useEffect(() => {
+    recomputeLightboxFitScale();
+  }, [recomputeLightboxFitScale]);
+
+  const zoomInLightbox = () => {
+    setLightboxZoom((current) =>
+      Math.min(MAX_LIGHTBOX_ZOOM, Math.round((current + 0.25) * 100) / 100)
+    );
+  };
+
+  const zoomOutLightbox = () => {
+    setLightboxZoom((current) =>
+      Math.max(MIN_LIGHTBOX_ZOOM, Math.round((current - 0.25) * 100) / 100)
+    );
+  };
+
+  const resetLightboxZoom = () => {
+    setLightboxZoom(1);
+  };
+
+  const effectiveLightboxScale = lightboxFitScale * lightboxZoom;
+  const lightboxDisplayWidth = lightboxNaturalSize
+    ? Math.max(1, Math.round(lightboxNaturalSize.width * effectiveLightboxScale))
+    : undefined;
+  const lightboxDisplayHeight = lightboxNaturalSize
+    ? Math.max(1, Math.round(lightboxNaturalSize.height * effectiveLightboxScale))
+    : undefined;
+
 
   return (
-    <>
-      <Variants />
+    <div className="flex flex-col h-full">
+      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2">
+        <Variants />
+      </div>
 
-      <ThinkingIndicator />
+      {/* Scrollable content */}
+      <div
+        ref={middlePaneRef}
+        className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4"
+      >
+        {latestChangeSummary && (
+          <div className="mb-4 flex flex-col items-end">
+            <div className="inline-block max-w-[85%] rounded-2xl rounded-br-md bg-violet-100 px-4 py-2.5 dark:bg-violet-900/30">
+              <p className="text-[15px] text-violet-950 dark:text-violet-100 break-words">
+                {latestChangeSummary}
+              </p>
+            </div>
+              {latestChangeImages.length > 0 && (
+                <div className="mt-2 flex gap-2 flex-wrap justify-end">
+                  {latestChangeImages.map((image, index) => (
+                    <button
+                      key={`${image.slice(0, 40)}-${index}`}
+                      onClick={() => openLightbox(image)}
+                      className="shrink-0 cursor-zoom-in rounded-lg border border-gray-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
+                    >
+                      <img
+                        src={image}
+                        alt={`Reference ${index + 1}`}
+                        className="h-24 w-24 object-contain"
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+              {latestChangeVideos.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {latestChangeVideos.map((video, index) => (
+                    <video
+                      key={`${video.slice(0, 40)}-${index}`}
+                      src={video}
+                      className="w-full rounded-lg border border-gray-200 dark:border-zinc-700"
+                      controls
+                      preload="metadata"
+                    />
+                  ))}
+                </div>
+              )}
+          </div>
+        )}
 
-      {/* Show code preview when coding and the selected variant is not complete */}
-      {appState === AppState.CODING && !isSelectedVariantComplete && (
-        <div className="flex flex-col">
-          <CodePreview code={viewedCode} />
+        {showWorkingIndicator && (
+          <div className="working-indicator-bg mb-3 rounded-xl border border-violet-200 dark:border-violet-800 px-3 py-2 transition-all duration-500">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <WorkingPulse />
+                <span>Working...</span>
+              </div>
+              <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                Time so far {elapsedSeconds ? `${elapsedSeconds}s` : "--"}
+              </div>
+            </div>
+          </div>
+        )}
 
+        {isViewingOlderVersion && currentVersionNumber !== null ? (
+          <div className="mb-4 flex flex-col items-center py-6">
+            <p className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">
+              Version {currentVersionNumber}
+            </p>
+            <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+              You are viewing an older version
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={onOpenVersions}
+                className="rounded-lg border border-gray-300 dark:border-zinc-600 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+              >
+                All versions
+              </button>
+              <button
+                onClick={() => latestCommitHash && setHead(latestCommitHash)}
+                className="rounded-lg bg-gray-900 dark:bg-white px-4 py-2 text-sm font-medium text-white dark:text-black hover:bg-black dark:hover:bg-gray-200 transition-colors"
+              >
+                View latest
+              </button>
+            </div>
+          </div>
+        ) : (
+          <AgentActivity />
+        )}
+
+        {/* Regenerate button for first generation */}
+        {isFirstGeneration && head === latestCommitHash && (appState === AppState.CODE_READY || isSelectedVariantComplete) && !isSelectedVariantError && (
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={regenerate}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <LuRefreshCw className="w-3.5 h-3.5" />
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Show cancel button when coding */}
+        {appState === AppState.CODING && !isSelectedVariantComplete && (
           <div className="flex w-full">
             <Button
               onClick={cancelCodeGeneration}
@@ -136,45 +412,45 @@ function Sidebar({
               Cancel All Generations
             </Button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Show error message when selected option has an error */}
-      {isSelectedVariantError && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
-          <div className="text-red-800 text-sm">
-            <div className="font-medium mb-1">
-              This option failed to generate because
-            </div>
-            {selectedVariantErrorMessage && (
-              <div className="mb-2">
-                <div className="text-red-700 bg-red-100 border border-red-300 rounded px-2 py-1 text-xs font-mono break-words">
-                  {selectedVariantErrorMessage.length > 200 && !isErrorExpanded
-                    ? `${selectedVariantErrorMessage.slice(0, 200)}...`
-                    : selectedVariantErrorMessage}
-                </div>
-                {selectedVariantErrorMessage.length > 200 && (
-                  <button
-                    onClick={() => setIsErrorExpanded(!isErrorExpanded)}
-                    className="text-red-600 text-xs underline mt-1 hover:text-red-800"
-                  >
-                    {isErrorExpanded ? "Show less" : "Show more"}
-                  </button>
-                )}
+        {/* Show error message when selected option has an error */}
+        {isSelectedVariantError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
+            <div className="text-red-800 text-sm">
+              <div className="font-medium mb-1">
+                This option failed to generate because
               </div>
-            )}
-            <div>Switch to another option above to make updates.</div>
+              {selectedVariantErrorMessage && (
+                <div className="mb-2">
+                  <div className="text-red-700 bg-red-100 border border-red-300 rounded px-2 py-1 text-xs font-mono break-words">
+                    {selectedVariantErrorMessage.length > 200 && !isErrorExpanded
+                      ? `${selectedVariantErrorMessage.slice(0, 200)}...`
+                      : selectedVariantErrorMessage}
+                  </div>
+                  {selectedVariantErrorMessage.length > 200 && (
+                    <button
+                      onClick={() => setIsErrorExpanded(!isErrorExpanded)}
+                      className="text-red-600 text-xs underline mt-1 hover:text-red-800"
+                    >
+                      {isErrorExpanded ? "Show less" : "Show more"}
+                    </button>
+                  )}
+                </div>
+              )}
+              <div>Switch to another option above to make updates.</div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Show update UI when app state is ready OR the selected variant is complete (but not errored) */}
+      {/* Pinned bottom: prompt box + option selector */}
       {(appState === AppState.CODE_READY || isSelectedVariantComplete) &&
         !isSelectedVariantError && (
           <div
+            className="shrink-0 border-t border-gray-200 bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 px-4 py-4"
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={(e) => {
-              // Only set to false if we're leaving the container entirely
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setIsDragging(false);
               }
@@ -182,124 +458,163 @@ function Sidebar({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
-            <div className="grid w-full gap-2 relative">
-              <UpdateImagePreview 
-                updateImages={updateImages} 
-                setUpdateImages={setUpdateImages} 
+            {/* Select and edit instructions card */}
+            {inSelectAndEditMode && (
+              <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <LuMousePointerClick className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 shrink-0" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Click any element in the preview to edit it</span>
+                </div>
+                <button
+                  onClick={toggleInSelectAndEditMode}
+                  className="shrink-0 ml-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                >
+                  Exit
+                </button>
+              </div>
+            )}
+            <div className="relative w-full overflow-hidden rounded-2xl border-2 border-violet-300 bg-white transition-all focus-within:border-violet-500 dark:border-violet-500/50 dark:bg-zinc-900 dark:focus-within:border-violet-400">
+              <UpdateImagePreview
+                updateImages={updateImages}
+                setUpdateImages={setUpdateImages}
               />
-              <Textarea
+              <textarea
                 ref={textareaRef}
                 placeholder="Tell the AI what to change..."
-                onChange={(e) => setUpdateInstruction(e.target.value)}
+                onChange={(e) => {
+                  setUpdateInstruction(e.target.value);
+                  autoResize();
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
                     doUpdate(updateInstruction);
                   }
                 }}
                 value={updateInstruction}
                 data-testid="update-input"
+                rows={1}
+                className="max-h-40 w-full resize-none border-0 bg-transparent px-4 pt-4 pb-6 text-[15px] leading-6 text-gray-800 placeholder:text-gray-400 focus:outline-none dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
-              <div className="flex gap-2">
-                <Button
+              <div className="flex items-center justify-between px-3 pb-3">
+                <div className="flex items-center gap-1">
+                  <UpdateImageUpload
+                    updateImages={updateImages}
+                    setUpdateImages={setUpdateImages}
+                  />
+                  {showSelectAndEditFeature && (
+                    <button
+                      onClick={toggleInSelectAndEditMode}
+                      className={`rounded-lg p-2 transition-colors ${
+                        inSelectAndEditMode
+                          ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                      }`}
+                      title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
+                    >
+                      <LuMousePointerClick className="w-[18px] h-[18px]" />
+                    </button>
+                  )}
+                </div>
+                <button
                   onClick={() => doUpdate(updateInstruction)}
-                  className="dark:text-white dark:bg-gray-700 update-btn flex-1"
+                  disabled={!updateInstruction.trim()}
+                  className={`rounded-xl p-2 transition-colors update-btn ${
+                    updateInstruction.trim()
+                      ? "bg-violet-600 text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400"
+                      : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-zinc-700 dark:text-zinc-500"
+                  }`}
+                  title="Send"
                 >
-                  Update <KeyboardShortcutBadge letter="enter" />
-                </Button>
-                <UpdateImageUpload 
-                  updateImages={updateImages} 
-                  setUpdateImages={setUpdateImages} 
-                />
+                  <LuArrowUp className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                </button>
               </div>
-              
-              {/* Drag overlay that covers the entire update area */}
+
               {isDragging && (
-                <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-md flex items-center justify-center pointer-events-none z-10">
+                <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-xl flex items-center justify-center pointer-events-none z-10">
                   <p className="text-blue-600 dark:text-blue-400 font-medium">Drop images here</p>
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-end gap-x-2 mt-2">
-              <Button
-                onClick={regenerate}
-                className="flex items-center gap-x-2 dark:text-white dark:bg-gray-700 regenerate-btn"
-              >
-                🔄 Regenerate
-              </Button>
-              {showSelectAndEditFeature && <SelectAndEditModeToggleButton />}
-            </div>
-            {/* <div className="flex justify-end items-center mt-2">
-            <TipLink />
-          </div> */}
           </div>
         )}
 
-      {/* Reference image display */}
-      <div className="flex gap-x-2 mt-2">
-        {referenceImages.length > 0 && (
-          <div className="flex flex-col">
-            <div
-              className={classNames("relative w-[340px]", {
-                scanning: appState === AppState.CODING,
-              })}
-            >
-              {inputMode === "image" && (
-                <div className="w-[340px] rounded-md border border-gray-200 bg-white p-2">
-                  <div className="rounded-md border border-gray-100 bg-gray-50 p-1">
+      {/* Image lightbox */}
+      <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && closeLightbox()}>
+        <DialogPortal>
+          <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
+          <div
+            className="fixed inset-0 z-50 p-4 sm:p-6"
+            onClick={closeLightbox}
+          >
+            <div className="relative flex h-full w-full flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="absolute right-0 top-0 z-10 flex items-center gap-2 rounded-lg bg-black/60 px-2 py-1.5 backdrop-blur-sm">
+                <button
+                  onClick={zoomOutLightbox}
+                  className="rounded-md p-1.5 text-white hover:bg-white/10 disabled:opacity-40"
+                  disabled={lightboxZoom <= MIN_LIGHTBOX_ZOOM}
+                  title="Zoom out"
+                >
+                  <LuMinus className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={resetLightboxZoom}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-white hover:bg-white/10"
+                  title="Reset zoom"
+                >
+                  {Math.round(lightboxZoom * 100)}%
+                </button>
+                <button
+                  onClick={zoomInLightbox}
+                  className="rounded-md p-1.5 text-white hover:bg-white/10 disabled:opacity-40"
+                  disabled={lightboxZoom >= MAX_LIGHTBOX_ZOOM}
+                  title="Zoom in"
+                >
+                  <LuPlus className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={closeLightbox}
+                  className="rounded-md p-1.5 text-white hover:bg-white/10"
+                  title="Close"
+                >
+                  <LuX className="w-5 h-5" />
+                </button>
+              </div>
+              <div
+                ref={lightboxViewportRef}
+                className="mt-12 flex-1 overflow-auto rounded-lg"
+              >
+                <div className="flex min-h-full min-w-full items-center justify-center p-4">
+                  {lightboxImage && (
                     <img
-                      className="w-full max-h-[360px] object-contain rounded"
-                      src={referenceImages[activeReferenceIndex] || referenceImages[0]}
-                      alt={`Reference ${activeReferenceIndex + 1}`}
+                      src={lightboxImage}
+                      alt="Reference image"
+                      className="rounded-lg object-contain"
+                      style={
+                        lightboxDisplayWidth && lightboxDisplayHeight
+                          ? {
+                              width: `${lightboxDisplayWidth}px`,
+                              height: `${lightboxDisplayHeight}px`,
+                              maxWidth: "none",
+                              maxHeight: "none",
+                            }
+                          : undefined
+                      }
+                      onLoad={(event) => {
+                        setLightboxNaturalSize({
+                          width: event.currentTarget.naturalWidth,
+                          height: event.currentTarget.naturalHeight,
+                        });
+                      }}
                     />
-                  </div>
-                  {referenceImages.length > 1 && (
-                    <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                      {referenceImages.map((image, index) => (
-                        <button
-                          key={`${image}-${index}`}
-                          type="button"
-                          onClick={() => setActiveReferenceIndex(index)}
-                          className={`h-14 w-14 rounded border overflow-hidden flex-shrink-0 ${
-                            activeReferenceIndex === index
-                              ? "border-blue-500 ring-2 ring-blue-200"
-                              : "border-gray-200"
-                          }`}
-                          aria-label={`View reference ${index + 1}`}
-                        >
-                          <img
-                            className="h-full w-full object-cover"
-                            src={image}
-                            alt={`Reference thumbnail ${index + 1}`}
-                          />
-                        </button>
-                      ))}
-                    </div>
                   )}
                 </div>
-              )}
-              {inputMode === "video" && (
-                <video
-                  muted
-                  autoPlay
-                  loop
-                  className="w-[340px] border border-gray-200 rounded-md"
-                  src={referenceImages[0]}
-                />
-              )}
-            </div>
-            <div className="text-gray-400 uppercase text-sm text-center mt-1">
-              {inputMode === "video"
-                ? "Original Video"
-                : referenceImages.length > 1
-                  ? `Original Screenshots (${activeReferenceIndex + 1}/${referenceImages.length})`
-                  : "Original Screenshot"}
+              </div>
             </div>
           </div>
-        )}
-      </div>
-
-      <HistoryDisplay shouldDisableReverts={appState === AppState.CODING} />
-    </>
+        </DialogPortal>
+      </Dialog>
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { toast } from "react-hot-toast";
-import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
-import { Button } from "./ui/button";
+import { Cross2Icon } from "@radix-ui/react-icons";
+import { LuPlus } from "react-icons/lu";
 
 const MAX_UPDATE_IMAGES = 5;
 
@@ -28,28 +28,23 @@ export function UpdateImagePreview({ updateImages, setUpdateImages }: Props) {
 
   if (updateImages.length === 0) return null;
 
-  const remaining = Math.max(0, MAX_UPDATE_IMAGES - updateImages.length);
-  const isAtLimit = remaining === 0;
-
   return (
-    <div className="mb-2">
-      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-        <span>{`Reference images: ${updateImages.length}/${MAX_UPDATE_IMAGES}`}</span>
-        <span>{isAtLimit ? "Limit reached" : `${remaining} remaining`}</span>
-      </div>
-      <div className="flex gap-2 overflow-x-auto py-2">
+    <div className="px-3 pt-3">
+      <div className="flex flex-wrap gap-2 py-1">
         {updateImages.map((image, index) => (
-          <div key={index} className="relative flex-shrink-0 group">
-            <img
-              src={image}
-              alt={`Reference ${index + 1}`}
-              className="h-12 w-12 object-cover rounded border border-gray-200 dark:border-gray-600"
-            />
+          <div key={index} className="relative flex-shrink-0 group overflow-visible">
+            <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+              <img
+                src={image}
+                alt={`Reference ${index + 1}`}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
             <button
               onClick={() => removeImage(index)}
-              className="absolute -top-1 -right-1 h-4 w-4 bg-gray-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-white bg-gray-900 text-white opacity-0 shadow transition-opacity group-hover:opacity-100 hover:bg-red-600 dark:border-zinc-900"
             >
-              <Cross2Icon className="h-2 w-2" />
+              <Cross2Icon className="h-2.5 w-2.5" />
             </button>
           </div>
         ))}
@@ -117,31 +112,23 @@ function UpdateImageUpload({ updateImages, setUpdateImages }: Props) {
         onChange={handleFileInputChange}
         className="hidden"
       />
-      
-      {/* Image button styled to match other buttons */}
-      <Button
+      <button
         type="button"
-        variant="outline"
-        size="default"
         onClick={handleButtonClick}
-        className={`dark:text-white dark:bg-gray-700 h-10 px-3 ${
-          updateImages.length > 0 ? "border-blue-500" : ""
-        } relative`}
         disabled={isAtLimit}
+        className={`p-2 rounded-lg transition-colors ${
+          isAtLimit
+            ? "text-gray-300 dark:text-zinc-600 cursor-not-allowed"
+            : "text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+        }`}
         title={
           isAtLimit
             ? `Limit reached (${MAX_UPDATE_IMAGES})`
-            : updateImages.length > 0
-              ? `Add up to ${remaining} more`
-              : `Add up to ${MAX_UPDATE_IMAGES}`
+            : "Add images"
         }
       >
-        <ImageIcon className="h-4 w-4" />
-        {updateImages.length > 0 && (
-          <span className="ml-2 text-sm">{`${updateImages.length}/${MAX_UPDATE_IMAGES}`}</span>
-        )}
-      </Button>
-      
+        <LuPlus className="w-[18px] h-[18px]" />
+      </button>
     </div>
   );
 }
