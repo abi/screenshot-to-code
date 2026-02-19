@@ -5,7 +5,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../../ui/dialog";
 import { useStore } from "../../../store/store";
 import PricingPlans from "./PricingPlans";
@@ -13,7 +12,6 @@ import PricingPlans from "./PricingPlans";
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
 const PricingDialog: React.FC = () => {
-  const subscriberTier = useStore((state) => state.subscriberTier);
   const [showDialog, setShowDialog] = useStore((state) => [
     state.isPricingDialogOpen,
     state.setPricingDialogOpen,
@@ -21,14 +19,7 @@ const PricingDialog: React.FC = () => {
 
   return (
     <Dialog open={showDialog} onOpenChange={(isOpen) => setShowDialog(isOpen)}>
-      {subscriberTier === "free" && (
-        <DialogTrigger
-          className="fixed z-50 bottom-28 right-5 rounded-md shadow-lg bg-black
-          text-white  px-4 text-xs py-3 cursor-pointer"
-        >
-          get 100 code generations for $15
-        </DialogTrigger>
-      )}
+
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-3xl text-center">

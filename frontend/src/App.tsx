@@ -3,7 +3,7 @@ import { generateCode } from "./generateCode";
 import { AppState, EditorTheme, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/messages/PicoBadge";
-import { OnboardingNote } from "./components/messages/OnboardingNote";
+import OnboardingPaywall from "./components/hosted/OnboardingPaywall";
 import { usePersistedState } from "./hooks/usePersistedState";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
@@ -749,14 +749,6 @@ function App({ navbarComponent }: Props) {
             </div>
           ) : (
             <>
-              {IS_RUNNING_ON_CLOUD &&
-                !settings.openAiApiKey &&
-                subscriberTier === "free" && (
-                <div className="px-6 mt-4">
-                  <OnboardingNote />
-                </div>
-              )}
-
               {(appState === AppState.CODING ||
                 appState === AppState.CODE_READY) && (
                 <Sidebar
@@ -790,18 +782,24 @@ function App({ navbarComponent }: Props) {
         }`}
       >
         {appState === AppState.INITIAL && !isProjectsPanelOpen && (
-          <StartPane
-            doCreate={doCreate}
-            doCreateFromText={doCreateFromText}
-            importFromCode={importFromCode}
-            onOpenProjects={() => {
-              setIsVersionsPanelOpen(false);
-              setProjectsPanelOpen(true);
-              setMobilePane("preview");
-            }}
-            settings={settings}
-            setSettings={setSettings}
-          />
+          IS_RUNNING_ON_CLOUD &&
+          !settings.openAiApiKey &&
+          subscriberTier === "free" ? (
+            <OnboardingPaywall />
+          ) : (
+            <StartPane
+              doCreate={doCreate}
+              doCreateFromText={doCreateFromText}
+              importFromCode={importFromCode}
+              onOpenProjects={() => {
+                setIsVersionsPanelOpen(false);
+                setProjectsPanelOpen(true);
+                setMobilePane("preview");
+              }}
+              settings={settings}
+              setSettings={setSettings}
+            />
+          )
         )}
 
         {isProjectsPanelOpen && (
