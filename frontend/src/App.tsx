@@ -21,6 +21,7 @@ import {
   buildAssistantHistoryMessage,
   buildUserHistoryMessage,
   cloneVariantHistory,
+  GenerationRequest,
   registerAssetIds,
   toRequestHistory,
 } from "./lib/prompt-history";

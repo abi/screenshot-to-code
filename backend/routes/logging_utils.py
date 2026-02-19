@@ -7,7 +7,7 @@ import json
 from config import BACKEND_SAAS_API_SECRET, BACKEND_SAAS_URL, IS_PROD
 from custom_types import InputMode
 from llm import Completion, Llm
-from prompts.types import Stack
+from prompts.prompt_types import Stack
 
 
 class PaymentMethod(Enum):

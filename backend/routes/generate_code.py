@@ -30,7 +30,6 @@ from llm import (
 from fs_logging.core import write_logs
 from typing import (
     Any,
-    Callable,
     Coroutine,
     Dict,
     List,
@@ -39,7 +38,7 @@ from typing import (
     get_args,
 )
 from openai.types.chat import ChatCompletionMessageParam
-from routes.logging_utils import PaymentMethod, send_to_saas_backend
+from routes.logging_utils import PaymentMethod
 from routes.saas_utils import does_user_have_subscription_credits
 from utils import print_prompt_preview
 
@@ -572,38 +571,31 @@ class AgenticGenerationStage:
     """Handles agent tool-calling generation for each variant."""
 
     # Type annotations for class attributes
-    send_message: Callable[[MessageType, str, int], Coroutine[Any, Any, None]]
+    send_message: Callable[
+        [MessageType, str | None, int, Dict[str, Any] | None, str | None],
+        Coroutine[Any, Any, None],
+    ]
     openai_api_key: str | None
     openai_base_url: str | None
     anthropic_api_key: str | None
     gemini_api_key: str | None
     should_generate_images: bool
-    user_id: str
-    payment_method: PaymentMethod
-    stack: Stack
-    input_mode: InputMode
-    generation_type: Literal["create", "update"]
-    is_imported_from_code: bool
-    generation_group_id: str
+    file_state: Dict[str, str] | None
+    option_codes: List[str]
 
     def __init__(
         self,
-        send_message: Callable[[MessageType, str | None, int, Dict[str, Any] | None, str | None], Coroutine[Any, Any, None]],
+        send_message: Callable[
+            [MessageType, str | None, int, Dict[str, Any] | None, str | None],
+            Coroutine[Any, Any, None],
+        ],
         openai_api_key: str | None,
         openai_base_url: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
         should_generate_images: bool,
-        prompt: PromptContent,
         file_state: Dict[str, str] | None,
         option_codes: List[str] | None,
-        # SaaS logging parameters
-        user_id: str,
-        payment_method: PaymentMethod,
-        stack: Stack,
-        input_mode: InputMode,
-        generation_type: Literal["create", "update"],
-        generation_group_id: str,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -611,16 +603,8 @@ class AgenticGenerationStage:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
-        self.prompt = prompt
         self.file_state = file_state
         self.option_codes = option_codes or []
-        # SaaS logging data
-        self.user_id = user_id
-        self.payment_method = payment_method
-        self.stack = stack
-        self.input_mode = input_mode
-        self.generation_type = generation_type
-        self.generation_group_id = generation_group_id
 
 
     async def process_variants(

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import ScreenRecorder from "./recording/ScreenRecorder";
+import { getVideoDurationSecondsFromBlob } from "./recording/utils";
 import { ScreenRecorderState } from "../types";
 import { Stack } from "../lib/stacks";
 

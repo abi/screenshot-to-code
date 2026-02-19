@@ -9,6 +9,7 @@ from routes.generate_code import (
     PipelineContext,
     StatusBroadcastMiddleware,
 )
+from routes.logging_utils import PaymentMethod
 
 
 @pytest.mark.asyncio
@@ -33,12 +34,15 @@ async def test_video_update_broadcasts_two_variants() -> None:
         ),
     )
     context.extracted_params = ExtractedParams(
+        user_id="test-user",
         stack="html_tailwind",
         input_mode="video",
         should_generate_images=True,
         openai_api_key=None,
         anthropic_api_key=None,
+        gemini_api_key="test-gemini-key",
         openai_base_url=None,
+        payment_method=PaymentMethod.SUBSCRIPTION,
         generation_type="update",
         prompt={"text": "Edit this video output", "images": [], "videos": []},
         history=[],
