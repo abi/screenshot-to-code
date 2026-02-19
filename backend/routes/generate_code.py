@@ -880,7 +880,7 @@ class CodeGenerationMiddleware(Middleware):
                 input_mode=context.extracted_params.input_mode,
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
-                gemini_api_key=GEMINI_API_KEY,
+                gemini_api_key=context.extracted_params.gemini_api_key,
             )
             if IS_DEBUG_ENABLED:
                 await context.send_message(
@@ -896,7 +896,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 openai_base_url=context.extracted_params.openai_base_url,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
-                gemini_api_key=GEMINI_API_KEY,
+                gemini_api_key=context.extracted_params.gemini_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
                 prompt=context.extracted_params.prompt,
                 file_state=context.extracted_params.file_state,
