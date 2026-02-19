@@ -379,7 +379,21 @@ function AgentEventCard({
     if (!event.content) return null;
     return (
       <div className="py-1 text-sm text-gray-700 dark:text-gray-300 prose prose-sm dark:prose-invert max-w-none">
-        <ReactMarkdown>{event.content}</ReactMarkdown>
+        <ReactMarkdown
+          components={{
+            img: ({ ...props }) => (
+              <div className="my-2 flex justify-start max-w-full">
+                <img
+                  {...props}
+                  className="max-h-60 max-w-full object-contain rounded-lg border border-gray-200 dark:border-gray-700"
+                  loading="lazy"
+                />
+              </div>
+            ),
+          }}
+        >
+          {event.content}
+        </ReactMarkdown>
       </div>
     );
   }
@@ -404,7 +418,21 @@ function AgentEventCard({
         <div className="pb-2">
           {event.type === "thinking" && event.content && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown>{event.content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  img: ({ ...props }) => (
+                    <div className="my-2 flex justify-start max-w-full">
+                      <img
+                        {...props}
+                        className="max-h-60 max-w-full object-contain rounded-lg border border-gray-200 dark:border-gray-700"
+                        loading="lazy"
+                      />
+                    </div>
+                  ),
+                }}
+              >
+                {event.content}
+              </ReactMarkdown>
             </div>
           )}
           {event.type === "tool" && renderToolDetails(event, variantCode)}
@@ -509,7 +537,7 @@ function AgentActivity() {
         </>
       ) : (
         <>
-          <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2">
+          <div className="flex items-center justify-between rounded-xl border border-violet-200 dark:border-violet-800 bg-gradient-to-r from-violet-50 to-white dark:from-violet-900/20 dark:to-zinc-900 px-3 py-2 shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)] dark:shadow-[0_0_15px_-3px_rgba(139,92,246,0.4)] transition-all duration-500">
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
               <WorkingPulse />
               <span>Working...</span>

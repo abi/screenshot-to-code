@@ -1,14 +1,9 @@
-import toast from "react-hot-toast";
 import { renderHistory } from "./utils";
 import { useProjectStore } from "../../store/project-store";
 import { BsChevronDown, BsChevronRight } from "react-icons/bs";
 import { useState } from "react";
 
-interface Props {
-  shouldDisableReverts: boolean;
-}
-
-export default function HistoryDisplay({ shouldDisableReverts }: Props) {
+export default function HistoryDisplay() {
   const { commits, head, setHead } = useProjectStore();
   const [expandedHash, setExpandedHash] = useState<string | null>(null);
 
@@ -42,11 +37,7 @@ export default function HistoryDisplay({ shouldDisableReverts }: Props) {
             <div
               className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
               onClick={() =>
-                shouldDisableReverts
-                  ? toast.error(
-                      "Please wait for code generation to complete before viewing an older version."
-                    )
-                  : setHead(item.hash)
+                setHead(item.hash)
               }
             >
               {/* Version number badge */}

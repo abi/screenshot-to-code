@@ -125,7 +125,9 @@ function Sidebar({
   const selectedVariant = currentCommit?.variants[selectedVariantIndex];
   const selectedVariantEvents = selectedVariant?.agentEvents ?? [];
   const showWorkingIndicator =
-    appState === AppState.CODING && selectedVariantEvents.length === 0;
+    appState === AppState.CODING &&
+    selectedVariantEvents.length === 0 &&
+    head === latestCommitHash;
   const requestStartMs =
     selectedVariant?.requestStartedAt ??
     (currentCommit?.dateCreated
@@ -231,7 +233,7 @@ function Sidebar({
               </p>
             </div>
               {latestChangeImages.length > 0 && (
-                <div className="mt-2 flex gap-2 overflow-x-auto">
+                <div className="mt-2 flex gap-2 flex-wrap justify-end">
                   {latestChangeImages.map((image, index) => (
                     <button
                       key={`${image.slice(0, 40)}-${index}`}
@@ -265,7 +267,7 @@ function Sidebar({
         )}
 
         {showWorkingIndicator && (
-          <div className="mb-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2">
+          <div className="mb-3 rounded-xl border border-violet-200 dark:border-violet-800 bg-gradient-to-r from-violet-50 to-white dark:from-violet-900/20 dark:to-zinc-900 px-3 py-2 shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)] dark:shadow-[0_0_15px_-3px_rgba(139,92,246,0.4)] transition-all duration-500">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                 <WorkingPulse />

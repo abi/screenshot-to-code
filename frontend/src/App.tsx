@@ -672,9 +672,7 @@ function App() {
                       Back to editor
                     </button>
                   </div>
-                  <HistoryDisplay
-                    shouldDisableReverts={appState === AppState.CODING}
-                  />
+                  <HistoryDisplay />
                 </div>
               </div>
             ) : (

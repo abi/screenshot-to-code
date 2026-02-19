@@ -59,6 +59,12 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
     ? currentCommit.variants[currentCommit.selectedVariantIndex].code
     : "";
 
+  const isSelectedVariantComplete =
+    head &&
+    commits[head] &&
+    commits[head].variants[commits[head].selectedVariantIndex].status ===
+      "complete";
+
   const previewCode =
     inputMode === "video" && appState === AppState.CODING
       ? extractHtml(currentCode)
@@ -150,11 +156,11 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
                 className="flex items-center justify-center gap-2 px-1 cursor-pointer hover:opacity-70 transition-opacity w-32"
                 title="View all versions"
               >
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">
                   Version {currentVersionIndex + 1}
                 </span>
                 {currentVersionIndex === totalVersions - 1 && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300 leading-none flex items-center h-4">
                     Latest
                   </span>
                 )}
@@ -173,7 +179,7 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
           )}
 
           <div className="flex items-center gap-1">
-            {appState === AppState.CODE_READY && (
+            {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
               <Button
                 onClick={() => downloadCode(previewCode)}
                 variant="ghost"
