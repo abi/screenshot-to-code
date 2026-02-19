@@ -151,14 +151,14 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-4">
-      <div className="mt-3">
-        <div className="mb-3 px-1">
+    <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-5 pb-6">
+      <div className="mt-4">
+        <div className="mb-4 px-1">
           <h2 className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
             Projects
           </h2>
         </div>
-        <div className="mb-3 text-sm">Total Generations: {totalCount}</div>
+        <div className="mb-4 text-sm">Total Generations: {totalCount}</div>
 
         <PaginationSection
           currentPage={currentPage}
@@ -167,29 +167,36 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         />
 
         {isLoading ? (
-          <div className="flex justify-center items-center h-40">
+          <div className="flex h-40 items-center justify-center">
             <Spinner />
           </div>
+        ) : generations.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 px-6 py-12 text-center text-sm text-gray-500 dark:border-zinc-700 dark:text-zinc-400">
+            No projects yet.
+          </div>
         ) : (
-          <ul>
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {generations.map((generation, index) => (
-              <Card key={index} className="mb-4 pb-2 border-b-4">
-                <CardHeader className="text-sm">
-                  <p>Created {generation.date_created}</p>
+              <Card key={index} className="overflow-hidden border shadow-sm">
+                <CardHeader className="space-y-1 pb-2 text-sm">
+                  <p className="text-xs text-gray-500 dark:text-zinc-400">
+                    Created {generation.date_created}
+                  </p>
                   <StackLabel stack={generation.stack} />
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pb-3">
                   <iframe
                     srcDoc={generation.completion}
                     title={`Generation ${index}`}
                     width="100%"
-                    height="500px"
+                    height="220px"
                     sandbox="allow-scripts"
-                    className="mb-2 border"
+                    className="rounded-md border"
                   />
                 </CardContent>
-                <CardFooter className="text-sm">
+                <CardFooter className="pt-0 text-sm">
                   <Button
+                    className="w-full"
                     onClick={() =>
                       onLoadGeneration(generation.completion, generation.stack)
                     }
