@@ -640,8 +640,6 @@ function App({ navbarComponent }: Props) {
       {/* Dialog to show all the user's projects */}
       <ProjectHistoryView importFromCode={importFromCode} />
 
-      {!!navbarComponent && navbarComponent}
-
       {SHOW_FEEDBACK_CALL_UI && shouldShowBanner && (
         <div className="px-4 mb-2">
           <FeedbackBanner
@@ -677,6 +675,7 @@ function App({ navbarComponent }: Props) {
           }}
           settings={settings}
           setSettings={setSettings}
+          accountComponent={navbarComponent}
         />
       </div>
 

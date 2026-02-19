@@ -107,13 +107,7 @@ function AppContainer() {
   // If the user is signed in, show the app
   return (
     <>
-      <App
-        navbarComponent={
-          <div className="flex justify-end items-center gap-x-2 px-10 mt-0 mb-4">
-            <AvatarDropdown />
-          </div>
-        }
-      />
+      <App navbarComponent={<AvatarDropdown compact />} />
     </>
   );
 }

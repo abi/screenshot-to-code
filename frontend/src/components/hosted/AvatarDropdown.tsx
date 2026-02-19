@@ -19,7 +19,11 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { showNewMessage } from "@intercom/messenger-js-sdk";
 
-export default function AvatarDropdown() {
+interface AvatarDropdownProps {
+  compact?: boolean;
+}
+
+export default function AvatarDropdown({ compact = false }: AvatarDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoadingUsage, setIsLoadingUsage] = useState(false);
   const [usedCredits, setUsedCredits] = useState(0);
@@ -69,13 +73,20 @@ export default function AvatarDropdown() {
     <>
       <DropdownMenu open={isOpen} onOpenChange={open}>
         <DropdownMenuTrigger asChild>
-          <div className="flex items-center space-x-2 cursor-pointer">
-            <span className="text-sm">Your account</span>
-            <Avatar className="w-8 h-8">
+          <button
+            className={
+              compact
+                ? "flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-200/70 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-zinc-800 dark:hover:text-gray-200"
+                : "flex cursor-pointer items-center space-x-2"
+            }
+            title="Your account"
+          >
+            {!compact && <span className="text-sm">Your account</span>}
+            <Avatar className={compact ? "h-8 w-8" : "w-8 h-8"}>
               <AvatarImage src={user?.imageUrl} alt="Profile image" />
               <AvatarFallback>{user?.firstName}</AvatarFallback>
             </Avatar>
-          </div>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
           {/* Free users */}

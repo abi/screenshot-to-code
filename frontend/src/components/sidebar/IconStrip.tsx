@@ -1,6 +1,7 @@
 import { LuClock, LuCode, LuSettings, LuPlus } from "react-icons/lu";
 import SettingsDialog from "../settings/SettingsDialog";
 import { Settings } from "../../types";
+import { ReactNode } from "react";
 
 interface IconStripProps {
   isHistoryOpen: boolean;
@@ -13,6 +14,7 @@ interface IconStripProps {
   onNewProject: () => void;
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+  accountComponent?: ReactNode;
 }
 
 function IconStrip({
@@ -26,6 +28,7 @@ function IconStrip({
   onNewProject,
   settings,
   setSettings,
+  accountComponent,
 }: IconStripProps) {
   return (
     <div className="flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 dark:border-zinc-800 dark:bg-zinc-900 lg:h-full lg:w-16 lg:flex-col lg:items-center lg:gap-y-3 lg:border-b-0 lg:border-r lg:px-0 lg:py-4">
@@ -86,6 +89,12 @@ function IconStrip({
 
       {/* Spacer pushes settings to bottom */}
       <div className="hidden flex-1 lg:block" />
+
+      {accountComponent && (
+        <div className="hidden lg:mb-2 lg:flex lg:w-full lg:justify-center">
+          {accountComponent}
+        </div>
+      )}
 
       {/* Settings */}
       <SettingsDialog
