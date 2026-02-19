@@ -33,6 +33,9 @@ interface ProjectHistoryResponse {
   total_pages: number;
 }
 
+const PREVIEW_DESKTOP_WIDTH = 1366;
+const PREVIEW_DESKTOP_HEIGHT = 900;
+
 const formatDate = (dateString: string) => {
   try {
     const date = new Date(dateString);
@@ -185,14 +188,16 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                   <StackLabel stack={generation.stack} />
                 </CardHeader>
                 <CardContent className="pb-3">
-                  <iframe
-                    srcDoc={generation.completion}
-                    title={`Generation ${index}`}
-                    width="100%"
-                    height="220px"
-                    sandbox="allow-scripts"
-                    className="rounded-md border"
-                  />
+                  <div className="relative h-56 w-full overflow-hidden rounded-md border bg-white">
+                    <iframe
+                      srcDoc={generation.completion}
+                      title={`Generation ${index}`}
+                      width={PREVIEW_DESKTOP_WIDTH}
+                      height={PREVIEW_DESKTOP_HEIGHT}
+                      sandbox="allow-scripts"
+                      className="pointer-events-none absolute left-0 top-0 origin-top-left scale-[0.25] border-0"
+                    />
+                  </div>
                 </CardContent>
                 <CardFooter className="pt-0 text-sm">
                   <Button
