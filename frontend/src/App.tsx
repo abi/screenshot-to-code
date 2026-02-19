@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
-import SettingsDialog from "./components/settings/SettingsDialog";
 import { AppState, EditorTheme, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD } from "./config";
 import { PicoBadge } from "./components/messages/PicoBadge";
@@ -640,23 +639,6 @@ function App({ navbarComponent }: Props) {
 
       {/* Dialog to show all the user's projects */}
       <ProjectHistoryView importFromCode={importFromCode} />
-
-      <div className="lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-96 lg:flex-col">
-        <div className="sidebar-scrollbar-stable flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-200 bg-white px-6 dark:bg-zinc-950 dark:text-white">
-          {/* Header with access to settings */}
-          <div className="flex items-center justify-between mt-10 mb-2">
-            <h1 className="text-2xl ">Screenshot to Code</h1>
-            <SettingsDialog settings={settings} setSettings={setSettings} />
-          </div>
-
-          {/* Show tip link until coding is complete */}
-          {/* {appState !== AppState.CODE_READY && <TipLink />} */}
-
-          {IS_RUNNING_ON_CLOUD &&
-            !settings.openAiApiKey &&
-            subscriberTier === "free" && <OnboardingNote />}
-        </div>
-      </div>
 
       {!!navbarComponent && navbarComponent}
 
