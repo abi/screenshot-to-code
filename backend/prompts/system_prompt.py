@@ -25,9 +25,10 @@ You are a coding agent that's an expert at building front-ends.
 
 - Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
 
-## CSS
+## html_css
 
 - Only use HTML, CSS and JS.
+- Do not use Tailwind
 
 ## Bootstrap
 
