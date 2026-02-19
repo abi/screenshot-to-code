@@ -737,7 +737,9 @@ function App({ navbarComponent }: Props) {
             </div>
           ) : (
             <>
-              {IS_RUNNING_ON_CLOUD && !settings.openAiApiKey && (
+              {IS_RUNNING_ON_CLOUD &&
+                !settings.openAiApiKey &&
+                subscriberTier === "free" && (
                 <div className="px-6 mt-4">
                   <OnboardingNote />
                 </div>
