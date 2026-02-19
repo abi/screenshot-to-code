@@ -17,6 +17,7 @@ interface Props {
   ) => void;
   doCreateFromText: (text: string) => void;
   importFromCode: (code: string, stack: Stack) => void;
+  onOpenProjects: () => void;
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
 }
@@ -27,6 +28,7 @@ function UnifiedInputPane({
   doCreate,
   doCreateFromText,
   importFromCode,
+  onOpenProjects,
   settings,
   setSettings,
 }: Props) {
@@ -126,7 +128,7 @@ function UnifiedInputPane({
 
         {IS_RUNNING_ON_CLOUD && (
           <TabsContent value="history" className="mt-0">
-            <HistoryTab />
+            <HistoryTab onOpenProjects={onOpenProjects} />
           </TabsContent>
         )}
       </Tabs>

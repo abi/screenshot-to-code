@@ -52,6 +52,8 @@ function App({ navbarComponent }: Props) {
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
   const subscriberTier = useStore((state) => state.subscriberTier);
+  const isProjectsPanelOpen = useStore((state) => state.isProjectsPanelOpen);
+  const setProjectsPanelOpen = useStore((state) => state.setProjectsPanelOpen);
 
   const {
     // Inputs
@@ -121,7 +123,7 @@ function App({ navbarComponent }: Props) {
   const lastAssistantEventIdRef = useRef<Record<number, string>>({});
   const lastToolEventIdRef = useRef<Record<number, string>>({});
 
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isVersionsPanelOpen, setIsVersionsPanelOpen] = useState(false);
   const [mobilePane, setMobilePane] = useState<"preview" | "chat">("preview");
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
@@ -159,6 +161,8 @@ function App({ navbarComponent }: Props) {
     // Inputs
     setInputMode("image");
     setReferenceImages([]);
+    setIsVersionsPanelOpen(false);
+    setProjectsPanelOpen(false);
   };
 
   const regenerate = () => {
@@ -614,9 +618,10 @@ function App({ navbarComponent }: Props) {
   }
 
   const showContentPanel =
-    appState === AppState.CODING ||
-    appState === AppState.CODE_READY ||
-    isHistoryOpen;
+    !isProjectsPanelOpen &&
+    (appState === AppState.CODING ||
+      appState === AppState.CODE_READY ||
+      isVersionsPanelOpen);
   const isCodingOrReady =
     appState === AppState.CODING || appState === AppState.CODE_READY;
   const showMobileChatPane = showContentPanel && mobilePane === "chat";
@@ -637,9 +642,6 @@ function App({ navbarComponent }: Props) {
         />
       )}
 
-      {/* Dialog to show all the user's projects */}
-      <ProjectHistoryView importFromCode={importFromCode} />
-
       {SHOW_FEEDBACK_CALL_UI && shouldShowBanner && (
         <div className="px-4 mb-2">
           <FeedbackBanner
@@ -652,25 +654,36 @@ function App({ navbarComponent }: Props) {
       {/* Icon strip - always visible */}
       <div className="sticky top-0 z-50 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-16 lg:flex-col">
         <IconStrip
-          isHistoryOpen={isHistoryOpen}
-          isEditorOpen={!isHistoryOpen}
-          showHistory={isCodingOrReady}
+          isVersionsOpen={isVersionsPanelOpen}
+          isProjectsOpen={isProjectsPanelOpen}
+          isEditorOpen={!isVersionsPanelOpen && !isProjectsPanelOpen}
+          showVersions={isCodingOrReady}
+          showProjects={IS_RUNNING_ON_CLOUD}
           showEditor={isCodingOrReady}
-          onToggleHistory={() => {
-            setIsHistoryOpen((prev) => !prev);
+          onToggleVersions={() => {
+            setProjectsPanelOpen(false);
+            setIsVersionsPanelOpen((prev) => !prev);
             setMobilePane("chat");
           }}
+          onToggleProjects={() => {
+            setIsVersionsPanelOpen(false);
+            setProjectsPanelOpen(!isProjectsPanelOpen);
+            setMobilePane("preview");
+          }}
           onToggleEditor={() => {
-            setIsHistoryOpen(false);
+            setIsVersionsPanelOpen(false);
+            setProjectsPanelOpen(false);
             setMobilePane("preview");
           }}
           onLogoClick={() => {
-            setIsHistoryOpen(false);
+            setIsVersionsPanelOpen(false);
+            setProjectsPanelOpen(false);
             setMobilePane("preview");
           }}
           onNewProject={() => {
             reset();
-            setIsHistoryOpen(false);
+            setIsVersionsPanelOpen(false);
+            setProjectsPanelOpen(false);
             setMobilePane("preview");
           }}
           settings={settings}
@@ -684,7 +697,7 @@ function App({ navbarComponent }: Props) {
           <div className="grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-zinc-800">
             <button
               onClick={() => {
-                setIsHistoryOpen(false);
+                setIsVersionsPanelOpen(false);
                 setMobilePane("preview");
               }}
               className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -716,7 +729,7 @@ function App({ navbarComponent }: Props) {
             showMobileChatPane ? "block" : "hidden lg:flex"
           }`}
         >
-          {isHistoryOpen ? (
+          {isVersionsPanelOpen ? (
             <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-4">
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -724,7 +737,7 @@ function App({ navbarComponent }: Props) {
                     Versions
                   </h2>
                   <button
-                    onClick={() => setIsHistoryOpen(false)}
+                    onClick={() => setIsVersionsPanelOpen(false)}
                     className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                   >
                     <LuChevronLeft className="w-3.5 h-3.5" />
@@ -752,7 +765,8 @@ function App({ navbarComponent }: Props) {
                   regenerate={regenerate}
                   cancelCodeGeneration={cancelCodeGeneration}
                   onOpenVersions={() => {
-                    setIsHistoryOpen(true);
+                    setProjectsPanelOpen(false);
+                    setIsVersionsPanelOpen(true);
                     setMobilePane("chat");
                   }}
                 />
@@ -764,27 +778,43 @@ function App({ navbarComponent }: Props) {
 
       <main
         className={`${
-          showContentPanel
+          isProjectsPanelOpen
+            ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-16"
+            : showContentPanel
             ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
             : "lg:pl-16"
-        } ${isCodingOrReady && mobilePane === "chat" ? "hidden lg:flex" : ""}`}
+        } ${
+          isCodingOrReady && mobilePane === "chat" && !isProjectsPanelOpen
+            ? "hidden lg:flex"
+            : ""
+        }`}
       >
-        {appState === AppState.INITIAL && (
+        {appState === AppState.INITIAL && !isProjectsPanelOpen && (
           <StartPane
             doCreate={doCreate}
             doCreateFromText={doCreateFromText}
             importFromCode={importFromCode}
+            onOpenProjects={() => {
+              setIsVersionsPanelOpen(false);
+              setProjectsPanelOpen(true);
+              setMobilePane("preview");
+            }}
             settings={settings}
             setSettings={setSettings}
           />
         )}
 
-        {isCodingOrReady && (
+        {isProjectsPanelOpen && (
+          <ProjectHistoryView importFromCode={importFromCode} />
+        )}
+
+        {isCodingOrReady && !isProjectsPanelOpen && (
           <PreviewPane
             doUpdate={doUpdate}
             settings={settings}
             onOpenVersions={() => {
-              setIsHistoryOpen(true);
+              setProjectsPanelOpen(false);
+              setIsVersionsPanelOpen(true);
               setMobilePane("chat");
             }}
           />

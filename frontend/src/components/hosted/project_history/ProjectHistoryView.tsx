@@ -14,8 +14,6 @@ import {
   PaginationNext,
   PaginationLink,
 } from "../../ui/pagination";
-import { useStore } from "../../../store/store";
-import { Dialog, DialogContent } from "../../ui/dialog";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import StackLabel from "../../core/StackLabel";
 import { addEvent } from "../../../lib/analytics";
@@ -104,13 +102,6 @@ interface ProjectHistoryViewProps {
 function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const authenticatedFetch = useAuthenticatedFetch();
 
-  const isProjectsHistoryDialogOpen = useStore(
-    (state) => state.isProjectsHistoryDialogOpen
-  );
-  const setProjectsHistoryDialogOpen = useStore(
-    (state) => state.setProjectsHistoryDialogOpen
-  );
-
   const [isLoading, setIsLoading] = useState(false);
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -120,8 +111,6 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    if (!isProjectsHistoryDialogOpen) return;
-
     const loadData = async () => {
       setIsLoading(true);
       addEvent("ViewProjectHistory");
@@ -148,11 +137,10 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
       }
     };
     loadData();
-  }, [currentPage, isProjectsHistoryDialogOpen]);
+  }, [currentPage]);
 
   const onLoadGeneration = (completion: string, stack: Stack) => {
     importFromCode(completion, stack);
-    setProjectsHistoryDialogOpen(false);
     addEvent("ProjectHistory:LoadInEditor");
   };
 
@@ -163,13 +151,14 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   };
 
   return (
-    <Dialog
-      open={isProjectsHistoryDialogOpen}
-      onOpenChange={(isOpen: boolean) => setProjectsHistoryDialogOpen(isOpen)}
-    >
-      <DialogContent className="max-w-[90%] max-h-[90%] overflow-y-auto">
-        <h2 className="text-xl font-semibold">Your History</h2>
-        <div className="text-sm mb-2">Total Generations: {totalCount}</div>
+    <div className="flex-1 overflow-y-auto sidebar-scrollbar-stable px-4">
+      <div className="mt-3">
+        <div className="mb-3 px-1">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            Projects
+          </h2>
+        </div>
+        <div className="mb-3 text-sm">Total Generations: {totalCount}</div>
 
         <PaginationSection
           currentPage={currentPage}
@@ -218,8 +207,8 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
           totalPages={totalPages}
           handlePageChange={onPageChange}
         />
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
 

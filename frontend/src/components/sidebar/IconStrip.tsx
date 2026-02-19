@@ -1,14 +1,23 @@
-import { LuClock, LuCode, LuSettings, LuPlus } from "react-icons/lu";
+import {
+  LuClock,
+  LuCode,
+  LuFolderOpen,
+  LuSettings,
+  LuPlus,
+} from "react-icons/lu";
 import SettingsDialog from "../settings/SettingsDialog";
 import { Settings } from "../../types";
 import { ReactNode } from "react";
 
 interface IconStripProps {
-  isHistoryOpen: boolean;
+  isVersionsOpen: boolean;
+  isProjectsOpen: boolean;
   isEditorOpen: boolean;
-  showHistory: boolean;
+  showVersions: boolean;
+  showProjects: boolean;
   showEditor: boolean;
-  onToggleHistory: () => void;
+  onToggleVersions: () => void;
+  onToggleProjects: () => void;
   onToggleEditor: () => void;
   onLogoClick: () => void;
   onNewProject: () => void;
@@ -18,11 +27,14 @@ interface IconStripProps {
 }
 
 function IconStrip({
-  isHistoryOpen,
+  isVersionsOpen,
+  isProjectsOpen,
   isEditorOpen,
-  showHistory,
+  showVersions,
+  showProjects,
   showEditor,
-  onToggleHistory,
+  onToggleVersions,
+  onToggleProjects,
   onToggleEditor,
   onLogoClick,
   onNewProject,
@@ -62,11 +74,11 @@ function IconStrip({
         )}
 
         {/* Versions */}
-        {showHistory && (
+        {showVersions && (
           <button
-            onClick={onToggleHistory}
+            onClick={onToggleVersions}
             className={`flex items-center justify-center rounded-lg p-2 transition-colors lg:flex-col lg:gap-1 lg:px-2 lg:py-1.5 ${
-              isHistoryOpen
+              isVersionsOpen
                 ? "text-gray-900 dark:text-white"
                 : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             }`}
@@ -74,6 +86,22 @@ function IconStrip({
           >
             <LuClock className="w-[18px] h-[18px]" />
             <span className="hidden text-[10px] leading-none lg:block">Versions</span>
+          </button>
+        )}
+
+        {/* Projects */}
+        {showProjects && (
+          <button
+            onClick={onToggleProjects}
+            className={`flex items-center justify-center rounded-lg p-2 transition-colors lg:flex-col lg:gap-1 lg:px-2 lg:py-1.5 ${
+              isProjectsOpen
+                ? "text-gray-900 dark:text-white"
+                : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+            }`}
+            title="Projects"
+          >
+            <LuFolderOpen className="w-[18px] h-[18px]" />
+            <span className="hidden text-[10px] leading-none lg:block">Projects</span>
           </button>
         )}
 

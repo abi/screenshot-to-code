@@ -11,6 +11,7 @@ interface Props {
   ) => void;
   doCreateFromText: (text: string) => void;
   importFromCode: (code: string, stack: Stack) => void;
+  onOpenProjects: () => void;
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
 }
@@ -19,6 +20,7 @@ const StartPane: React.FC<Props> = ({
   doCreate,
   doCreateFromText,
   importFromCode,
+  onOpenProjects,
   settings,
   setSettings,
 }) => {
@@ -28,6 +30,7 @@ const StartPane: React.FC<Props> = ({
         doCreate={doCreate}
         doCreateFromText={doCreateFromText}
         importFromCode={importFromCode}
+        onOpenProjects={onOpenProjects}
         settings={settings}
         setSettings={setSettings}
       />

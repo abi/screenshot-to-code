@@ -1,10 +1,10 @@
 import { Button } from "../../ui/button";
-import { useStore } from "../../../store/store";
 
-function HistoryTab() {
-  const setProjectsHistoryDialogOpen = useStore(
-    (state) => state.setProjectsHistoryDialogOpen
-  );
+interface HistoryTabProps {
+  onOpenProjects: () => void;
+}
+
+function HistoryTab({ onOpenProjects }: HistoryTabProps) {
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -40,9 +40,9 @@ function HistoryTab() {
 
           <Button
             variant="secondary"
-            onClick={() => setProjectsHistoryDialogOpen(true)}
+            onClick={onOpenProjects}
           >
-            View History
+            Open Projects
           </Button>
         </div>
       </div>
