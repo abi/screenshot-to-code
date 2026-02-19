@@ -30,14 +30,16 @@ export function UpdateImagePreview({ updateImages, setUpdateImages }: Props) {
 
   return (
     <div className="px-3 pt-3">
-      <div className="flex gap-2 overflow-x-auto py-1">
+      <div className="flex flex-wrap gap-2 py-1">
         {updateImages.map((image, index) => (
           <div key={index} className="relative flex-shrink-0 group overflow-visible">
-            <img
-              src={image}
-              alt={`Reference ${index + 1}`}
-              className="h-14 w-14 rounded-lg border border-gray-200 object-cover shadow-sm dark:border-zinc-700"
-            />
+            <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+              <img
+                src={image}
+                alt={`Reference ${index + 1}`}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
             <button
               onClick={() => removeImage(index)}
               className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-white bg-gray-900 text-white opacity-0 shadow transition-opacity group-hover:opacity-100 hover:bg-red-600 dark:border-zinc-900"

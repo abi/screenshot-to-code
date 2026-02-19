@@ -238,12 +238,12 @@ function Sidebar({
                     <button
                       key={`${image.slice(0, 40)}-${index}`}
                       onClick={() => setLightboxImage(image)}
-                      className="shrink-0 cursor-zoom-in overflow-hidden rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
+                      className="shrink-0 cursor-zoom-in rounded-lg border border-gray-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
                     >
                       <img
                         src={image}
                         alt={`Reference ${index + 1}`}
-                        className="h-24 object-cover"
+                        className="h-24 w-24 object-contain"
                         loading="lazy"
                       />
                     </button>
