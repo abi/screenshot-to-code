@@ -1,4 +1,5 @@
 import asyncio
+import time
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import traceback
@@ -38,7 +39,7 @@ from typing import (
     get_args,
 )
 from openai.types.chat import ChatCompletionMessageParam
-from routes.logging_utils import PaymentMethod
+from routes.logging_utils import PaymentMethod, send_to_saas_backend
 from routes.saas_utils import does_user_have_subscription_credits
 from utils import print_prompt_preview
 
@@ -580,8 +581,15 @@ class AgenticGenerationStage:
     anthropic_api_key: str | None
     gemini_api_key: str | None
     should_generate_images: bool
+    prompt: UserTurnInput
     file_state: Dict[str, str] | None
     option_codes: List[str]
+    user_id: str
+    payment_method: PaymentMethod
+    stack: Stack
+    input_mode: InputMode
+    generation_type: Literal["create", "update"]
+    generation_group_id: str
 
     def __init__(
         self,
@@ -594,8 +602,15 @@ class AgenticGenerationStage:
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
         should_generate_images: bool,
+        prompt: UserTurnInput,
         file_state: Dict[str, str] | None,
         option_codes: List[str] | None,
+        user_id: str,
+        payment_method: PaymentMethod,
+        stack: Stack,
+        input_mode: InputMode,
+        generation_type: Literal["create", "update"],
+        generation_group_id: str,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -603,8 +618,15 @@ class AgenticGenerationStage:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
+        self.prompt = prompt
         self.file_state = file_state
         self.option_codes = option_codes or []
+        self.user_id = user_id
+        self.payment_method = payment_method
+        self.stack = stack
+        self.input_mode = input_mode
+        self.generation_type = generation_type
+        self.generation_group_id = generation_group_id
 
 
     async def process_variants(
@@ -637,6 +659,7 @@ class AgenticGenerationStage:
         model: Llm,
         prompt_messages: List[ChatCompletionMessageParam],
     ) -> str:
+        start_time = time.perf_counter()
         try:
             async def send_runner_message(
                 type: str,
@@ -674,6 +697,35 @@ class AgenticGenerationStage:
                 None,
                 None,
             )
+
+            if completion and IS_PROD:
+                try:
+                    duration_seconds = time.perf_counter() - start_time
+                    video_data_url = (
+                        self.prompt.get("videos", [None])[0]
+                        if self.input_mode == "video"
+                        and self.generation_type == "create"
+                        else None
+                    )
+                    await send_to_saas_backend(
+                        user_id=self.user_id,
+                        prompt_messages=prompt_messages,
+                        completion=completion,
+                        duration=duration_seconds,
+                        llm_version=model,
+                        generation_group_id=self.generation_group_id,
+                        payment_method=self.payment_method,
+                        stack=self.stack,
+                        is_imported_from_code=False,
+                        input_mode=self.input_mode,
+                        other_info={"generation_type": self.generation_type},
+                        video_data_url=video_data_url,
+                        video_generation_cost=None,
+                    )
+                except Exception as e:
+                    print("Error sending to SaaS backend", e)
+                    sentry_sdk.capture_exception(e)
+
             return completion
         except openai.AuthenticationError as e:
             print(f"[VARIANT {index + 1}] OpenAI Authentication failed", e)
@@ -846,8 +898,15 @@ class CodeGenerationMiddleware(Middleware):
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=GEMINI_API_KEY,
                 should_generate_images=context.extracted_params.should_generate_images,
+                prompt=context.extracted_params.prompt,
                 file_state=context.extracted_params.file_state,
                 option_codes=context.extracted_params.option_codes,
+                user_id=context.extracted_params.user_id,
+                payment_method=context.extracted_params.payment_method,
+                stack=context.extracted_params.stack,
+                input_mode=context.extracted_params.input_mode,
+                generation_type=context.extracted_params.generation_type,
+                generation_group_id=context.generation_group_id,
             )
 
             context.variant_completions = await generation_stage.process_variants(
