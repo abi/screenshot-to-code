@@ -10,6 +10,7 @@ from codegen.utils import extract_html_content
 from config import (
     ANTHROPIC_API_KEY,
     GEMINI_API_KEY,
+    IS_DEBUG_ENABLED,
     IS_PROD,
     NUM_VARIANTS,
     NUM_VARIANTS_VIDEO,
@@ -729,13 +730,14 @@ class CodeGenerationMiddleware(Middleware):
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=GEMINI_API_KEY,
             )
-            await context.send_message(
-                "variantModels",
-                None,
-                0,
-                {"models": [model.value for model in context.variant_models]},
-                None,
-            )
+            if IS_DEBUG_ENABLED:
+                await context.send_message(
+                    "variantModels",
+                    None,
+                    0,
+                    {"models": [model.value for model in context.variant_models]},
+                    None,
+                )
 
             generation_stage = AgenticGenerationStage(
                 send_message=context.send_message,
