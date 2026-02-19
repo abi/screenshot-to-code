@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatRelative } from "date-fns";
 import * as Sentry from "@sentry/react";
 import { SAAS_BACKEND_URL } from "../../../config";
@@ -60,7 +60,7 @@ function PaginationSection({
   if (totalPages <= 1) return null;
 
   return (
-    <Pagination className="my-4">
+    <Pagination className="my-3">
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
@@ -111,6 +111,48 @@ function PaginationSection({
         </PaginationItem>
       </PaginationContent>
     </Pagination>
+  );
+}
+
+function PreviewIframe({ srcDoc, title }: { srcDoc: string; title: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setScale(entry.contentRect.width / PREVIEW_DESKTOP_WIDTH);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full overflow-hidden border-b border-gray-100 bg-gray-50 dark:border-zinc-700 dark:bg-zinc-900"
+      style={{
+        aspectRatio: `${PREVIEW_DESKTOP_WIDTH} / ${PREVIEW_DESKTOP_HEIGHT}`,
+      }}
+    >
+      {scale > 0 && (
+        <iframe
+          srcDoc={srcDoc}
+          title={title}
+          sandbox="allow-scripts"
+          className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
+          style={{
+            width: PREVIEW_DESKTOP_WIDTH,
+            height: PREVIEW_DESKTOP_HEIGHT,
+            transform: `scale(${scale})`,
+          }}
+        />
+      )}
+    </div>
   );
 }
 
@@ -169,14 +211,14 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10 lg:py-12">
+      <div className="px-4 py-4 lg:px-6 lg:py-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+        <div className="mb-4">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
             Projects
           </h1>
           {totalCount > 0 && (
-            <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
               {totalCount} generation{totalCount !== 1 ? "s" : ""}
             </p>
           )}
@@ -206,31 +248,19 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
               handlePageChange={onPageChange}
             />
 
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {generations.map((generation, index) => (
                 <div
                   key={index}
-                  className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800/60 dark:hover:border-zinc-600"
+                  className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800/60 dark:hover:border-zinc-600"
                 >
-                  {/* Preview */}
-                  <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-gray-100 bg-gray-50 dark:border-zinc-700 dark:bg-zinc-900">
-                    <iframe
-                      srcDoc={generation.completion}
-                      title={`Generation ${index}`}
-                      width={PREVIEW_DESKTOP_WIDTH}
-                      height={PREVIEW_DESKTOP_HEIGHT}
-                      sandbox="allow-scripts"
-                      className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
-                      style={{
-                        transform: `scale(${1 / (PREVIEW_DESKTOP_WIDTH / 600)})`,
-                        width: PREVIEW_DESKTOP_WIDTH,
-                        height: PREVIEW_DESKTOP_HEIGHT,
-                      }}
-                    />
-                  </div>
+                  <PreviewIframe
+                    srcDoc={generation.completion}
+                    title={`Generation ${index}`}
+                  />
 
                   {/* Info + button */}
-                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3 px-3 py-2">
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-gray-800 dark:text-zinc-200">
                         <StackLabel stack={generation.stack} />
