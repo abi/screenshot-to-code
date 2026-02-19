@@ -382,14 +382,16 @@ function UploadTab({ doCreate, stack, setStack }: Props) {
                     ? "Limit reached"
                     : `${remainingSlots} remaining`}
                 </div>
-                <div className="mt-3 rounded-md border border-gray-100 bg-gray-50 p-2">
-                  {files[selectedIndex] && (
-                    <img
-                      src={files[selectedIndex].preview}
-                      alt={`Uploaded screenshot ${selectedIndex + 1}`}
-                      className="w-full max-h-[280px] object-contain rounded"
-                    />
-                  )}
+                <div className="mt-3 rounded-md border border-gray-100 bg-gray-50 p-2 overflow-hidden">
+                  <div className="flex h-[280px] w-full items-center justify-center overflow-hidden rounded bg-white">
+                    {files[selectedIndex] && (
+                      <img
+                        src={files[selectedIndex].preview}
+                        alt={`Uploaded screenshot ${selectedIndex + 1}`}
+                        className="h-auto w-auto max-h-full max-w-full object-contain"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
                   {files.map((file, index) => (
