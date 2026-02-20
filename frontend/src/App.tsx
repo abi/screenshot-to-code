@@ -362,6 +362,9 @@ function App() {
         finishThinkingEvent(variantIndex, "complete");
         finishAssistantEvent(variantIndex, "complete");
         finishToolEvent(variantIndex, "complete");
+        // Clear prompt as soon as a variant succeeds (textarea becomes visible)
+        setUpdateInstruction("");
+        setUpdateImages([]);
       },
       onVariantError: (variantIndex, error) => {
         console.error(`Error in variant ${variantIndex}:`, error);
@@ -588,9 +591,6 @@ function App() {
           }
         : undefined,
     });
-
-    setUpdateInstruction("");
-    setUpdateImages([]);
   }
 
   const handleTermDialogOpenChange = (open: boolean) => {

@@ -189,7 +189,9 @@ function Sidebar({
       (appState === AppState.CODE_READY || isSelectedVariantComplete) &&
       textareaRef.current
     ) {
-      textareaRef.current.focus();
+      const el = textareaRef.current;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
     }
   }, [appState, isSelectedVariantComplete]);
 
