@@ -459,7 +459,8 @@ class ModelSelectionStage:
                 print(f"Variant {index + 1}: {model.value}")
 
             return variant_models
-        except Exception:
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
             await self.throw_error(
                 "No OpenAI, Anthropic, or Gemini API key found. Please add the environment variable "
                 "OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY to backend/.env or in the settings dialog. "
@@ -550,7 +551,8 @@ class PromptCreationStage:
             print_prompt_preview(prompt_messages)
 
             return prompt_messages
-        except Exception:
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
             await self.throw_error(
                 "Error assembling prompt. Contact support at support@picoapps.xyz"
             )
@@ -954,6 +956,7 @@ class CodeGenerationMiddleware(Middleware):
 
         except Exception as e:
             print(f"[GENERATE_CODE] Unexpected error: {e}")
+            sentry_sdk.capture_exception(e)
             await context.throw_error(f"An unexpected error occurred: {str(e)}")
             return  # Don't continue the pipeline
 
