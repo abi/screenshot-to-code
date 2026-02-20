@@ -3,21 +3,14 @@ import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useCallback } from "react";
-import {
-  LuMousePointerClick,
-  LuRefreshCw,
-  LuArrowUp,
-  LuMinus,
-  LuPlus,
-  LuX,
-} from "react-icons/lu";
+import { LuMousePointerClick, LuRefreshCw, LuArrowUp } from "react-icons/lu";
 import { toast } from "react-hot-toast";
 
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import AgentActivity from "../agent/AgentActivity";
 import WorkingPulse from "../core/WorkingPulse";
-import { Dialog, DialogPortal, DialogOverlay } from "../ui/dialog";
+import ImageLightbox from "../ImageLightbox";
 import { Commit } from "../commits/types";
 import { removeHighlight } from "../select-and-edit/utils";
 
@@ -30,8 +23,6 @@ interface SidebarProps {
 }
 
 const MAX_UPDATE_IMAGES = 5;
-const MIN_LIGHTBOX_ZOOM = 0.5;
-const MAX_LIGHTBOX_ZOOM = 6;
 
 function summarizeLatestChange(commit: Commit | null): string | null {
   if (!commit) return null;
@@ -62,7 +53,6 @@ function Sidebar({
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const middlePaneRef = useRef<HTMLDivElement>(null);
-  const lightboxViewportRef = useRef<HTMLDivElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const [isPromptExpanded, setIsPromptExpanded] = useState(false);
   const [isPromptClamped, setIsPromptClamped] = useState(false);
@@ -70,12 +60,6 @@ function Sidebar({
   const [isDragging, setIsDragging] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-  const [lightboxZoom, setLightboxZoom] = useState(1);
-  const [lightboxNaturalSize, setLightboxNaturalSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-  const [lightboxFitScale, setLightboxFitScale] = useState(1);
 
   const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode, selectedElement, setSelectedElement } = useAppStore();
 
@@ -254,72 +238,6 @@ function Sidebar({
     return () => window.clearInterval(intervalId);
   }, [appState]);
 
-  const closeLightbox = useCallback(() => {
-    setLightboxImage(null);
-    setLightboxZoom(1);
-    setLightboxNaturalSize(null);
-    setLightboxFitScale(1);
-  }, []);
-
-  const openLightbox = useCallback((image: string) => {
-    setLightboxImage(image);
-    setLightboxZoom(1);
-    setLightboxNaturalSize(null);
-    setLightboxFitScale(1);
-  }, []);
-
-  const recomputeLightboxFitScale = useCallback(() => {
-    if (!lightboxViewportRef.current || !lightboxNaturalSize) return;
-
-    const viewportWidth = lightboxViewportRef.current.clientWidth;
-    const viewportHeight = lightboxViewportRef.current.clientHeight;
-    if (viewportWidth <= 0 || viewportHeight <= 0) return;
-
-    const fitScale = Math.min(
-      viewportWidth / lightboxNaturalSize.width,
-      viewportHeight / lightboxNaturalSize.height,
-      1
-    );
-    setLightboxFitScale(fitScale);
-  }, [lightboxNaturalSize]);
-
-  useEffect(() => {
-    if (!lightboxImage) return;
-    recomputeLightboxFitScale();
-
-    const handleResize = () => recomputeLightboxFitScale();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [lightboxImage, recomputeLightboxFitScale]);
-
-  useEffect(() => {
-    recomputeLightboxFitScale();
-  }, [recomputeLightboxFitScale]);
-
-  const zoomInLightbox = () => {
-    setLightboxZoom((current) =>
-      Math.min(MAX_LIGHTBOX_ZOOM, Math.round((current + 0.25) * 100) / 100)
-    );
-  };
-
-  const zoomOutLightbox = () => {
-    setLightboxZoom((current) =>
-      Math.max(MIN_LIGHTBOX_ZOOM, Math.round((current - 0.25) * 100) / 100)
-    );
-  };
-
-  const resetLightboxZoom = () => {
-    setLightboxZoom(1);
-  };
-
-  const effectiveLightboxScale = lightboxFitScale * lightboxZoom;
-  const lightboxDisplayWidth = lightboxNaturalSize
-    ? Math.max(1, Math.round(lightboxNaturalSize.width * effectiveLightboxScale))
-    : undefined;
-  const lightboxDisplayHeight = lightboxNaturalSize
-    ? Math.max(1, Math.round(lightboxNaturalSize.height * effectiveLightboxScale))
-    : undefined;
-
 
   return (
     <div className="flex flex-col h-full">
@@ -359,7 +277,7 @@ function Sidebar({
                   {latestChangeImages.map((image, index) => (
                     <button
                       key={`${image.slice(0, 40)}-${index}`}
-                      onClick={() => openLightbox(image)}
+                      onClick={() => setLightboxImage(image)}
                       className="shrink-0 cursor-zoom-in rounded-lg border border-gray-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
                     >
                       <img
@@ -606,81 +524,10 @@ function Sidebar({
           </div>
         )}
 
-      {/* Image lightbox */}
-      <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && closeLightbox()}>
-        <DialogPortal>
-          <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
-          <div
-            className="fixed inset-0 z-50 p-4 sm:p-6"
-            onClick={closeLightbox}
-          >
-            <div className="relative flex h-full w-full flex-col" onClick={(e) => e.stopPropagation()}>
-              <div className="absolute right-0 top-0 z-10 flex items-center gap-2 rounded-lg bg-black/60 px-2 py-1.5 backdrop-blur-sm">
-                <button
-                  onClick={zoomOutLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10 disabled:opacity-40"
-                  disabled={lightboxZoom <= MIN_LIGHTBOX_ZOOM}
-                  title="Zoom out"
-                >
-                  <LuMinus className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={resetLightboxZoom}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-white hover:bg-white/10"
-                  title="Reset zoom"
-                >
-                  {Math.round(lightboxZoom * 100)}%
-                </button>
-                <button
-                  onClick={zoomInLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10 disabled:opacity-40"
-                  disabled={lightboxZoom >= MAX_LIGHTBOX_ZOOM}
-                  title="Zoom in"
-                >
-                  <LuPlus className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={closeLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10"
-                  title="Close"
-                >
-                  <LuX className="w-5 h-5" />
-                </button>
-              </div>
-              <div
-                ref={lightboxViewportRef}
-                className="mt-12 flex-1 overflow-auto rounded-lg"
-              >
-                <div className="flex min-h-full min-w-full items-center justify-center p-4">
-                  {lightboxImage && (
-                    <img
-                      src={lightboxImage}
-                      alt="Reference image"
-                      className="rounded-lg object-contain"
-                      style={
-                        lightboxDisplayWidth && lightboxDisplayHeight
-                          ? {
-                              width: `${lightboxDisplayWidth}px`,
-                              height: `${lightboxDisplayHeight}px`,
-                              maxWidth: "none",
-                              maxHeight: "none",
-                            }
-                          : undefined
-                      }
-                      onLoad={(event) => {
-                        setLightboxNaturalSize({
-                          width: event.currentTarget.naturalWidth,
-                          height: event.currentTarget.naturalHeight,
-                        });
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogPortal>
-      </Dialog>
+      <ImageLightbox
+        image={lightboxImage}
+        onClose={() => setLightboxImage(null)}
+      />
     </div>
   );
 }
