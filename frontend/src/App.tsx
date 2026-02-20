@@ -36,7 +36,7 @@ import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
 import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
-import { FeedbackFAB } from "./components/feedback/FeedbackFAB";
+import { showNewMessage } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 
@@ -689,6 +689,16 @@ function App({ navbarComponent }: Props) {
           settings={settings}
           setSettings={setSettings}
           accountComponent={navbarComponent}
+          onOpenFeedback={
+            SHOW_FEEDBACK_CALL_UI
+              ? () => setIsFeedbackOpen(true)
+              : undefined
+          }
+          onContactSupport={
+            IS_RUNNING_ON_CLOUD
+              ? () => showNewMessage("")
+              : undefined
+          }
         />
       </div>
 
@@ -820,14 +830,11 @@ function App({ navbarComponent }: Props) {
       </main>
 
       {SHOW_FEEDBACK_CALL_UI && (
-        <>
-          <FeedbackFAB onOpen={() => setIsFeedbackOpen(true)} />
-          <FeedbackModal
-            open={isFeedbackOpen}
-            onOpenChange={setIsFeedbackOpen}
-            subscriberTier={subscriberTier}
-          />
-        </>
+        <FeedbackModal
+          open={isFeedbackOpen}
+          onOpenChange={setIsFeedbackOpen}
+          subscriberTier={subscriberTier}
+        />
       )}
     </div>
   );
