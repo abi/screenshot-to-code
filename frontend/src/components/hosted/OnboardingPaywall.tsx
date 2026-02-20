@@ -1,4 +1,4 @@
-import { FaArrowRight, FaCode, FaLayerGroup, FaMagic, FaVideo } from "react-icons/fa";
+import { FaArrowRight, FaKeyboard, FaLayerGroup, FaMagic, FaVideo } from "react-icons/fa";
 import PricingPlans from "./payments/PricingPlans";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
@@ -15,14 +15,14 @@ const FEATURES = [
     description: "Record your screen and convert interactions into components.",
   },
   {
+    icon: FaKeyboard,
+    title: "Text to Code",
+    description: "Describe any UI in plain English and get working code.",
+  },
+  {
     icon: FaLayerGroup,
     title: "Any Framework",
     description: "React, Vue, HTML/Tailwind, Bootstrap, Ionic, and more.",
-  },
-  {
-    icon: FaCode,
-    title: "Iterate & Refine",
-    description: "Use follow-up prompts to tweak and perfect your output.",
   },
 ];
 
@@ -40,12 +40,13 @@ function OnboardingPaywall() {
             71,000+ GitHub stars
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-            Turn Screenshots into{" "}
-            <span className="text-blue-600 dark:text-blue-400">Code</span>
+            Your All-in-One{" "}
+            <span className="text-blue-600 dark:text-blue-400">Front-End</span>{" "}
+            Tool
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-lg text-gray-500 dark:text-zinc-400">
-            The fastest way to go from design to production-ready UI. Paste a
-            screenshot, get clean code in seconds.
+            Turn screenshots, videos, and text prompts into clean,
+            production-ready code. Subscribe to get started.
           </p>
         </div>
 

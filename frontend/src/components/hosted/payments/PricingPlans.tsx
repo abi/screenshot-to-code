@@ -31,9 +31,14 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
         </Button>
       </div>
       <div className="flex justify-center items-center">
-        <div className="grid grid-cols-2 gap-6 p-2">
+        <div className="grid grid-cols-2 gap-6 px-2 pb-2 pt-4">
           {/* Hobby Plan */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-6 transition-shadow hover:shadow-md">
+          <div className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-blue-500 dark:border-blue-400 p-6 shadow-md shadow-blue-500/5">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white dark:bg-blue-500">
+                Most Popular
+              </span>
+            </div>
             <h2 className="font-semibold dark:text-white">Hobby</h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               Great for getting started
@@ -53,7 +58,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             </div>
 
             <button
-              className="bg-black text-white dark:bg-white dark:text-black rounded-lg py-2.5 px-4 w-full text-sm font-medium
+              className="bg-blue-600 text-white rounded-lg py-2.5 px-4 w-full text-sm font-medium
                 flex justify-center items-center gap-x-2 transition-opacity hover:opacity-90"
               onClick={() =>
                 checkout(
@@ -87,12 +92,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
           </div>
 
           {/* Pro Plan */}
-          <div className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-blue-500 dark:border-blue-400 p-6 shadow-md shadow-blue-500/5">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white dark:bg-blue-500">
-                Most Popular
-              </span>
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-6 transition-shadow hover:shadow-md">
             <h2 className="font-semibold dark:text-white">Pro</h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               For power users
@@ -112,7 +112,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             </div>
 
             <button
-              className="bg-blue-600 text-white rounded-lg py-2.5 px-4 w-full text-sm font-medium
+              className="bg-black text-white dark:bg-white dark:text-black rounded-lg py-2.5 px-4 w-full text-sm font-medium
                 flex justify-center items-center gap-x-2 transition-opacity hover:opacity-90"
               onClick={() =>
                 checkout(
