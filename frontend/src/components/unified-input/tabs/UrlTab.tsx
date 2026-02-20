@@ -74,8 +74,8 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="w-full max-w-lg">
-        <div className="flex flex-col items-center gap-6 p-8 border border-gray-200 rounded-xl bg-gray-50/50">
-          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-6 p-8 border border-gray-200 dark:border-zinc-700 rounded-xl bg-gray-50/50 dark:bg-zinc-900/50">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="28"
@@ -86,7 +86,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-gray-400"
+              className="text-gray-400 dark:text-zinc-500"
             >
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -94,7 +94,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
           </div>
 
           <div className="text-center">
-            <h3 className="text-gray-700 font-medium">Screenshot from URL</h3>
+            <h3 className="text-gray-700 dark:text-zinc-200 font-medium">Screenshot from URL</h3>
           </div>
 
           <div className="w-full space-y-3">
@@ -149,7 +149,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
             </Button>
           </div>
 
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-gray-400 dark:text-zinc-500 text-center">
             Requires ScreenshotOne API key.
           </p>
         </div>

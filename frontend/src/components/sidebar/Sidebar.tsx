@@ -416,14 +416,14 @@ function Sidebar({
 
         {/* Show error message when selected option has an error */}
         {isSelectedVariantError && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
-            <div className="text-red-800 text-sm">
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-3 mb-2">
+            <div className="text-red-800 dark:text-red-200 text-sm">
               <div className="font-medium mb-1">
                 This option failed to generate because
               </div>
               {selectedVariantErrorMessage && (
                 <div className="mb-2">
-                  <div className="text-red-700 bg-red-100 border border-red-300 rounded px-2 py-1 text-xs font-mono break-words">
+                  <div className="text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-700 rounded px-2 py-1 text-xs font-mono break-words">
                     {selectedVariantErrorMessage.length > 200 && !isErrorExpanded
                       ? `${selectedVariantErrorMessage.slice(0, 200)}...`
                       : selectedVariantErrorMessage}
@@ -431,7 +431,7 @@ function Sidebar({
                   {selectedVariantErrorMessage.length > 200 && (
                     <button
                       onClick={() => setIsErrorExpanded(!isErrorExpanded)}
-                      className="text-red-600 text-xs underline mt-1 hover:text-red-800"
+                      className="text-red-600 dark:text-red-400 text-xs underline mt-1 hover:text-red-800 dark:hover:text-red-300"
                     >
                       {isErrorExpanded ? "Show less" : "Show more"}
                     </button>
