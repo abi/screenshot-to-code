@@ -17,6 +17,10 @@ interface AppStore {
   inSelectAndEditMode: boolean;
   toggleInSelectAndEditMode: () => void;
   disableInSelectAndEditMode: () => void;
+
+  selectedElement: HTMLElement | null;
+  setSelectedElement: (element: HTMLElement | null) => void;
+  clearSelectedElement: () => void;
 }
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -36,4 +40,9 @@ export const useAppStore = create<AppStore>((set) => ({
   toggleInSelectAndEditMode: () =>
     set((state) => ({ inSelectAndEditMode: !state.inSelectAndEditMode })),
   disableInSelectAndEditMode: () => set({ inSelectAndEditMode: false }),
+
+  selectedElement: null,
+  setSelectedElement: (element: HTMLElement | null) =>
+    set({ selectedElement: element }),
+  clearSelectedElement: () => set({ selectedElement: null }),
 }));

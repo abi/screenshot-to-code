@@ -19,6 +19,7 @@ import AgentActivity from "../agent/AgentActivity";
 import WorkingPulse from "../core/WorkingPulse";
 import { Dialog, DialogPortal, DialogOverlay } from "../ui/dialog";
 import { Commit } from "../commits/types";
+import { removeHighlight } from "../select-and-edit/utils";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -73,7 +74,7 @@ function Sidebar({
   } | null>(null);
   const [lightboxFitScale, setLightboxFitScale] = useState(1);
 
-  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode } = useAppStore();
+  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode, selectedElement, setSelectedElement } = useAppStore();
 
   // Helper function to convert file to data URL
   const fileToDataURL = (file: File): Promise<string> => {
@@ -458,19 +459,42 @@ function Sidebar({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
-            {/* Select and edit instructions card */}
+            {/* Select and edit indicator */}
             {inSelectAndEditMode && (
-              <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <LuMousePointerClick className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 shrink-0" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Click any element in the preview to edit it</span>
-                </div>
-                <button
-                  onClick={toggleInSelectAndEditMode}
-                  className="shrink-0 ml-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-                >
-                  Exit
-                </button>
+              <div className="mb-2">
+                {selectedElement ? (
+                  <div className="flex items-center justify-between rounded-xl border border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-900/20 px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <LuMousePointerClick className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400 shrink-0" />
+                      <span className="text-sm text-violet-700 dark:text-violet-300 truncate">
+                        Selected: <code className="font-mono text-xs bg-violet-100 dark:bg-violet-800/50 px-1.5 py-0.5 rounded">&lt;{selectedElement.tagName.toLowerCase()}&gt;</code>
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        removeHighlight(selectedElement);
+                        setSelectedElement(null);
+                      }}
+                      className="shrink-0 ml-3 p-0.5 text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 transition-colors"
+                      title="Clear selection"
+                    >
+                      <LuX className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <LuMousePointerClick className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 shrink-0" />
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Click any element in the preview to edit it</span>
+                    </div>
+                    <button
+                      onClick={toggleInSelectAndEditMode}
+                      className="shrink-0 ml-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                    >
+                      Exit
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             <div className="relative w-full overflow-hidden rounded-2xl border-2 border-violet-300 bg-white transition-all focus-within:border-violet-500 dark:border-violet-500/50 dark:bg-zinc-900 dark:focus-within:border-violet-400">
@@ -480,7 +504,11 @@ function Sidebar({
               />
               <textarea
                 ref={textareaRef}
-                placeholder="Tell the AI what to change..."
+                placeholder={
+                  inSelectAndEditMode && selectedElement
+                    ? `Describe changes for the selected <${selectedElement.tagName.toLowerCase()}> element...`
+                    : "Tell the AI what to change..."
+                }
                 onChange={(e) => {
                   setUpdateInstruction(e.target.value);
                   autoResize();
