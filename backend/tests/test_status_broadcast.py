@@ -88,12 +88,15 @@ async def test_image_update_broadcasts_two_variants() -> None:
         ),
     )
     context.extracted_params = ExtractedParams(
+        user_id="test-user",
         stack="html_tailwind",
         input_mode="image",
         should_generate_images=True,
         openai_api_key="key",
         anthropic_api_key="key",
+        gemini_api_key="key",
         openai_base_url=None,
+        payment_method=PaymentMethod.SUBSCRIPTION,
         generation_type="update",
         prompt={"text": "Edit this screenshot", "images": ["data:image/png;base64,abc"], "videos": []},
         history=[],

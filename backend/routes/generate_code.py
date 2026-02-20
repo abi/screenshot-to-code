@@ -40,7 +40,10 @@ from typing import (
 )
 from openai.types.chat import ChatCompletionMessageParam
 from routes.logging_utils import PaymentMethod, send_to_saas_backend
-from routes.saas_utils import does_user_have_subscription_credits
+from routes.saas_utils import (
+    SubscriptionCreditsCheckError,
+    does_user_have_subscription_credits,
+)
 from utils import print_prompt_preview
 
 # WebSocket message types
@@ -288,7 +291,11 @@ class ParameterExtractionStage:
 
         # If the user is a subscriber, use the platform API key
         # TODO: Rename does_user_have_subscription_credits
-        res = await does_user_have_subscription_credits(auth_token)
+        try:
+            res = await does_user_have_subscription_credits(auth_token)
+        except SubscriptionCreditsCheckError as e:
+            await self.throw_error(str(e))
+            raise ValueError(str(e))
         if res.status != "not_subscriber":
             if (
                 res.status == "subscriber_has_credits"
@@ -822,7 +829,8 @@ class ParameterExtractionMiddleware(Middleware):
             )
         except Exception as e:
             await context.throw_error(f"An unexpected error occurred: {str(e)}")
-            raise e
+            sentry_sdk.capture_exception(e)
+            return
 
         # Log what we're generating
         print(
