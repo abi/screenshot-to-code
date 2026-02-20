@@ -55,6 +55,7 @@ function AppContainer() {
           name: user.first_name,
           email: user.email,
           "Subscriber Tier": user.subscriber_tier || "free",
+          hide_default_launcher: true,
         });
 
         // Initialize PostHog only for paid users
