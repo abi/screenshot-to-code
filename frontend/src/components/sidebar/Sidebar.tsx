@@ -3,21 +3,14 @@ import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useCallback } from "react";
-import {
-  LuMousePointerClick,
-  LuRefreshCw,
-  LuArrowUp,
-  LuMinus,
-  LuPlus,
-  LuX,
-} from "react-icons/lu";
+import { LuMousePointerClick, LuRefreshCw, LuArrowUp } from "react-icons/lu";
 import { toast } from "react-hot-toast";
 
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import AgentActivity from "../agent/AgentActivity";
 import WorkingPulse from "../core/WorkingPulse";
-import { Dialog, DialogPortal, DialogOverlay } from "../ui/dialog";
+import ImageLightbox from "../ImageLightbox";
 import { Commit } from "../commits/types";
 
 interface SidebarProps {
@@ -29,8 +22,6 @@ interface SidebarProps {
 }
 
 const MAX_UPDATE_IMAGES = 5;
-const MIN_LIGHTBOX_ZOOM = 0.5;
-const MAX_LIGHTBOX_ZOOM = 6;
 
 function summarizeLatestChange(commit: Commit | null): string | null {
   if (!commit) return null;
@@ -61,17 +52,10 @@ function Sidebar({
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const middlePaneRef = useRef<HTMLDivElement>(null);
-  const lightboxViewportRef = useRef<HTMLDivElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-  const [lightboxZoom, setLightboxZoom] = useState(1);
-  const [lightboxNaturalSize, setLightboxNaturalSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-  const [lightboxFitScale, setLightboxFitScale] = useState(1);
 
   const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode } = useAppStore();
 
@@ -229,132 +213,6 @@ function Sidebar({
     return () => window.clearInterval(intervalId);
   }, [appState]);
 
-  const closeLightbox = useCallback(() => {
-    setLightboxImage(null);
-    setLightboxZoom(1);
-    setLightboxNaturalSize(null);
-    setLightboxFitScale(1);
-  }, []);
-
-  const openLightbox = useCallback((image: string) => {
-    setLightboxImage(image);
-    setLightboxZoom(1);
-    setLightboxNaturalSize(null);
-    setLightboxFitScale(1);
-  }, []);
-
-  const recomputeLightboxFitScale = useCallback(() => {
-    if (!lightboxViewportRef.current || !lightboxNaturalSize) return;
-
-    const viewportWidth = lightboxViewportRef.current.clientWidth;
-    const viewportHeight = lightboxViewportRef.current.clientHeight;
-    if (viewportWidth <= 0 || viewportHeight <= 0) return;
-
-    const fitScale = Math.min(
-      viewportWidth / lightboxNaturalSize.width,
-      viewportHeight / lightboxNaturalSize.height,
-      1
-    );
-    setLightboxFitScale(fitScale);
-  }, [lightboxNaturalSize]);
-
-  useEffect(() => {
-    if (!lightboxImage) return;
-    recomputeLightboxFitScale();
-
-    const handleResize = () => recomputeLightboxFitScale();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [lightboxImage, recomputeLightboxFitScale]);
-
-  useEffect(() => {
-    recomputeLightboxFitScale();
-  }, [recomputeLightboxFitScale]);
-
-  const zoomInLightbox = () => {
-    setLightboxZoom((current) =>
-      Math.min(MAX_LIGHTBOX_ZOOM, Math.round((current + 0.25) * 100) / 100)
-    );
-  };
-
-  const zoomOutLightbox = () => {
-    setLightboxZoom((current) =>
-      Math.max(MIN_LIGHTBOX_ZOOM, Math.round((current - 0.25) * 100) / 100)
-    );
-  };
-
-  const resetLightboxZoom = () => {
-    setLightboxZoom(1);
-  };
-
-  // Drag-to-scroll state for lightbox
-  const lightboxDragRef = useRef({
-    isDragging: false,
-    startX: 0,
-    startY: 0,
-    scrollLeft: 0,
-    scrollTop: 0,
-    didDrag: false,
-  });
-
-  const handleLightboxMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (!lightboxViewportRef.current || e.button !== 0) return;
-      lightboxDragRef.current = {
-        isDragging: true,
-        startX: e.clientX,
-        startY: e.clientY,
-        scrollLeft: lightboxViewportRef.current.scrollLeft,
-        scrollTop: lightboxViewportRef.current.scrollTop,
-        didDrag: false,
-      };
-      lightboxViewportRef.current.style.cursor = "grabbing";
-      e.preventDefault();
-    },
-    []
-  );
-
-  const handleLightboxMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      const drag = lightboxDragRef.current;
-      if (!drag.isDragging || !lightboxViewportRef.current) return;
-
-      const dx = e.clientX - drag.startX;
-      const dy = e.clientY - drag.startY;
-
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        drag.didDrag = true;
-      }
-
-      lightboxViewportRef.current.scrollLeft = drag.scrollLeft - dx;
-      lightboxViewportRef.current.scrollTop = drag.scrollTop - dy;
-    },
-    []
-  );
-
-  const handleLightboxMouseUp = useCallback(() => {
-    lightboxDragRef.current.isDragging = false;
-    if (lightboxViewportRef.current) {
-      lightboxViewportRef.current.style.cursor = "";
-    }
-  }, []);
-
-  const handleLightboxViewportClick = useCallback(() => {
-    if (lightboxDragRef.current.didDrag) {
-      lightboxDragRef.current.didDrag = false;
-      return;
-    }
-    closeLightbox();
-  }, [closeLightbox]);
-
-  const effectiveLightboxScale = lightboxFitScale * lightboxZoom;
-  const lightboxDisplayWidth = lightboxNaturalSize
-    ? Math.max(1, Math.round(lightboxNaturalSize.width * effectiveLightboxScale))
-    : undefined;
-  const lightboxDisplayHeight = lightboxNaturalSize
-    ? Math.max(1, Math.round(lightboxNaturalSize.height * effectiveLightboxScale))
-    : undefined;
-
 
   return (
     <div className="flex flex-col h-full">
@@ -379,7 +237,7 @@ function Sidebar({
                   {latestChangeImages.map((image, index) => (
                     <button
                       key={`${image.slice(0, 40)}-${index}`}
-                      onClick={() => openLightbox(image)}
+                      onClick={() => setLightboxImage(image)}
                       className="shrink-0 cursor-zoom-in rounded-lg border border-gray-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
                     >
                       <img
@@ -599,90 +457,10 @@ function Sidebar({
           </div>
         )}
 
-      {/* Image lightbox */}
-      <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && closeLightbox()}>
-        <DialogPortal>
-          <DialogOverlay className="bg-black/90 backdrop-blur-md" />
-          <div className="fixed inset-0 z-50">
-            {/* Scrollable viewport - drag to scroll, click to close */}
-            <div
-              ref={lightboxViewportRef}
-              className="h-full w-full overflow-auto cursor-grab"
-              onMouseDown={handleLightboxMouseDown}
-              onMouseMove={handleLightboxMouseMove}
-              onMouseUp={handleLightboxMouseUp}
-              onMouseLeave={handleLightboxMouseUp}
-              onClick={handleLightboxViewportClick}
-            >
-              <div className="flex min-h-full min-w-full items-center justify-center p-8">
-                {lightboxImage && (
-                  <img
-                    src={lightboxImage}
-                    alt="Reference image"
-                    className="rounded-lg shadow-2xl select-none"
-                    draggable={false}
-                    style={
-                      lightboxDisplayWidth && lightboxDisplayHeight
-                        ? {
-                            width: `${lightboxDisplayWidth}px`,
-                            height: `${lightboxDisplayHeight}px`,
-                            maxWidth: "none",
-                            maxHeight: "none",
-                          }
-                        : undefined
-                    }
-                    onLoad={(event) => {
-                      setLightboxNaturalSize({
-                        width: event.currentTarget.naturalWidth,
-                        height: event.currentTarget.naturalHeight,
-                      });
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Zoom controls - bottom center pill */}
-            <div
-              className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/60 px-3 py-2 shadow-lg backdrop-blur-md"
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={zoomOutLightbox}
-                className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30"
-                disabled={lightboxZoom <= MIN_LIGHTBOX_ZOOM}
-                title="Zoom out"
-              >
-                <LuMinus className="h-4 w-4" />
-              </button>
-              <button
-                onClick={resetLightboxZoom}
-                className="min-w-[3.5rem] rounded-full px-3 py-1 text-center text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                title="Reset zoom"
-              >
-                {Math.round(lightboxZoom * 100)}%
-              </button>
-              <button
-                onClick={zoomInLightbox}
-                className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30"
-                disabled={lightboxZoom >= MAX_LIGHTBOX_ZOOM}
-                title="Zoom in"
-              >
-                <LuPlus className="h-4 w-4" />
-              </button>
-              <div className="mx-1 h-4 w-px bg-white/20" />
-              <button
-                onClick={closeLightbox}
-                className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                title="Close"
-              >
-                <LuX className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </DialogPortal>
-      </Dialog>
+      <ImageLightbox
+        image={lightboxImage}
+        onClose={() => setLightboxImage(null)}
+      />
     </div>
   );
 }
