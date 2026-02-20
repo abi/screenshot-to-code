@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 import FullPageSpinner from "../core/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
-import AvatarDropdown from "./AvatarDropdown";
 import { UserResponse } from "./types";
 import {
   LOGROCKET_APP_ID,
@@ -56,6 +55,7 @@ function AppContainer() {
           name: user.first_name,
           email: user.email,
           "Subscriber Tier": user.subscriber_tier || "free",
+          hide_default_launcher: true,
         });
 
         // Initialize PostHog only for paid users
@@ -107,7 +107,7 @@ function AppContainer() {
   // If the user is signed in, show the app
   return (
     <>
-      <App navbarComponent={<AvatarDropdown compact />} />
+      <App />
     </>
   );
 }
