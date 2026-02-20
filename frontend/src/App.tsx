@@ -391,9 +391,6 @@ function App() {
           finishToolEvent(Number(key), "complete");
         });
         setAppState(AppState.CODE_READY);
-        // Clear prompt only on successful completion so it's preserved on error
-        setUpdateInstruction("");
-        setUpdateImages([]);
       },
     });
   }
