@@ -63,6 +63,9 @@ function Sidebar({
   const middlePaneRef = useRef<HTMLDivElement>(null);
   const lightboxViewportRef = useRef<HTMLDivElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
+  const [isPromptExpanded, setIsPromptExpanded] = useState(false);
+  const [isPromptClamped, setIsPromptClamped] = useState(false);
+  const promptTextRef = useRef<HTMLParagraphElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
@@ -215,6 +218,20 @@ function Sidebar({
     setIsErrorExpanded(false);
   }, [head, commits[head || ""]?.selectedVariantIndex]);
 
+  // Reset prompt expanded state when commit changes and detect clamping
+  useEffect(() => {
+    setIsPromptExpanded(false);
+  }, [head]);
+
+  useEffect(() => {
+    const el = promptTextRef.current;
+    if (el) {
+      setIsPromptClamped(el.scrollHeight > el.clientHeight);
+    } else {
+      setIsPromptClamped(false);
+    }
+  }, [latestChangeSummary, isPromptExpanded]);
+
   useEffect(() => {
     if (!middlePaneRef.current) return;
     requestAnimationFrame(() => {
@@ -310,9 +327,22 @@ function Sidebar({
         {latestChangeSummary && (
           <div className="mb-4 flex flex-col items-end">
             <div className="inline-block max-w-[85%] rounded-2xl rounded-br-md bg-violet-100 px-4 py-2.5 dark:bg-violet-900/30">
-              <p className="text-[15px] text-violet-950 dark:text-violet-100 break-words">
+              <p
+                ref={promptTextRef}
+                className={`text-[15px] text-violet-950 dark:text-violet-100 break-words whitespace-pre-wrap ${
+                  !isPromptExpanded ? "line-clamp-[10]" : ""
+                }`}
+              >
                 {latestChangeSummary}
               </p>
+              {(isPromptClamped || isPromptExpanded) && (
+                <button
+                  onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                  className="mt-1 text-xs font-medium text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
+                >
+                  {isPromptExpanded ? "less" : "more"}
+                </button>
+              )}
             </div>
               {latestChangeImages.length > 0 && (
                 <div className="mt-2 flex gap-2 flex-wrap justify-end">
