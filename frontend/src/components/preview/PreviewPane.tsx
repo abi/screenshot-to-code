@@ -31,12 +31,11 @@ function openInNewTab(code: string) {
 }
 
 interface Props {
-  doUpdate: (instruction: string) => void;
   settings: Settings;
   onOpenVersions: () => void;
 }
 
-function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
+function PreviewPane({ settings, onOpenVersions }: Props) {
   const { appState } = useAppStore();
   const { inputMode, head, commits, setHead } = useProjectStore();
   const [activeTab, setActiveTab] = useState("desktop");
@@ -215,7 +214,6 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
           <PreviewComponent
             code={previewCode}
             device="desktop"
-            doUpdate={doUpdate}
             onScaleChange={setDesktopScale}
             viewMode={desktopViewMode}
           />
@@ -224,7 +222,6 @@ function PreviewPane({ doUpdate, settings, onOpenVersions }: Props) {
           <PreviewComponent
             code={previewCode}
             device="mobile"
-            doUpdate={doUpdate}
             viewMode="actual"
           />
         </TabsContent>

@@ -432,10 +432,12 @@ html {
     --radius: 0.5rem;
   }
   
+  .dark body,
   body.dark {
     background-color: black;
   }
 
+  .dark div[role="presentation"],
   div[role="presentation"].dark {
     background-color: #09090b !important;
   }
@@ -445,6 +447,8 @@ html {
   }
 
   .dark {
+    color-scheme: dark;
+
     --background: 222.2 0% 0%;
     --foreground: 210 40% 98%;
 

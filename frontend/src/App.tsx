@@ -27,11 +27,12 @@ import {
 // import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
+import { removeHighlight } from "./components/select-and-edit/utils";
+import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
-import Sidebar from "./components/sidebar/Sidebar";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
@@ -94,6 +95,8 @@ function App() {
     setUpdateImages,
     appState,
     setAppState,
+    selectedElement,
+    setSelectedElement,
   } = useAppStore();
 
   const { shouldShowBanner, incrementGenerations, dismissBanner } =
@@ -505,10 +508,7 @@ function App() {
   }
 
   // Subsequent updates
-  async function doUpdate(
-    updateInstruction: string,
-    selectedElement?: HTMLElement,
-  ) {
+  async function doUpdate(updateInstruction: string) {
     if (updateInstruction.trim() === "") {
       toast.error("Please include some instructions for AI on what to update.");
       return;
@@ -532,10 +532,12 @@ function App() {
 
     // Send in a reference to the selected element if it exists
     if (selectedElement) {
+      const elementHtml = removeHighlight(selectedElement).outerHTML;
       modifiedUpdateInstruction =
         updateInstruction +
         " referring to this element specifically: " +
-        selectedElement.outerHTML;
+        elementHtml;
+      setSelectedElement(null);
     }
 
     const selectedVariant =
@@ -657,7 +659,9 @@ function App() {
         <IconStrip
           isVersionsOpen={isVersionsPanelOpen}
           isProjectsOpen={isProjectsPanelOpen}
-          isEditorOpen={!isVersionsPanelOpen && !isProjectsPanelOpen && !isAccountPanelOpen}
+          isEditorOpen={
+            !isVersionsPanelOpen && !isProjectsPanelOpen && !isAccountPanelOpen
+          }
           showVersions={isCodingOrReady}
           showProjects={IS_RUNNING_ON_CLOUD}
           showAccount={IS_RUNNING_ON_CLOUD}
@@ -702,14 +706,10 @@ function App() {
           settings={settings}
           setSettings={setSettings}
           onOpenFeedback={
-            SHOW_FEEDBACK_CALL_UI
-              ? () => setIsFeedbackOpen(true)
-              : undefined
+            SHOW_FEEDBACK_CALL_UI ? () => setIsFeedbackOpen(true) : undefined
           }
           onContactSupport={
-            IS_RUNNING_ON_CLOUD
-              ? () => showNewMessage("")
-              : undefined
+            IS_RUNNING_ON_CLOUD ? () => showNewMessage("") : undefined
           }
         />
       </div>
@@ -747,7 +747,7 @@ function App() {
       {/* Content panel - shows sidebar, history, or editor */}
       {showContentPanel && (
         <div
-          className={`border-b border-gray-200 bg-white dark:bg-zinc-950 dark:text-white lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col lg:border-b-0 lg:border-r ${
+          className={`border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 dark:text-white lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col lg:border-b-0 lg:border-r ${
             showMobileChatPane ? "block" : "hidden lg:flex"
           }`}
         >
@@ -795,16 +795,21 @@ function App() {
           isProjectsPanelOpen || isAccountPanelOpen
             ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-16"
             : showContentPanel
-            ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
-            : "lg:pl-16"
+              ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
+              : "lg:pl-16"
         } ${
-          isCodingOrReady && mobilePane === "chat" && !isProjectsPanelOpen && !isAccountPanelOpen
+          isCodingOrReady &&
+          mobilePane === "chat" &&
+          !isProjectsPanelOpen &&
+          !isAccountPanelOpen
             ? "hidden lg:flex"
             : ""
         }`}
       >
-        {appState === AppState.INITIAL && !isProjectsPanelOpen && !isAccountPanelOpen && (
-          IS_RUNNING_ON_CLOUD &&
+        {appState === AppState.INITIAL &&
+          !isProjectsPanelOpen &&
+          !isAccountPanelOpen &&
+          (IS_RUNNING_ON_CLOUD &&
           !settings.openAiApiKey &&
           subscriberTier === "free" ? (
             <OnboardingPaywall />
@@ -822,8 +827,7 @@ function App() {
               settings={settings}
               setSettings={setSettings}
             />
-          )
-        )}
+          ))}
 
         {isProjectsPanelOpen && (
           <ProjectHistoryView importFromCode={importFromCode} />
@@ -833,7 +837,6 @@ function App() {
 
         {isCodingOrReady && !isProjectsPanelOpen && !isAccountPanelOpen && (
           <PreviewPane
-            doUpdate={doUpdate}
             settings={settings}
             onOpenVersions={() => {
               setProjectsPanelOpen(false);

@@ -63,9 +63,9 @@ function ImportTab({ importFromCode }: Props) {
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="w-full max-w-lg">
-        <div className="flex flex-col gap-6 p-8 border border-gray-200 rounded-xl bg-gray-50/50">
+        <div className="flex flex-col gap-6 p-8 border border-gray-200 dark:border-zinc-700 rounded-xl bg-gray-50/50 dark:bg-zinc-900/50">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="28"
@@ -76,7 +76,7 @@ function ImportTab({ importFromCode }: Props) {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-gray-400"
+                className="text-gray-400 dark:text-zinc-500"
               >
                 <polyline points="16 18 22 12 16 6" />
                 <polyline points="8 6 2 12 8 18" />
@@ -84,7 +84,7 @@ function ImportTab({ importFromCode }: Props) {
             </div>
 
             <div className="text-center">
-              <h3 className="text-gray-700 font-medium">Import Existing Code</h3>
+              <h3 className="text-gray-700 dark:text-zinc-200 font-medium">Import Existing Code</h3>
             </div>
           </div>
 
@@ -92,7 +92,7 @@ function ImportTab({ importFromCode }: Props) {
             <div
               {...getRootProps({
                 className: `rounded-lg ${
-                  isDraggingFile ? "ring-2 ring-blue-300 ring-offset-2" : ""
+                  isDraggingFile ? "ring-2 ring-blue-300 dark:ring-blue-700 ring-offset-2 dark:ring-offset-zinc-900" : ""
                 }`,
               })}
             >
@@ -124,7 +124,7 @@ function ImportTab({ importFromCode }: Props) {
               Import Code
             </Button>
 
-            <p className="text-xs text-gray-400 text-center">
+            <p className="text-xs text-gray-400 dark:text-zinc-500 text-center">
               Press Cmd/Ctrl + Enter to import
             </p>
           </div>

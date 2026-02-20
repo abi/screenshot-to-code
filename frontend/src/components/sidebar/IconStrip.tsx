@@ -63,7 +63,7 @@ function IconStrip({
         <img
           src="/favicon/main.png"
           alt="Logo"
-          className="w-5 h-5"
+          className="w-5 h-5 dark:invert"
         />
       </button>
 

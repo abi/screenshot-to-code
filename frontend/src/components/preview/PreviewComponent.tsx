@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import useThrottle from "../../hooks/useThrottle";
-import EditPopup from "../select-and-edit/EditPopup";
+import { useAppStore } from "../../store/app-store";
+import { addHighlight, removeHighlight } from "../select-and-edit/utils";
 
 interface Props {
   code: string;
   device: "mobile" | "desktop";
-  doUpdate: (updateInstruction: string, selectedElement?: HTMLElement) => void;
   onScaleChange?: (scale: number) => void;
   viewMode?: "fit" | "actual";
 }
@@ -17,7 +17,6 @@ export const DESKTOP_VIEWPORT_WIDTH = 1366;
 function PreviewComponent({
   code,
   device,
-  doUpdate,
   onScaleChange,
   viewMode,
 }: Props) {
@@ -29,11 +28,59 @@ function PreviewComponent({
 
   // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
-  const [scale, setScale] = useState(1);
   const activeMode = viewMode ?? "fit";
   const handleIframeClick = useCallback((event: MouseEvent) => {
     setClickEvent(event);
   }, []);
+
+  const handleIframeLinkClick = useCallback((event: MouseEvent) => {
+    const target = (event.target as HTMLElement).closest("a");
+    if (!target) return;
+    const href = target.getAttribute("href");
+    if (href && href.startsWith("#")) {
+      event.preventDefault();
+    }
+  }, []);
+
+  const {
+    inSelectAndEditMode,
+    selectedElement,
+    setSelectedElement,
+  } = useAppStore();
+
+  const inSelectAndEditModeRef = useRef(inSelectAndEditMode);
+  useEffect(() => {
+    inSelectAndEditModeRef.current = inSelectAndEditMode;
+  }, [inSelectAndEditMode]);
+
+  // Handle click events to select elements
+  useEffect(() => {
+    if (!inSelectAndEditModeRef.current || !clickEvent) {
+      return;
+    }
+
+    clickEvent.preventDefault();
+
+    const targetElement = clickEvent.target as HTMLElement;
+    if (!targetElement) return;
+
+    // Remove highlight from previous element
+    if (selectedElement) {
+      removeHighlight(selectedElement);
+    }
+
+    // Highlight and store the new selected element
+    addHighlight(targetElement);
+    setSelectedElement(targetElement);
+  }, [clickEvent, setSelectedElement]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clean up highlight when exiting select-and-edit mode
+  useEffect(() => {
+    if (!inSelectAndEditMode && selectedElement) {
+      removeHighlight(selectedElement);
+      setSelectedElement(null);
+    }
+  }, [inSelectAndEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apply a fixed viewport per device and scale to fit the available pane.
   useEffect(() => {
@@ -52,7 +99,6 @@ function PreviewComponent({
             : 1;
         const iframeHeight = scaleValue > 0 ? viewportHeight / scaleValue : viewportHeight;
 
-        setScale(scaleValue);
         onScaleChange?.(scaleValue);
         iframe.style.width = `${DESKTOP_VIEWPORT_WIDTH}px`;
         iframe.style.height = `${iframeHeight}px`;
@@ -61,7 +107,6 @@ function PreviewComponent({
         return;
       }
 
-      setScale(1);
       onScaleChange?.(1);
       iframe.style.width = `${MOBILE_VIEWPORT_WIDTH}px`;
       iframe.style.height = `${viewportHeight}px`;
@@ -90,6 +135,7 @@ function PreviewComponent({
       const body = iframe.contentWindow?.document.body;
       if (!body) return;
       body.addEventListener("click", handleIframeClick);
+      body.addEventListener("click", handleIframeLinkClick);
     };
 
     iframe.addEventListener("load", handleLoad);
@@ -99,9 +145,10 @@ function PreviewComponent({
       const body = iframe.contentWindow?.document.body;
       if (body) {
         body.removeEventListener("click", handleIframeClick);
+        body.removeEventListener("click", handleIframeLinkClick);
       }
     };
-  }, [handleIframeClick]);
+  }, [handleIframeClick, handleIframeLinkClick]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -135,12 +182,6 @@ function PreviewComponent({
             }
           )}
         ></iframe>
-        <EditPopup
-          event={clickEvent}
-          iframeRef={iframeRef}
-          doUpdate={doUpdate}
-          scale={scale}
-        />
       </div>
     </div>
   );
