@@ -11,7 +11,7 @@ interface Props {
   doCreate: (
     urls: string[],
     inputMode: "image" | "video",
-    textPrompt?: string
+    textPrompt?: string,
   ) => void;
   stack: Stack;
   setStack: (stack: Stack) => void;
@@ -22,16 +22,25 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
   const [referenceUrl, setReferenceUrl] = useState("");
 
   async function takeScreenshot() {
+    const trimmedReferenceUrl = referenceUrl.trim();
+
     if (!screenshotOneApiKey) {
       toast.error(
         "Please add a ScreenshotOne API key in Settings. You can also upload screenshots directly in the Upload tab.",
-        { duration: 6000 }
+        { duration: 6000 },
       );
       return;
     }
 
-    if (!referenceUrl) {
+    if (!trimmedReferenceUrl) {
       toast.error("Please enter a URL");
+      return;
+    }
+
+    if (trimmedReferenceUrl.toLowerCase().startsWith("file://")) {
+      toast.error(
+        "file:// URLs can't be screenshot. If you're trying to import a local file, please use the Import tab.",
+      );
       return;
     }
 
@@ -40,7 +49,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
       const response = await fetch(`${HTTP_BACKEND_URL}/api/screenshot`, {
         method: "POST",
         body: JSON.stringify({
-          url: referenceUrl,
+          url: trimmedReferenceUrl,
           apiKey: screenshotOneApiKey,
         }),
         headers: {
@@ -101,10 +110,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
               className="w-full"
               data-testid="url-input"
             />
-            <OutputSettingsSection
-              stack={stack}
-              setStack={setStack}
-            />
+            <OutputSettingsSection stack={stack} setStack={setStack} />
 
             <Button
               onClick={takeScreenshot}
