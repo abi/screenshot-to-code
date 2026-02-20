@@ -657,7 +657,6 @@ function App() {
         <IconStrip
           isVersionsOpen={isVersionsPanelOpen}
           isProjectsOpen={isProjectsPanelOpen}
-          isAccountOpen={isAccountPanelOpen}
           isEditorOpen={!isVersionsPanelOpen && !isProjectsPanelOpen && !isAccountPanelOpen}
           showVersions={isCodingOrReady}
           showProjects={IS_RUNNING_ON_CLOUD}
@@ -702,7 +701,6 @@ function App() {
           }}
           settings={settings}
           setSettings={setSettings}
-          accountComponent={navbarComponent}
           onOpenFeedback={
             SHOW_FEEDBACK_CALL_UI
               ? () => setIsFeedbackOpen(true)
