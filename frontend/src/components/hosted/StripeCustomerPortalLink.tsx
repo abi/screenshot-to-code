@@ -3,10 +3,10 @@ import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { addEvent } from "../../lib/analytics";
 import { SAAS_BACKEND_URL } from "../../config";
 import { PortalSessionResponse } from "./types";
-import { forwardRef, useState } from "react";
+import React, { forwardRef, useState } from "react";
 import Spinner from "../core/Spinner";
 
-interface Props {
+interface Props extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   label: string;
 }
 

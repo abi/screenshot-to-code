@@ -35,6 +35,7 @@ import Sidebar from "./components/sidebar/Sidebar";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
+import AccountView from "./components/hosted/AccountView";
 import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
 import { FeedbackFAB } from "./components/feedback/FeedbackFAB";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
@@ -43,17 +44,15 @@ import { useFeedbackState } from "./hooks/useFeedbackState";
 // Temporary kill switch for feedback call UI.
 const SHOW_FEEDBACK_CALL_UI = true;
 
-interface Props {
-  navbarComponent?: JSX.Element;
-}
-
-function App({ navbarComponent }: Props) {
+function App() {
   // Relevant for hosted version only
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
   const subscriberTier = useStore((state) => state.subscriberTier);
   const isProjectsPanelOpen = useStore((state) => state.isProjectsPanelOpen);
   const setProjectsPanelOpen = useStore((state) => state.setProjectsPanelOpen);
+  const isAccountPanelOpen = useStore((state) => state.isAccountPanelOpen);
+  const setAccountPanelOpen = useStore((state) => state.setAccountPanelOpen);
 
   const {
     // Inputs
@@ -163,6 +162,7 @@ function App({ navbarComponent }: Props) {
     setReferenceImages([]);
     setIsVersionsPanelOpen(false);
     setProjectsPanelOpen(false);
+    setAccountPanelOpen(false);
   };
 
   const regenerate = () => {
@@ -619,6 +619,7 @@ function App({ navbarComponent }: Props) {
 
   const showContentPanel =
     !isProjectsPanelOpen &&
+    !isAccountPanelOpen &&
     (appState === AppState.CODING ||
       appState === AppState.CODE_READY ||
       isVersionsPanelOpen);
@@ -656,39 +657,51 @@ function App({ navbarComponent }: Props) {
         <IconStrip
           isVersionsOpen={isVersionsPanelOpen}
           isProjectsOpen={isProjectsPanelOpen}
-          isEditorOpen={!isVersionsPanelOpen && !isProjectsPanelOpen}
+          isAccountOpen={isAccountPanelOpen}
+          isEditorOpen={!isVersionsPanelOpen && !isProjectsPanelOpen && !isAccountPanelOpen}
           showVersions={isCodingOrReady}
           showProjects={IS_RUNNING_ON_CLOUD}
+          showAccount={IS_RUNNING_ON_CLOUD}
           showEditor={isCodingOrReady}
           onToggleVersions={() => {
             setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
             setIsVersionsPanelOpen((prev) => !prev);
             setMobilePane("chat");
           }}
           onToggleProjects={() => {
             setIsVersionsPanelOpen(false);
+            setAccountPanelOpen(false);
             setProjectsPanelOpen(!isProjectsPanelOpen);
+            setMobilePane("preview");
+          }}
+          onToggleAccount={() => {
+            setIsVersionsPanelOpen(false);
+            setProjectsPanelOpen(false);
+            setAccountPanelOpen(!isAccountPanelOpen);
             setMobilePane("preview");
           }}
           onToggleEditor={() => {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
             setMobilePane("preview");
           }}
           onLogoClick={() => {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
             setMobilePane("preview");
           }}
           onNewProject={() => {
             reset();
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
             setMobilePane("preview");
           }}
           settings={settings}
           setSettings={setSettings}
-          accountComponent={navbarComponent}
         />
       </div>
 
@@ -770,18 +783,18 @@ function App({ navbarComponent }: Props) {
 
       <main
         className={`${
-          isProjectsPanelOpen
+          isProjectsPanelOpen || isAccountPanelOpen
             ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-16"
             : showContentPanel
             ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
             : "lg:pl-16"
         } ${
-          isCodingOrReady && mobilePane === "chat" && !isProjectsPanelOpen
+          isCodingOrReady && mobilePane === "chat" && !isProjectsPanelOpen && !isAccountPanelOpen
             ? "hidden lg:flex"
             : ""
         }`}
       >
-        {appState === AppState.INITIAL && !isProjectsPanelOpen && (
+        {appState === AppState.INITIAL && !isProjectsPanelOpen && !isAccountPanelOpen && (
           IS_RUNNING_ON_CLOUD &&
           !settings.openAiApiKey &&
           subscriberTier === "free" ? (
@@ -793,6 +806,7 @@ function App({ navbarComponent }: Props) {
               importFromCode={importFromCode}
               onOpenProjects={() => {
                 setIsVersionsPanelOpen(false);
+                setAccountPanelOpen(false);
                 setProjectsPanelOpen(true);
                 setMobilePane("preview");
               }}
@@ -806,7 +820,9 @@ function App({ navbarComponent }: Props) {
           <ProjectHistoryView importFromCode={importFromCode} />
         )}
 
-        {isCodingOrReady && !isProjectsPanelOpen && (
+        {isAccountPanelOpen && <AccountView />}
+
+        {isCodingOrReady && !isProjectsPanelOpen && !isAccountPanelOpen && (
           <PreviewPane
             doUpdate={doUpdate}
             settings={settings}

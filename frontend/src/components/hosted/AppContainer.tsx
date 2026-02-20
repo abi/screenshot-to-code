@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 import FullPageSpinner from "../core/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
-import AvatarDropdown from "./AvatarDropdown";
 import { UserResponse } from "./types";
 import {
   LOGROCKET_APP_ID,
@@ -107,7 +106,7 @@ function AppContainer() {
   // If the user is signed in, show the app
   return (
     <>
-      <App navbarComponent={<AvatarDropdown compact />} />
+      <App />
     </>
   );
 }
