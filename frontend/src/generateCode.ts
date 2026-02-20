@@ -52,35 +52,6 @@ export function generateCode(
   params: FullGenerationSettings,
   callbacks: CodeGenerationCallbacks
 ) {
-  // Simulate errors for testing prompt preservation
-  if (params.prompt?.text?.includes("__simulate_error")) {
-    console.log("Simulating generate_code error for testing");
-    setTimeout(() => {
-      toast.error("Simulated error: generate_code failed (test mode)");
-      callbacks.onCancel();
-    }, 500);
-    return;
-  }
-
-  if (params.prompt?.text?.includes("__simulate_variant_error")) {
-    console.log("Simulating single variant error for testing");
-    setTimeout(() => {
-      callbacks.onVariantCount(2);
-      callbacks.onVariantModels(["test-model-a", "test-model-b"]);
-    }, 200);
-    setTimeout(() => {
-      callbacks.onSetCode("<html><body><h1>Variant 0 succeeded</h1></body></html>", 0);
-      callbacks.onVariantComplete(0);
-    }, 600);
-    setTimeout(() => {
-      callbacks.onVariantError(1, "Simulated variant error (test mode)");
-    }, 800);
-    setTimeout(() => {
-      callbacks.onComplete();
-    }, 1000);
-    return;
-  }
-
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
 
