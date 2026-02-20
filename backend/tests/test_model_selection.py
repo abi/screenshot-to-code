@@ -33,7 +33,7 @@ class TestModelSelectionAllKeys:
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_update_text(self):
-        """All keys text update: uses edit-specific model mix."""
+        """All keys text update: uses two fast edit variants."""
         models = await self.model_selector.select_models(
             generation_type="update",
             input_mode="text",
@@ -44,15 +44,13 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_2_CODEX_HIGH,
-            Llm.CLAUDE_SONNET_4_6,
             Llm.GPT_5_2_CODEX_LOW,
         ]
         assert models == expected
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_update(self):
-        """All keys update: uses edit-specific model mix."""
+        """All keys image update: uses two fast edit variants."""
         models = await self.model_selector.select_models(
             generation_type="update",
             input_mode="image",
@@ -63,8 +61,6 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_2_CODEX_HIGH,
-            Llm.CLAUDE_SONNET_4_6,
             Llm.GPT_5_2_CODEX_LOW,
         ]
         assert models == expected
