@@ -53,11 +53,12 @@ function ImageLightbox({ image, onClose }: ImageLightboxProps) {
     );
     setFitScale(scale);
 
-    // Set initial zoom to target DEFAULT_DISPLAY_WIDTH, clamped to fit
+    // Set initial zoom to target DEFAULT_DISPLAY_WIDTH (only clamp to viewport width)
     if (!initialZoomSet.current) {
       initialZoomSet.current = true;
       const targetScale = DEFAULT_DISPLAY_WIDTH / naturalSize.width;
-      const clampedScale = Math.min(targetScale, scale);
+      const maxWidthScale = viewportWidth / naturalSize.width;
+      const clampedScale = Math.min(targetScale, maxWidthScale);
       setZoom(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, clampedScale / scale)));
     }
   }, [naturalSize]);
@@ -86,9 +87,11 @@ function ImageLightbox({ image, onClose }: ImageLightboxProps) {
   const zoomToFit = () => setZoom(1);
 
   const zoomToDefault = () => {
-    if (!naturalSize || fitScale <= 0) return;
+    if (!naturalSize || fitScale <= 0 || !viewportRef.current) return;
+    const viewportWidth = viewportRef.current.clientWidth - 64;
     const targetScale = DEFAULT_DISPLAY_WIDTH / naturalSize.width;
-    const clampedScale = Math.min(targetScale, fitScale);
+    const maxWidthScale = viewportWidth / naturalSize.width;
+    const clampedScale = Math.min(targetScale, maxWidthScale);
     setZoom(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, clampedScale / fitScale)));
   };
 
