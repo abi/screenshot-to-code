@@ -35,15 +35,6 @@ function PreviewComponent({
     setClickEvent(event);
   }, []);
 
-  const handleIframeLinkClick = useCallback((event: MouseEvent) => {
-    const target = (event.target as HTMLElement).closest("a");
-    if (!target) return;
-    const href = target.getAttribute("href");
-    if (href && href.startsWith("#")) {
-      event.preventDefault();
-    }
-  }, []);
-
   // Apply a fixed viewport per device and scale to fit the available pane.
   useEffect(() => {
     const updateScale = () => {
@@ -99,7 +90,6 @@ function PreviewComponent({
       const body = iframe.contentWindow?.document.body;
       if (!body) return;
       body.addEventListener("click", handleIframeClick);
-      body.addEventListener("click", handleIframeLinkClick);
     };
 
     iframe.addEventListener("load", handleLoad);
@@ -109,10 +99,9 @@ function PreviewComponent({
       const body = iframe.contentWindow?.document.body;
       if (body) {
         body.removeEventListener("click", handleIframeClick);
-        body.removeEventListener("click", handleIframeLinkClick);
       }
     };
-  }, [handleIframeClick, handleIframeLinkClick]);
+  }, [handleIframeClick]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
