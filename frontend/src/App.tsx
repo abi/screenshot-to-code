@@ -27,33 +27,33 @@ import {
 // import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
+import { removeHighlight } from "./components/select-and-edit/utils";
+import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
-import Sidebar from "./components/sidebar/Sidebar";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
+import AccountView from "./components/hosted/AccountView";
 import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
-import { FeedbackFAB } from "./components/feedback/FeedbackFAB";
+import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 
 // Temporary kill switch for feedback call UI.
 const SHOW_FEEDBACK_CALL_UI = true;
 
-interface Props {
-  navbarComponent?: JSX.Element;
-}
-
-function App({ navbarComponent }: Props) {
+function App() {
   // Relevant for hosted version only
   // TODO: Move to AppContainer
   const { getToken } = useAuth();
   const subscriberTier = useStore((state) => state.subscriberTier);
   const isProjectsPanelOpen = useStore((state) => state.isProjectsPanelOpen);
   const setProjectsPanelOpen = useStore((state) => state.setProjectsPanelOpen);
+  const isAccountPanelOpen = useStore((state) => state.isAccountPanelOpen);
+  const setAccountPanelOpen = useStore((state) => state.setAccountPanelOpen);
 
   const {
     // Inputs
@@ -95,11 +95,22 @@ function App({ navbarComponent }: Props) {
     setUpdateImages,
     appState,
     setAppState,
+    selectedElement,
+    setSelectedElement,
   } = useAppStore();
 
   const { shouldShowBanner, incrementGenerations, dismissBanner } =
     useFeedbackState();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+
+  const isIntercomOpenRef = useRef(false);
+  useEffect(() => {
+    if (IS_RUNNING_ON_CLOUD) {
+      onHide(() => {
+        isIntercomOpenRef.current = false;
+      });
+    }
+  }, []);
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -163,6 +174,7 @@ function App({ navbarComponent }: Props) {
     setReferenceImages([]);
     setIsVersionsPanelOpen(false);
     setProjectsPanelOpen(false);
+    setAccountPanelOpen(false);
   };
 
   const regenerate = () => {
@@ -505,10 +517,7 @@ function App({ navbarComponent }: Props) {
   }
 
   // Subsequent updates
-  async function doUpdate(
-    updateInstruction: string,
-    selectedElement?: HTMLElement,
-  ) {
+  async function doUpdate(updateInstruction: string) {
     if (updateInstruction.trim() === "") {
       toast.error("Please include some instructions for AI on what to update.");
       return;
@@ -532,10 +541,12 @@ function App({ navbarComponent }: Props) {
 
     // Send in a reference to the selected element if it exists
     if (selectedElement) {
+      const elementHtml = removeHighlight(selectedElement).outerHTML;
       modifiedUpdateInstruction =
         updateInstruction +
         " referring to this element specifically: " +
-        selectedElement.outerHTML;
+        elementHtml;
+      setSelectedElement(null);
     }
 
     const selectedVariant =
@@ -619,6 +630,7 @@ function App({ navbarComponent }: Props) {
 
   const showContentPanel =
     !isProjectsPanelOpen &&
+    !isAccountPanelOpen &&
     (appState === AppState.CODING ||
       appState === AppState.CODE_READY ||
       isVersionsPanelOpen);
@@ -656,39 +668,68 @@ function App({ navbarComponent }: Props) {
         <IconStrip
           isVersionsOpen={isVersionsPanelOpen}
           isProjectsOpen={isProjectsPanelOpen}
-          isEditorOpen={!isVersionsPanelOpen && !isProjectsPanelOpen}
+          isEditorOpen={
+            !isVersionsPanelOpen && !isProjectsPanelOpen && !isAccountPanelOpen
+          }
           showVersions={isCodingOrReady}
           showProjects={IS_RUNNING_ON_CLOUD}
+          showAccount={IS_RUNNING_ON_CLOUD}
           showEditor={isCodingOrReady}
           onToggleVersions={() => {
             setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
             setIsVersionsPanelOpen((prev) => !prev);
             setMobilePane("chat");
           }}
           onToggleProjects={() => {
             setIsVersionsPanelOpen(false);
+            setAccountPanelOpen(false);
             setProjectsPanelOpen(!isProjectsPanelOpen);
+            setMobilePane("preview");
+          }}
+          onToggleAccount={() => {
+            setIsVersionsPanelOpen(false);
+            setProjectsPanelOpen(false);
+            setAccountPanelOpen(!isAccountPanelOpen);
             setMobilePane("preview");
           }}
           onToggleEditor={() => {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
             setMobilePane("preview");
           }}
           onLogoClick={() => {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
             setMobilePane("preview");
           }}
           onNewProject={() => {
             reset();
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
             setMobilePane("preview");
           }}
           settings={settings}
           setSettings={setSettings}
-          accountComponent={navbarComponent}
+          onOpenFeedback={
+            SHOW_FEEDBACK_CALL_UI ? () => setIsFeedbackOpen(true) : undefined
+          }
+          onContactSupport={
+            IS_RUNNING_ON_CLOUD
+              ? () => {
+                  if (isIntercomOpenRef.current) {
+                    hide();
+                    isIntercomOpenRef.current = false;
+                  } else {
+                    show();
+                    isIntercomOpenRef.current = true;
+                  }
+                }
+              : undefined
+          }
         />
       </div>
 
@@ -725,7 +766,7 @@ function App({ navbarComponent }: Props) {
       {/* Content panel - shows sidebar, history, or editor */}
       {showContentPanel && (
         <div
-          className={`border-b border-gray-200 bg-white dark:bg-zinc-950 dark:text-white lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col lg:border-b-0 lg:border-r ${
+          className={`border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 dark:text-white lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col lg:border-b-0 lg:border-r ${
             showMobileChatPane ? "block" : "hidden lg:flex"
           }`}
         >
@@ -770,19 +811,24 @@ function App({ navbarComponent }: Props) {
 
       <main
         className={`${
-          isProjectsPanelOpen
+          isProjectsPanelOpen || isAccountPanelOpen
             ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-16"
             : showContentPanel
-            ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
-            : "lg:pl-16"
+              ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
+              : "lg:pl-16"
         } ${
-          isCodingOrReady && mobilePane === "chat" && !isProjectsPanelOpen
+          isCodingOrReady &&
+          mobilePane === "chat" &&
+          !isProjectsPanelOpen &&
+          !isAccountPanelOpen
             ? "hidden lg:flex"
             : ""
         }`}
       >
-        {appState === AppState.INITIAL && !isProjectsPanelOpen && (
-          IS_RUNNING_ON_CLOUD &&
+        {appState === AppState.INITIAL &&
+          !isProjectsPanelOpen &&
+          !isAccountPanelOpen &&
+          (IS_RUNNING_ON_CLOUD &&
           !settings.openAiApiKey &&
           subscriberTier === "free" ? (
             <OnboardingPaywall />
@@ -793,22 +839,23 @@ function App({ navbarComponent }: Props) {
               importFromCode={importFromCode}
               onOpenProjects={() => {
                 setIsVersionsPanelOpen(false);
+                setAccountPanelOpen(false);
                 setProjectsPanelOpen(true);
                 setMobilePane("preview");
               }}
               settings={settings}
               setSettings={setSettings}
             />
-          )
-        )}
+          ))}
 
         {isProjectsPanelOpen && (
           <ProjectHistoryView importFromCode={importFromCode} />
         )}
 
-        {isCodingOrReady && !isProjectsPanelOpen && (
+        {isAccountPanelOpen && <AccountView />}
+
+        {isCodingOrReady && !isProjectsPanelOpen && !isAccountPanelOpen && (
           <PreviewPane
-            doUpdate={doUpdate}
             settings={settings}
             onOpenVersions={() => {
               setProjectsPanelOpen(false);
@@ -820,14 +867,11 @@ function App({ navbarComponent }: Props) {
       </main>
 
       {SHOW_FEEDBACK_CALL_UI && (
-        <>
-          <FeedbackFAB onOpen={() => setIsFeedbackOpen(true)} />
-          <FeedbackModal
-            open={isFeedbackOpen}
-            onOpenChange={setIsFeedbackOpen}
-            subscriberTier={subscriberTier}
-          />
-        </>
+        <FeedbackModal
+          open={isFeedbackOpen}
+          onOpenChange={setIsFeedbackOpen}
+          subscriberTier={subscriberTier}
+        />
       )}
     </div>
   );
