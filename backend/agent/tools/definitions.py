@@ -106,7 +106,7 @@ def canonical_tool_definitions(
             name="create_file",
             description=(
                 "Create the main HTML file for the app. Use exactly once to write the "
-                "full HTML. Returns the updated file content."
+                "full HTML. Returns a success message and file metadata."
             ),
             parameters=_create_schema(),
         ),
