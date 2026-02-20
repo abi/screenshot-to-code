@@ -1,4 +1,4 @@
-import { FaArrowRight, FaKeyboard, FaLayerGroup, FaMagic, FaVideo } from "react-icons/fa";
+import { FaKeyboard, FaLayerGroup, FaMagic, FaVideo } from "react-icons/fa";
 import PricingPlans from "./payments/PricingPlans";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
@@ -31,8 +31,8 @@ function OnboardingPaywall() {
     <div className="flex flex-1 flex-col items-center overflow-y-auto px-4 py-8 lg:py-12">
       <div className="w-full max-w-4xl">
         {/* Hero */}
-        <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+        <div className="mb-6 text-center">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
@@ -44,14 +44,17 @@ function OnboardingPaywall() {
             <span className="text-blue-600 dark:text-blue-400">Front-End</span>{" "}
             Tool
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-gray-500 dark:text-zinc-400">
+          <p className="mx-auto mt-3 max-w-xl text-lg text-gray-500 dark:text-zinc-400">
             Turn screenshots, videos, and text prompts into clean,
             production-ready code. Subscribe to get started.
           </p>
         </div>
 
+        {/* Pricing — above the fold */}
+        <PricingPlans shouldShowFAQLink={false} />
+
         {/* Demo video */}
-        <div className="mx-auto mb-10 max-w-2xl overflow-hidden rounded-xl border border-gray-200 shadow-lg dark:border-zinc-700">
+        <div className="mx-auto mt-10 mb-10 max-w-2xl overflow-hidden rounded-xl border border-gray-200 shadow-lg dark:border-zinc-700">
           <video
             src="/demos/instagram.mp4"
             className="w-full"
@@ -80,22 +83,8 @@ function OnboardingPaywall() {
           ))}
         </div>
 
-        {/* Pricing section header */}
-        <div className="mb-2 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Get Started Today
-          </h2>
-          <p className="mt-2 flex items-center justify-center gap-1 text-sm text-gray-500 dark:text-zinc-400">
-            <FaArrowRight className="text-xs text-blue-500" />
-            Choose a plan and start building in under a minute
-          </p>
-        </div>
-
-        {/* Pricing */}
-        <PricingPlans shouldShowFAQLink={false} />
-
         {/* Social proof logos */}
-        <div className="mt-10 border-t border-gray-100 pt-8 dark:border-zinc-800">
+        <div className="border-t border-gray-100 pt-8 dark:border-zinc-800">
           <p className="mb-4 text-center text-xs text-gray-400 dark:text-zinc-500">
             Trusted by engineers and designers at
           </p>
