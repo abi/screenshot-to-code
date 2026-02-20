@@ -24,6 +24,7 @@ import {
 // import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
+import { removeHighlight } from "./components/select-and-edit/utils";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
 import HistoryDisplay from "./components/history/HistoryDisplay";
@@ -73,6 +74,8 @@ function App() {
     setUpdateImages,
     appState,
     setAppState,
+    selectedElement,
+    setSelectedElement,
   } = useAppStore();
 
   // Settings
@@ -457,10 +460,7 @@ function App() {
   }
 
   // Subsequent updates
-  async function doUpdate(
-    updateInstruction: string,
-    selectedElement?: HTMLElement
-  ) {
+  async function doUpdate(updateInstruction: string) {
     if (updateInstruction.trim() === "") {
       toast.error("Please include some instructions for AI on what to update.");
       return;
@@ -484,10 +484,12 @@ function App() {
 
     // Send in a reference to the selected element if it exists
     if (selectedElement) {
+      const elementHtml = removeHighlight(selectedElement).outerHTML;
       modifiedUpdateInstruction =
         updateInstruction +
         " referring to this element specifically: " +
-        selectedElement.outerHTML;
+        elementHtml;
+      setSelectedElement(null);
     }
 
     const selectedVariant = currentCommit.variants[currentCommit.selectedVariantIndex];
@@ -720,7 +722,6 @@ function App() {
 
         {isCodingOrReady && (
           <PreviewPane
-            doUpdate={doUpdate}
             settings={settings}
             onOpenVersions={() => {
               setIsHistoryOpen(true);
