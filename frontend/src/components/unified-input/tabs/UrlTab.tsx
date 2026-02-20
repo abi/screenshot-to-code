@@ -24,6 +24,8 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
   const { getToken } = useAuth();
 
   async function takeScreenshot() {
+    const trimmedReferenceUrl = referenceUrl.trim();
+
     if (!IS_RUNNING_ON_CLOUD && !screenshotOneApiKey) {
       toast.error(
         "Please add a ScreenshotOne API key in Settings. You can also upload screenshots directly in the Upload tab.",
@@ -32,8 +34,15 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
       return;
     }
 
-    if (!referenceUrl) {
+    if (!trimmedReferenceUrl) {
       toast.error("Please enter a URL");
+      return;
+    }
+
+    if (trimmedReferenceUrl.toLowerCase().startsWith("file://")) {
+      toast.error(
+        "file:// URLs can't be screenshot. If you're trying to import a local file, please use the Import tab.",
+      );
       return;
     }
 
@@ -45,7 +54,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
         return;
       }
       const payload: { url: string; apiKey: string | null } = {
-        url: referenceUrl,
+        url: trimmedReferenceUrl,
         apiKey: IS_RUNNING_ON_CLOUD ? null : screenshotOneApiKey,
       };
 
