@@ -131,6 +131,12 @@ function ImageLightbox({ image, onClose }: ImageLightboxProps) {
     }
   }, []);
 
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (!viewportRef.current) return;
+    viewportRef.current.scrollTop += e.deltaY;
+    viewportRef.current.scrollLeft += e.deltaX;
+  }, []);
+
   const handleViewportClick = useCallback(() => {
     if (dragRef.current.didDrag) {
       dragRef.current.didDrag = false;
@@ -160,6 +166,7 @@ function ImageLightbox({ image, onClose }: ImageLightboxProps) {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
             onClick={handleViewportClick}
           >
             <div className="flex min-h-full min-w-full items-center justify-center p-8">
