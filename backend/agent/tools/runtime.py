@@ -74,8 +74,11 @@ class AgentToolRuntime:
             "preview": summarize_text(self.file_state.content, 320),
         }
         result = {
-            "path": self.file_state.path,
-            "content": self.file_state.content,
+            "content": f"Successfully created file at {self.file_state.path}.",
+            "details": {
+                "path": self.file_state.path,
+                "contentLength": len(self.file_state.content),
+            },
         }
         return ToolExecutionResult(
             ok=True,
