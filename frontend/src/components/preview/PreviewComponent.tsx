@@ -28,7 +28,6 @@ function PreviewComponent({
 
   // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
-  const [scale, setScale] = useState(1);
   const activeMode = viewMode ?? "fit";
   const handleIframeClick = useCallback((event: MouseEvent) => {
     setClickEvent(event);
@@ -91,7 +90,6 @@ function PreviewComponent({
             : 1;
         const iframeHeight = scaleValue > 0 ? viewportHeight / scaleValue : viewportHeight;
 
-        setScale(scaleValue);
         onScaleChange?.(scaleValue);
         iframe.style.width = `${DESKTOP_VIEWPORT_WIDTH}px`;
         iframe.style.height = `${iframeHeight}px`;
@@ -100,7 +98,6 @@ function PreviewComponent({
         return;
       }
 
-      setScale(1);
       onScaleChange?.(1);
       iframe.style.width = `${MOBILE_VIEWPORT_WIDTH}px`;
       iframe.style.height = `${viewportHeight}px`;

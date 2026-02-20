@@ -206,6 +206,13 @@ function Sidebar({
     }
   }, [appState, isSelectedVariantComplete]);
 
+  // Focus the textarea when an element is selected in the preview
+  useEffect(() => {
+    if (selectedElement && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [selectedElement]);
+
   // Reset textarea height when instruction changes externally (e.g., cleared after submit)
   useEffect(() => {
     autoResize();
@@ -482,14 +489,14 @@ function Sidebar({
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 px-3 py-2">
+                  <div className="flex items-center justify-between rounded-xl border border-violet-200 dark:border-violet-700 bg-violet-50 dark:bg-violet-900/20 px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <LuMousePointerClick className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 shrink-0" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Click any element in the preview to edit it</span>
+                      <LuMousePointerClick className="w-3.5 h-3.5 text-violet-500 dark:text-violet-400 shrink-0" />
+                      <span className="text-sm font-medium text-violet-700 dark:text-violet-300">Click an element to edit it</span>
                     </div>
                     <button
                       onClick={toggleInSelectAndEditMode}
-                      className="shrink-0 ml-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                      className="shrink-0 ml-3 text-sm text-violet-500 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 transition-colors"
                     >
                       Exit
                     </button>
@@ -535,7 +542,7 @@ function Sidebar({
                       onClick={toggleInSelectAndEditMode}
                       className={`rounded-lg p-2 transition-colors ${
                         inSelectAndEditMode
-                          ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                          ? "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
                           : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                       }`}
                       title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
