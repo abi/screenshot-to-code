@@ -22,7 +22,7 @@ const StripeCustomerPortalLink = forwardRef<HTMLAnchorElement, Props>(
           SAAS_BACKEND_URL + "/payments/create_portal_session",
           "POST"
         );
-        window.location.href = res.url;
+        window.open(res.url, "_blank");
       } catch (e) {
         toast.error(
           "Error directing you to the billing portal. Please email support and we'll get it fixed right away."
