@@ -185,7 +185,7 @@ function ImageLightbox({ image, onClose }: ImageLightboxProps) {
                           maxWidth: "none",
                           maxHeight: "none",
                         }
-                      : undefined
+                      : { visibility: "hidden" as const }
                   }
                   onLoad={(event) => {
                     setNaturalSize({
