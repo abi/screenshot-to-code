@@ -146,12 +146,6 @@ function IconStrip({
         </button>
       )}
 
-      {accountComponent && (
-        <div className="hidden lg:mb-2 lg:flex lg:w-full lg:justify-center">
-          {accountComponent}
-        </div>
-      )}
-
       {/* Settings */}
       <SettingsDialog
         settings={settings}
@@ -166,6 +160,12 @@ function IconStrip({
           </button>
         }
       />
+
+      {accountComponent && (
+        <div className="hidden lg:flex lg:w-full lg:justify-center">
+          {accountComponent}
+        </div>
+      )}
     </div>
   );
 }
