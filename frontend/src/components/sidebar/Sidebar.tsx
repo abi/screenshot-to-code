@@ -3,22 +3,16 @@ import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useCallback } from "react";
-import {
-  LuMousePointerClick,
-  LuRefreshCw,
-  LuArrowUp,
-  LuMinus,
-  LuPlus,
-  LuX,
-} from "react-icons/lu";
+import { LuMousePointerClick, LuRefreshCw, LuArrowUp } from "react-icons/lu";
 import { toast } from "react-hot-toast";
 
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import AgentActivity from "../agent/AgentActivity";
 import WorkingPulse from "../core/WorkingPulse";
-import { Dialog, DialogPortal, DialogOverlay } from "../ui/dialog";
+import ImageLightbox from "../ImageLightbox";
 import { Commit } from "../commits/types";
+import { removeHighlight } from "../select-and-edit/utils";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -29,8 +23,6 @@ interface SidebarProps {
 }
 
 const MAX_UPDATE_IMAGES = 5;
-const MIN_LIGHTBOX_ZOOM = 0.5;
-const MAX_LIGHTBOX_ZOOM = 6;
 
 function summarizeLatestChange(commit: Commit | null): string | null {
   if (!commit) return null;
@@ -61,19 +53,15 @@ function Sidebar({
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const middlePaneRef = useRef<HTMLDivElement>(null);
-  const lightboxViewportRef = useRef<HTMLDivElement>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
+  const [isPromptExpanded, setIsPromptExpanded] = useState(false);
+  const [isPromptClamped, setIsPromptClamped] = useState(false);
+  const promptTextRef = useRef<HTMLParagraphElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-  const [lightboxZoom, setLightboxZoom] = useState(1);
-  const [lightboxNaturalSize, setLightboxNaturalSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-  const [lightboxFitScale, setLightboxFitScale] = useState(1);
 
-  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode } = useAppStore();
+  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode, selectedElement, setSelectedElement } = useAppStore();
 
   // Helper function to convert file to data URL
   const fileToDataURL = (file: File): Promise<string> => {
@@ -205,6 +193,13 @@ function Sidebar({
     }
   }, [appState, isSelectedVariantComplete]);
 
+  // Focus the textarea when an element is selected in the preview
+  useEffect(() => {
+    if (selectedElement && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [selectedElement]);
+
   // Reset textarea height when instruction changes externally (e.g., cleared after submit)
   useEffect(() => {
     autoResize();
@@ -214,6 +209,20 @@ function Sidebar({
   useEffect(() => {
     setIsErrorExpanded(false);
   }, [head, commits[head || ""]?.selectedVariantIndex]);
+
+  // Reset prompt expanded state when commit changes and detect clamping
+  useEffect(() => {
+    setIsPromptExpanded(false);
+  }, [head]);
+
+  useEffect(() => {
+    const el = promptTextRef.current;
+    if (el) {
+      setIsPromptClamped(el.scrollHeight > el.clientHeight);
+    } else {
+      setIsPromptClamped(false);
+    }
+  }, [latestChangeSummary, isPromptExpanded]);
 
   useEffect(() => {
     if (!middlePaneRef.current) return;
@@ -228,72 +237,6 @@ function Sidebar({
     const intervalId = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(intervalId);
   }, [appState]);
-
-  const closeLightbox = useCallback(() => {
-    setLightboxImage(null);
-    setLightboxZoom(1);
-    setLightboxNaturalSize(null);
-    setLightboxFitScale(1);
-  }, []);
-
-  const openLightbox = useCallback((image: string) => {
-    setLightboxImage(image);
-    setLightboxZoom(1);
-    setLightboxNaturalSize(null);
-    setLightboxFitScale(1);
-  }, []);
-
-  const recomputeLightboxFitScale = useCallback(() => {
-    if (!lightboxViewportRef.current || !lightboxNaturalSize) return;
-
-    const viewportWidth = lightboxViewportRef.current.clientWidth;
-    const viewportHeight = lightboxViewportRef.current.clientHeight;
-    if (viewportWidth <= 0 || viewportHeight <= 0) return;
-
-    const fitScale = Math.min(
-      viewportWidth / lightboxNaturalSize.width,
-      viewportHeight / lightboxNaturalSize.height,
-      1
-    );
-    setLightboxFitScale(fitScale);
-  }, [lightboxNaturalSize]);
-
-  useEffect(() => {
-    if (!lightboxImage) return;
-    recomputeLightboxFitScale();
-
-    const handleResize = () => recomputeLightboxFitScale();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [lightboxImage, recomputeLightboxFitScale]);
-
-  useEffect(() => {
-    recomputeLightboxFitScale();
-  }, [recomputeLightboxFitScale]);
-
-  const zoomInLightbox = () => {
-    setLightboxZoom((current) =>
-      Math.min(MAX_LIGHTBOX_ZOOM, Math.round((current + 0.25) * 100) / 100)
-    );
-  };
-
-  const zoomOutLightbox = () => {
-    setLightboxZoom((current) =>
-      Math.max(MIN_LIGHTBOX_ZOOM, Math.round((current - 0.25) * 100) / 100)
-    );
-  };
-
-  const resetLightboxZoom = () => {
-    setLightboxZoom(1);
-  };
-
-  const effectiveLightboxScale = lightboxFitScale * lightboxZoom;
-  const lightboxDisplayWidth = lightboxNaturalSize
-    ? Math.max(1, Math.round(lightboxNaturalSize.width * effectiveLightboxScale))
-    : undefined;
-  const lightboxDisplayHeight = lightboxNaturalSize
-    ? Math.max(1, Math.round(lightboxNaturalSize.height * effectiveLightboxScale))
-    : undefined;
 
 
   return (
@@ -310,16 +253,31 @@ function Sidebar({
         {latestChangeSummary && (
           <div className="mb-4 flex flex-col items-end">
             <div className="inline-block max-w-[85%] rounded-2xl rounded-br-md bg-violet-100 px-4 py-2.5 dark:bg-violet-900/30">
-              <p className="text-[15px] text-violet-950 dark:text-violet-100 break-words">
+              <p
+                ref={promptTextRef}
+                className={`text-[13px] text-violet-950 dark:text-violet-100 break-words whitespace-pre-wrap ${
+                  !isPromptExpanded ? "line-clamp-[10]" : ""
+                }`}
+              >
                 {latestChangeSummary}
               </p>
+              {(isPromptClamped || isPromptExpanded) && (
+                <div className="flex justify-end mt-1.5">
+                  <button
+                    onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                    className="text-[11px] font-medium text-gray-600 bg-white/70 hover:bg-white dark:text-gray-300 dark:bg-zinc-800/70 dark:hover:bg-zinc-800 px-2 py-0.5 rounded-full transition-colors shadow-sm"
+                  >
+                    {isPromptExpanded ? "less" : "more"}
+                  </button>
+                </div>
+              )}
             </div>
               {latestChangeImages.length > 0 && (
                 <div className="mt-2 flex gap-2 flex-wrap justify-end">
                   {latestChangeImages.map((image, index) => (
                     <button
                       key={`${image.slice(0, 40)}-${index}`}
-                      onClick={() => openLightbox(image)}
+                      onClick={() => setLightboxImage(image)}
                       className="shrink-0 cursor-zoom-in rounded-lg border border-gray-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
                     >
                       <img
@@ -458,19 +416,42 @@ function Sidebar({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
-            {/* Select and edit instructions card */}
+            {/* Select and edit indicator */}
             {inSelectAndEditMode && (
-              <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <LuMousePointerClick className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 shrink-0" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Click any element in the preview to edit it</span>
-                </div>
-                <button
-                  onClick={toggleInSelectAndEditMode}
-                  className="shrink-0 ml-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-                >
-                  Exit
-                </button>
+              <div className="mb-2">
+                {selectedElement ? (
+                  <div className="flex items-center justify-between rounded-xl border border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-900/20 px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <LuMousePointerClick className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400 shrink-0" />
+                      <span className="text-sm text-violet-700 dark:text-violet-300 truncate">
+                        Selected: <code className="font-mono text-xs bg-violet-100 dark:bg-violet-800/50 px-1.5 py-0.5 rounded">&lt;{selectedElement.tagName.toLowerCase()}&gt;</code>
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        removeHighlight(selectedElement);
+                        setSelectedElement(null);
+                      }}
+                      className="shrink-0 ml-3 p-0.5 text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 transition-colors"
+                      title="Clear selection"
+                    >
+                      <LuX className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-xl border border-violet-200 dark:border-violet-700 bg-violet-50 dark:bg-violet-900/20 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <LuMousePointerClick className="w-3.5 h-3.5 text-violet-500 dark:text-violet-400 shrink-0" />
+                      <span className="text-sm font-medium text-violet-700 dark:text-violet-300">Click an element to edit it</span>
+                    </div>
+                    <button
+                      onClick={toggleInSelectAndEditMode}
+                      className="shrink-0 ml-3 text-sm text-violet-500 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 transition-colors"
+                    >
+                      Exit
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             <div className="relative w-full overflow-hidden rounded-2xl border-2 border-violet-300 bg-white transition-all focus-within:border-violet-500 dark:border-violet-500/50 dark:bg-zinc-900 dark:focus-within:border-violet-400">
@@ -480,7 +461,11 @@ function Sidebar({
               />
               <textarea
                 ref={textareaRef}
-                placeholder="Tell the AI what to change..."
+                placeholder={
+                  inSelectAndEditMode && selectedElement
+                    ? `Describe changes for the selected <${selectedElement.tagName.toLowerCase()}> element...`
+                    : "Tell the AI what to change..."
+                }
                 onChange={(e) => {
                   setUpdateInstruction(e.target.value);
                   autoResize();
@@ -507,7 +492,7 @@ function Sidebar({
                       onClick={toggleInSelectAndEditMode}
                       className={`rounded-lg p-2 transition-colors ${
                         inSelectAndEditMode
-                          ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                          ? "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
                           : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                       }`}
                       title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
@@ -539,81 +524,10 @@ function Sidebar({
           </div>
         )}
 
-      {/* Image lightbox */}
-      <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && closeLightbox()}>
-        <DialogPortal>
-          <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
-          <div
-            className="fixed inset-0 z-50 p-4 sm:p-6"
-            onClick={closeLightbox}
-          >
-            <div className="relative flex h-full w-full flex-col" onClick={(e) => e.stopPropagation()}>
-              <div className="absolute right-0 top-0 z-10 flex items-center gap-2 rounded-lg bg-black/60 px-2 py-1.5 backdrop-blur-sm">
-                <button
-                  onClick={zoomOutLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10 disabled:opacity-40"
-                  disabled={lightboxZoom <= MIN_LIGHTBOX_ZOOM}
-                  title="Zoom out"
-                >
-                  <LuMinus className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={resetLightboxZoom}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-white hover:bg-white/10"
-                  title="Reset zoom"
-                >
-                  {Math.round(lightboxZoom * 100)}%
-                </button>
-                <button
-                  onClick={zoomInLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10 disabled:opacity-40"
-                  disabled={lightboxZoom >= MAX_LIGHTBOX_ZOOM}
-                  title="Zoom in"
-                >
-                  <LuPlus className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={closeLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10"
-                  title="Close"
-                >
-                  <LuX className="w-5 h-5" />
-                </button>
-              </div>
-              <div
-                ref={lightboxViewportRef}
-                className="mt-12 flex-1 overflow-auto rounded-lg"
-              >
-                <div className="flex min-h-full min-w-full items-center justify-center p-4">
-                  {lightboxImage && (
-                    <img
-                      src={lightboxImage}
-                      alt="Reference image"
-                      className="rounded-lg object-contain"
-                      style={
-                        lightboxDisplayWidth && lightboxDisplayHeight
-                          ? {
-                              width: `${lightboxDisplayWidth}px`,
-                              height: `${lightboxDisplayHeight}px`,
-                              maxWidth: "none",
-                              maxHeight: "none",
-                            }
-                          : undefined
-                      }
-                      onLoad={(event) => {
-                        setLightboxNaturalSize({
-                          width: event.currentTarget.naturalWidth,
-                          height: event.currentTarget.naturalHeight,
-                        });
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogPortal>
-      </Dialog>
+      <ImageLightbox
+        image={lightboxImage}
+        onClose={() => setLightboxImage(null)}
+      />
     </div>
   );
 }
