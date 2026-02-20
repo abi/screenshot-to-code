@@ -287,6 +287,66 @@ function Sidebar({
     setLightboxZoom(1);
   };
 
+  // Drag-to-scroll state for lightbox
+  const lightboxDragRef = useRef({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    scrollLeft: 0,
+    scrollTop: 0,
+    didDrag: false,
+  });
+
+  const handleLightboxMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!lightboxViewportRef.current || e.button !== 0) return;
+      lightboxDragRef.current = {
+        isDragging: true,
+        startX: e.clientX,
+        startY: e.clientY,
+        scrollLeft: lightboxViewportRef.current.scrollLeft,
+        scrollTop: lightboxViewportRef.current.scrollTop,
+        didDrag: false,
+      };
+      lightboxViewportRef.current.style.cursor = "grabbing";
+      e.preventDefault();
+    },
+    []
+  );
+
+  const handleLightboxMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      const drag = lightboxDragRef.current;
+      if (!drag.isDragging || !lightboxViewportRef.current) return;
+
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        drag.didDrag = true;
+      }
+
+      lightboxViewportRef.current.scrollLeft = drag.scrollLeft - dx;
+      lightboxViewportRef.current.scrollTop = drag.scrollTop - dy;
+    },
+    []
+  );
+
+  const handleLightboxMouseUp = useCallback(() => {
+    lightboxDragRef.current.isDragging = false;
+    if (lightboxViewportRef.current) {
+      lightboxViewportRef.current.style.cursor = "";
+    }
+  }, []);
+
+  const handleLightboxViewportClick = useCallback(() => {
+    if (lightboxDragRef.current.didDrag) {
+      lightboxDragRef.current.didDrag = false;
+      return;
+    }
+    closeLightbox();
+  }, [closeLightbox]);
+
   const effectiveLightboxScale = lightboxFitScale * lightboxZoom;
   const lightboxDisplayWidth = lightboxNaturalSize
     ? Math.max(1, Math.round(lightboxNaturalSize.width * effectiveLightboxScale))
@@ -542,74 +602,83 @@ function Sidebar({
       {/* Image lightbox */}
       <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && closeLightbox()}>
         <DialogPortal>
-          <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
-          <div
-            className="fixed inset-0 z-50 p-4 sm:p-6"
-            onClick={closeLightbox}
-          >
-            <div className="relative flex h-full w-full flex-col" onClick={(e) => e.stopPropagation()}>
-              <div className="absolute right-0 top-0 z-10 flex items-center gap-2 rounded-lg bg-black/60 px-2 py-1.5 backdrop-blur-sm">
-                <button
-                  onClick={zoomOutLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10 disabled:opacity-40"
-                  disabled={lightboxZoom <= MIN_LIGHTBOX_ZOOM}
-                  title="Zoom out"
-                >
-                  <LuMinus className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={resetLightboxZoom}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-white hover:bg-white/10"
-                  title="Reset zoom"
-                >
-                  {Math.round(lightboxZoom * 100)}%
-                </button>
-                <button
-                  onClick={zoomInLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10 disabled:opacity-40"
-                  disabled={lightboxZoom >= MAX_LIGHTBOX_ZOOM}
-                  title="Zoom in"
-                >
-                  <LuPlus className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={closeLightbox}
-                  className="rounded-md p-1.5 text-white hover:bg-white/10"
-                  title="Close"
-                >
-                  <LuX className="w-5 h-5" />
-                </button>
+          <DialogOverlay className="bg-black/90 backdrop-blur-md" />
+          <div className="fixed inset-0 z-50">
+            {/* Scrollable viewport - drag to scroll, click to close */}
+            <div
+              ref={lightboxViewportRef}
+              className="h-full w-full overflow-auto cursor-grab"
+              onMouseDown={handleLightboxMouseDown}
+              onMouseMove={handleLightboxMouseMove}
+              onMouseUp={handleLightboxMouseUp}
+              onMouseLeave={handleLightboxMouseUp}
+              onClick={handleLightboxViewportClick}
+            >
+              <div className="flex min-h-full min-w-full items-center justify-center p-8">
+                {lightboxImage && (
+                  <img
+                    src={lightboxImage}
+                    alt="Reference image"
+                    className="rounded-lg shadow-2xl select-none"
+                    draggable={false}
+                    style={
+                      lightboxDisplayWidth && lightboxDisplayHeight
+                        ? {
+                            width: `${lightboxDisplayWidth}px`,
+                            height: `${lightboxDisplayHeight}px`,
+                            maxWidth: "none",
+                            maxHeight: "none",
+                          }
+                        : undefined
+                    }
+                    onLoad={(event) => {
+                      setLightboxNaturalSize({
+                        width: event.currentTarget.naturalWidth,
+                        height: event.currentTarget.naturalHeight,
+                      });
+                    }}
+                  />
+                )}
               </div>
-              <div
-                ref={lightboxViewportRef}
-                className="mt-12 flex-1 overflow-auto rounded-lg"
+            </div>
+
+            {/* Zoom controls - bottom center pill */}
+            <div
+              className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/60 px-3 py-2 shadow-lg backdrop-blur-md"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={zoomOutLightbox}
+                className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30"
+                disabled={lightboxZoom <= MIN_LIGHTBOX_ZOOM}
+                title="Zoom out"
               >
-                <div className="flex min-h-full min-w-full items-center justify-center p-4">
-                  {lightboxImage && (
-                    <img
-                      src={lightboxImage}
-                      alt="Reference image"
-                      className="rounded-lg object-contain"
-                      style={
-                        lightboxDisplayWidth && lightboxDisplayHeight
-                          ? {
-                              width: `${lightboxDisplayWidth}px`,
-                              height: `${lightboxDisplayHeight}px`,
-                              maxWidth: "none",
-                              maxHeight: "none",
-                            }
-                          : undefined
-                      }
-                      onLoad={(event) => {
-                        setLightboxNaturalSize({
-                          width: event.currentTarget.naturalWidth,
-                          height: event.currentTarget.naturalHeight,
-                        });
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
+                <LuMinus className="h-4 w-4" />
+              </button>
+              <button
+                onClick={resetLightboxZoom}
+                className="min-w-[3.5rem] rounded-full px-3 py-1 text-center text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                title="Reset zoom"
+              >
+                {Math.round(lightboxZoom * 100)}%
+              </button>
+              <button
+                onClick={zoomInLightbox}
+                className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30"
+                disabled={lightboxZoom >= MAX_LIGHTBOX_ZOOM}
+                title="Zoom in"
+              >
+                <LuPlus className="h-4 w-4" />
+              </button>
+              <div className="mx-1 h-4 w-px bg-white/20" />
+              <button
+                onClick={closeLightbox}
+                className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                title="Close"
+              >
+                <LuX className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </DialogPortal>
