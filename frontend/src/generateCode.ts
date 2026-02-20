@@ -52,6 +52,16 @@ export function generateCode(
   params: FullGenerationSettings,
   callbacks: CodeGenerationCallbacks
 ) {
+  // Simulate error for testing prompt preservation on error
+  if (params.prompt?.text?.includes("__simulate_error")) {
+    console.log("Simulating generate_code error for testing");
+    setTimeout(() => {
+      toast.error("Simulated error: generate_code failed (test mode)");
+      callbacks.onCancel();
+    }, 500);
+    return;
+  }
+
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
 
