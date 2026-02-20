@@ -329,19 +329,21 @@ function Sidebar({
             <div className="inline-block max-w-[85%] rounded-2xl rounded-br-md bg-violet-100 px-4 py-2.5 dark:bg-violet-900/30">
               <p
                 ref={promptTextRef}
-                className={`text-[15px] text-violet-950 dark:text-violet-100 break-words whitespace-pre-wrap ${
+                className={`text-[13px] text-violet-950 dark:text-violet-100 break-words whitespace-pre-wrap ${
                   !isPromptExpanded ? "line-clamp-[10]" : ""
                 }`}
               >
                 {latestChangeSummary}
               </p>
               {(isPromptClamped || isPromptExpanded) && (
-                <button
-                  onClick={() => setIsPromptExpanded(!isPromptExpanded)}
-                  className="mt-1 text-xs font-medium text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
-                >
-                  {isPromptExpanded ? "less" : "more"}
-                </button>
+                <div className="flex justify-end mt-1.5">
+                  <button
+                    onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                    className="text-[11px] font-medium text-gray-600 bg-white/70 hover:bg-white dark:text-gray-300 dark:bg-zinc-800/70 dark:hover:bg-zinc-800 px-2 py-0.5 rounded-full transition-colors shadow-sm"
+                  >
+                    {isPromptExpanded ? "less" : "more"}
+                  </button>
+                </div>
               )}
             </div>
               {latestChangeImages.length > 0 && (
