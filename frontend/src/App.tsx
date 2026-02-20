@@ -38,7 +38,7 @@ import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
 import AccountView from "./components/hosted/AccountView";
 import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
-import { showNewMessage } from "@intercom/messenger-js-sdk";
+import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 
@@ -102,6 +102,15 @@ function App() {
   const { shouldShowBanner, incrementGenerations, dismissBanner } =
     useFeedbackState();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+
+  const isIntercomOpenRef = useRef(false);
+  useEffect(() => {
+    if (IS_RUNNING_ON_CLOUD) {
+      onHide(() => {
+        isIntercomOpenRef.current = false;
+      });
+    }
+  }, []);
 
   // Settings
   const [settings, setSettings] = usePersistedState<Settings>(
@@ -709,7 +718,17 @@ function App() {
             SHOW_FEEDBACK_CALL_UI ? () => setIsFeedbackOpen(true) : undefined
           }
           onContactSupport={
-            IS_RUNNING_ON_CLOUD ? () => showNewMessage("") : undefined
+            IS_RUNNING_ON_CLOUD
+              ? () => {
+                  if (isIntercomOpenRef.current) {
+                    hide();
+                    isIntercomOpenRef.current = false;
+                  } else {
+                    show();
+                    isIntercomOpenRef.current = true;
+                  }
+                }
+              : undefined
           }
         />
       </div>
