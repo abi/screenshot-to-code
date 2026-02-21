@@ -72,18 +72,24 @@ describe("History Utils", () => {
         type: "Create",
         summary: "Create",
         parentVersion: null,
+        images: [""],
+        videos: [],
       },
       {
         ...basicLinearHistory["1"],
         type: "Edit",
         summary: "use better icons",
         parentVersion: null,
+        images: [],
+        videos: [],
       },
       {
         ...basicLinearHistory["2"],
         type: "Edit",
         summary: "make text red",
         parentVersion: null,
+        images: [],
+        videos: [],
       },
     ]);
 
@@ -94,18 +100,24 @@ describe("History Utils", () => {
         type: "Imported from code",
         summary: "Imported from code",
         parentVersion: null,
+        images: [],
+        videos: [],
       },
       {
         ...basicLinearHistoryWithCode["1"],
         type: "Edit",
         summary: "use better icons",
         parentVersion: null,
+        images: [],
+        videos: [],
       },
       {
         ...basicLinearHistoryWithCode["2"],
         type: "Edit",
         summary: "make text red",
         parentVersion: null,
+        images: [],
+        videos: [],
       },
     ]);
 
@@ -116,24 +128,32 @@ describe("History Utils", () => {
         type: "Create",
         summary: "Create",
         parentVersion: null,
+        images: [""],
+        videos: [],
       },
       {
         ...basicBranchingHistory["1"],
         type: "Edit",
         summary: "use better icons",
         parentVersion: null,
+        images: [],
+        videos: [],
       },
       {
         ...basicBranchingHistory["2"],
         type: "Edit",
         summary: "make text red",
         parentVersion: null,
+        images: [],
+        videos: [],
       },
       {
         ...basicBranchingHistory["3"],
         type: "Edit",
         summary: "make text green",
         parentVersion: 2,
+        images: [],
+        videos: [],
       },
     ]);
   });

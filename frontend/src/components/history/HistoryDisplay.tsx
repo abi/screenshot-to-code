@@ -1,7 +1,84 @@
-import { renderHistory } from "./utils";
+import { renderHistory, RenderedHistoryItem } from "./utils";
 import { useProjectStore } from "../../store/project-store";
 import { BsChevronDown, BsChevronRight } from "react-icons/bs";
 import { useState } from "react";
+
+function MediaThumbnail({ item }: { item: RenderedHistoryItem }) {
+  const firstImage = item.images[0];
+  const firstVideo = item.videos[0];
+
+  if (!firstImage && !firstVideo) return null;
+
+  return (
+    <div className="shrink-0 w-12 h-12 rounded-md overflow-hidden border border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800">
+      {firstImage ? (
+        <img
+          src={firstImage}
+          alt="Input screenshot"
+          className="w-full h-full object-cover"
+          draggable={false}
+        />
+      ) : firstVideo ? (
+        <div className="relative w-full h-full">
+          <video
+            src={firstVideo}
+            className="w-full h-full object-cover"
+            muted
+            playsInline
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <svg
+              className="w-4 h-4 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+            </svg>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ExpandedMedia({ item }: { item: RenderedHistoryItem }) {
+  const hasImages = item.images.length > 0;
+  const hasVideos = item.videos.length > 0;
+
+  if (!hasImages && !hasVideos) return null;
+
+  return (
+    <div className="flex flex-col gap-2 mt-2">
+      {item.images.map((img, i) => (
+        <div
+          key={`img-${i}`}
+          className="rounded-md overflow-hidden border border-gray-200 dark:border-zinc-700"
+        >
+          <img
+            src={img}
+            alt={`Input ${i + 1}`}
+            className="w-full h-auto object-contain max-h-48"
+            draggable={false}
+          />
+        </div>
+      ))}
+      {item.videos.map((vid, i) => (
+        <div
+          key={`vid-${i}`}
+          className="rounded-md overflow-hidden border border-gray-200 dark:border-zinc-700"
+        >
+          <video
+            src={vid}
+            className="w-full h-auto max-h-48"
+            controls
+            muted
+            playsInline
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function HistoryDisplay() {
   const { commits, head, setHead } = useProjectStore();
@@ -19,42 +96,62 @@ export default function HistoryDisplay() {
   if (renderedHistory.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       {[...renderedHistory].reverse().map((item, _reverseIndex) => {
         const versionNumber = renderedHistory.length - _reverseIndex;
         const isActive = item.hash === head;
         const isExpanded = expandedHash === item.hash;
+        const hasMedia = item.images.length > 0 || item.videos.length > 0;
 
         return (
           <div
             key={item.hash}
-            className={`rounded-lg transition-colors ${
+            className={`rounded-xl border transition-all ${
               isActive
-                ? "bg-gray-100 dark:bg-zinc-800"
-                : "hover:bg-gray-50 dark:hover:bg-zinc-800/50"
+                ? "bg-white dark:bg-zinc-800 border-blue-200 dark:border-blue-800 shadow-sm"
+                : "bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-gray-200 dark:hover:border-zinc-700"
             }`}
           >
             <div
               className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
-              onClick={() =>
-                setHead(item.hash)
-              }
+              onClick={() => setHead(item.hash)}
             >
               {/* Version number badge */}
               <span
-                className={`shrink-0 text-xs font-medium ${
+                className={`shrink-0 flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold ${
                   isActive
-                    ? "text-gray-900 dark:text-white"
-                    : "text-gray-400 dark:text-gray-500"
+                    ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                    : "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-500"
                 }`}
               >
-                v{versionNumber}
+                {versionNumber}
               </span>
+
+              {/* Thumbnail */}
+              <MediaThumbnail item={item} />
 
               {/* Summary */}
               <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded ${
+                      item.type === "Create"
+                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                        : item.type === "Edit"
+                          ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                          : "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {item.type}
+                  </span>
+                  {item.parentVersion !== null && (
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                      from v{item.parentVersion}
+                    </span>
+                  )}
+                </div>
                 <p
-                  className={`text-sm truncate ${
+                  className={`text-sm mt-0.5 line-clamp-2 ${
                     isActive
                       ? "font-medium text-gray-900 dark:text-white"
                       : "text-gray-600 dark:text-gray-400"
@@ -62,38 +159,35 @@ export default function HistoryDisplay() {
                 >
                   {item.summary}
                 </p>
-                {item.parentVersion !== null && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
-                    from v{item.parentVersion}
-                  </p>
-                )}
               </div>
 
-              {/* Type label + expand */}
-              <span className="shrink-0 text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                {item.type}
-              </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpandedHash(isExpanded ? null : item.hash);
-                }}
-                className="shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-0.5"
-              >
-                {isExpanded ? (
-                  <BsChevronDown className="w-3 h-3" />
-                ) : (
-                  <BsChevronRight className="w-3 h-3" />
-                )}
-              </button>
+              {/* Expand button */}
+              {(hasMedia || item.summary.length > 30) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedHash(isExpanded ? null : item.hash);
+                  }}
+                  className="shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                >
+                  {isExpanded ? (
+                    <BsChevronDown className="w-3 h-3" />
+                  ) : (
+                    <BsChevronRight className="w-3 h-3" />
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Expanded details */}
             {isExpanded && (
-              <div className="px-3 pb-2.5 pl-12">
-                <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
-                  {item.summary}
-                </p>
+              <div className="px-3 pb-3 pl-12">
+                {item.summary.length > 30 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
+                    {item.summary}
+                  </p>
+                )}
+                <ExpandedMedia item={item} />
               </div>
             )}
           </div>
