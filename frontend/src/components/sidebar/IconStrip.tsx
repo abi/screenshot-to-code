@@ -1,31 +1,29 @@
 import { LuClock, LuCode, LuSettings, LuPlus } from "react-icons/lu";
-import SettingsDialog from "../settings/SettingsDialog";
-import { Settings } from "../../types";
 
 interface IconStripProps {
   isHistoryOpen: boolean;
   isEditorOpen: boolean;
+  isSettingsOpen: boolean;
   showHistory: boolean;
   showEditor: boolean;
   onToggleHistory: () => void;
   onToggleEditor: () => void;
   onLogoClick: () => void;
   onNewProject: () => void;
-  settings: Settings;
-  setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+  onOpenSettings: () => void;
 }
 
 function IconStrip({
   isHistoryOpen,
   isEditorOpen,
+  isSettingsOpen,
   showHistory,
   showEditor,
   onToggleHistory,
   onToggleEditor,
   onLogoClick,
   onNewProject,
-  settings,
-  setSettings,
+  onOpenSettings,
 }: IconStripProps) {
   return (
     <div className="flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 dark:border-zinc-800 dark:bg-zinc-900 lg:h-full lg:w-16 lg:flex-col lg:items-center lg:gap-y-3 lg:border-b-0 lg:border-r lg:px-0 lg:py-4">
@@ -88,19 +86,18 @@ function IconStrip({
       <div className="hidden flex-1 lg:block" />
 
       {/* Settings */}
-      <SettingsDialog
-        settings={settings}
-        setSettings={setSettings}
-        trigger={
-          <button
-            className="flex items-center justify-center rounded-lg p-2 transition-colors text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 lg:flex-col lg:gap-1 lg:px-2 lg:py-1.5"
-            title="Settings"
-          >
-            <LuSettings className="w-[18px] h-[18px]" />
-            <span className="hidden text-[10px] leading-none lg:block">Settings</span>
-          </button>
-        }
-      />
+      <button
+        onClick={onOpenSettings}
+        className={`flex items-center justify-center rounded-lg p-2 transition-colors lg:flex-col lg:gap-1 lg:px-2 lg:py-1.5 ${
+          isSettingsOpen
+            ? "text-gray-900 dark:text-white"
+            : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+        }`}
+        title="Settings"
+      >
+        <LuSettings className="w-[18px] h-[18px]" />
+        <span className="hidden text-[10px] leading-none lg:block">Settings</span>
+      </button>
     </div>
   );
 }

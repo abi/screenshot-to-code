@@ -30,6 +30,7 @@ import IconStrip from "./components/sidebar/IconStrip";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
+import SettingsTab from "./components/settings/SettingsTab";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 
@@ -101,6 +102,7 @@ function App() {
   const lastToolEventIdRef = useRef<Record<number, string>>({});
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [mobilePane, setMobilePane] = useState<"preview" | "chat">("preview");
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
@@ -599,32 +601,39 @@ function App() {
       >
         <IconStrip
           isHistoryOpen={isHistoryOpen}
-          isEditorOpen={!isHistoryOpen}
+          isEditorOpen={!isHistoryOpen && !isSettingsOpen}
+          isSettingsOpen={isSettingsOpen}
           showHistory={isCodingOrReady}
           showEditor={isCodingOrReady}
           onToggleHistory={() => {
             setIsHistoryOpen((prev) => !prev);
+            setIsSettingsOpen(false);
             setMobilePane("chat");
           }}
           onToggleEditor={() => {
             setIsHistoryOpen(false);
+            setIsSettingsOpen(false);
             setMobilePane("preview");
           }}
           onLogoClick={() => {
             setIsHistoryOpen(false);
+            setIsSettingsOpen(false);
             setMobilePane("preview");
           }}
           onNewProject={() => {
             reset();
             setIsHistoryOpen(false);
+            setIsSettingsOpen(false);
             setMobilePane("preview");
           }}
-          settings={settings}
-          setSettings={setSettings}
+          onOpenSettings={() => {
+            setIsSettingsOpen(true);
+            setIsHistoryOpen(false);
+          }}
         />
       </div>
 
-      {isCodingOrReady && (
+      {isCodingOrReady && !isSettingsOpen && (
         <div className="border-b border-gray-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
           <div className="grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-zinc-800">
             <button
@@ -655,7 +664,7 @@ function App() {
       )}
 
       {/* Content panel - shows sidebar, history, or editor */}
-      {showContentPanel && (
+      {showContentPanel && !isSettingsOpen && (
         <div
           className={`border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 dark:text-white lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col lg:border-b-0 lg:border-r ${
             showMobileChatPane ? "block" : "hidden lg:flex"
@@ -705,29 +714,41 @@ function App() {
 
       <main
         className={`${
-          showContentPanel
+          showContentPanel && !isSettingsOpen
             ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
             : "lg:pl-16"
-        } ${isCodingOrReady && mobilePane === "chat" ? "hidden lg:flex" : ""}`}
+        } ${isCodingOrReady && !isSettingsOpen && mobilePane === "chat" ? "hidden lg:flex" : ""}`}
       >
-        {appState === AppState.INITIAL && (
-          <StartPane
-            doCreate={doCreate}
-            doCreateFromText={doCreateFromText}
-            importFromCode={importFromCode}
-            settings={settings}
-            setSettings={setSettings}
-          />
-        )}
+        {isSettingsOpen ? (
+          <div className="h-dvh lg:h-screen">
+            <SettingsTab
+              settings={settings}
+              setSettings={setSettings}
+              onClose={() => setIsSettingsOpen(false)}
+            />
+          </div>
+        ) : (
+          <>
+            {appState === AppState.INITIAL && (
+              <StartPane
+                doCreate={doCreate}
+                doCreateFromText={doCreateFromText}
+                importFromCode={importFromCode}
+                settings={settings}
+                setSettings={setSettings}
+              />
+            )}
 
-        {isCodingOrReady && (
-          <PreviewPane
-            settings={settings}
-            onOpenVersions={() => {
-              setIsHistoryOpen(true);
-              setMobilePane("chat");
-            }}
-          />
+            {isCodingOrReady && (
+              <PreviewPane
+                settings={settings}
+                onOpenVersions={() => {
+                  setIsHistoryOpen(true);
+                  setMobilePane("chat");
+                }}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
