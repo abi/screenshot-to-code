@@ -202,10 +202,12 @@ function App() {
     // Merge settings with params
     const updatedParams = { ...requestParams, ...settings };
 
-    // Create variants dynamically - start with 4 to handle most cases
-    // Backend will use however many it needs (typically 3)
+    // Use 4 variants for create, 2 for edits to match backend counts
+    // and avoid a flash when the backend sends the actual variant count
+    const initialVariantCount =
+      requestParams.generationType === "create" ? 4 : 2;
     const baseCommitObject = {
-      variants: Array(4)
+      variants: Array(initialVariantCount)
         .fill(null)
         .map(() => ({
           code: "",
