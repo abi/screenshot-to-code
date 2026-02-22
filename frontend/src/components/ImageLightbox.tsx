@@ -169,12 +169,12 @@ function ImageLightbox({ image, onClose }: ImageLightboxProps) {
             onWheel={handleWheel}
             onClick={handleViewportClick}
           >
-            <div className="flex min-h-full min-w-full items-center justify-center p-8">
+            <div className="flex min-h-full min-w-full p-8">
               {image && (
                 <img
                   src={image}
                   alt="Reference image"
-                  className="rounded-lg shadow-2xl select-none"
+                  className="rounded-lg shadow-2xl select-none shrink-0 m-auto"
                   draggable={false}
                   onClick={(e) => e.stopPropagation()}
                   style={
