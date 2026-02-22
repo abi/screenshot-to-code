@@ -76,12 +76,15 @@ def _remove_background_schema() -> Dict[str, Any]:
     return {
         "type": "object",
         "properties": {
-            "image_url": {
-                "type": "string",
-                "description": "URL of the image to remove the background from.",
+            "image_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "description": "URL of an image to remove the background from.",
+                },
             },
         },
-        "required": ["image_url"],
+        "required": ["image_urls"],
     }
 
 
@@ -135,8 +138,9 @@ def canonical_tool_definitions(
             CanonicalToolDefinition(
                 name="remove_background",
                 description=(
-                    "Remove the background from an image. Returns a URL to the processed "
-                    "image with transparent background."
+                    "Remove the background from one or more images. You can pass multiple "
+                    "image URLs at once. Returns URLs to the processed images with "
+                    "transparent backgrounds."
                 ),
                 parameters=_remove_background_schema(),
             ),
