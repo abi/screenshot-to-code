@@ -252,101 +252,165 @@ function Sidebar({
         ref={middlePaneRef}
         className="flex-1 min-h-0 overflow-y-auto sidebar-scrollbar-stable px-6 pt-4"
       >
-        {latestChangeSummary && (
-          <div className="mb-4 flex flex-col items-end">
-            <div className="inline-block max-w-[85%] rounded-2xl rounded-br-md bg-violet-100 px-4 py-2.5 dark:bg-violet-900/30">
-              <p
-                ref={promptTextRef}
-                className={`text-[13px] text-violet-950 dark:text-violet-100 break-words whitespace-pre-wrap ${
-                  !isPromptExpanded ? "line-clamp-[10]" : ""
-                }`}
-              >
-                {latestChangeSummary}
-              </p>
-              {(isPromptClamped || isPromptExpanded) && (
-                <div className="flex justify-end mt-1.5">
-                  <button
-                    onClick={() => setIsPromptExpanded(!isPromptExpanded)}
-                    className="text-[11px] font-medium text-gray-600 bg-white/70 hover:bg-white dark:text-gray-300 dark:bg-zinc-800/70 dark:hover:bg-zinc-800 px-2 py-0.5 rounded-full transition-colors shadow-sm"
-                  >
-                    {isPromptExpanded ? "less" : "more"}
-                  </button>
-                </div>
-              )}
-            </div>
-              {latestChangeImages.length > 0 && (
-                <div className="mt-2 flex gap-2 flex-wrap justify-end">
-                  {latestChangeImages.map((image, index) => (
-                    <button
-                      key={`${image.slice(0, 40)}-${index}`}
-                      onClick={() => setLightboxImage(image)}
-                      className="shrink-0 cursor-zoom-in rounded-lg border border-gray-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
-                    >
-                      <img
-                        src={image}
-                        alt={`Reference ${index + 1}`}
-                        className="h-24 w-24 object-contain"
-                        loading="lazy"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-              {latestChangeVideos.length > 0 && (
-                <div className="mt-2 space-y-2">
-                  {latestChangeVideos.map((video, index) => (
-                    <video
-                      key={`${video.slice(0, 40)}-${index}`}
-                      src={video}
-                      className="w-full rounded-lg border border-gray-200 dark:border-zinc-700"
-                      controls
-                      preload="metadata"
-                    />
-                  ))}
-                </div>
-              )}
-          </div>
-        )}
-
-        {showWorkingIndicator && (
-          <div className="working-indicator-bg mb-3 rounded-xl border border-violet-200 dark:border-violet-800 px-3 py-2 transition-all duration-500">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <WorkingPulse />
-                <span>Working...</span>
-              </div>
-              <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-                Time so far {elapsedSeconds ? `${elapsedSeconds}s` : "--"}
-              </div>
-            </div>
-          </div>
-        )}
-
         {isViewingOlderVersion && currentVersionNumber !== null ? (
-          <div className="mb-4 flex flex-col items-center py-6">
-            <p className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">
-              Version {currentVersionNumber}
-            </p>
-            <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
-              You are viewing an older version
-            </p>
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={onOpenVersions}
-                className="rounded-lg border border-gray-300 dark:border-zinc-600 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
-              >
-                All versions
-              </button>
+          <div className="mb-4 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50">
+              <div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                  Version {currentVersionNumber}
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Viewing an older version
+                </p>
+              </div>
               <button
                 onClick={() => latestCommitHash && setHead(latestCommitHash)}
-                className="rounded-lg bg-gray-900 dark:bg-white px-4 py-2 text-sm font-medium text-white dark:text-black hover:bg-black dark:hover:bg-gray-200 transition-colors"
+                className="rounded-lg bg-gray-900 dark:bg-white px-3 py-1.5 text-xs font-medium text-white dark:text-black hover:bg-black dark:hover:bg-gray-200 transition-colors"
               >
                 View latest
               </button>
             </div>
+
+            {latestChangeSummary && (
+              <div className="px-4 py-3">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                  Prompt
+                </p>
+                <p
+                  ref={promptTextRef}
+                  className={`text-[13px] text-gray-800 dark:text-zinc-200 break-words whitespace-pre-wrap ${
+                    !isPromptExpanded ? "line-clamp-4" : ""
+                  }`}
+                >
+                  {latestChangeSummary}
+                </p>
+                {(isPromptClamped || isPromptExpanded) && (
+                  <button
+                    onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                    className="text-[11px] font-medium text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 mt-1 transition-colors"
+                  >
+                    {isPromptExpanded ? "Show less" : "Show more"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {latestChangeImages.length > 0 && (
+              <div className="px-4 pb-3 flex gap-2 flex-wrap">
+                {latestChangeImages.map((image, index) => (
+                  <button
+                    key={`${image.slice(0, 40)}-${index}`}
+                    onClick={() => setLightboxImage(image)}
+                    className="shrink-0 cursor-zoom-in rounded-lg border border-gray-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
+                  >
+                    <img
+                      src={image}
+                      alt={`Reference ${index + 1}`}
+                      className="h-20 w-20 object-contain"
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {latestChangeVideos.length > 0 && (
+              <div className="px-4 pb-3 space-y-2">
+                {latestChangeVideos.map((video, index) => (
+                  <video
+                    key={`${video.slice(0, 40)}-${index}`}
+                    src={video}
+                    className="w-full rounded-lg border border-gray-200 dark:border-zinc-700"
+                    controls
+                    preload="metadata"
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="px-4 py-3 border-t border-gray-200 dark:border-zinc-700">
+              <button
+                onClick={onOpenVersions}
+                className="w-full rounded-lg border border-gray-300 dark:border-zinc-600 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-zinc-700 transition-colors"
+              >
+                All versions
+              </button>
+            </div>
           </div>
         ) : (
-          <AgentActivity />
+          <>
+            {latestChangeSummary && (
+              <div className="mb-4 flex flex-col items-end">
+                <div className="inline-block max-w-[85%] rounded-2xl rounded-br-md bg-violet-100 px-4 py-2.5 dark:bg-violet-900/30">
+                  <p
+                    ref={promptTextRef}
+                    className={`text-[13px] text-violet-950 dark:text-violet-100 break-words whitespace-pre-wrap ${
+                      !isPromptExpanded ? "line-clamp-[10]" : ""
+                    }`}
+                  >
+                    {latestChangeSummary}
+                  </p>
+                  {(isPromptClamped || isPromptExpanded) && (
+                    <div className="flex justify-end mt-1.5">
+                      <button
+                        onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                        className="text-[11px] font-medium text-gray-600 bg-white/70 hover:bg-white dark:text-gray-300 dark:bg-zinc-800/70 dark:hover:bg-zinc-800 px-2 py-0.5 rounded-full transition-colors shadow-sm"
+                      >
+                        {isPromptExpanded ? "less" : "more"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {latestChangeImages.length > 0 && (
+                  <div className="mt-2 flex gap-2 flex-wrap justify-end">
+                    {latestChangeImages.map((image, index) => (
+                      <button
+                        key={`${image.slice(0, 40)}-${index}`}
+                        onClick={() => setLightboxImage(image)}
+                        className="shrink-0 cursor-zoom-in rounded-lg border border-gray-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
+                      >
+                        <img
+                          src={image}
+                          alt={`Reference ${index + 1}`}
+                          className="h-24 w-24 object-contain"
+                          loading="lazy"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {latestChangeVideos.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {latestChangeVideos.map((video, index) => (
+                      <video
+                        key={`${video.slice(0, 40)}-${index}`}
+                        src={video}
+                        className="w-full rounded-lg border border-gray-200 dark:border-zinc-700"
+                        controls
+                        preload="metadata"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {showWorkingIndicator && (
+              <div className="working-indicator-bg mb-3 rounded-xl border border-violet-200 dark:border-violet-800 px-3 py-2 transition-all duration-500">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <WorkingPulse />
+                    <span>Working...</span>
+                  </div>
+                  <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                    Time so far {elapsedSeconds ? `${elapsedSeconds}s` : "--"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <AgentActivity />
+          </>
         )}
 
         {/* Regenerate button for first generation */}
