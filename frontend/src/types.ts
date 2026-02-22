@@ -44,6 +44,7 @@ export interface PromptContent {
   text: string;
   images: string[]; // Array of data URLs
   videos?: string[]; // Array of data URLs
+  selectedElementHtml?: string; // Raw HTML of selected element (for display only)
 }
 
 export interface PromptHistoryMessage {

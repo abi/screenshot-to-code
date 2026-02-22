@@ -24,6 +24,11 @@ interface SidebarProps {
 
 const MAX_UPDATE_IMAGES = 5;
 
+function extractTagName(html: string): string {
+  const match = html.match(/^<(\w+)/);
+  return match ? match[1].toLowerCase() : "element";
+}
+
 function summarizeLatestChange(commit: Commit | null): string | null {
   if (!commit) return null;
   if (commit.type === "code_create") return "Imported existing code.";
@@ -42,6 +47,13 @@ function summarizeLatestChange(commit: Commit | null): string | null {
     return "Updated with one reference image.";
   }
   return "Updated code.";
+}
+
+function getSelectedElementTag(commit: Commit | null): string | null {
+  if (!commit || commit.type === "code_create") return null;
+  const html = commit.inputs.selectedElementHtml;
+  if (!html) return null;
+  return extractTagName(html);
 }
 
 function Sidebar({
@@ -117,6 +129,7 @@ function Sidebar({
 
   const currentCommit = head ? commits[head] : null;
   const latestChangeSummary = summarizeLatestChange(currentCommit);
+  const selectedElementTag = getSelectedElementTag(currentCommit);
   const latestChangeImages =
     currentCommit && currentCommit.type !== "code_create"
       ? currentCommit.inputs.images
@@ -263,6 +276,14 @@ function Sidebar({
               >
                 {latestChangeSummary}
               </p>
+              {selectedElementTag && (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <LuMousePointerClick className="w-3 h-3 text-violet-500 dark:text-violet-400" />
+                  <span className="text-[11px] text-violet-600 dark:text-violet-300">
+                    Selected: <code className="font-mono text-[10px] bg-violet-200/60 dark:bg-violet-800/50 px-1 py-0.5 rounded">&lt;{selectedElementTag}&gt;</code>
+                  </span>
+                </div>
+              )}
               {(isPromptClamped || isPromptExpanded) && (
                 <div className="flex justify-end mt-1.5">
                   <button

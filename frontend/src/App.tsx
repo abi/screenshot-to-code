@@ -215,16 +215,6 @@ function App() {
         })),
     };
 
-    const latestHistoryMessage =
-      requestParams.history && requestParams.history.length > 0
-        ? requestParams.history[requestParams.history.length - 1]
-        : null;
-    const latestUpdateInput = latestHistoryMessage ?? {
-      text: requestParams.prompt.text,
-      images: requestParams.prompt.images,
-      videos: requestParams.prompt.videos ?? [],
-    };
-
     const commitInputObject =
       requestParams.generationType === "create"
         ? {
@@ -237,11 +227,7 @@ function App() {
             ...baseCommitObject,
             type: "ai_edit" as const,
             parentHash: head,
-            inputs: {
-              text: latestUpdateInput.text,
-              images: latestUpdateInput.images,
-              videos: latestUpdateInput.videos,
-            },
+            inputs: requestParams.prompt,
           };
 
     // Create a new commit and set it as the head
@@ -486,10 +472,12 @@ function App() {
     );
 
     let modifiedUpdateInstruction = updateInstruction;
+    let selectedElementHtml: string | undefined;
 
     // Send in a reference to the selected element if it exists
     if (selectedElement) {
       const elementHtml = removeHighlight(selectedElement).outerHTML;
+      selectedElementHtml = elementHtml;
       modifiedUpdateInstruction =
         updateInstruction +
         " referring to this element specifically: " +
@@ -520,9 +508,10 @@ function App() {
       generationType: "update",
       inputMode,
       prompt: {
-        text: modifiedUpdateInstruction,
+        text: updateInstruction,
         images: updateImages,
         videos: [],
+        selectedElementHtml,
       },
       history: updatedHistory,
       optionCodes,

@@ -31,13 +31,25 @@ const setParentVersion = (commit: Commit, history: Commit[]) => {
     : null;
 };
 
+function extractTagName(html: string): string {
+  const match = html.match(/^<(\w+)/);
+  return match ? match[1].toLowerCase() : "element";
+}
+
 export function summarizeHistoryItem(commit: Commit) {
   const commitType = commit.type;
   switch (commitType) {
     case "ai_create":
       return "Create";
-    case "ai_edit":
-      return commit.inputs.text;
+    case "ai_edit": {
+      const text = commit.inputs.text;
+      const elementHtml = commit.inputs.selectedElementHtml;
+      if (elementHtml) {
+        const tag = extractTagName(elementHtml);
+        return text ? `${text} [<${tag}>]` : `Edit <${tag}>`;
+      }
+      return text;
+    }
     case "code_create":
       return "Imported from code";
     default: {
