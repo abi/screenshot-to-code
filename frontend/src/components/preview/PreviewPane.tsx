@@ -20,6 +20,7 @@ import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
+import DeployButton from "./DeployButton";
 
 function openInNewTab(code: string) {
   const newWindow = window.open("", "_blank");
@@ -179,16 +180,19 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
 
           <div className="flex items-center gap-1">
             {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
-              <Button
-                onClick={() => downloadCode(previewCode)}
-                variant="ghost"
-                size="icon"
-                title="Download Code"
-                className="h-9 w-9"
-                data-testid="download-code"
-              >
-                <LuDownload />
-              </Button>
+              <>
+                <DeployButton />
+                <Button
+                  onClick={() => downloadCode(previewCode)}
+                  variant="ghost"
+                  size="icon"
+                  title="Download Code"
+                  className="h-9 w-9"
+                  data-testid="download-code"
+                >
+                  <LuDownload />
+                </Button>
+              </>
             )}
             <Button
               onClick={() => {
