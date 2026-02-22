@@ -7,6 +7,15 @@ from image_generation.generation import process_tasks
 from image_generation.replicate import remove_background
 
 from agent.state import AgentFileState, ensure_str
+from agent.tools.edit_diff import (
+    count_fuzzy_occurrences,
+    detect_line_ending,
+    fuzzy_find_text,
+    generate_diff_string,
+    normalize_to_lf,
+    restore_line_endings,
+    strip_bom,
+)
 from agent.tools.types import ToolCall, ToolExecutionResult
 from agent.tools.summaries import summarize_text
 
@@ -93,19 +102,57 @@ class AgentToolRuntime:
         old_text: str,
         new_text: str,
         count: Optional[int],
-    ) -> Tuple[str, int]:
-        if old_text not in content:
-            return content, 0
+    ) -> Tuple[str, int, Optional[str]]:
+        normalized_content = normalize_to_lf(content)
+        normalized_old = normalize_to_lf(old_text)
+        normalized_new = normalize_to_lf(new_text)
+
+        match_result = fuzzy_find_text(normalized_content, normalized_old)
+
+        if not match_result.found:
+            return content, 0, None
+
+        base_content = match_result.content_for_replacement
 
         if count is None:
+            occurrences = count_fuzzy_occurrences(
+                normalized_content, normalized_old
+            )
+            if occurrences > 1:
+                return (
+                    content,
+                    0,
+                    f"Found {occurrences} occurrences of the text. "
+                    "Please provide more context to make it unique.",
+                )
             replace_count = 1
         elif count < 0:
-            replace_count = content.count(old_text)
+            replace_count = count_fuzzy_occurrences(
+                normalized_content, normalized_old
+            )
         else:
             replace_count = count
 
-        updated = content.replace(old_text, new_text, replace_count)
-        return updated, min(replace_count, content.count(old_text))
+        updated = base_content
+        replacements_done = 0
+        search_start = 0
+        for _ in range(replace_count):
+            match = fuzzy_find_text(updated[search_start:], normalized_old)
+            if not match.found:
+                break
+            abs_index = search_start + match.index
+            updated = (
+                updated[:abs_index]
+                + normalized_new
+                + updated[abs_index + match.match_length :]
+            )
+            search_start = abs_index + len(normalized_new)
+            replacements_done += 1
+
+        original_ending = detect_line_ending(content)
+        updated = restore_line_endings(updated, original_ending)
+
+        return updated, replacements_done, None
 
     def _edit_file(self, args: Dict[str, Any]) -> ToolExecutionResult:
         if not self.file_state.content:
@@ -129,7 +176,8 @@ class AgentToolRuntime:
                 summary={"error": "Invalid edits payload"},
             )
 
-        content = self.file_state.content
+        raw_content = self.file_state.content
+        content, bom = strip_bom(raw_content)
         summary_edits: List[Dict[str, Any]] = []
         for edit in edits:
             old_text = ensure_str(edit.get("old_text"))
@@ -142,11 +190,28 @@ class AgentToolRuntime:
                     summary={"error": "Missing old_text"},
                 )
 
-            content, replaced = self._apply_single_edit(content, old_text, new_text, count)
+            content, replaced, error_msg = self._apply_single_edit(
+                content, old_text, new_text, count
+            )
+            if error_msg:
+                return ToolExecutionResult(
+                    ok=False,
+                    result={"error": error_msg, "old_text": old_text},
+                    summary={
+                        "error": error_msg,
+                        "old_text": summarize_text(old_text, 160),
+                    },
+                )
             if replaced == 0:
                 return ToolExecutionResult(
                     ok=False,
-                    result={"error": "old_text not found", "old_text": old_text},
+                    result={
+                        "error": (
+                            "Could not find the exact text. The old_text must "
+                            "match exactly including all whitespace and newlines."
+                        ),
+                        "old_text": old_text,
+                    },
                     summary={
                         "error": "old_text not found",
                         "old_text": summarize_text(old_text, 160),
@@ -161,16 +226,27 @@ class AgentToolRuntime:
                 }
             )
 
-        self.file_state.content = content
+        final_content = bom + content
+        old_normalized = normalize_to_lf(raw_content)
+        new_normalized = normalize_to_lf(final_content)
+        diff_str, first_changed_line = generate_diff_string(
+            old_normalized, new_normalized
+        )
+
+        self.file_state.content = final_content
         summary = {
             "path": self.file_state.path,
             "edits": summary_edits,
             "contentLength": len(self.file_state.content),
         }
-        result = {
+        result: Dict[str, Any] = {
             "path": self.file_state.path,
             "content": self.file_state.content,
         }
+        if diff_str:
+            result["diff"] = diff_str
+        if first_changed_line is not None:
+            result["firstChangedLine"] = first_changed_line
         return ToolExecutionResult(
             ok=True,
             result=result,

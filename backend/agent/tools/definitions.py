@@ -113,8 +113,10 @@ def canonical_tool_definitions(
         CanonicalToolDefinition(
             name="edit_file",
             description=(
-                "Edit the main HTML file using exact string replacements. Do not "
-                "regenerate the entire file. Returns the updated file content."
+                "Edit the main HTML file by replacing exact text. The old_text "
+                "must match exactly (including whitespace). Use this for precise, "
+                "surgical edits. Do not regenerate the entire file. Returns the "
+                "updated file content and a diff of the changes."
             ),
             parameters=_edit_schema(),
         ),
