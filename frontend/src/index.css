@@ -213,5 +213,25 @@
   }
   body {
     @apply bg-background text-foreground m-0;
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* Prevent iOS bounce/overscroll on the app shell */
+@supports (padding: env(safe-area-inset-bottom)) {
+  html {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Prevent text inputs from zooming on iOS (font-size < 16px causes zoom) */
+@media (max-width: 639px) {
+  input[type="text"],
+  input[type="url"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }

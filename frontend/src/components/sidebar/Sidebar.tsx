@@ -408,7 +408,7 @@ function Sidebar({
       {(appState === AppState.CODE_READY || isSelectedVariantComplete) &&
         !isSelectedVariantError && (
           <div
-            className="shrink-0 border-t border-gray-200 bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 px-4 py-4"
+            className="shrink-0 border-t border-gray-200 bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 px-3 sm:px-4 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
@@ -434,10 +434,10 @@ function Sidebar({
                         removeHighlight(selectedElement);
                         setSelectedElement(null);
                       }}
-                      className="shrink-0 ml-3 p-0.5 text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 transition-colors"
+                      className="shrink-0 ml-3 p-1.5 text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 transition-colors"
                       title="Clear selection"
                     >
-                      <LuX className="w-3.5 h-3.5" />
+                      <LuX className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
@@ -506,14 +506,14 @@ function Sidebar({
                 <button
                   onClick={() => doUpdate(updateInstruction)}
                   disabled={!updateInstruction.trim()}
-                  className={`rounded-xl p-2 transition-colors update-btn ${
+                  className={`rounded-xl p-2.5 sm:p-2 transition-colors update-btn ${
                     updateInstruction.trim()
                       ? "bg-violet-600 text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400"
                       : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-zinc-700 dark:text-zinc-500"
                   }`}
                   title="Send"
                 >
-                  <LuArrowUp className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                  <LuArrowUp className="w-5 h-5 sm:w-[18px] sm:h-[18px]" strokeWidth={2.5} />
                 </button>
               </div>
 

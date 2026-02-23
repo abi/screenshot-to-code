@@ -11,7 +11,7 @@ import {
   LuRefreshCw,
   LuDownload,
 } from "react-icons/lu";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppState, Settings } from "../../types";
 import CodeTab from "./CodeTab";
 import { Button } from "../ui/button";
@@ -30,6 +30,19 @@ function openInNewTab(code: string) {
   }
 }
 
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(
+    () => window.innerWidth < breakpoint
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 interface Props {
   settings: Settings;
   onOpenVersions: () => void;
@@ -38,7 +51,10 @@ interface Props {
 function PreviewPane({ settings, onOpenVersions }: Props) {
   const { appState } = useAppStore();
   const { inputMode, head, commits, setHead } = useProjectStore();
-  const [activeTab, setActiveTab] = useState("desktop");
+  const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState(() =>
+    window.innerWidth < 640 ? "mobile" : "desktop"
+  );
   const [desktopScale, setDesktopScale] = useState(1);
   const [desktopViewMode, setDesktopViewMode] = useState<"fit" | "actual">("fit");
 
@@ -76,8 +92,9 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
         onValueChange={setActiveTab}
         className="flex-1 flex flex-col min-h-0"
       >
-        <div className="relative flex items-center justify-between px-4 py-2 shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-          <div className="flex items-center gap-2">
+        {/* Toolbar row */}
+        <div className="relative flex items-center justify-between px-2 sm:px-4 py-2 shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 gap-1">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <TabsList>
               <TabsTrigger value="desktop" title="Desktop" data-testid="tab-desktop">
                 <FaDesktop />
@@ -89,7 +106,7 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
                 <FaCode />
               </TabsTrigger>
             </TabsList>
-            {(activeTab === "desktop" || activeTab === "mobile") && (
+            {(activeTab === "desktop" || activeTab === "mobile") && !isMobile && (
               <div className="hidden sm:inline-flex items-center gap-2">
                 {activeTab === "desktop" && (
                   <div className="inline-flex items-center rounded-lg bg-gray-100 p-1 dark:bg-zinc-800">
@@ -137,29 +154,30 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
             )}
           </div>
 
-          {/* Version navigation */}
+          {/* Version navigation - visible on all screen sizes */}
           {totalVersions > 0 && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center justify-center gap-1 bg-gray-100/50 dark:bg-zinc-800/50 rounded-full p-1 border border-gray-200/50 dark:border-zinc-700/50 backdrop-blur-sm">
+            <div className="flex items-center justify-center gap-0.5 sm:gap-1 bg-gray-100/50 dark:bg-zinc-800/50 rounded-full p-0.5 sm:p-1 border border-gray-200/50 dark:border-zinc-700/50 backdrop-blur-sm md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
               <Button
                 onClick={() => canGoPrev && setHead(sortedCommits[currentVersionIndex - 1].hash)}
                 variant="ghost"
                 size="icon"
                 title="Previous version"
-                className={`h-6 w-6 rounded-full hover:bg-white dark:hover:bg-zinc-700 ${!canGoPrev ? "opacity-30 cursor-not-allowed" : ""}`}
+                className={`h-7 w-7 sm:h-6 sm:w-6 rounded-full hover:bg-white dark:hover:bg-zinc-700 ${!canGoPrev ? "opacity-30 cursor-not-allowed" : ""}`}
                 disabled={!canGoPrev}
               >
-                <LuChevronLeft className="w-3.5 h-3.5" />
+                <LuChevronLeft className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               </Button>
               <div
                 onClick={onOpenVersions}
-                className="flex items-center justify-center gap-2 px-1 cursor-pointer hover:opacity-70 transition-opacity w-32"
+                className="flex items-center justify-center gap-1 sm:gap-2 px-1 cursor-pointer hover:opacity-70 transition-opacity min-w-[4rem] sm:w-32"
                 title="View all versions"
               >
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">
-                  Version {currentVersionIndex + 1}
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none whitespace-nowrap">
+                  v{currentVersionIndex + 1}
+                  <span className="hidden sm:inline"> of {totalVersions}</span>
                 </span>
                 {currentVersionIndex === totalVersions - 1 && (
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300 leading-none flex items-center h-4">
+                  <span className="hidden sm:flex rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300 leading-none items-center h-4">
                     Latest
                   </span>
                 )}
@@ -169,15 +187,15 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
                 variant="ghost"
                 size="icon"
                 title="Next version"
-                className={`h-6 w-6 rounded-full hover:bg-white dark:hover:bg-zinc-700 ${!canGoNext ? "opacity-30 cursor-not-allowed" : ""}`}
+                className={`h-7 w-7 sm:h-6 sm:w-6 rounded-full hover:bg-white dark:hover:bg-zinc-700 ${!canGoNext ? "opacity-30 cursor-not-allowed" : ""}`}
                 disabled={!canGoNext}
               >
-                <LuChevronRight className="w-3.5 h-3.5" />
+                <LuChevronRight className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               </Button>
             </div>
           )}
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
               <Button
                 onClick={() => downloadCode(previewCode)}

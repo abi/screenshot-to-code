@@ -235,7 +235,7 @@ function UploadTab({ doCreate, stack, setStack }: Props) {
 
   const dropzoneClassName = useMemo(() => {
     const base =
-      "flex flex-1 w-full min-h-[320px] flex-col items-center justify-center p-5 border-2 border-dashed rounded-xl bg-gray-50 dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 outline-none transition-all cursor-pointer";
+      "flex flex-1 w-full min-h-[200px] sm:min-h-[320px] flex-col items-center justify-center p-4 sm:p-5 border-2 border-dashed rounded-xl bg-gray-50 dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 outline-none transition-all cursor-pointer";
     if (isFocused) {
       return `${base} border-blue-500 bg-blue-50 dark:bg-blue-950/30`;
     }
@@ -365,7 +365,7 @@ function UploadTab({ doCreate, stack, setStack }: Props) {
                     : `${remainingSlots} remaining`}
                 </div>
                 <div className="mt-3 rounded-md border border-gray-100 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 p-2 overflow-hidden">
-                  <div className="flex h-[280px] w-full items-center justify-center overflow-hidden rounded bg-white dark:bg-zinc-900">
+                  <div className="flex h-[180px] sm:h-[280px] w-full items-center justify-center overflow-hidden rounded bg-white dark:bg-zinc-900">
                     {files[selectedIndex] && (
                       <img
                         src={files[selectedIndex].preview}
@@ -397,7 +397,7 @@ function UploadTab({ doCreate, stack, setStack }: Props) {
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(index)}
-                        className="absolute -top-1 -right-1 h-4 w-4 bg-gray-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-1 -right-1 h-5 w-5 sm:h-4 sm:w-4 bg-gray-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                         aria-label={`Remove screenshot ${index + 1}`}
                       >
                         <Cross2Icon className="h-2 w-2" />

@@ -23,7 +23,7 @@ const StartPane: React.FC<Props> = ({
   setSettings,
 }) => {
   return (
-    <div className="flex flex-col justify-center items-center py-8">
+    <div className="flex flex-col justify-center items-center py-4 sm:py-8">
       <UnifiedInputPane
         doCreate={doCreate}
         doCreateFromText={doCreateFromText}

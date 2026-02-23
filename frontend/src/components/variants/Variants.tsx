@@ -113,7 +113,37 @@ function Variants() {
 
   return (
     <div className="pt-2 pb-1">
-      <div className="grid grid-cols-2 gap-2">
+      {/* Compact horizontal pill selector for mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-1 sm:hidden">
+        {variants.map((variant, index) => {
+          let statusColor = "bg-gray-300 dark:bg-gray-600";
+          if (variant.status === "complete") statusColor = "bg-green-500";
+          else if (variant.status === "error" || variant.status === "cancelled") statusColor = "bg-red-500";
+
+          return (
+            <button
+              key={index}
+              className={`flex items-center gap-1.5 shrink-0 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                index === selectedVariantIndex
+                  ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400 dark:bg-blue-900/40 dark:text-blue-300 dark:ring-blue-500"
+                  : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700"
+              }`}
+              title={variant.model ? (CODE_GENERATION_MODEL_DESCRIPTIONS[variant.model as CodeGenerationModel]?.name || variant.model) : undefined}
+              onClick={() => handleVariantClick(index)}
+            >
+              <span className={`w-2 h-2 rounded-full shrink-0 ${statusColor}`} />
+              <span className="whitespace-nowrap">Option {index + 1}</span>
+              {variant.status === "generating" && (
+                <div className="shrink-0 scale-75">
+                  <Spinner />
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {/* Grid with thumbnails for larger screens */}
+      <div className="hidden sm:grid grid-cols-2 gap-2">
         {variants.map((variant, index) => {
           let statusColor = "bg-gray-300 dark:bg-gray-600";
           if (variant.status === "complete") statusColor = "bg-green-500";
