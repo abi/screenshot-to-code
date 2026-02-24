@@ -15,7 +15,7 @@ export function useGenerationFeedback() {
     }
 
     const commit = commits[head];
-    if (!commit || commit.type !== "ai_create") {
+    if (!commit || (commit.type !== "ai_create" && commit.type !== "ai_edit")) {
       return false;
     }
 
