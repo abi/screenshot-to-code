@@ -771,11 +771,15 @@ class CodeGenerationMiddleware(Middleware):
             )
             # Always send variant models so the frontend can track which
             # model produced each variant (used for edit-base-model logging).
+            # Only show model names in the UI when debug mode is enabled.
             await context.send_message(
                 "variantModels",
                 None,
                 0,
-                {"models": [model.value for model in context.variant_models]},
+                {
+                    "models": [model.value for model in context.variant_models],
+                    "showModels": IS_DEBUG_ENABLED,
+                },
                 None,
             )
 
