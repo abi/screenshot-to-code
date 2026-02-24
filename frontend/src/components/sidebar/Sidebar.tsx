@@ -395,7 +395,7 @@ function Sidebar({
 
         {/* Regenerate button for first generation */}
         {isFirstGeneration && head === latestCommitHash && (appState === AppState.CODE_READY || isSelectedVariantComplete) && !isSelectedVariantError && (
-          <div className="mb-3 flex justify-end gap-2">
+          <div className="mb-3 flex items-center justify-end gap-2">
             <GenerationFeedbackButtons
               selectedValue={selectedFeedbackValue}
               onSubmit={submitGenerationFeedback}
