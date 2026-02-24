@@ -769,14 +769,15 @@ class CodeGenerationMiddleware(Middleware):
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=GEMINI_API_KEY,
             )
-            if IS_DEBUG_ENABLED:
-                await context.send_message(
-                    "variantModels",
-                    None,
-                    0,
-                    {"models": [model.value for model in context.variant_models]},
-                    None,
-                )
+            # Always send variant models so the frontend can track which
+            # model produced each variant (used for edit-base-model logging).
+            await context.send_message(
+                "variantModels",
+                None,
+                0,
+                {"models": [model.value for model in context.variant_models]},
+                None,
+            )
 
             generation_stage = AgenticGenerationStage(
                 send_message=context.send_message,
