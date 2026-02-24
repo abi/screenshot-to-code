@@ -524,6 +524,8 @@ function App() {
             content: currentCode,
           }
         : undefined,
+      editBaseModel: selectedVariant.model,
+      editBaseVariantIndex: currentCommit.selectedVariantIndex,
     });
   }
 

@@ -237,6 +237,8 @@ class ExtractedParams:
     history: List[PromptHistoryMessage]
     file_state: Dict[str, str] | None
     option_codes: List[str]
+    edit_base_model: str | None
+    edit_base_variant_index: int | None
 
 
 class ParameterExtractionStage:
@@ -320,6 +322,15 @@ class ParameterExtractionStage:
                 else:
                     option_codes.append(str(entry))
 
+        # Extract edit base model tracking info (only present for updates)
+        edit_base_model: str | None = params.get("editBaseModel")
+        raw_edit_base_variant_index = params.get("editBaseVariantIndex")
+        edit_base_variant_index: int | None = (
+            int(raw_edit_base_variant_index)
+            if raw_edit_base_variant_index is not None
+            else None
+        )
+
         return ExtractedParams(
             stack=validated_stack,
             input_mode=validated_input_mode,
@@ -332,6 +343,8 @@ class ParameterExtractionStage:
             history=history,
             file_state=file_state,
             option_codes=option_codes,
+            edit_base_model=edit_base_model,
+            edit_base_variant_index=edit_base_variant_index,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -683,6 +696,17 @@ class ParameterExtractionMiddleware(Middleware):
         print(
             f"Generating {context.extracted_params.stack} code in {context.extracted_params.input_mode} mode"
         )
+
+        # Log which model the user chose to base the edit on
+        if context.extracted_params.generation_type == "update":
+            edit_model = context.extracted_params.edit_base_model or "unknown"
+            edit_index = context.extracted_params.edit_base_variant_index
+            # Display as 1-indexed option number for readability
+            option_num = (edit_index + 1) if edit_index is not None else "unknown"
+            print(
+                f"[Edit tracking] User based edit on model={edit_model}, "
+                f"option #{option_num}"
+            )
 
         await next_func()
 
