@@ -66,6 +66,7 @@ export interface CodeGenerationParams {
   optionCodes?: string[];
   editBaseModel?: string;
   editBaseVariantIndex?: number;
+  editBaseGenerationType?: "create" | "update" | "code_create";
 }
 
 export type FullGenerationSettings = CodeGenerationParams & Settings;
