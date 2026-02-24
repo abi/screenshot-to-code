@@ -14,11 +14,13 @@ import ImageLightbox from "../ImageLightbox";
 import { Commit } from "../commits/types";
 import { removeHighlight } from "../select-and-edit/utils";
 import { CodeGenerationModel } from "../../lib/models";
+import GenerationFeedbackButtons from "./GenerationFeedbackButtons";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
   doUpdate: (instruction: string) => void;
   regenerate: () => void;
+  submitGenerationFeedback: (value: "up" | "down") => Promise<void>;
   cancelCodeGeneration: () => void;
   onOpenVersions: () => void;
 }
@@ -68,6 +70,7 @@ function Sidebar({
   showSelectAndEditFeature,
   doUpdate,
   regenerate,
+  submitGenerationFeedback,
   cancelCodeGeneration,
   onOpenVersions,
 }: SidebarProps) {
@@ -163,6 +166,11 @@ function Sidebar({
     : undefined;
 
   const isFirstGeneration = currentCommit?.type === "ai_create";
+  const selectedFeedbackValue =
+    isFirstGeneration &&
+    currentCommit?.userFeedback?.optionIndex === selectedVariantIndex
+      ? currentCommit.userFeedback.value
+      : null;
   const isViewingOlderVersion = head !== null && head !== latestCommitHash;
 
   // Compute version number for the current head
@@ -387,7 +395,11 @@ function Sidebar({
 
         {/* Regenerate button for first generation */}
         {isFirstGeneration && head === latestCommitHash && (appState === AppState.CODE_READY || isSelectedVariantComplete) && !isSelectedVariantError && (
-          <div className="flex justify-end mb-3">
+          <div className="mb-3 flex justify-end gap-2">
+            <GenerationFeedbackButtons
+              selectedValue={selectedFeedbackValue}
+              onSubmit={submitGenerationFeedback}
+            />
             <button
               onClick={regenerate}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"

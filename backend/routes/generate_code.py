@@ -56,6 +56,7 @@ MessageType = Literal[
     "variantError",
     "variantCount",
     "variantModels",
+    "variantGenerationId",
     "thinking",
     "assistant",
     "toolStart",
@@ -758,7 +759,8 @@ class AgenticGenerationStage:
                         else None
                     )
                     other_info: dict[str, str | bool | int | float | None] = {
-                        "generation_type": self.generation_type
+                        "generation_type": self.generation_type,
+                        "variant_index": index + 1,
                     }
                     if self.generation_type == "update":
                         other_info["edit_base_model"] = self.edit_base_model
@@ -768,7 +770,7 @@ class AgenticGenerationStage:
                         other_info["edit_base_generation_type"] = (
                             self.edit_base_generation_type
                         )
-                    await send_to_saas_backend(
+                    saas_response = await send_to_saas_backend(
                         user_id=self.user_id,
                         prompt_messages=prompt_messages,
                         completion=completion,
@@ -783,6 +785,16 @@ class AgenticGenerationStage:
                         video_data_url=video_data_url,
                         video_generation_cost=None,
                     )
+                    if isinstance(saas_response, dict):
+                        generation_id = saas_response.get("generation_id")
+                        if isinstance(generation_id, str) and generation_id:
+                            await self.send_message(
+                                "variantGenerationId",
+                                generation_id,
+                                index,
+                                None,
+                                None,
+                            )
                 except Exception as e:
                     print("Error sending to SaaS backend", e)
                     sentry_sdk.capture_exception(e)
@@ -925,7 +937,6 @@ class StatusBroadcastMiddleware(Middleware):
 
         # Tell frontend how many variants we're using
         await context.send_message("variantCount", str(num_variants), 0)
-
         for i in range(num_variants):
             await context.send_message("status", "Generating code...", i)
 

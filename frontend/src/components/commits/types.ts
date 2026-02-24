@@ -28,6 +28,7 @@ export type VariantHistoryMessage = {
 
 export type Variant = {
   code: string;
+  generationId?: string;
   history: VariantHistoryMessage[];
   requestStartedAt?: number;
   completedAt?: number;
@@ -47,6 +48,11 @@ export type BaseCommit = {
   isCommitted: boolean;
   variants: Variant[];
   selectedVariantIndex: number;
+  userFeedback?: {
+    value: "up" | "down";
+    optionIndex: number;
+    submittedAt: number;
+  };
 };
 
 export type CommitType = "ai_create" | "ai_edit" | "code_create";

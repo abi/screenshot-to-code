@@ -42,6 +42,7 @@ import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
 import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
+import { useGenerationFeedback } from "./hooks/useGenerationFeedback";
 
 // Temporary kill switch for feedback call UI.
 const SHOW_FEEDBACK_CALL_UI = true;
@@ -79,6 +80,7 @@ function App() {
     updateVariantStatus,
     resizeVariants,
     setVariantModels,
+    setVariantGenerationId,
     setShowVariantModels,
     appendVariantHistoryMessage,
     startAgentEvent,
@@ -171,6 +173,7 @@ function App() {
   ]);
 
   const getAssetsById = () => useProjectStore.getState().assetsById;
+  const { submitGenerationFeedback } = useGenerationFeedback();
 
   // Functions
   const reset = () => {
@@ -384,6 +387,11 @@ function App() {
       onVariantModels: (models, showModels) => {
         setVariantModels(commit.hash, models);
         setShowVariantModels(showModels);
+      },
+      onVariantGenerationId: (generationId, variantIndex) => {
+        if (generationId) {
+          setVariantGenerationId(commit.hash, variantIndex, generationId);
+        }
       },
       onThinking: (content, variantIndex, eventId) => {
         if (!eventId) return;
@@ -827,6 +835,7 @@ function App() {
                   showSelectAndEditFeature={showSelectAndEditFeature}
                   doUpdate={doUpdate}
                   regenerate={regenerate}
+                  submitGenerationFeedback={submitGenerationFeedback}
                   cancelCodeGeneration={cancelCodeGeneration}
                   onOpenVersions={() => {
                     setProjectsPanelOpen(false);

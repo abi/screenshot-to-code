@@ -55,6 +55,19 @@ interface ProjectStore {
   ) => void;
   resizeVariants: (hash: CommitHash, count: number) => void;
   setVariantModels: (hash: CommitHash, models: string[]) => void;
+  setVariantGenerationId: (
+    hash: CommitHash,
+    numVariant: number,
+    generationId: string
+  ) => void;
+  setCommitFeedback: (
+    hash: CommitHash,
+    feedback: {
+      value: "up" | "down";
+      optionIndex: number;
+      submittedAt: number;
+    }
+  ) => void;
   showVariantModels: boolean;
   setShowVariantModels: (show: boolean) => void;
 
@@ -355,6 +368,36 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         commits: {
           ...state.commits,
           [hash]: { ...commit, variants },
+        },
+      };
+    }),
+  setVariantGenerationId: (hash, numVariant, generationId) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      if (!commit || commit.isCommitted) return state;
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: {
+            ...commit,
+            variants: commit.variants.map((variant, index) =>
+              index === numVariant ? { ...variant, generationId } : variant
+            ),
+          },
+        },
+      };
+    }),
+  setCommitFeedback: (hash, feedback) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      if (!commit) return state;
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: {
+            ...commit,
+            userFeedback: feedback,
+          },
         },
       };
     }),
