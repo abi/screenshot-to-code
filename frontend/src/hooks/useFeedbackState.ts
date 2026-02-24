@@ -32,7 +32,7 @@ export function useFeedbackState() {
   }, [setState]);
 
   const shouldShowBanner =
-    state.successfulGenerations >= 1 && !state.bannerDismissed;
+    state.successfulGenerations >= 3 && !state.bannerDismissed;
 
   return {
     successfulGenerations: state.successfulGenerations,
