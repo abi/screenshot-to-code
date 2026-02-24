@@ -20,7 +20,7 @@ interface SidebarProps {
   showSelectAndEditFeature: boolean;
   doUpdate: (instruction: string) => void;
   regenerate: () => void;
-  submitGenerationFeedback: (value: "up" | "down") => Promise<void>;
+  submitGenerationFeedback: (value: "up" | "down") => Promise<boolean>;
   cancelCodeGeneration: () => void;
   onOpenVersions: () => void;
 }

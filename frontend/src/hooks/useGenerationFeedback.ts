@@ -7,26 +7,28 @@ export function useGenerationFeedback() {
   const { getToken } = useAuth();
   const { head, commits, setCommitFeedback } = useProjectStore();
 
-  const submitGenerationFeedback = async (value: "up" | "down") => {
+  const submitGenerationFeedback = async (
+    value: "up" | "down"
+  ): Promise<boolean> => {
     if (!IS_RUNNING_ON_CLOUD || !SAAS_BACKEND_URL || !head) {
-      return;
+      return false;
     }
 
     const commit = commits[head];
     if (!commit || commit.type !== "ai_create") {
-      return;
+      return false;
     }
 
     const optionIndex = commit.selectedVariantIndex;
     const generationId = commit.variants[optionIndex]?.generationId;
     if (!generationId) {
       toast.error("Feedback is not ready yet. Try again in a moment.");
-      return;
+      return false;
     }
     const authToken = await getToken();
     if (!authToken) {
       toast.error("Unable to submit feedback right now.");
-      return;
+      return false;
     }
 
     const response = await fetch(`${SAAS_BACKEND_URL}/generations/feedback`, {
@@ -43,7 +45,7 @@ export function useGenerationFeedback() {
 
     if (!response.ok) {
       toast.error("Failed to save feedback. Please try again.");
-      return;
+      return false;
     }
 
     setCommitFeedback(commit.hash, {
@@ -51,6 +53,7 @@ export function useGenerationFeedback() {
       optionIndex,
       submittedAt: Date.now(),
     });
+    return true;
   };
 
   return { submitGenerationFeedback };
