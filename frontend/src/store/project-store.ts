@@ -55,6 +55,8 @@ interface ProjectStore {
   ) => void;
   resizeVariants: (hash: CommitHash, count: number) => void;
   setVariantModels: (hash: CommitHash, models: string[]) => void;
+  showVariantModels: boolean;
+  setShowVariantModels: (show: boolean) => void;
 
   startAgentEvent: (
     hash: CommitHash,
@@ -356,6 +358,8 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         },
       };
     }),
+  showVariantModels: false,
+  setShowVariantModels: (show) => set({ showVariantModels: show }),
 
   startAgentEvent: (hash, numVariant, event) =>
     set((state) => {

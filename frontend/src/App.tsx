@@ -79,6 +79,7 @@ function App() {
     updateVariantStatus,
     resizeVariants,
     setVariantModels,
+    setShowVariantModels,
     appendVariantHistoryMessage,
     startAgentEvent,
     appendAgentEventContent,
@@ -380,8 +381,9 @@ function App() {
         console.log(`Backend is using ${count} variants`);
         resizeVariants(commit.hash, count);
       },
-      onVariantModels: (models) => {
+      onVariantModels: (models, showModels) => {
         setVariantModels(commit.hash, models);
+        setShowVariantModels(showModels);
       },
       onThinking: (content, variantIndex, eventId) => {
         if (!eventId) return;
@@ -596,6 +598,8 @@ function App() {
             content: currentCode,
           }
         : undefined,
+      editBaseModel: selectedVariant.model,
+      editBaseVariantIndex: currentCommit.selectedVariantIndex,
     });
   }
 

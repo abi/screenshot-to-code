@@ -23,3 +23,7 @@ If changes touch both, run both sets.
 
 - Prefer triple-quoted strings (`"""..."""`) for multi-line prompt text.
 - For interpolated multi-line prompts, prefer a single triple-quoted f-string over concatenated string fragments.
+
+# Hosted
+
+The hosted version is on the `hosted` branch. The `hosted` branch connects to a saas backend, which is a seperate codebase at ../screenshot-to-code-saas
