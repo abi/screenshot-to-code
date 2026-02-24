@@ -559,8 +559,13 @@ function App() {
       setSelectedElement(null);
     }
 
-    const selectedVariant =
-      currentCommit.variants[currentCommit.selectedVariantIndex];
+    const selectedVariant = currentCommit.variants[currentCommit.selectedVariantIndex];
+    const editBaseGenerationType =
+      currentCommit.type === "ai_create"
+        ? "create"
+        : currentCommit.type === "ai_edit"
+          ? "update"
+          : "code_create";
     const baseVariantHistory = selectedVariant.history;
     const updateImageAssetIds = registerAssetIds(
       "image",
@@ -600,6 +605,7 @@ function App() {
         : undefined,
       editBaseModel: selectedVariant.model,
       editBaseVariantIndex: currentCommit.selectedVariantIndex,
+      editBaseGenerationType,
     });
   }
 

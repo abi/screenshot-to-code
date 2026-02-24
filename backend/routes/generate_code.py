@@ -250,8 +250,9 @@ class ExtractedParams:
     history: List[PromptHistoryMessage]
     file_state: Dict[str, str] | None
     option_codes: List[str]
-    edit_base_model: str | None
-    edit_base_variant_index: int | None
+    edit_base_model: str | None = None
+    edit_base_variant_index: int | None = None
+    edit_base_generation_type: Literal["create", "update", "code_create"] | None = None
 
 
 class ParameterExtractionStage:
@@ -404,6 +405,14 @@ class ParameterExtractionStage:
             if raw_edit_base_variant_index is not None
             else None
         )
+        raw_edit_base_generation_type = params.get("editBaseGenerationType")
+        edit_base_generation_type: (
+            Literal["create", "update", "code_create"] | None
+        ) = (
+            raw_edit_base_generation_type
+            if raw_edit_base_generation_type in ("create", "update", "code_create")
+            else None
+        )
 
         return ExtractedParams(
             user_id=user_id,
@@ -422,6 +431,7 @@ class ParameterExtractionStage:
             option_codes=option_codes,
             edit_base_model=edit_base_model,
             edit_base_variant_index=edit_base_variant_index,
+            edit_base_generation_type=edit_base_generation_type,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -862,11 +872,15 @@ class ParameterExtractionMiddleware(Middleware):
         if context.extracted_params.generation_type == "update":
             edit_model = context.extracted_params.edit_base_model or "unknown"
             edit_index = context.extracted_params.edit_base_variant_index
+            edit_base_generation_type = (
+                context.extracted_params.edit_base_generation_type or "unknown"
+            )
             # Display as 1-indexed option number for readability
             option_num = (edit_index + 1) if edit_index is not None else "unknown"
             print(
                 f"[Edit tracking] User based edit on model={edit_model}, "
-                f"option #{option_num}"
+                f"option #{option_num}, "
+                f"base_generation_type={edit_base_generation_type}"
             )
 
         await next_func()
