@@ -7,7 +7,6 @@ import {
   FiGift,
   FiMessageCircle,
   FiGlobe,
-  FiCalendar,
   FiCheck,
 } from "react-icons/fi";
 
@@ -51,7 +50,6 @@ export function FeedbackModal({
 }: FeedbackModalProps) {
   const authenticatedFetch = useAuthenticatedFetch();
   const [englishFluent, setEnglishFluent] = useState<Answer>(null);
-  const [hasTimeForCall, setHasTimeForCall] = useState<Answer>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -59,19 +57,19 @@ export function FeedbackModal({
     () => !!subscriberTier && subscriberTier !== "free",
     [subscriberTier]
   );
+  const rewardAmount = isSubscriber ? 200 : 50;
 
   useEffect(() => {
     if (!open) {
       setEnglishFluent(null);
-      setHasTimeForCall(null);
       setIsSubmitting(false);
       setSubmitted(false);
     }
   }, [open]);
 
   const handleSubmit = async () => {
-    if (englishFluent === null || hasTimeForCall === null) {
-      toast.error("Please answer both questions.");
+    if (englishFluent === null) {
+      toast.error("Please answer the question.");
       return;
     }
     if (!SAAS_BACKEND_URL) {
@@ -83,7 +81,7 @@ export function FeedbackModal({
     try {
       await authenticatedFetch(`${SAAS_BACKEND_URL}/feedback/submit`, "POST", {
         english_fluent: englishFluent,
-        available_for_call: hasTimeForCall,
+        available_for_call: true,
       });
       setSubmitted(true);
     } catch (error) {
@@ -94,12 +92,8 @@ export function FeedbackModal({
     }
   };
 
-  const showCalEmbed =
-    submitted &&
-    englishFluent === true &&
-    hasTimeForCall === true &&
-    isSubscriber;
-  const canSubmit = englishFluent !== null && hasTimeForCall !== null;
+  const showCalEmbed = submitted && englishFluent === true;
+  const canSubmit = englishFluent !== null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,7 +107,7 @@ export function FeedbackModal({
               User Research
             </p>
             <h2 className="text-2xl font-semibold">
-              Get a $200 gift card
+              Get a ${rewardAmount} gift card
             </h2>
             <p className="text-emerald-100/80 mt-2 text-sm leading-relaxed max-w-md">
               Share your feedback in a 30-minute call and receive $200 via
@@ -150,31 +144,6 @@ export function FeedbackModal({
                 </div>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                  <FiCalendar className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-gray-800 font-medium mb-3">
-                    Available for a 30-min video call this week?
-                  </p>
-                  <div className="flex gap-2">
-                    <ToggleButton
-                      selected={hasTimeForCall === true}
-                      onClick={() => setHasTimeForCall(true)}
-                    >
-                      Yes
-                    </ToggleButton>
-                    <ToggleButton
-                      selected={hasTimeForCall === false}
-                      onClick={() => setHasTimeForCall(false)}
-                    >
-                      No
-                    </ToggleButton>
-                  </div>
-                </div>
-              </div>
-
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting || !canSubmit}
@@ -194,7 +163,7 @@ export function FeedbackModal({
           )}
 
           {submitted &&
-            (englishFluent === false || hasTimeForCall === false) && (
+            englishFluent === false && (
               <div className="text-center py-6">
                 <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
                   <FiMessageCircle className="w-5 h-5 text-gray-500" />
@@ -202,21 +171,6 @@ export function FeedbackModal({
                 <p className="text-gray-600 text-sm">
                   Thanks for your response! This opportunity isn't the right fit
                   at the moment, but we appreciate your time.
-                </p>
-              </div>
-            )}
-
-          {submitted &&
-            !showCalEmbed &&
-            englishFluent === true &&
-            hasTimeForCall === true && (
-              <div className="text-center py-6">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
-                  <FiCheck className="w-5 h-5 text-emerald-600" />
-                </div>
-                <p className="text-gray-600 text-sm">
-                  Thanks for your interest! We'll reach out soon if it's a good
-                  fit.
                 </p>
               </div>
             )}

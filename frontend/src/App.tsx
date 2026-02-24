@@ -683,6 +683,9 @@ function App() {
           <FeedbackBanner
             onDismiss={dismissBanner}
             onOpen={() => setIsFeedbackOpen(true)}
+            rewardAmount={
+              subscriberTier && subscriberTier !== "free" ? 200 : 50
+            }
           />
         </div>
       )}

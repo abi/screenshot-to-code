@@ -3,17 +3,22 @@ import { IoClose } from "react-icons/io5";
 interface FeedbackBannerProps {
   onDismiss: () => void;
   onOpen: () => void;
+  rewardAmount: number;
 }
 
-export function FeedbackBanner({ onDismiss, onOpen }: FeedbackBannerProps) {
+export function FeedbackBanner({
+  onDismiss,
+  onOpen,
+  rewardAmount,
+}: FeedbackBannerProps) {
   return (
     <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-3 rounded-lg mb-4 shadow-md">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-lg">🎁</span>
           <p className="text-sm font-medium">
-            Get a <span className="font-bold">$200 gift card</span> for 30 min
-            of feedback
+            Get a <span className="font-bold">${rewardAmount} gift card</span>{" "}
+            for 30 min of feedback
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
