@@ -33,6 +33,7 @@ import IconStrip from "./components/sidebar/IconStrip";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
+import SettingsTab from "./components/settings/SettingsTab";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
@@ -135,6 +136,8 @@ function App() {
   const lastToolEventIdRef = useRef<Record<number, string>>({});
 
   const [isVersionsPanelOpen, setIsVersionsPanelOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [mobilePane, setMobilePane] = useState<"preview" | "chat">("preview");
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
@@ -248,25 +251,17 @@ function App() {
       authToken: authToken || undefined,
     };
 
-    // Create variants dynamically - start with 4 to handle most cases
-    // Backend will use however many it needs (typically 3)
+    // Use 4 variants for create, 2 for edits to match backend counts
+    // and avoid a flash when the backend sends the actual variant count
+    const initialVariantCount =
+      requestParams.generationType === "create" ? 4 : 2;
     const baseCommitObject = {
-      variants: Array(4)
+      variants: Array(initialVariantCount)
         .fill(null)
         .map(() => ({
           code: "",
           history: cloneVariantHistory(variantHistory),
         })),
-    };
-
-    const latestHistoryMessage =
-      requestParams.history && requestParams.history.length > 0
-        ? requestParams.history[requestParams.history.length - 1]
-        : null;
-    const latestUpdateInput = latestHistoryMessage ?? {
-      text: requestParams.prompt.text,
-      images: requestParams.prompt.images,
-      videos: requestParams.prompt.videos ?? [],
     };
 
     const commitInputObject =
@@ -281,11 +276,7 @@ function App() {
             ...baseCommitObject,
             type: "ai_edit" as const,
             parentHash: head,
-            inputs: {
-              text: latestUpdateInput.text,
-              images: latestUpdateInput.images,
-              videos: latestUpdateInput.videos,
-            },
+            inputs: requestParams.prompt,
           };
 
     // Create a new commit and set it as the head
@@ -541,10 +532,12 @@ function App() {
     );
 
     let modifiedUpdateInstruction = updateInstruction;
+    let selectedElementHtml: string | undefined;
 
     // Send in a reference to the selected element if it exists
     if (selectedElement) {
       const elementHtml = removeHighlight(selectedElement).outerHTML;
+      selectedElementHtml = elementHtml;
       modifiedUpdateInstruction =
         updateInstruction +
         " referring to this element specifically: " +
@@ -577,9 +570,10 @@ function App() {
       generationType: "update",
       inputMode,
       prompt: {
-        text: modifiedUpdateInstruction,
+        text: updateInstruction,
         images: updateImages,
         videos: [],
+        selectedElementHtml,
       },
       history: updatedHistory,
       optionCodes,
@@ -666,7 +660,6 @@ function App() {
       {/* Icon strip - always visible */}
       <div className="sticky top-0 z-50 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-16 lg:flex-col">
         <IconStrip
-          isVersionsOpen={isVersionsPanelOpen}
           isProjectsOpen={isProjectsPanelOpen}
           isEditorOpen={
             !isVersionsPanelOpen && !isProjectsPanelOpen && !isAccountPanelOpen
@@ -679,8 +672,11 @@ function App() {
             setProjectsPanelOpen(false);
             setAccountPanelOpen(false);
             setIsVersionsPanelOpen((prev) => !prev);
-            setMobilePane("chat");
           }}
+          isVersionsOpen={isVersionsPanelOpen}
+          isEditorOpen={!isHistoryOpen && !isSettingsOpen}
+          isSettingsOpen={isSettingsOpen}
+          showEditor={isCodingOrReady}
           onToggleProjects={() => {
             setIsVersionsPanelOpen(false);
             setAccountPanelOpen(false);
@@ -703,6 +699,8 @@ function App() {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
             setAccountPanelOpen(false);
+            setIsHistoryOpen(false);
+            setIsSettingsOpen(false);
             setMobilePane("preview");
           }}
           onNewProject={() => {
@@ -712,8 +710,6 @@ function App() {
             setAccountPanelOpen(false);
             setMobilePane("preview");
           }}
-          settings={settings}
-          setSettings={setSettings}
           onOpenFeedback={
             SHOW_FEEDBACK_CALL_UI ? () => setIsFeedbackOpen(true) : undefined
           }
@@ -730,10 +726,14 @@ function App() {
                 }
               : undefined
           }
+          onOpenSettings={() => {
+            setIsSettingsOpen(true);
+            setIsHistoryOpen(false);
+          }}
         />
       </div>
 
-      {isCodingOrReady && (
+      {isCodingOrReady && !isSettingsOpen && (
         <div className="border-b border-gray-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
           <div className="grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-zinc-800">
             <button
@@ -764,7 +764,7 @@ function App() {
       )}
 
       {/* Content panel - shows sidebar, history, or editor */}
-      {showContentPanel && (
+      {showContentPanel && !isSettingsOpen && (
         <div
           className={`border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 dark:text-white lg:fixed lg:inset-y-0 lg:left-16 lg:z-40 lg:flex lg:w-[calc(28rem-4rem)] lg:flex-col lg:border-b-0 lg:border-r ${
             showMobileChatPane ? "block" : "hidden lg:flex"
@@ -811,7 +811,7 @@ function App() {
 
       <main
         className={`${
-          isProjectsPanelOpen || isAccountPanelOpen
+          isProjectsPanelOpen || isAccountPanelOpen || isSettingsOpen
             ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-16"
             : showContentPanel
               ? "flex flex-1 min-h-0 flex-col lg:h-full lg:pl-[28rem]"
@@ -820,7 +820,8 @@ function App() {
           isCodingOrReady &&
           mobilePane === "chat" &&
           !isProjectsPanelOpen &&
-          !isAccountPanelOpen
+          !isAccountPanelOpen &&
+          !isSettingsOpen
             ? "hidden lg:flex"
             : ""
         }`}
@@ -853,6 +854,10 @@ function App() {
         )}
 
         {isAccountPanelOpen && <AccountView />}
+
+        {isSettingsOpen && (
+          <SettingsTab settings={settings} setSettings={setSettings} />
+        )}
 
         {isCodingOrReady && !isProjectsPanelOpen && !isAccountPanelOpen && (
           <PreviewPane

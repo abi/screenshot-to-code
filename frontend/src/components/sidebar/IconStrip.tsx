@@ -9,8 +9,6 @@ import {
 } from "react-icons/lu";
 import { useUser } from "@clerk/clerk-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import SettingsDialog from "../settings/SettingsDialog";
-import { Settings } from "../../types";
 
 interface IconStripProps {
   isVersionsOpen: boolean;
@@ -19,6 +17,7 @@ interface IconStripProps {
   showVersions: boolean;
   showProjects: boolean;
   showAccount: boolean;
+  isSettingsOpen: boolean;
   showEditor: boolean;
   onToggleVersions: () => void;
   onToggleProjects: () => void;
@@ -26,10 +25,9 @@ interface IconStripProps {
   onToggleEditor: () => void;
   onLogoClick: () => void;
   onNewProject: () => void;
-  settings: Settings;
-  setSettings: React.Dispatch<React.SetStateAction<Settings>>;
   onOpenFeedback?: () => void;
   onContactSupport?: () => void;
+  onOpenSettings: () => void;
 }
 
 function IconStrip({
@@ -39,6 +37,7 @@ function IconStrip({
   showVersions,
   showProjects,
   showAccount,
+  isSettingsOpen,
   showEditor,
   onToggleVersions,
   onToggleProjects,
@@ -46,10 +45,9 @@ function IconStrip({
   onToggleEditor,
   onLogoClick,
   onNewProject,
-  settings,
-  setSettings,
   onOpenFeedback,
   onContactSupport,
+  onOpenSettings,
 }: IconStripProps) {
   const { user } = useUser();
 
@@ -80,7 +78,9 @@ function IconStrip({
             title="Editor"
           >
             <LuCode className="w-[18px] h-[18px]" />
-            <span className="hidden text-[10px] leading-none lg:block">Editor</span>
+            <span className="hidden text-[10px] leading-none lg:block">
+              Editor
+            </span>
           </button>
         )}
 
@@ -96,7 +96,9 @@ function IconStrip({
             title="Versions"
           >
             <LuClock className="w-[18px] h-[18px]" />
-            <span className="hidden text-[10px] leading-none lg:block">Versions</span>
+            <span className="hidden text-[10px] leading-none lg:block">
+              Versions
+            </span>
           </button>
         )}
 
@@ -112,7 +114,9 @@ function IconStrip({
             title="Projects"
           >
             <LuFolderOpen className="w-[18px] h-[18px]" />
-            <span className="hidden text-[10px] leading-none lg:block">Projects</span>
+            <span className="hidden text-[10px] leading-none lg:block">
+              Projects
+            </span>
           </button>
         )}
 
@@ -122,7 +126,9 @@ function IconStrip({
           title="Start a new project"
         >
           <LuPlus className="w-[18px] h-[18px]" />
-          <span className="hidden text-[10px] leading-none lg:block font-medium">New</span>
+          <span className="hidden text-[10px] leading-none lg:block font-medium">
+            New
+          </span>
         </button>
       </div>
 
@@ -136,7 +142,9 @@ function IconStrip({
           title="Get $200 for feedback"
         >
           <LuGift className="w-[18px] h-[18px]" />
-          <span className="hidden text-[10px] leading-none lg:block">Feedback</span>
+          <span className="hidden text-[10px] leading-none lg:block">
+            Feedback
+          </span>
         </button>
       )}
 
@@ -147,24 +155,26 @@ function IconStrip({
           title="Contact support"
         >
           <LuMessageCircle className="w-[18px] h-[18px]" />
-          <span className="hidden text-[10px] leading-none lg:block">Support</span>
+          <span className="hidden text-[10px] leading-none lg:block">
+            Support
+          </span>
         </button>
       )}
 
-      {/* Settings */}
-      <SettingsDialog
-        settings={settings}
-        setSettings={setSettings}
-        trigger={
-          <button
-            className="flex items-center justify-center rounded-lg p-2 transition-colors text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 lg:flex-col lg:gap-1 lg:px-2 lg:py-1.5"
-            title="Settings"
-          >
-            <LuSettings className="w-[18px] h-[18px]" />
-            <span className="hidden text-[10px] leading-none lg:block">Settings</span>
-          </button>
-        }
-      />
+      <button
+        onClick={onOpenSettings}
+        className={`flex items-center justify-center rounded-lg p-2 transition-colors lg:flex-col lg:gap-1 lg:px-2 lg:py-1.5 ${
+          isSettingsOpen
+            ? "text-gray-900 dark:text-white"
+            : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+        }`}
+        title="Settings"
+      >
+        <LuSettings className="w-[18px] h-[18px]" />
+        <span className="hidden text-[10px] leading-none lg:block">
+          Settings
+        </span>
+      </button>
 
       {/* Account - last item */}
       {showAccount && (
@@ -175,9 +185,13 @@ function IconStrip({
         >
           <Avatar className="h-7 w-7">
             <AvatarImage src={user?.imageUrl} alt="Profile" />
-            <AvatarFallback className="text-xs">{user?.firstName?.charAt(0)}</AvatarFallback>
+            <AvatarFallback className="text-xs">
+              {user?.firstName?.charAt(0)}
+            </AvatarFallback>
           </Avatar>
-          <span className="hidden text-[10px] leading-none lg:block">Account</span>
+          <span className="hidden text-[10px] leading-none lg:block">
+            Account
+          </span>
         </button>
       )}
     </div>

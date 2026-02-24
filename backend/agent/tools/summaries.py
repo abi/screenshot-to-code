@@ -55,8 +55,13 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
             }
 
     if tool_call.name == "remove_background":
-        image_url = ensure_str(args.get("image_url"))
-        return {"image_url": summarize_text(image_url, 100)}
+        image_urls = args.get("image_urls") or []
+        if isinstance(image_urls, list):
+            return {
+                "count": len(image_urls),
+                "image_urls": [ensure_str(u) for u in image_urls],
+            }
+        return {"image_urls": []}
 
     if tool_call.name == "retrieve_option":
         return {

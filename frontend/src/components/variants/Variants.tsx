@@ -1,11 +1,11 @@
 import { useProjectStore } from "../../store/project-store";
-import Spinner from "../core/Spinner";
 import { useEffect, useRef, useState } from "react";
 import { useThrottle } from "../../hooks/useThrottle";
 import {
   CODE_GENERATION_MODEL_DESCRIPTIONS,
   CodeGenerationModel,
 } from "../../lib/models";
+import WorkingPulse from "../core/WorkingPulse";
 
 const IFRAME_WIDTH = 1280;
 const IFRAME_HEIGHT = 550;
@@ -149,8 +149,13 @@ function Variants() {
                   Option {index + 1}
                 </span>
                 {variant.status === "generating" && (
-                  <div className="ml-auto shrink-0 scale-75">
-                    <Spinner />
+                  <div
+                    className="ml-auto shrink-0 inline-flex items-center"
+                    role="status"
+                    aria-live="polite"
+                    aria-label="Working"
+                  >
+                    <WorkingPulse />
                   </div>
                 )}
               </div>

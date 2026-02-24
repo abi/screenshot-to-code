@@ -60,7 +60,11 @@ GEMINI_PRICING = {
 def get_model_api_name(model: Llm) -> str:
     if model in [Llm.GEMINI_3_FLASH_PREVIEW_HIGH, Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL]:
         return "gemini-3-flash-preview"
-    elif model in [Llm.GEMINI_3_1_PRO_PREVIEW_HIGH, Llm.GEMINI_3_1_PRO_PREVIEW_LOW]:
+    elif model in [
+        Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
+        Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM,
+        Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
+    ]:
         return "gemini-3.1-pro-preview"
     elif model in [Llm.GEMINI_3_PRO_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_LOW]:
         return "gemini-3-pro-preview"

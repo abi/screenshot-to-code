@@ -136,9 +136,13 @@ function getEventTitle(event: AgentEvent): string {
       return count ? `Generated ${count} image${count !== 1 ? "s" : ""}` : "Generated images";
     }
     if (event.toolName === "remove_background") {
-      return event.status === "running"
-        ? "Removing background"
-        : "Background removed";
+      const rbInput = event.input as any;
+      const rbOutput = event.output as any;
+      const rbCount = rbOutput?.images?.length || rbInput?.image_urls?.length || 0;
+      if (event.status === "running") {
+        return rbCount > 1 ? `Removing ${rbCount} backgrounds` : "Removing background";
+      }
+      return rbCount > 1 ? `Removed ${rbCount} backgrounds` : "Background removed";
     }
     if (event.toolName === "retrieve_option") {
       return event.status === "running"
@@ -279,53 +283,63 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
 
       {event.toolName === "remove_background" && !hasError && (
         <div>
-          {/* While running: show the source image */}
-          {event.status === "running" && (input?.image_url || output?.image_url) && (
-            <img
-              src={input?.image_url || output?.image_url}
-              alt="Original image"
-              className="w-full rounded object-cover"
-              loading="lazy"
-            />
+          {/* While running: show the source images */}
+          {event.status === "running" && input?.image_urls && Array.isArray(input.image_urls) && (
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {input.image_urls.map((url: string, index: number) => (
+                <div key={index} className="py-2">
+                  <img
+                    src={url}
+                    alt={`Original image ${index + 1}`}
+                    className="w-full rounded object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
           )}
-          {/* After complete: before/after side by side */}
-          {event.status !== "running" && output?.image_url && (
-            <div className="flex gap-2">
-              <div className="w-1/2">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Before</div>
-                <img
-                  src={output.image_url}
-                  alt="Original image"
-                  className="w-full rounded object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <div className="w-1/2">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">After</div>
-                {output?.result_url ? (
-                  <div className="relative">
-                    <div
-                      className="absolute inset-0 rounded"
-                      style={{
-                        backgroundImage:
-                          "linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)",
-                        backgroundSize: "10px 10px",
-                        backgroundPosition: "0 0, 0 5px, 5px -5px, -5px 0px",
-                      }}
-                    />
+          {/* After complete: before/after side by side for each image */}
+          {event.status !== "running" && output?.images && Array.isArray(output.images) && (
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {output.images.map((item: any, index: number) => (
+                <div key={`${item.image_url}-${index}`} className="flex gap-2 py-2">
+                  <div className="w-1/2">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Before</div>
                     <img
-                      src={output.result_url}
-                      alt="Background removed"
-                      className="relative w-full rounded"
+                      src={item.image_url}
+                      alt={`Original image ${index + 1}`}
+                      className="w-full rounded object-cover"
                       loading="lazy"
                     />
                   </div>
-                ) : (
-                  <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
-                    Failed
+                  <div className="w-1/2">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">After</div>
+                    {item.result_url ? (
+                      <div className="relative">
+                        <div
+                          className="absolute inset-0 rounded"
+                          style={{
+                            backgroundImage:
+                              "linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)",
+                            backgroundSize: "10px 10px",
+                            backgroundPosition: "0 0, 0 5px, 5px -5px, -5px 0px",
+                          }}
+                        />
+                        <img
+                          src={item.result_url}
+                          alt="Background removed"
+                          className="relative w-full rounded"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                        Failed
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

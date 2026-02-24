@@ -139,9 +139,17 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   },
   removeCommit: (hash: CommitHash) => {
     set((state) => {
+      const removedCommit = state.commits[hash];
       const newCommits = { ...state.commits };
       delete newCommits[hash];
-      return { commits: newCommits };
+
+      // If removing the latest commit, fall back to its parent
+      const newLatestCommitHash =
+        state.latestCommitHash === hash
+          ? (removedCommit?.parentHash ?? null)
+          : state.latestCommitHash;
+
+      return { commits: newCommits, latestCommitHash: newLatestCommitHash };
     });
   },
   resetCommits: () => set({ commits: {}, latestCommitHash: null }),
