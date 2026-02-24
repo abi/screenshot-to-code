@@ -136,7 +136,6 @@ function App() {
   const lastToolEventIdRef = useRef<Record<number, string>>({});
 
   const [isVersionsPanelOpen, setIsVersionsPanelOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [mobilePane, setMobilePane] = useState<"preview" | "chat">("preview");
   const showSelectAndEditFeature =
@@ -662,7 +661,10 @@ function App() {
         <IconStrip
           isProjectsOpen={isProjectsPanelOpen}
           isEditorOpen={
-            !isVersionsPanelOpen && !isProjectsPanelOpen && !isAccountPanelOpen
+            !isVersionsPanelOpen &&
+            !isProjectsPanelOpen &&
+            !isAccountPanelOpen &&
+            !isSettingsOpen
           }
           showVersions={isCodingOrReady}
           showProjects={IS_RUNNING_ON_CLOUD}
@@ -674,9 +676,7 @@ function App() {
             setIsVersionsPanelOpen((prev) => !prev);
           }}
           isVersionsOpen={isVersionsPanelOpen}
-          isEditorOpen={!isHistoryOpen && !isSettingsOpen}
           isSettingsOpen={isSettingsOpen}
-          showEditor={isCodingOrReady}
           onToggleProjects={() => {
             setIsVersionsPanelOpen(false);
             setAccountPanelOpen(false);
@@ -699,7 +699,6 @@ function App() {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
             setAccountPanelOpen(false);
-            setIsHistoryOpen(false);
             setIsSettingsOpen(false);
             setMobilePane("preview");
           }}
@@ -728,7 +727,6 @@ function App() {
           }
           onOpenSettings={() => {
             setIsSettingsOpen(true);
-            setIsHistoryOpen(false);
           }}
         />
       </div>
