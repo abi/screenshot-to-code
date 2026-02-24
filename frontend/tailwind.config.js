@@ -2,7 +2,7 @@
 import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
-  darkMode: "media",
+  darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
