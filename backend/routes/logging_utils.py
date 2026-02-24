@@ -9,6 +9,8 @@ from custom_types import InputMode
 from llm import Completion, Llm
 from prompts.prompt_types import Stack
 
+SaasOtherInfoValue = str | bool | int | float | None
+
 
 class PaymentMethod(Enum):
     LEGACY = "legacy"
@@ -29,11 +31,12 @@ async def send_to_saas_backend(
     stack: Stack,
     is_imported_from_code: bool,
     input_mode: InputMode,
-    other_info: dict[str, str | bool] = {},
+    other_info: dict[str, SaasOtherInfoValue] | None = None,
     video_data_url: str | None = None,
     video_generation_cost: float | None = None,
 ):
     if IS_PROD:
+        normalized_other_info = other_info or {}
         async with httpx.AsyncClient() as client:
             url = BACKEND_SAAS_URL + "/generations/store"
 
@@ -50,7 +53,7 @@ async def send_to_saas_backend(
                     "is_imported_from_code": is_imported_from_code,
                     "includes_result_image": False,  # Deprecated
                     "input_mode": input_mode,
-                    "other_info": other_info,
+                    "other_info": normalized_other_info,
                     "video_data_url": video_data_url,
                     "video_generation_cost": video_generation_cost,
                 }

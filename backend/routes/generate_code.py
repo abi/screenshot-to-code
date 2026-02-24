@@ -631,6 +631,9 @@ class AgenticGenerationStage:
     input_mode: InputMode
     generation_type: Literal["create", "update"]
     generation_group_id: str
+    edit_base_model: str | None
+    edit_base_variant_index: int | None
+    edit_base_generation_type: Literal["create", "update", "code_create"] | None
 
     def __init__(
         self,
@@ -652,6 +655,9 @@ class AgenticGenerationStage:
         input_mode: InputMode,
         generation_type: Literal["create", "update"],
         generation_group_id: str,
+        edit_base_model: str | None,
+        edit_base_variant_index: int | None,
+        edit_base_generation_type: Literal["create", "update", "code_create"] | None,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -668,6 +674,9 @@ class AgenticGenerationStage:
         self.input_mode = input_mode
         self.generation_type = generation_type
         self.generation_group_id = generation_group_id
+        self.edit_base_model = edit_base_model
+        self.edit_base_variant_index = edit_base_variant_index
+        self.edit_base_generation_type = edit_base_generation_type
 
 
     async def process_variants(
@@ -748,6 +757,17 @@ class AgenticGenerationStage:
                         and self.generation_type == "create"
                         else None
                     )
+                    other_info: dict[str, str | bool | int | float | None] = {
+                        "generation_type": self.generation_type
+                    }
+                    if self.generation_type == "update":
+                        other_info["edit_base_model"] = self.edit_base_model
+                        other_info["edit_base_variant_index"] = (
+                            self.edit_base_variant_index
+                        )
+                        other_info["edit_base_generation_type"] = (
+                            self.edit_base_generation_type
+                        )
                     await send_to_saas_backend(
                         user_id=self.user_id,
                         prompt_messages=prompt_messages,
@@ -759,7 +779,7 @@ class AgenticGenerationStage:
                         stack=self.stack,
                         is_imported_from_code=False,
                         input_mode=self.input_mode,
-                        other_info={"generation_type": self.generation_type},
+                        other_info=other_info,
                         video_data_url=video_data_url,
                         video_generation_cost=None,
                     )
@@ -974,6 +994,9 @@ class CodeGenerationMiddleware(Middleware):
                 input_mode=context.extracted_params.input_mode,
                 generation_type=context.extracted_params.generation_type,
                 generation_group_id=context.generation_group_id,
+                edit_base_model=context.extracted_params.edit_base_model,
+                edit_base_variant_index=context.extracted_params.edit_base_variant_index,
+                edit_base_generation_type=context.extracted_params.edit_base_generation_type,
             )
 
             context.variant_completions = await generation_stage.process_variants(
