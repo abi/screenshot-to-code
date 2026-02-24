@@ -157,6 +157,18 @@ function App() {
     }
   }, [settings.generatedCodeConfig, setSettings]);
 
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+    setIsVersionsPanelOpen(false);
+    setProjectsPanelOpen(false);
+    setAccountPanelOpen(false);
+  }, [
+    isSettingsOpen,
+    setProjectsPanelOpen,
+    setAccountPanelOpen,
+    setIsVersionsPanelOpen,
+  ]);
+
   const getAssetsById = () => useProjectStore.getState().assetsById;
 
   // Functions
@@ -177,6 +189,7 @@ function App() {
     setIsVersionsPanelOpen(false);
     setProjectsPanelOpen(false);
     setAccountPanelOpen(false);
+    setIsSettingsOpen(false);
   };
 
   const regenerate = () => {
@@ -673,6 +686,7 @@ function App() {
           onToggleVersions={() => {
             setProjectsPanelOpen(false);
             setAccountPanelOpen(false);
+            setIsSettingsOpen(false);
             setIsVersionsPanelOpen((prev) => !prev);
           }}
           isVersionsOpen={isVersionsPanelOpen}
@@ -680,12 +694,14 @@ function App() {
           onToggleProjects={() => {
             setIsVersionsPanelOpen(false);
             setAccountPanelOpen(false);
+            setIsSettingsOpen(false);
             setProjectsPanelOpen(!isProjectsPanelOpen);
             setMobilePane("preview");
           }}
           onToggleAccount={() => {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
+            setIsSettingsOpen(false);
             setAccountPanelOpen(!isAccountPanelOpen);
             setMobilePane("preview");
           }}
@@ -693,6 +709,7 @@ function App() {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
             setAccountPanelOpen(false);
+            setIsSettingsOpen(false);
             setMobilePane("preview");
           }}
           onLogoClick={() => {
@@ -707,6 +724,7 @@ function App() {
             setIsVersionsPanelOpen(false);
             setProjectsPanelOpen(false);
             setAccountPanelOpen(false);
+            setIsSettingsOpen(false);
             setMobilePane("preview");
           }}
           onOpenFeedback={
@@ -726,7 +744,11 @@ function App() {
               : undefined
           }
           onOpenSettings={() => {
-            setIsSettingsOpen(true);
+            setIsVersionsPanelOpen(false);
+            setProjectsPanelOpen(false);
+            setAccountPanelOpen(false);
+            setIsSettingsOpen((prev) => !prev);
+            setMobilePane("preview");
           }}
         />
       </div>
@@ -734,11 +756,12 @@ function App() {
       {isCodingOrReady && !isSettingsOpen && (
         <div className="border-b border-gray-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
           <div className="grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-zinc-800">
-            <button
-              onClick={() => {
-                setIsVersionsPanelOpen(false);
-                setMobilePane("preview");
-              }}
+              <button
+                onClick={() => {
+                  setIsVersionsPanelOpen(false);
+                  setIsSettingsOpen(false);
+                  setMobilePane("preview");
+                }}
               className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 mobilePane === "preview"
                   ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-700 dark:text-white"
@@ -827,6 +850,7 @@ function App() {
         {appState === AppState.INITIAL &&
           !isProjectsPanelOpen &&
           !isAccountPanelOpen &&
+          !isSettingsOpen &&
           (IS_RUNNING_ON_CLOUD &&
           !settings.openAiApiKey &&
           subscriberTier === "free" ? (
@@ -839,6 +863,7 @@ function App() {
               onOpenProjects={() => {
                 setIsVersionsPanelOpen(false);
                 setAccountPanelOpen(false);
+                setIsSettingsOpen(false);
                 setProjectsPanelOpen(true);
                 setMobilePane("preview");
               }}
@@ -857,11 +882,15 @@ function App() {
           <SettingsTab settings={settings} setSettings={setSettings} />
         )}
 
-        {isCodingOrReady && !isProjectsPanelOpen && !isAccountPanelOpen && (
+        {isCodingOrReady &&
+          !isProjectsPanelOpen &&
+          !isAccountPanelOpen &&
+          !isSettingsOpen && (
           <PreviewPane
             settings={settings}
             onOpenVersions={() => {
               setProjectsPanelOpen(false);
+              setIsSettingsOpen(false);
               setIsVersionsPanelOpen(true);
               setMobilePane("chat");
             }}
