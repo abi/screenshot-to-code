@@ -69,7 +69,7 @@ function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
 }
 
 function Variants() {
-  const { head, commits, updateSelectedVariantIndex } = useProjectStore();
+  const { head, commits, updateSelectedVariantIndex, showVariantModels } = useProjectStore();
 
   const commit = head ? commits[head] : null;
   const variants = commit?.variants || [];
@@ -127,7 +127,7 @@ function Variants() {
                   ? "ring-2 ring-blue-400 dark:ring-blue-500"
                   : "ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600"
               }`}
-              title={variant.model ? (CODE_GENERATION_MODEL_DESCRIPTIONS[variant.model as CodeGenerationModel]?.name || variant.model) : undefined}
+              title={showVariantModels && variant.model ? (CODE_GENERATION_MODEL_DESCRIPTIONS[variant.model as CodeGenerationModel]?.name || variant.model) : undefined}
               onClick={() => handleVariantClick(index)}
             >
               <VariantThumbnail
