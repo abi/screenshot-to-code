@@ -42,7 +42,7 @@ def _convert_message_to_responses_input(
                     {
                         "type": "input_image",
                         "image_url": image_url.get("url", ""),
-                        "detail": image_url.get("detail", "auto"),
+                        "detail": image_url.get("detail", "high"),
                     }
                 )
 

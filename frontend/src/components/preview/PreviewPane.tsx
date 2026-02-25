@@ -85,8 +85,9 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
               <TabsTrigger value="mobile" title="Mobile" data-testid="tab-mobile">
                 <FaMobile />
               </TabsTrigger>
-              <TabsTrigger value="code" title="Code" data-testid="tab-code">
+              <TabsTrigger value="code" title="Code" data-testid="tab-code" className="gap-2">
                 <FaCode />
+                Code
               </TabsTrigger>
             </TabsList>
             {(activeTab === "desktop" || activeTab === "mobile") && (

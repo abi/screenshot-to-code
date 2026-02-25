@@ -66,7 +66,7 @@ class TestModelSelectionAllKeys:
         assert models == expected
 
     @pytest.mark.asyncio
-    async def test_video_create_prefers_gemini_minimal_then_31_pro_high(self):
+    async def test_video_create_prefers_gemini_minimal_then_3_1_high(self):
         """Video create always uses two Gemini variants in fixed order."""
         models = await self.model_selector.select_models(
             generation_type="create",
@@ -83,7 +83,7 @@ class TestModelSelectionAllKeys:
         assert models == expected
 
     @pytest.mark.asyncio
-    async def test_video_update_prefers_gemini_minimal_then_31_pro_high(self):
+    async def test_video_update_prefers_gemini_minimal_then_3_1_high(self):
         """Video update always uses the same two Gemini variants as video create."""
         models = await self.model_selector.select_models(
             generation_type="update",

@@ -87,7 +87,17 @@ function Sidebar({
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  const { appState, updateInstruction, setUpdateInstruction, updateImages, setUpdateImages, inSelectAndEditMode, toggleInSelectAndEditMode, selectedElement, setSelectedElement } = useAppStore();
+  const {
+    appState,
+    updateInstruction,
+    setUpdateInstruction,
+    updateImages,
+    setUpdateImages,
+    inSelectAndEditMode,
+    toggleInSelectAndEditMode,
+    selectedElement,
+    setSelectedElement,
+  } = useAppStore();
 
   // Helper function to convert file to data URL
   const fileToDataURL = (file: File): Promise<string> => {

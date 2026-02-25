@@ -18,7 +18,7 @@ Supported AI models:
 
 - Gemini 3 Flash and Pro - Best models! (Google)
 - Claude Opus 4.5 - Best model! (Anthropic)
-- GPT-5.2, GPT-4.1 (OpenAI)
+- GPT-5.3, GPT-5.2, GPT-4.1 (OpenAI)
 - Other models are available as well but we recommend using the above models.
 - DALL-E 3 or Flux Schnell (using Replicate) for image generation
 
@@ -55,7 +55,8 @@ echo "OPENAI_API_KEY=sk-your-key" > .env
 echo "ANTHROPIC_API_KEY=your-key" >> .env
 echo "GEMINI_API_KEY=your-key" >> .env
 poetry install
-poetry shell
+poetry env activate
+# run the printed command, e.g. source /path/to/venv/bin/activate
 poetry run uvicorn main:app --reload --port 7001
 ```
 
@@ -110,4 +111,3 @@ https://github.com/user-attachments/assets/a335a105-f9cc-40e6-ac6b-64e5390bfc21
 
 
 https://github.com/user-attachments/assets/205cb5c7-9c3c-438d-acd4-26dfe6e077e5
-

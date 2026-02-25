@@ -1,22 +1,24 @@
 import React from "react";
-import { EditorTheme, Settings } from "../../types";
-import { Switch } from "../ui/switch";
-import { Input } from "../ui/input";
+import { AppTheme, EditorTheme, Settings } from "../../types";
+import { capitalize } from "../../lib/utils";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
 } from "../ui/select";
-import { capitalize } from "../../lib/utils";
+import { Input } from "../ui/input";
+import { Switch } from "../ui/switch";
 import { IS_RUNNING_ON_CLOUD } from "../../config";
 
 interface Props {
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+  appTheme: AppTheme;
+  setAppTheme: React.Dispatch<React.SetStateAction<AppTheme>>;
 }
 
-function SettingsTab({ settings, setSettings }: Props) {
+function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
   const handleThemeChange = (theme: EditorTheme) => {
     setSettings((s) => ({
       ...s,
@@ -44,18 +46,28 @@ function SettingsTab({ settings, setSettings }: Props) {
             </div>
             <div className="divide-y divide-gray-100 dark:divide-zinc-700">
               <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm text-gray-700 dark:text-zinc-300">
-                  App Theme
-                </span>
-                <button
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-700/50"
-                  onClick={() => {
-                    document.documentElement.classList.toggle("dark");
-                    document.body.classList.toggle("dark");
-                  }}
+                <div>
+                  <span className="text-sm text-gray-700 dark:text-zinc-300">
+                    App Theme
+                  </span>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
+                    System default, with optional light/dark override
+                  </p>
+                </div>
+                <Select
+                  name="app-theme"
+                  value={appTheme}
+                  onValueChange={(value) => setAppTheme(value as AppTheme)}
                 >
-                  Toggle dark mode
-                </button>
+                  <SelectTrigger className="w-[140px]">
+                    {capitalize(appTheme)}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={AppTheme.SYSTEM}>System</SelectItem>
+                    <SelectItem value={AppTheme.LIGHT}>Light</SelectItem>
+                    <SelectItem value={AppTheme.DARK}>Dark</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-center justify-between px-4 py-3">
                 <div>

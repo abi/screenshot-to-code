@@ -6,6 +6,12 @@ export enum EditorTheme {
   COBALT = "cobalt",
 }
 
+export enum AppTheme {
+  SYSTEM = "system",
+  LIGHT = "light",
+  DARK = "dark",
+}
+
 export interface Settings {
   openAiApiKey: string | null;
   openAiBaseURL: string | null;

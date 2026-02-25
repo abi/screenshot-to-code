@@ -242,7 +242,7 @@ class AnthropicProviderSession(ProviderSession):
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
         stream_kwargs: Dict[str, Any] = {
             "model": self._model.value,
-            "max_tokens": 30000,
+            "max_tokens": 50000,
             "system": self._system_prompt,
             "messages": self._messages,
             "tools": self._tools,

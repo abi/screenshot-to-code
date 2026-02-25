@@ -12,6 +12,10 @@ class Llm(Enum):
     GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)"
     GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)"
     GPT_5_2_CODEX_XHIGH = "gpt-5.2-codex (xhigh thinking)"
+    GPT_5_3_CODEX_LOW = "gpt-5.3-codex (low thinking)"
+    GPT_5_3_CODEX_MEDIUM = "gpt-5.3-codex (medium thinking)"
+    GPT_5_3_CODEX_HIGH = "gpt-5.3-codex (high thinking)"
+    GPT_5_3_CODEX_XHIGH = "gpt-5.3-codex (xhigh thinking)"
     # Claude
     CLAUDE_SONNET_4_6 = "claude-sonnet-4-6"
     CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
@@ -43,6 +47,10 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GPT_5_2_CODEX_MEDIUM: "openai",
     Llm.GPT_5_2_CODEX_HIGH: "openai",
     Llm.GPT_5_2_CODEX_XHIGH: "openai",
+    Llm.GPT_5_3_CODEX_LOW: "openai",
+    Llm.GPT_5_3_CODEX_MEDIUM: "openai",
+    Llm.GPT_5_3_CODEX_HIGH: "openai",
+    Llm.GPT_5_3_CODEX_XHIGH: "openai",
     # Anthropic models
     Llm.CLAUDE_SONNET_4_6: "anthropic",
     Llm.CLAUDE_4_5_SONNET_2025_09_29: "anthropic",
@@ -69,6 +77,10 @@ OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
     Llm.GPT_5_2_CODEX_MEDIUM: {"api_name": "gpt-5.2-codex", "reasoning_effort": "medium"},
     Llm.GPT_5_2_CODEX_HIGH: {"api_name": "gpt-5.2-codex", "reasoning_effort": "high"},
     Llm.GPT_5_2_CODEX_XHIGH: {"api_name": "gpt-5.2-codex", "reasoning_effort": "xhigh"},
+    Llm.GPT_5_3_CODEX_LOW: {"api_name": "gpt-5.3-codex", "reasoning_effort": "low"},
+    Llm.GPT_5_3_CODEX_MEDIUM: {"api_name": "gpt-5.3-codex", "reasoning_effort": "medium"},
+    Llm.GPT_5_3_CODEX_HIGH: {"api_name": "gpt-5.3-codex", "reasoning_effort": "high"},
+    Llm.GPT_5_3_CODEX_XHIGH: {"api_name": "gpt-5.3-codex", "reasoning_effort": "xhigh"},
 }
 
 
