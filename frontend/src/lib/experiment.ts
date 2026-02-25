@@ -3,11 +3,20 @@ const FREE_TRIAL_STORAGE_KEY = "freeTrialGenerationsUsed";
 
 export type ExperimentGroup = "control" | "delayed_paywall";
 
+// Force specific users into the delayed_paywall group for testing.
+const DELAYED_PAYWALL_OVERRIDE_EMAILS: string[] = [
+  "abimanyuraja@gmail.com",
+];
+
 /**
  * Deterministically assign a user to an experiment group based on their user ID.
  * Uses a simple hash to split users ~50/50.
  */
 export function getExperimentGroup(userId: string): ExperimentGroup {
+  if (DELAYED_PAYWALL_OVERRIDE_EMAILS.includes(userId.toLowerCase())) {
+    return "delayed_paywall";
+  }
+
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     const char = userId.charCodeAt(i);
