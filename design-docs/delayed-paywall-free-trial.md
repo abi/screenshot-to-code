@@ -23,7 +23,10 @@ seeing the paywall, instead of seeing it immediately on sign-up.
    server-side by the SaaS backend.
 4. The main backend validates the server-side count before each free trial
    generation to prevent abuse.
-5. Once the limit is reached, the user sees the paywall.
+5. Once the limit is reached, the backend returns a subscribe-related error.
+   The frontend detects "subscribe" in the error message and opens the
+   `PricingDialog` (with plans and Stripe checkout) instead of showing a
+   plain error toast.
 
 ## Files changed
 
@@ -34,10 +37,11 @@ seeing the paywall, instead of seeing it immediately on sign-up.
 | `frontend/src/lib/experiment.ts` | **New file.** Experiment group assignment (hash-based 50/50), email overrides, `FREE_TRIAL_GENERATION_LIMIT` constant. |
 | `frontend/src/store/store.ts` | Added `experimentGroup`, `freeTrialUsed`, `freeTrialLimit`, `setFreeTrialUsage`, `setExperimentGroup` to Zustand store. |
 | `frontend/src/components/hosted/AppContainer.tsx` | Calls `getExperimentGroup()` on user init. Fetches `/credits/free_trial_usage` for delayed paywall users and stores result. |
-| `frontend/src/App.tsx` | Paywall gating: skips `OnboardingPaywall` when user is in delayed paywall group with remaining generations. Passes `isFreeTrial: true` to backend. Optimistically increments usage after generation. Passes `freeTrialInfo` to `StartPane` and `Sidebar`. |
+| `frontend/src/App.tsx` | Paywall gating: skips `OnboardingPaywall` when user is in delayed paywall group with remaining generations. Passes `isFreeTrial: true` to backend. Refreshes free trial usage after generation. Passes `freeTrialInfo` to `StartPane` and `Sidebar`. Removed `FeedbackBanner` (Claim button) from top of app to reduce noise during experiment. |
 | `frontend/src/components/start-pane/StartPane.tsx` | Accepts `freeTrialInfo` prop, renders `FreeTrialBanner`. |
 | `frontend/src/components/sidebar/Sidebar.tsx` | Accepts `freeTrialInfo` prop, renders `FreeTrialBanner` during coding. |
 | `frontend/src/components/hosted/FreeTrialBanner.tsx` | **New file.** Shared banner component with progress bar and Upgrade link. |
+| `frontend/src/generateCode.ts` | Subscribe-related errors now open `PricingDialog` instead of showing an error toast. |
 | `frontend/src/types.ts` | Added `isFreeTrial?: boolean` to generation request type. |
 
 ### Backend (`screenshot-to-code`)
@@ -65,6 +69,8 @@ ed4a531 Show free trial generation count in sidebar during coding
 d06e47a Add email override for delayed paywall testing
 e2407c5 Improve free trial banner with progress bar and upgrade link
 35aa4c1 Track free trial generations server-side via SaaS backend
+(pending) Show PricingDialog instead of error toast on subscribe errors
+(pending) Remove feedback banner with Claim button from top of app
 ```
 
 ### `screenshot-to-code-saas`

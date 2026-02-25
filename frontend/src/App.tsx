@@ -9,7 +9,7 @@ import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import { addEvent } from "./lib/analytics";
 import { useAuth } from "@clerk/clerk-react";
-import { useStore } from "./store/store";
+import { useStore, refreshFreeTrialUsage } from "./store/store";
 import toast from "react-hot-toast";
 import { nanoid } from "nanoid";
 import { Stack } from "./lib/stacks";
@@ -38,7 +38,6 @@ import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
 import AccountView from "./components/hosted/AccountView";
-import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
 import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
@@ -58,7 +57,7 @@ function App() {
   const experimentGroup = useStore((state) => state.experimentGroup);
   const freeTrialUsed = useStore((state) => state.freeTrialUsed);
   const freeTrialLimit = useStore((state) => state.freeTrialLimit);
-  const setFreeTrialUsage = useStore((state) => state.setFreeTrialUsage);
+
 
   const freeTrialRemaining = freeTrialLimit > 0 && freeTrialUsed < freeTrialLimit;
 
@@ -108,8 +107,7 @@ function App() {
     setSelectedElement,
   } = useAppStore();
 
-  const { shouldShowBanner, incrementGenerations, dismissBanner } =
-    useFeedbackState();
+  const { incrementGenerations } = useFeedbackState();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isIntercomOpenRef = useRef(false);
@@ -472,13 +470,12 @@ function App() {
         setAppState(AppState.CODE_READY);
         incrementGenerations();
 
-        // Track free trial generations for delayed paywall experiment
+        // Refresh free trial count from server for delayed paywall experiment
         if (
           subscriberTier === "free" &&
           experimentGroup === "delayed_paywall"
         ) {
-          // Optimistically increment the local count
-          setFreeTrialUsage(freeTrialUsed + 1, freeTrialLimit);
+          refreshFreeTrialUsage(getToken);
         }
       },
     });
@@ -695,18 +692,6 @@ function App() {
           open={false}
           onOpenChange={handleTermDialogOpenChange}
         />
-      )}
-
-      {SHOW_FEEDBACK_CALL_UI && shouldShowBanner && (
-        <div className="px-4 mb-2">
-          <FeedbackBanner
-            onDismiss={dismissBanner}
-            onOpen={() => setIsFeedbackOpen(true)}
-            rewardAmount={
-              subscriberTier && subscriberTier !== "free" ? 200 : 50
-            }
-          />
-        </div>
       )}
 
       {/* Icon strip - always visible */}
