@@ -4,6 +4,7 @@ import {
   APP_ERROR_WEB_SOCKET_CODE,
   USER_CLOSE_WEB_SOCKET_CODE,
 } from "./constants";
+import { useStore } from "./store/store";
 import { FullGenerationSettings } from "./types";
 
 const ERROR_MESSAGE =
@@ -92,7 +93,13 @@ export function generateCode(
       callbacks.onToolResult(response.data, response.variantIndex, response.eventId);
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
-      toast.error(response.value || ERROR_MESSAGE);
+      const msg = response.value || "";
+      if (msg.includes("subscribe")) {
+        // Open pricing dialog instead of showing a generic error toast
+        useStore.getState().setPricingDialogOpen(true);
+      } else {
+        toast.error(response.value || ERROR_MESSAGE);
+      }
     }
   });
 
