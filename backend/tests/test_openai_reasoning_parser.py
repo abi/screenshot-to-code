@@ -1,6 +1,10 @@
 import pytest
 
-from agent.providers.openai import OpenAIResponsesParseState, parse_event
+from agent.providers.openai import (
+    OpenAIResponsesParseState,
+    _convert_message_to_responses_input,
+    parse_event,
+)
 from agent.providers.types import StreamEvent
 
 
@@ -57,3 +61,30 @@ async def test_reasoning_summary_part_added_and_done_emits_once() -> None:
 
     thinking_text = [event.text for event in events if event.type == "thinking_delta"]
     assert thinking_text == ["Refining layout and assets."]
+
+
+def test_convert_image_url_defaults_to_high_detail() -> None:
+    message = {
+        "role": "user",
+        "content": [
+            {"type": "image_url", "image_url": {"url": "data:image/png;base64,abc"}},
+        ],
+    }
+    result = _convert_message_to_responses_input(message)  # type: ignore
+    image_part = result["content"][0]
+    assert image_part["detail"] == "high"
+
+
+def test_convert_image_url_preserves_explicit_detail() -> None:
+    message = {
+        "role": "user",
+        "content": [
+            {
+                "type": "image_url",
+                "image_url": {"url": "data:image/png;base64,abc", "detail": "low"},
+            },
+        ],
+    }
+    result = _convert_message_to_responses_input(message)  # type: ignore
+    image_part = result["content"][0]
+    assert image_part["detail"] == "low"
