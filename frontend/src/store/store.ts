@@ -13,6 +13,9 @@ interface Store {
   setSubscriberTier: (tier: string) => void;
   experimentGroup: ExperimentGroup | null;
   setExperimentGroup: (group: ExperimentGroup) => void;
+  freeTrialUsed: number;
+  freeTrialLimit: number;
+  setFreeTrialUsage: (used: number, limit: number) => void;
 }
 
 export const useStore = create<Store>((set) => ({
@@ -30,4 +33,8 @@ export const useStore = create<Store>((set) => ({
   experimentGroup: null,
   setExperimentGroup: (group: ExperimentGroup) =>
     set(() => ({ experimentGroup: group })),
+  freeTrialUsed: 0,
+  freeTrialLimit: 0,
+  setFreeTrialUsage: (used: number, limit: number) =>
+    set(() => ({ freeTrialUsed: used, freeTrialLimit: limit })),
 }));

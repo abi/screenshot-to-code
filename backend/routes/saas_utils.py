@@ -12,6 +12,11 @@ class SubscriptionCreditsResponse(BaseModel):
     status: str
 
 
+class FreeTrialUsageResponse(BaseModel):
+    used: int
+    limit: int
+
+
 class SubscriptionCreditsCheckError(Exception):
     # Raised when subscription verification cannot be completed reliably.
     # We surface this as a user-safe message instead of leaking transport details.
@@ -58,3 +63,22 @@ async def does_user_have_subscription_credits(
     raise SubscriptionCreditsCheckError(
         "Unable to verify subscription status right now. Please try again."
     )
+
+
+async def get_free_trial_usage(
+    auth_token: str,
+) -> FreeTrialUsageResponse:
+    url = BACKEND_SAAS_URL + "/credits/free_trial_usage"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {auth_token}",
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(url, headers=headers, timeout=60)
+            response.raise_for_status()
+            return FreeTrialUsageResponse.model_validate(response.json())
+        except Exception:
+            # If we can't check, deny the free trial to be safe
+            return FreeTrialUsageResponse(used=0, limit=0)

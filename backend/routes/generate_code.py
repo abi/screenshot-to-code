@@ -43,6 +43,7 @@ from routes.logging_utils import PaymentMethod, send_to_saas_backend
 from routes.saas_utils import (
     SubscriptionCreditsCheckError,
     does_user_have_subscription_credits,
+    get_free_trial_usage,
 )
 from utils import print_prompt_preview
 
@@ -332,11 +333,21 @@ class ParameterExtractionStage:
             # Delayed paywall A/B test: allow free trial generations
             is_free_trial = bool(params.get("isFreeTrial", False))
             if is_free_trial and res.status == "not_subscriber":
-                payment_method = PaymentMethod.FREE_TRIAL
-                openai_api_key = PLATFORM_OPENAI_API_KEY
-                anthropic_api_key = PLATFORM_ANTHROPIC_API_KEY
-                gemini_api_key = PLATFORM_GEMINI_API_KEY
-                print("Free trial - using platform API key")
+                # Validate server-side that the user has free trial generations left
+                free_trial_usage = await get_free_trial_usage(auth_token)
+                if free_trial_usage.used < free_trial_usage.limit:
+                    payment_method = PaymentMethod.FREE_TRIAL
+                    openai_api_key = PLATFORM_OPENAI_API_KEY
+                    anthropic_api_key = PLATFORM_ANTHROPIC_API_KEY
+                    gemini_api_key = PLATFORM_GEMINI_API_KEY
+                    print(
+                        f"Free trial - using platform API key ({free_trial_usage.used}/{free_trial_usage.limit} used)"
+                    )
+                else:
+                    await self.throw_error(
+                        "Your free trial has ended. Please subscribe to continue generating code."
+                    )
+                    raise ValueError("Free trial limit reached")
             else:
                 openai_api_key = self._get_from_settings_dialog_or_env(
                     params, "openAiApiKey", None

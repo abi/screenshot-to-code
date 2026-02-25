@@ -43,13 +43,6 @@ import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 import { useGenerationFeedback } from "./hooks/useGenerationFeedback";
-import {
-  hasRemainingFreeTrialGenerations,
-  incrementFreeTrialGenerations,
-  getFreeTrialGenerationsUsed,
-  FREE_TRIAL_GENERATION_LIMIT,
-} from "./lib/experiment";
-
 // Temporary kill switch for feedback call UI.
 const SHOW_FEEDBACK_CALL_UI = true;
 
@@ -63,11 +56,11 @@ function App() {
   const isAccountPanelOpen = useStore((state) => state.isAccountPanelOpen);
   const setAccountPanelOpen = useStore((state) => state.setAccountPanelOpen);
   const experimentGroup = useStore((state) => state.experimentGroup);
+  const freeTrialUsed = useStore((state) => state.freeTrialUsed);
+  const freeTrialLimit = useStore((state) => state.freeTrialLimit);
+  const setFreeTrialUsage = useStore((state) => state.setFreeTrialUsage);
 
-  // Track free trial generation allowance for re-rendering
-  const [freeTrialRemaining, setFreeTrialRemaining] = useState(
-    hasRemainingFreeTrialGenerations(),
-  );
+  const freeTrialRemaining = freeTrialLimit > 0 && freeTrialUsed < freeTrialLimit;
 
   const {
     // Inputs
@@ -276,7 +269,7 @@ function App() {
     const isFreeTrial =
       subscriberTier === "free" &&
       experimentGroup === "delayed_paywall" &&
-      hasRemainingFreeTrialGenerations();
+      freeTrialRemaining;
     const updatedParams = {
       ...requestParams,
       ...settings,
@@ -484,8 +477,8 @@ function App() {
           subscriberTier === "free" &&
           experimentGroup === "delayed_paywall"
         ) {
-          incrementFreeTrialGenerations();
-          setFreeTrialRemaining(hasRemainingFreeTrialGenerations());
+          // Optimistically increment the local count
+          setFreeTrialUsage(freeTrialUsed + 1, freeTrialLimit);
         }
       },
     });
@@ -873,10 +866,11 @@ function App() {
                   }}
                   freeTrialInfo={
                     subscriberTier === "free" &&
-                    experimentGroup === "delayed_paywall"
+                    experimentGroup === "delayed_paywall" &&
+                    freeTrialLimit > 0
                       ? {
-                          used: getFreeTrialGenerationsUsed(),
-                          limit: FREE_TRIAL_GENERATION_LIMIT,
+                          used: freeTrialUsed,
+                          limit: freeTrialLimit,
                         }
                       : undefined
                   }
@@ -932,10 +926,10 @@ function App() {
               freeTrialInfo={
                 subscriberTier === "free" &&
                 experimentGroup === "delayed_paywall" &&
-                freeTrialRemaining
+                freeTrialLimit > 0
                   ? {
-                      used: getFreeTrialGenerationsUsed(),
-                      limit: FREE_TRIAL_GENERATION_LIMIT,
+                      used: freeTrialUsed,
+                      limit: freeTrialLimit,
                     }
                   : undefined
               }
