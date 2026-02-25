@@ -975,7 +975,12 @@ function App() {
         {isAccountPanelOpen && <AccountView />}
 
         {isSettingsOpen && (
-          <SettingsTab settings={settings} setSettings={setSettings} />
+          <SettingsTab
+            settings={settings}
+            setSettings={setSettings}
+            appTheme={appTheme}
+            setAppTheme={setAppTheme}
+          />
         )}
 
         {isCodingOrReady &&
