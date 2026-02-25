@@ -329,24 +329,33 @@ class ParameterExtractionStage:
         print("Payment method: ", payment_method)
 
         if payment_method is PaymentMethod.UNKNOWN:
-            openai_api_key = self._get_from_settings_dialog_or_env(
-                params, "openAiApiKey", None
-            )
-
-            if not openai_api_key:
-                await self.throw_error(
-                    "Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
-                )
+            # Delayed paywall A/B test: allow free trial generations
+            is_free_trial = bool(params.get("isFreeTrial", False))
+            if is_free_trial and res.status == "not_subscriber":
+                payment_method = PaymentMethod.FREE_TRIAL
+                openai_api_key = PLATFORM_OPENAI_API_KEY
+                anthropic_api_key = PLATFORM_ANTHROPIC_API_KEY
+                gemini_api_key = PLATFORM_GEMINI_API_KEY
+                print("Free trial - using platform API key")
             else:
-                sentry_sdk.capture_exception(
-                    Exception("OpenAI key is no longer supported")
-                )
-                await self.throw_error(
-                    "Using your own OpenAI key is no longer supported due to the costs of running this website. Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
+                openai_api_key = self._get_from_settings_dialog_or_env(
+                    params, "openAiApiKey", None
                 )
 
-            if res.status != "not_subscriber":
-                raise Exception("No payment method found")
+                if not openai_api_key:
+                    await self.throw_error(
+                        "Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
+                    )
+                else:
+                    sentry_sdk.capture_exception(
+                        Exception("OpenAI key is no longer supported")
+                    )
+                    await self.throw_error(
+                        "Using your own OpenAI key is no longer supported due to the costs of running this website. Please subscribe to a paid plan to generate code. If you are a subscriber and seeing this error, please contact support."
+                    )
+
+                if res.status != "not_subscriber":
+                    raise Exception("No payment method found")
 
         # Base URL for OpenAI API
         openai_base_url: str | None = None

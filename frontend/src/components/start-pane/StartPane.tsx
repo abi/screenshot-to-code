@@ -16,6 +16,7 @@ interface Props {
   onOpenProjects: () => void;
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+  freeTrialInfo?: { used: number; limit: number };
 }
 
 const StartPane: React.FC<Props> = ({
@@ -25,9 +26,16 @@ const StartPane: React.FC<Props> = ({
   onOpenProjects,
   settings,
   setSettings,
+  freeTrialInfo,
 }) => {
   return (
     <div className="flex flex-col justify-center items-center py-8">
+      {freeTrialInfo && (
+        <div className="mb-4 rounded-lg bg-blue-50 px-4 py-2 text-sm text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+          Free trial: {freeTrialInfo.limit - freeTrialInfo.used} of{" "}
+          {freeTrialInfo.limit} generations remaining
+        </div>
+      )}
       <UnifiedInputPane
         doCreate={doCreate}
         doCreateFromText={doCreateFromText}

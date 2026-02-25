@@ -16,11 +16,13 @@ import {
 import LogRocket from "logrocket";
 import LandingPage from "./LandingPage";
 import Intercom from "@intercom/messenger-js-sdk";
+import { getExperimentGroup } from "../../lib/experiment";
 
 function AppContainer() {
   const { isSignedIn, isLoaded } = useUser();
 
   const setSubscriberTier = useStore((state) => state.setSubscriberTier);
+  const setExperimentGroup = useStore((state) => state.setExperimentGroup);
 
   // For fetching user
   const authenticatedFetch = useAuthenticatedFetch();
@@ -44,6 +46,10 @@ function AppContainer() {
         isInitRequestInProgress.current = false;
         return;
       }
+
+      // Assign A/B test group for delayed paywall experiment
+      const group = getExperimentGroup(user.email);
+      setExperimentGroup(group);
 
       if (!user.subscriber_tier) {
         setSubscriberTier("free");

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { ExperimentGroup } from "../lib/experiment";
 
 // Store for non-open source (hosted) features
 interface Store {
@@ -10,6 +11,8 @@ interface Store {
   setAccountPanelOpen: (isOpen: boolean) => void;
   subscriberTier: string;
   setSubscriberTier: (tier: string) => void;
+  experimentGroup: ExperimentGroup | null;
+  setExperimentGroup: (group: ExperimentGroup) => void;
 }
 
 export const useStore = create<Store>((set) => ({
@@ -24,4 +27,7 @@ export const useStore = create<Store>((set) => ({
     set(() => ({ isAccountPanelOpen: isOpen })),
   subscriberTier: "",
   setSubscriberTier: (tier: string) => set(() => ({ subscriberTier: tier })),
+  experimentGroup: null,
+  setExperimentGroup: (group: ExperimentGroup) =>
+    set(() => ({ experimentGroup: group })),
 }));

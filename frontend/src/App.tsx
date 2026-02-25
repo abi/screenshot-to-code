@@ -43,6 +43,12 @@ import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 import { useGenerationFeedback } from "./hooks/useGenerationFeedback";
+import {
+  hasRemainingFreeTrialGenerations,
+  incrementFreeTrialGenerations,
+  getFreeTrialGenerationsUsed,
+  FREE_TRIAL_GENERATION_LIMIT,
+} from "./lib/experiment";
 
 // Temporary kill switch for feedback call UI.
 const SHOW_FEEDBACK_CALL_UI = true;
@@ -56,6 +62,12 @@ function App() {
   const setProjectsPanelOpen = useStore((state) => state.setProjectsPanelOpen);
   const isAccountPanelOpen = useStore((state) => state.isAccountPanelOpen);
   const setAccountPanelOpen = useStore((state) => state.setAccountPanelOpen);
+  const experimentGroup = useStore((state) => state.experimentGroup);
+
+  // Track free trial generation allowance for re-rendering
+  const [freeTrialRemaining, setFreeTrialRemaining] = useState(
+    hasRemainingFreeTrialGenerations(),
+  );
 
   const {
     // Inputs
@@ -261,10 +273,15 @@ function App() {
 
     // Merge settings with params
     const authToken = await getToken();
+    const isFreeTrial =
+      subscriberTier === "free" &&
+      experimentGroup === "delayed_paywall" &&
+      hasRemainingFreeTrialGenerations();
     const updatedParams = {
       ...requestParams,
       ...settings,
       authToken: authToken || undefined,
+      ...(isFreeTrial ? { isFreeTrial: true } : {}),
     };
 
     // Use 4 variants for create, 2 for edits to match backend counts
@@ -461,6 +478,15 @@ function App() {
         });
         setAppState(AppState.CODE_READY);
         incrementGenerations();
+
+        // Track free trial generations for delayed paywall experiment
+        if (
+          subscriberTier === "free" &&
+          experimentGroup === "delayed_paywall"
+        ) {
+          incrementFreeTrialGenerations();
+          setFreeTrialRemaining(hasRemainingFreeTrialGenerations());
+        }
       },
     });
   }
@@ -875,7 +901,10 @@ function App() {
           !isSettingsOpen &&
           (IS_RUNNING_ON_CLOUD &&
           !settings.openAiApiKey &&
-          subscriberTier === "free" ? (
+          subscriberTier === "free" &&
+          !(
+            experimentGroup === "delayed_paywall" && freeTrialRemaining
+          ) ? (
             <OnboardingPaywall />
           ) : (
             <StartPane
@@ -891,6 +920,16 @@ function App() {
               }}
               settings={settings}
               setSettings={setSettings}
+              freeTrialInfo={
+                subscriberTier === "free" &&
+                experimentGroup === "delayed_paywall" &&
+                freeTrialRemaining
+                  ? {
+                      used: getFreeTrialGenerationsUsed(),
+                      limit: FREE_TRIAL_GENERATION_LIMIT,
+                    }
+                  : undefined
+              }
             />
           ))}
 
