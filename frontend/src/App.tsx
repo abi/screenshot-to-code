@@ -871,6 +871,15 @@ function App() {
                     setIsVersionsPanelOpen(true);
                     setMobilePane("chat");
                   }}
+                  freeTrialInfo={
+                    subscriberTier === "free" &&
+                    experimentGroup === "delayed_paywall"
+                      ? {
+                          used: getFreeTrialGenerationsUsed(),
+                          limit: FREE_TRIAL_GENERATION_LIMIT,
+                        }
+                      : undefined
+                  }
                 />
               )}
             </>

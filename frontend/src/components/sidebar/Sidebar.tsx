@@ -23,6 +23,7 @@ interface SidebarProps {
   submitGenerationFeedback: (value: "up" | "down") => Promise<boolean>;
   cancelCodeGeneration: () => void;
   onOpenVersions: () => void;
+  freeTrialInfo?: { used: number; limit: number };
 }
 
 const MAX_UPDATE_IMAGES = 5;
@@ -73,6 +74,7 @@ function Sidebar({
   submitGenerationFeedback,
   cancelCodeGeneration,
   onOpenVersions,
+  freeTrialInfo,
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const middlePaneRef = useRef<HTMLDivElement>(null);
@@ -277,6 +279,13 @@ function Sidebar({
       <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2">
         <Variants />
       </div>
+
+      {freeTrialInfo && (
+        <div className="shrink-0 mx-4 mt-3 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+          Free trial: {freeTrialInfo.limit - freeTrialInfo.used} of{" "}
+          {freeTrialInfo.limit} generations remaining
+        </div>
+      )}
 
       {/* Scrollable content */}
       <div
