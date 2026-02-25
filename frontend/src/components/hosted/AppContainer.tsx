@@ -16,11 +16,14 @@ import {
 import LogRocket from "logrocket";
 import LandingPage from "./LandingPage";
 import Intercom from "@intercom/messenger-js-sdk";
+import { getExperimentGroup } from "../../lib/experiment";
 
 function AppContainer() {
   const { isSignedIn, isLoaded } = useUser();
 
   const setSubscriberTier = useStore((state) => state.setSubscriberTier);
+  const setExperimentGroup = useStore((state) => state.setExperimentGroup);
+  const setFreeTrialUsage = useStore((state) => state.setFreeTrialUsage);
 
   // For fetching user
   const authenticatedFetch = useAuthenticatedFetch();
@@ -45,8 +48,26 @@ function AppContainer() {
         return;
       }
 
+      // Assign A/B test group for delayed paywall experiment
+      const group = getExperimentGroup(user.email);
+      setExperimentGroup(group);
+
       if (!user.subscriber_tier) {
         setSubscriberTier("free");
+        // Fetch server-side free trial usage for delayed paywall users
+        if (group === "delayed_paywall") {
+          try {
+            const usage = await authenticatedFetch(
+              SAAS_BACKEND_URL + "/credits/free_trial_usage",
+              "POST",
+            );
+            if (usage) {
+              setFreeTrialUsage(usage.used, usage.limit);
+            }
+          } catch {
+            // Non-critical; fall back to 0/0
+          }
+        }
       } else {
         // Initialize Intercom only for paid users
         Intercom({

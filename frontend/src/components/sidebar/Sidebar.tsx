@@ -15,6 +15,7 @@ import { Commit } from "../commits/types";
 import { removeHighlight } from "../select-and-edit/utils";
 import { CodeGenerationModel } from "../../lib/models";
 import GenerationFeedbackButtons from "./GenerationFeedbackButtons";
+import FreeTrialBanner from "../hosted/FreeTrialBanner";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -23,6 +24,7 @@ interface SidebarProps {
   submitGenerationFeedback: (value: "up" | "down") => Promise<boolean>;
   cancelCodeGeneration: () => void;
   onOpenVersions: () => void;
+  freeTrialInfo?: { used: number; limit: number };
 }
 
 const MAX_UPDATE_IMAGES = 5;
@@ -73,6 +75,7 @@ function Sidebar({
   submitGenerationFeedback,
   cancelCodeGeneration,
   onOpenVersions,
+  freeTrialInfo,
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const middlePaneRef = useRef<HTMLDivElement>(null);
@@ -277,6 +280,15 @@ function Sidebar({
       <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2">
         <Variants />
       </div>
+
+      {freeTrialInfo && (
+        <div className="shrink-0 mx-4 mt-3">
+          <FreeTrialBanner
+            used={freeTrialInfo.used}
+            limit={freeTrialInfo.limit}
+          />
+        </div>
+      )}
 
       {/* Scrollable content */}
       <div

@@ -18,6 +18,7 @@ class PaymentMethod(Enum):
     OPENAI_API_KEY = "openai_api_key"
     SUBSCRIPTION = "subscription"
     TRIAL = "trial"
+    FREE_TRIAL = "free_trial"
 
 
 async def send_to_saas_backend(

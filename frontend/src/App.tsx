@@ -9,7 +9,7 @@ import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import { addEvent } from "./lib/analytics";
 import { useAuth } from "@clerk/clerk-react";
-import { useStore } from "./store/store";
+import { useStore, refreshFreeTrialUsage } from "./store/store";
 import toast from "react-hot-toast";
 import { nanoid } from "nanoid";
 import { Stack } from "./lib/stacks";
@@ -38,12 +38,10 @@ import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
 import AccountView from "./components/hosted/AccountView";
-import { FeedbackBanner } from "./components/feedback/FeedbackBanner";
 import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 import { useGenerationFeedback } from "./hooks/useGenerationFeedback";
-
 // Temporary kill switch for feedback call UI.
 const SHOW_FEEDBACK_CALL_UI = true;
 
@@ -56,6 +54,12 @@ function App() {
   const setProjectsPanelOpen = useStore((state) => state.setProjectsPanelOpen);
   const isAccountPanelOpen = useStore((state) => state.isAccountPanelOpen);
   const setAccountPanelOpen = useStore((state) => state.setAccountPanelOpen);
+  const experimentGroup = useStore((state) => state.experimentGroup);
+  const freeTrialUsed = useStore((state) => state.freeTrialUsed);
+  const freeTrialLimit = useStore((state) => state.freeTrialLimit);
+
+
+  const freeTrialRemaining = freeTrialLimit > 0 && freeTrialUsed < freeTrialLimit;
 
   const {
     // Inputs
@@ -103,8 +107,7 @@ function App() {
     setSelectedElement,
   } = useAppStore();
 
-  const { shouldShowBanner, incrementGenerations, dismissBanner } =
-    useFeedbackState();
+  const { incrementGenerations } = useFeedbackState();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isIntercomOpenRef = useRef(false);
@@ -261,10 +264,15 @@ function App() {
 
     // Merge settings with params
     const authToken = await getToken();
+    const isFreeTrial =
+      subscriberTier === "free" &&
+      experimentGroup === "delayed_paywall" &&
+      freeTrialRemaining;
     const updatedParams = {
       ...requestParams,
       ...settings,
       authToken: authToken || undefined,
+      ...(isFreeTrial ? { isFreeTrial: true } : {}),
     };
 
     // Use 4 variants for create, 2 for edits to match backend counts
@@ -461,6 +469,14 @@ function App() {
         });
         setAppState(AppState.CODE_READY);
         incrementGenerations();
+
+        // Refresh free trial count from server for delayed paywall experiment
+        if (
+          subscriberTier === "free" &&
+          experimentGroup === "delayed_paywall"
+        ) {
+          refreshFreeTrialUsage(getToken);
+        }
       },
     });
   }
@@ -678,18 +694,6 @@ function App() {
         />
       )}
 
-      {SHOW_FEEDBACK_CALL_UI && shouldShowBanner && (
-        <div className="px-4 mb-2">
-          <FeedbackBanner
-            onDismiss={dismissBanner}
-            onOpen={() => setIsFeedbackOpen(true)}
-            rewardAmount={
-              subscriberTier && subscriberTier !== "free" ? 200 : 50
-            }
-          />
-        </div>
-      )}
-
       {/* Icon strip - always visible */}
       <div className="sticky top-0 z-50 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-16 lg:flex-col">
         <IconStrip
@@ -845,6 +849,16 @@ function App() {
                     setIsVersionsPanelOpen(true);
                     setMobilePane("chat");
                   }}
+                  freeTrialInfo={
+                    subscriberTier === "free" &&
+                    experimentGroup === "delayed_paywall" &&
+                    freeTrialLimit > 0
+                      ? {
+                          used: freeTrialUsed,
+                          limit: freeTrialLimit,
+                        }
+                      : undefined
+                  }
                 />
               )}
             </>
@@ -875,7 +889,10 @@ function App() {
           !isSettingsOpen &&
           (IS_RUNNING_ON_CLOUD &&
           !settings.openAiApiKey &&
-          subscriberTier === "free" ? (
+          subscriberTier === "free" &&
+          !(
+            experimentGroup === "delayed_paywall" && freeTrialRemaining
+          ) ? (
             <OnboardingPaywall />
           ) : (
             <StartPane
@@ -891,6 +908,16 @@ function App() {
               }}
               settings={settings}
               setSettings={setSettings}
+              freeTrialInfo={
+                subscriberTier === "free" &&
+                experimentGroup === "delayed_paywall" &&
+                freeTrialLimit > 0
+                  ? {
+                      used: freeTrialUsed,
+                      limit: freeTrialLimit,
+                    }
+                  : undefined
+              }
             />
           ))}
 

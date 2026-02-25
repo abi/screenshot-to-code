@@ -4,6 +4,7 @@ import { Stack } from "../../lib/stacks";
 import { IS_RUNNING_ON_CLOUD } from "../../config";
 import UnifiedInputPane from "../unified-input/UnifiedInputPane";
 import RecentProjects from "./RecentProjects";
+import FreeTrialBanner from "../hosted/FreeTrialBanner";
 
 interface Props {
   doCreate: (
@@ -16,6 +17,7 @@ interface Props {
   onOpenProjects: () => void;
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+  freeTrialInfo?: { used: number; limit: number };
 }
 
 const StartPane: React.FC<Props> = ({
@@ -25,9 +27,18 @@ const StartPane: React.FC<Props> = ({
   onOpenProjects,
   settings,
   setSettings,
+  freeTrialInfo,
 }) => {
   return (
     <div className="flex flex-col justify-center items-center py-8">
+      {freeTrialInfo && (
+        <div className="mb-4 w-full max-w-md px-4">
+          <FreeTrialBanner
+            used={freeTrialInfo.used}
+            limit={freeTrialInfo.limit}
+          />
+        </div>
+      )}
       <UnifiedInputPane
         doCreate={doCreate}
         doCreateFromText={doCreateFromText}
