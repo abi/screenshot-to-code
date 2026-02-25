@@ -15,6 +15,7 @@ import { Commit } from "../commits/types";
 import { removeHighlight } from "../select-and-edit/utils";
 import { CodeGenerationModel } from "../../lib/models";
 import GenerationFeedbackButtons from "./GenerationFeedbackButtons";
+import FreeTrialBanner from "../hosted/FreeTrialBanner";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -281,9 +282,11 @@ function Sidebar({
       </div>
 
       {freeTrialInfo && (
-        <div className="shrink-0 mx-4 mt-3 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
-          Free trial: {freeTrialInfo.limit - freeTrialInfo.used} of{" "}
-          {freeTrialInfo.limit} generations remaining
+        <div className="shrink-0 mx-4 mt-3">
+          <FreeTrialBanner
+            used={freeTrialInfo.used}
+            limit={freeTrialInfo.limit}
+          />
         </div>
       )}
 
