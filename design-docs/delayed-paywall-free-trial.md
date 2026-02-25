@@ -2,7 +2,7 @@
 
 **Status**: Active experiment
 **Branch**: `claude/ab-test-delayed-paywall-pt3yi`
-**Date started**: 2026-02-25
+**Date started**: 2026-02-25 11:30 AM EST
 
 ## Overview
 
@@ -58,6 +58,10 @@ seeing the paywall, instead of seeing it immediately on sign-up.
 |------|-------------|
 | `backend/users/users.py` | Added `get_num_free_trial_generations()` — counts generations with `payment_method = 'free_trial'`. |
 | `backend/routes/credits.py` | Added `FREE_TRIAL_GENERATION_LIMIT = 5`, `FreeTrialUsageResponse` model, and `POST /credits/free_trial_usage` endpoint. |
+| `backend/analytics/core.py` | Added `get_experiment_group()` (Python port of JS hash) and `get_ab_test_stats()` for conversion rates by group + free trial usage histogram. |
+| `backend/routes/internal.py` | Added `GET /ab_test_stats` admin endpoint. Added A/B test section to daily stats email. |
+| `admin/src/components/ab-test/ABTestPanel.tsx` | **New file.** Admin dashboard panel showing conversion rates by group and free trial usage histogram. |
+| `admin/src/App.tsx` | Added "A/B Test" tab to admin dashboard navigation. |
 
 ## Commits
 
@@ -77,6 +81,7 @@ e2407c5 Improve free trial banner with progress bar and upgrade link
 
 ```
 b838efc Add free trial usage tracking endpoint
+(pending) Add A/B test tracking: admin endpoint, daily email section, dashboard tab
 ```
 
 ## How to revert
@@ -115,6 +120,12 @@ these commits restores the immediate paywall for all users.
 12. **Remove** `FREE_TRIAL_GENERATION_LIMIT`, `FreeTrialUsageResponse`,
     and `/credits/free_trial_usage` endpoint from SaaS
     `backend/routes/credits.py`.
+13. **Remove** A/B test code from SaaS `backend/analytics/core.py`:
+    `get_experiment_group()`, `get_ab_test_stats()`, and related constants.
+14. **Remove** `GET /ab_test_stats` endpoint and A/B test email section
+    from SaaS `backend/routes/internal.py`.
+15. **Delete** `admin/src/components/ab-test/ABTestPanel.tsx` and remove
+    the "A/B Test" tab from `admin/src/App.tsx`.
 
 ## Testing overrides
 
