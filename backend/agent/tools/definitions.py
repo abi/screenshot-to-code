@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from agent.tools.types import CanonicalToolDefinition
+from image_generation.aspect_ratios import SUPPORTED_ASPECT_RATIOS
 
 
 def _create_schema() -> Dict[str, Any]:
@@ -57,16 +58,32 @@ def _edit_schema() -> Dict[str, Any]:
 
 
 def _image_schema() -> Dict[str, Any]:
+    prompt_item_schema: Dict[str, Any] = {
+        "type": "object",
+        "properties": {
+            "prompt": {
+                "type": "string",
+                "description": "Prompt describing a single image to generate.",
+            },
+            "aspect_ratio": {
+                "type": "string",
+                "description": (
+                    "Optional image aspect ratio for this prompt. Choose one that "
+                    "fits where the image will be used."
+                ),
+                "enum": list(SUPPORTED_ASPECT_RATIOS),
+            },
+        },
+        "required": ["prompt"],
+        "additionalProperties": False,
+    }
     return {
         "type": "object",
         "properties": {
             "prompts": {
                 "type": "array",
-                "items": {
-                    "type": "string",
-                    "description": "Prompt describing a single image to generate.",
-                },
-            }
+                "items": prompt_item_schema,
+            },
         },
         "required": ["prompts"],
     }

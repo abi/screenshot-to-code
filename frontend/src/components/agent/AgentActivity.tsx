@@ -245,11 +245,32 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
           {/* While running: show prompts with dividers */}
           {event.status === "running" && input?.prompts && Array.isArray(input.prompts) && (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {input.prompts.map((prompt: string, index: number) => (
-                <div key={index} className="text-xs text-gray-600 dark:text-gray-400 py-1.5">
-                  {prompt}
-                </div>
-              ))}
+              {input.prompts.map((promptEntry: unknown, index: number) => {
+                const promptText =
+                  typeof promptEntry === "object" &&
+                    promptEntry !== null &&
+                    "prompt" in promptEntry &&
+                    typeof (promptEntry as { prompt?: unknown }).prompt === "string"
+                    ? (promptEntry as { prompt: string }).prompt
+                    : "";
+                const promptAspectRatio =
+                  typeof promptEntry === "object" &&
+                    promptEntry !== null &&
+                    "aspect_ratio" in promptEntry &&
+                    typeof (promptEntry as { aspect_ratio?: unknown }).aspect_ratio === "string"
+                    ? (promptEntry as { aspect_ratio: string }).aspect_ratio
+                    : null;
+                return (
+                  <div key={index} className="py-1.5">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">{promptText}</div>
+                    {promptAspectRatio && (
+                      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                        {promptAspectRatio}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
           {/* After complete: 50/50 image left, prompt right */}
@@ -271,8 +292,13 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
                       </div>
                     )}
                   </div>
-                  <div className="w-1/2 text-xs text-gray-600 dark:text-gray-400 self-center">
-                    {item.prompt}
+                  <div className="w-1/2 self-center">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">{item.prompt}</div>
+                    {item.aspect_ratio && (
+                      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                        {item.aspect_ratio}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

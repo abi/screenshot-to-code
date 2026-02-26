@@ -4,6 +4,10 @@ from typing import List, Literal, Union
 
 from openai import AsyncOpenAI
 
+from image_generation.aspect_ratios import (
+    AspectRatio,
+    DEFAULT_ASPECT_RATIO,
+)
 from image_generation.replicate import call_replicate
 
 
@@ -15,16 +19,17 @@ async def process_tasks(
     api_key: str,
     base_url: str | None,
     model: Literal["dalle3", "flux"],
+    aspect_ratio: AspectRatio = DEFAULT_ASPECT_RATIO,
 ) -> List[Union[str, None]]:
     start_time = time.time()
     if model == "dalle3":
         tasks = [generate_image_dalle(prompt, api_key, base_url) for prompt in prompts]
         results = await asyncio.gather(*tasks, return_exceptions=True)
     else:
-        results: list[str | BaseException] = []
+        results: list[str | None | BaseException] = []
         for i in range(0, len(prompts), REPLICATE_BATCH_SIZE):
             batch = prompts[i : i + REPLICATE_BATCH_SIZE]
-            tasks = [generate_image_replicate(p, api_key) for p in batch]
+            tasks = [generate_image_replicate(p, api_key, aspect_ratio) for p in batch]
             results.extend(await asyncio.gather(*tasks, return_exceptions=True))
     end_time = time.time()
     generation_time = end_time - start_time
@@ -42,7 +47,9 @@ async def process_tasks(
 
 
 async def generate_image_dalle(
-    prompt: str, api_key: str, base_url: str | None
+    prompt: str,
+    api_key: str,
+    base_url: str | None,
 ) -> Union[str, None]:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
     res = await client.images.generate(
@@ -59,12 +66,16 @@ async def generate_image_dalle(
     return res.data[0].url
 
 
-async def generate_image_replicate(prompt: str, api_key: str) -> str:
+async def generate_image_replicate(
+    prompt: str,
+    api_key: str,
+    aspect_ratio: AspectRatio = DEFAULT_ASPECT_RATIO,
+) -> str:
     # We use Flux 2 Klein
     return await call_replicate(
         {
             "prompt": prompt,
-            "aspect_ratio": "1:1",
+            "aspect_ratio": aspect_ratio,
             "output_format": "png",
         },
         api_key,

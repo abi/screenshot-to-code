@@ -49,9 +49,21 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
     if tool_call.name == "generate_images":
         prompts = args.get("prompts") or []
         if isinstance(prompts, list):
+            summarized_prompts: list[dict[str, str]] = []
+            for entry in prompts:
+                if not isinstance(entry, dict):
+                    continue
+                prompt = ensure_str(entry.get("prompt")).strip()
+                if not prompt:
+                    continue
+                summarized_entry: dict[str, str] = {"prompt": prompt}
+                aspect_ratio = entry.get("aspect_ratio")
+                if isinstance(aspect_ratio, str) and aspect_ratio.strip():
+                    summarized_entry["aspect_ratio"] = aspect_ratio
+                summarized_prompts.append(summarized_entry)
             return {
-                "count": len(prompts),
-                "prompts": [ensure_str(p) for p in prompts],
+                "count": len(summarized_prompts),
+                "prompts": summarized_prompts,
             }
 
     if tool_call.name == "remove_background":

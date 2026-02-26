@@ -1,15 +1,26 @@
 # pyright: reportUnknownVariableType=false
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict, Union, cast
 
 from codegen.utils import extract_html_content
 from config import REPLICATE_API_KEY
+from image_generation.aspect_ratios import (
+    AspectRatio,
+    DEFAULT_ASPECT_RATIO,
+    SUPPORTED_ASPECT_RATIOS,
+    is_supported_aspect_ratio,
+)
 from image_generation.generation import process_tasks
 from image_generation.replicate import remove_background
 
 from agent.state import AgentFileState, ensure_str
 from agent.tools.types import ToolCall, ToolExecutionResult
 from agent.tools.summaries import summarize_text
+
+
+class ImagePromptRequest(TypedDict):
+    prompt: str
+    aspect_ratio: AspectRatio
 
 
 class AgentToolRuntime:
@@ -195,14 +206,67 @@ class AgentToolRuntime:
                 summary={"error": "Missing prompts"},
             )
 
-        cleaned = [prompt.strip() for prompt in prompts if isinstance(prompt, str)]
-        unique_prompts = list(dict.fromkeys([p for p in cleaned if p]))
-        if not unique_prompts:
+        if "aspect_ratio" in args:
+            return ToolExecutionResult(
+                ok=False,
+                result={
+                    "error": (
+                        "Top-level aspect_ratio is not supported. "
+                        "Set aspect_ratio per prompt item in prompts[]."
+                    )
+                },
+                summary={"error": "Invalid aspect_ratio"},
+            )
+
+        requests: list[ImagePromptRequest] = []
+        for item in prompts:
+            if not isinstance(item, dict):
+                return ToolExecutionResult(
+                    ok=False,
+                    result={
+                        "error": (
+                            "Each prompts[] entry must be an object with "
+                            "'prompt' and optional 'aspect_ratio'."
+                        )
+                    },
+                    summary={"error": "Invalid prompts payload"},
+                )
+
+            prompt = ensure_str(item.get("prompt")).strip()
+            if not prompt:
+                return ToolExecutionResult(
+                    ok=False,
+                    result={"error": "Each prompts[] entry requires a non-empty prompt"},
+                    summary={"error": "Missing prompt"},
+                )
+
+            raw_aspect_ratio = item.get("aspect_ratio", DEFAULT_ASPECT_RATIO)
+            if not is_supported_aspect_ratio(raw_aspect_ratio):
+                return ToolExecutionResult(
+                    ok=False,
+                    result={
+                        "error": (
+                            f"Unsupported aspect_ratio: {raw_aspect_ratio}. "
+                            f"Supported values: {', '.join(SUPPORTED_ASPECT_RATIOS)}"
+                        )
+                    },
+                    summary={"error": "Invalid aspect_ratio"},
+                )
+            requests.append(
+                {
+                    "prompt": prompt,
+                    "aspect_ratio": cast(AspectRatio, raw_aspect_ratio),
+                }
+            )
+
+        if not requests:
             return ToolExecutionResult(
                 ok=False,
                 result={"error": "No valid prompts provided"},
                 summary={"error": "No valid prompts"},
             )
+
+        model: Literal["dalle3", "flux"]
         if REPLICATE_API_KEY:
             model = "flux"
             api_key = REPLICATE_API_KEY
@@ -218,19 +282,42 @@ class AgentToolRuntime:
             api_key = self.openai_api_key
             base_url = self.openai_base_url
 
-        generated = await process_tasks(unique_prompts, api_key, base_url, model)  # type: ignore
-        merged_results = {
-            prompt: url for prompt, url in zip(unique_prompts, generated)
-        }
+        grouped_requests: dict[AspectRatio, list[tuple[int, str]]] = {}
+        for index, request in enumerate(requests):
+            grouped_requests.setdefault(request["aspect_ratio"], []).append(
+                (index, request["prompt"])
+            )
+
+        grouped_items = list(grouped_requests.items())
+        grouped_results = await asyncio.gather(
+            *[
+                process_tasks(
+                    prompts=[prompt for _, prompt in entries],
+                    api_key=api_key,
+                    base_url=base_url,
+                    model=model,
+                    aspect_ratio=aspect_ratio,
+                )
+                for aspect_ratio, entries in grouped_items
+            ]
+        )
+
+        generated: list[str | None] = [None] * len(requests)
+        for (aspect_ratio, entries), urls in zip(grouped_items, grouped_results):
+            _ = aspect_ratio
+            for (index, _prompt), url in zip(entries, urls):
+                generated[index] = url
+
         summary_items = [
             {
-                "prompt": prompt,
+                "prompt": request["prompt"],
                 "url": url,
+                "aspect_ratio": request["aspect_ratio"],
                 "status": "ok" if url else "error",
             }
-            for prompt, url in merged_results.items()
+            for request, url in zip(requests, generated)
         ]
-        result = {"images": merged_results}
+        result = {"images": summary_items}
         summary = {"images": summary_items}
         return ToolExecutionResult(ok=True, result=result, summary=summary)
 
