@@ -1,0 +1,31 @@
+{
+  "plugins": {
+    "stripe": {
+      "enabled": true
+    },
+    "clerk": {
+      "enabled": true
+    },
+    "figma": {
+      "enabled": true
+    },
+    "vercel": {
+      "enabled": true
+    },
+    "posthog": {
+      "enabled": true
+    },
+    "browserstack": {
+      "enabled": true
+    },
+    "sentry": {
+      "enabled": true
+    },
+    "supabase": {
+      "enabled": true
+    },
+    "deploy-on-aws": {
+      "enabled": true
+    }
+  }
+}
