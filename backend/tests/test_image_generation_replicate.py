@@ -39,7 +39,9 @@ def test_extract_output_url_invalid_raises() -> None:
 
 
 @pytest.mark.asyncio
-async def test_call_replicate_uses_flux_model(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_call_replicate_uses_default_image_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: dict[str, object] = {}
 
     async def fake_call_replicate_model(
@@ -55,7 +57,34 @@ async def test_call_replicate_uses_flux_model(monkeypatch: pytest.MonkeyPatch) -
     result = await replicate.call_replicate({"prompt": "test", "seed": 1}, "token-123")
 
     assert result == "https://example.com/flux.png"
-    assert captured["model_path"] == replicate.FLUX_MODEL_PATH
+    assert captured["model_path"] == replicate.MODEL_PATHS[replicate.DEFAULT_IMAGE_MODEL]
+    assert captured["api_token"] == "token-123"
+
+
+@pytest.mark.asyncio
+async def test_call_replicate_can_use_flux_2_klein(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    async def fake_call_replicate_model(
+        model_path: str, input: dict[str, object], api_token: str
+    ) -> list[str]:
+        captured["model_path"] = model_path
+        captured["input"] = input
+        captured["api_token"] = api_token
+        return ["https://example.com/flux.png"]
+
+    monkeypatch.setattr(replicate, "call_replicate_model", fake_call_replicate_model)
+
+    result = await replicate.call_replicate(
+        {"prompt": "test", "seed": 1},
+        "token-123",
+        model="flux_2_klein",
+    )
+
+    assert result == "https://example.com/flux.png"
+    assert captured["model_path"] == replicate.FLUX_2_KLEIN_MODEL_PATH
     assert captured["api_token"] == "token-123"
 
 
