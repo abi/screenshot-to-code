@@ -49,6 +49,8 @@ class AgentToolRuntime:
             return await self._remove_background(tool_call.arguments)
         if tool_call.name == "retrieve_option":
             return self._retrieve_option(tool_call.arguments)
+        if tool_call.name == "annotate":
+            return self._annotate(tool_call.arguments)
         return ToolExecutionResult(
             ok=False,
             result={"error": f"Unknown tool: {tool_call.name}"},
@@ -355,6 +357,33 @@ class AgentToolRuntime:
             "preview": summarize_text(code, 200),
         }
         result = {"option_number": resolved_index + 1, "code": code}
+        return ToolExecutionResult(ok=True, result=result, summary=summary)
+
+    def _annotate(self, args: Dict[str, Any]) -> ToolExecutionResult:
+        annotations = args.get("annotations")
+        if not isinstance(annotations, list) or not annotations:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "annotate requires a non-empty annotations list"},
+                summary={"error": "Missing annotations"},
+            )
+
+        cleaned: List[Dict[str, str]] = []
+        for annotation in annotations:
+            label = ensure_str(annotation.get("label"))
+            description = ensure_str(annotation.get("description"))
+            if label and description:
+                cleaned.append({"label": label, "description": description})
+
+        if not cleaned:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "No valid annotations provided"},
+                summary={"error": "No valid annotations"},
+            )
+
+        summary = {"annotations": cleaned}
+        result = {"annotations": cleaned}
         return ToolExecutionResult(ok=True, result=result, summary=summary)
 
 

@@ -16,6 +16,7 @@ import {
   BsImage,
   BsScissors,
   BsFiles,
+  BsTag,
 } from "react-icons/bs";
 import ReactMarkdown from "react-markdown";
 import { Light as SyntaxHighlighterBase } from "react-syntax-highlighter";
@@ -107,6 +108,9 @@ function getEventIcon(type: AgentEventType, toolName?: string) {
   if (toolName === "retrieve_option") {
     return <BsFiles className="text-slate-500" />;
   }
+  if (toolName === "annotate") {
+    return <BsTag className="text-amber-500" />;
+  }
   return <BsFileEarmarkPlus className="text-gray-500" />;
 }
 
@@ -148,6 +152,11 @@ function getEventTitle(event: AgentEvent): string {
       return event.status === "running"
         ? "Retrieving option"
         : "Retrieved option";
+    }
+    if (event.toolName === "annotate") {
+      return event.status === "running"
+        ? "Annotating changes"
+        : "Annotated changes";
     }
     return event.status === "running" ? "Running tool" : "Tool completed";
   }
@@ -342,6 +351,33 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {event.toolName === "annotate" && !hasError && (
+        <div className="space-y-1.5">
+          {(() => {
+            const annotations =
+              (output?.annotations as Array<{ label: string; description: string }>) ||
+              (input?.annotations as Array<{ label: string; description: string }>) ||
+              [];
+            return annotations.map((annotation, index) => (
+              <div
+                key={`${annotation.label}-${index}`}
+                className="flex items-start gap-2 rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-2"
+              >
+                <BsTag className="text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                    {annotation.label}
+                  </span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400 ml-1.5">
+                    {annotation.description}
+                  </span>
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       )}
 

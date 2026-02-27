@@ -101,6 +101,32 @@ def _retrieve_option_schema() -> Dict[str, Any]:
     }
 
 
+def _annotate_schema() -> Dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {
+            "annotations": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "label": {
+                            "type": "string",
+                            "description": "Short label identifying the changed element (e.g. 'Header', 'Login button', 'Hero image').",
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "One-sentence description of what was changed.",
+                        },
+                    },
+                    "required": ["label", "description"],
+                },
+            }
+        },
+        "required": ["annotations"],
+    }
+
+
 def canonical_tool_definitions(
     image_generation_enabled: bool = True,
 ) -> List[CanonicalToolDefinition]:
@@ -151,6 +177,17 @@ def canonical_tool_definitions(
                     "reference it."
                 ),
                 parameters=_retrieve_option_schema(),
+            ),
+            CanonicalToolDefinition(
+                name="annotate",
+                description=(
+                    "Annotate the changed elements to highlight what was modified. "
+                    "Call this tool exactly once, AFTER all code edits are complete "
+                    "and right before returning your final response to the user. "
+                    "Each annotation should identify a changed element and include "
+                    "a short one-sentence description of what changed."
+                ),
+                parameters=_annotate_schema(),
             ),
         ]
     )
