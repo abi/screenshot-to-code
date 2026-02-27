@@ -174,11 +174,33 @@ def _convert_message_to_gemini_content(
 
 
 @dataclass
+class GeminiTokenUsage:
+    prompt_token_count: int = 0
+    cached_content_token_count: int = 0
+    candidates_token_count: int = 0
+    thoughts_token_count: int = 0
+    total_token_count: int = 0
+
+
+@dataclass
 class GeminiParseState:
     assistant_text: str = ""
     tool_calls: List[ToolCall] = field(default_factory=list)
     model_parts: List[types.Part] = field(default_factory=list)
     model_role: str = "model"
+
+
+def _extract_usage(chunk: types.GenerateContentResponse) -> GeminiTokenUsage | None:
+    meta = chunk.usage_metadata
+    if meta is None:
+        return None
+    return GeminiTokenUsage(
+        prompt_token_count=meta.prompt_token_count or 0,
+        cached_content_token_count=meta.cached_content_token_count or 0,
+        candidates_token_count=meta.candidates_token_count or 0,
+        thoughts_token_count=meta.thoughts_token_count or 0,
+        total_token_count=meta.total_token_count or 0,
+    )
 
 
 async def _parse_chunk(
@@ -243,11 +265,21 @@ class GeminiProviderSession(ProviderSession):
         self._client = client
         self._model = model
         self._tools = tools
+        self._total_usage = GeminiTokenUsage()
 
         self._system_prompt = str(prompt_messages[0].get("content", ""))
         self._contents: List[types.Content] = [
             _convert_message_to_gemini_content(msg) for msg in prompt_messages[1:]
         ]
+
+    def _accumulate_usage(self, turn_usage: GeminiTokenUsage) -> None:
+        self._total_usage.prompt_token_count += turn_usage.prompt_token_count
+        self._total_usage.cached_content_token_count += (
+            turn_usage.cached_content_token_count
+        )
+        self._total_usage.candidates_token_count += turn_usage.candidates_token_count
+        self._total_usage.thoughts_token_count += turn_usage.thoughts_token_count
+        self._total_usage.total_token_count += turn_usage.total_token_count
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
         thinking_level = _get_thinking_level_for_model(self._model)
@@ -269,8 +301,15 @@ class GeminiProviderSession(ProviderSession):
         )
 
         state = GeminiParseState()
+        turn_usage: GeminiTokenUsage | None = None
         async for chunk in stream:
             await _parse_chunk(chunk, state, on_event)
+            chunk_usage = _extract_usage(chunk)
+            if chunk_usage is not None:
+                turn_usage = chunk_usage
+
+        if turn_usage is not None:
+            self._accumulate_usage(turn_usage)
 
         assistant_turn = (
             types.Content(role=state.model_role, parts=state.model_parts)
@@ -309,4 +348,13 @@ class GeminiProviderSession(ProviderSession):
         self._contents.append(types.Content(role="tool", parts=tool_result_parts))
 
     async def close(self) -> None:
-        return
+        u = self._total_usage
+        model_name = _get_gemini_api_model_name(self._model)
+        print(
+            f"[GEMINI TOKEN USAGE] model={model_name} | "
+            f"input={u.prompt_token_count} "
+            f"cached={u.cached_content_token_count} "
+            f"output={u.candidates_token_count} "
+            f"thinking={u.thoughts_token_count} "
+            f"total={u.total_token_count}"
+        )
