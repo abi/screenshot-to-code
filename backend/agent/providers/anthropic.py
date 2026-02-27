@@ -18,6 +18,7 @@ from agent.providers.base import (
     ProviderSession,
     ProviderTurn,
     StreamEvent,
+    TokenUsage,
 )
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
 from llm import Llm
@@ -224,6 +225,28 @@ def _extract_tool_calls(final_message: Any) -> List[ToolCall]:
     return tool_calls
 
 
+def _extract_anthropic_usage(final_message: Any) -> TokenUsage:
+    """Extract unified token usage from an Anthropic final message.
+
+    Anthropic includes thinking tokens in ``output_tokens`` so no extra
+    addition is needed.  ``total`` is computed since the API doesn't provide it.
+    """
+    usage = getattr(final_message, "usage", None)
+    if usage is None:
+        return TokenUsage()
+    input_tokens = getattr(usage, "input_tokens", 0) or 0
+    output_tokens = getattr(usage, "output_tokens", 0) or 0
+    cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
+    cache_write = getattr(usage, "cache_creation_input_tokens", 0) or 0
+    return TokenUsage(
+        input=input_tokens,
+        output=output_tokens,
+        cache_read=cache_read,
+        cache_write=cache_write,
+        total=input_tokens + output_tokens + cache_read + cache_write,
+    )
+
+
 class AnthropicProviderSession(ProviderSession):
     def __init__(
         self,
@@ -235,6 +258,7 @@ class AnthropicProviderSession(ProviderSession):
         self._client = client
         self._model = model
         self._tools = tools
+        self._total_usage = TokenUsage()
         system_prompt, claude_messages = _convert_openai_messages_to_claude(prompt_messages)
         self._system_prompt = system_prompt
         self._messages = claude_messages
@@ -271,6 +295,8 @@ class AnthropicProviderSession(ProviderSession):
             async for event in stream:
                 await _parse_stream_event(event, state, on_event)
             final_message = await stream.get_final_message()
+
+        self._total_usage.accumulate(_extract_anthropic_usage(final_message))
 
         tool_calls = _extract_tool_calls(final_message)
         return ProviderTurn(
@@ -314,4 +340,11 @@ class AnthropicProviderSession(ProviderSession):
         self._messages.append({"role": "user", "content": tool_result_blocks})
 
     async def close(self) -> None:
+        u = self._total_usage
+        print(
+            f"[TOKEN USAGE] provider=anthropic model={self._model.value} | "
+            f"input={u.input} output={u.output} "
+            f"cache_read={u.cache_read} cache_write={u.cache_write} "
+            f"total={u.total}"
+        )
         await self._client.close()

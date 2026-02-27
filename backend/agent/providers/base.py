@@ -21,6 +21,32 @@ class StreamEvent:
 
 
 @dataclass
+class TokenUsage:
+    """Unified token usage across all providers.
+
+    Fields:
+        input:       Non-cached input (prompt) tokens.
+        output:      Output tokens (includes thinking/reasoning where applicable).
+        cache_read:  Cached input tokens read.
+        cache_write: Cached input tokens written (Anthropic only).
+        total:       Total tokens as reported by the provider, or computed.
+    """
+
+    input: int = 0
+    output: int = 0
+    cache_read: int = 0
+    cache_write: int = 0
+    total: int = 0
+
+    def accumulate(self, other: "TokenUsage") -> None:
+        self.input += other.input
+        self.output += other.output
+        self.cache_read += other.cache_read
+        self.cache_write += other.cache_write
+        self.total += other.total
+
+
+@dataclass
 class ProviderTurn:
     assistant_text: str
     tool_calls: list[ToolCall]
