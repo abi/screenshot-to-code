@@ -76,7 +76,7 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
                 "count": len(annotations),
                 "annotations": [
                     {
-                        "label": ensure_str(a.get("label")),
+                        "selector": ensure_str(a.get("selector")),
                         "description": summarize_text(
                             ensure_str(a.get("description")), 160
                         ),

@@ -110,16 +110,16 @@ def _annotate_schema() -> Dict[str, Any]:
                 "items": {
                     "type": "object",
                     "properties": {
-                        "label": {
+                        "selector": {
                             "type": "string",
-                            "description": "Short label identifying the changed element (e.g. 'Header', 'Login button', 'Hero image').",
+                            "description": "CSS selector that uniquely identifies the changed element in the HTML (e.g. '#hero-section', '.navbar', 'button.login-btn', 'header > nav').",
                         },
                         "description": {
                             "type": "string",
                             "description": "One-sentence description of what was changed.",
                         },
                     },
-                    "required": ["label", "description"],
+                    "required": ["selector", "description"],
                 },
             }
         },
@@ -181,11 +181,12 @@ def canonical_tool_definitions(
             CanonicalToolDefinition(
                 name="annotate",
                 description=(
-                    "Annotate the changed elements to highlight what was modified. "
+                    "Annotate the changed elements to highlight them in the preview. "
                     "Call this tool exactly once, AFTER all code edits are complete "
                     "and right before returning your final response to the user. "
-                    "Each annotation should identify a changed element and include "
-                    "a short one-sentence description of what changed."
+                    "Each annotation requires a CSS selector that uniquely targets "
+                    "the changed element in the HTML, plus a short one-sentence "
+                    "description of what changed."
                 ),
                 parameters=_annotate_schema(),
             ),

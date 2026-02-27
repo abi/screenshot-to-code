@@ -358,19 +358,19 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
         <div className="space-y-1.5">
           {(() => {
             const annotations =
-              (output?.annotations as Array<{ label: string; description: string }>) ||
-              (input?.annotations as Array<{ label: string; description: string }>) ||
+              (output?.annotations as Array<{ selector: string; description: string }>) ||
+              (input?.annotations as Array<{ selector: string; description: string }>) ||
               [];
             return annotations.map((annotation, index) => (
               <div
-                key={`${annotation.label}-${index}`}
+                key={`${annotation.selector}-${index}`}
                 className="flex items-start gap-2 rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-2"
               >
                 <BsTag className="text-amber-500 mt-0.5 shrink-0" />
                 <div>
-                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                    {annotation.label}
-                  </span>
+                  <code className="text-xs font-mono text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-1 rounded">
+                    {annotation.selector}
+                  </code>
                   <span className="text-xs text-gray-600 dark:text-gray-400 ml-1.5">
                     {annotation.description}
                   </span>

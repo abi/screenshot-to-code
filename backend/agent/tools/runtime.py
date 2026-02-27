@@ -370,10 +370,10 @@ class AgentToolRuntime:
 
         cleaned: List[Dict[str, str]] = []
         for annotation in annotations:
-            label = ensure_str(annotation.get("label"))
+            selector = ensure_str(annotation.get("selector"))
             description = ensure_str(annotation.get("description"))
-            if label and description:
-                cleaned.append({"label": label, "description": description})
+            if selector and description:
+                cleaned.append({"selector": selector, "description": description})
 
         if not cleaned:
             return ToolExecutionResult(
