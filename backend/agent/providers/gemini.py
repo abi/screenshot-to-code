@@ -10,6 +10,7 @@ from google.genai import types
 from openai.types.chat import ChatCompletionMessageParam
 
 from agent.providers.base import (
+    MODEL_PRICING,
     EventSink,
     ExecutedToolCall,
     ProviderSession,
@@ -340,9 +341,11 @@ class GeminiProviderSession(ProviderSession):
     async def close(self) -> None:
         u = self._total_usage
         model_name = _get_gemini_api_model_name(self._model)
+        pricing = MODEL_PRICING.get(model_name)
+        cost_str = f" cost=${u.cost(pricing):.4f}" if pricing else ""
         print(
             f"[TOKEN USAGE] provider=gemini model={model_name} | "
             f"input={u.input} output={u.output} "
             f"cache_read={u.cache_read} cache_write={u.cache_write} "
-            f"total={u.total}"
+            f"total={u.total}{cost_str}"
         )
