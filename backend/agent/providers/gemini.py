@@ -16,6 +16,8 @@ from agent.providers.base import (
     ProviderTurn,
     StreamEvent,
 )
+from agent.providers.pricing import MODEL_PRICING
+from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall
 from llm import Llm
 
@@ -181,6 +183,32 @@ class GeminiParseState:
     model_role: str = "model"
 
 
+def _extract_usage(chunk: types.GenerateContentResponse) -> TokenUsage | None:
+    """Extract unified token usage from a Gemini streaming chunk.
+
+    Gemini reports thinking tokens separately; they are folded into ``output``
+    to match the unified schema used by the other providers.
+
+    ``prompt_token_count`` *includes* ``cached_content_token_count``, so we
+    subtract cached tokens to get the non-cached input count (same approach
+    as the OpenAI provider).
+    """
+    meta = chunk.usage_metadata
+    if meta is None:
+        return None
+    candidates = meta.candidates_token_count or 0
+    thoughts = meta.thoughts_token_count or 0
+    prompt_tokens = meta.prompt_token_count or 0
+    cached_tokens = meta.cached_content_token_count or 0
+    return TokenUsage(
+        input=prompt_tokens - cached_tokens,
+        output=candidates + thoughts,
+        cache_read=cached_tokens,
+        cache_write=0,
+        total=meta.total_token_count or 0,
+    )
+
+
 async def _parse_chunk(
     chunk: types.GenerateContentResponse,
     state: GeminiParseState,
@@ -243,6 +271,7 @@ class GeminiProviderSession(ProviderSession):
         self._client = client
         self._model = model
         self._tools = tools
+        self._total_usage = TokenUsage()
 
         self._system_prompt = str(prompt_messages[0].get("content", ""))
         self._contents: List[types.Content] = [
@@ -269,8 +298,15 @@ class GeminiProviderSession(ProviderSession):
         )
 
         state = GeminiParseState()
+        turn_usage: TokenUsage | None = None
         async for chunk in stream:
             await _parse_chunk(chunk, state, on_event)
+            chunk_usage = _extract_usage(chunk)
+            if chunk_usage is not None:
+                turn_usage = chunk_usage
+
+        if turn_usage is not None:
+            self._total_usage.accumulate(turn_usage)
 
         assistant_turn = (
             types.Content(role=state.model_role, parts=state.model_parts)
@@ -309,4 +345,13 @@ class GeminiProviderSession(ProviderSession):
         self._contents.append(types.Content(role="tool", parts=tool_result_parts))
 
     async def close(self) -> None:
-        return
+        u = self._total_usage
+        model_name = _get_gemini_api_model_name(self._model)
+        pricing = MODEL_PRICING.get(model_name)
+        cost_str = f" cost=${u.cost(pricing):.4f}" if pricing else ""
+        print(
+            f"[TOKEN USAGE] provider=gemini model={model_name} | "
+            f"input={u.input} output={u.output} "
+            f"cache_read={u.cache_read} cache_write={u.cache_write} "
+            f"total={u.total}{cost_str}"
+        )
