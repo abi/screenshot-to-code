@@ -395,8 +395,18 @@ function Sidebar({
           <AgentActivity />
         )}
 
-        {/* Regenerate button for first generation */}
-        {isFirstGeneration && head === latestCommitHash && (appState === AppState.CODE_READY || isSelectedVariantComplete) && !isSelectedVariantError && (
+        {/* Regenerate button for first generation.
+            Scenarios:
+            1) `appState === CODE_READY`: request fully ended and user can retry.
+            2) `isSelectedVariantComplete`: selected option completed even if app state
+               has not yet fully transitioned.
+            3) `isSelectedVariantError`: selected option failed; keep retry visible so
+               users can rerun create without losing uploaded inputs. */}
+        {isFirstGeneration &&
+          head === latestCommitHash &&
+          (appState === AppState.CODE_READY ||
+            isSelectedVariantComplete ||
+            isSelectedVariantError) && (
           <div className="flex justify-end mb-3">
             <button
               onClick={regenerate}
@@ -444,7 +454,11 @@ function Sidebar({
                   )}
                 </div>
               )}
-              <div>Switch to another option above to make updates.</div>
+              <div>
+                {isFirstGeneration
+                  ? "Click Retry to run the create request again."
+                  : "Switch to another option above to make updates."}
+              </div>
             </div>
           </div>
         )}
