@@ -468,10 +468,11 @@ class OpenAIProviderSession(ProviderSession):
         model_name = get_openai_api_name(self._model)
         pricing = MODEL_PRICING.get(model_name)
         cost_str = f" cost=${u.cost(pricing):.4f}" if pricing else ""
+        cache_hit_rate_str = f" cache_hit_rate={u.cache_hit_rate_percent():.2f}%"
         print(
             f"[TOKEN USAGE] provider=openai model={model_name} | "
             f"input={u.input} output={u.output} "
             f"cache_read={u.cache_read} cache_write={u.cache_write} "
-            f"total={u.total}{cost_str}"
+            f"total={u.total}{cache_hit_rate_str}{cost_str}"
         )
         await self._client.close()

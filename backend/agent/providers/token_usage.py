@@ -25,7 +25,7 @@ class TokenUsage:
         total:       All tokens as reported by the provider API. Equals
                      input + cache_read + output (+ thinking for Gemini).
 
-    Total input sent to the model = input + cache_read.
+    Total input sent to the model = input + cache_read + cache_write.
     Cost = (input * input_rate + output * output_rate
             + cache_read * cache_read_rate + cache_write * cache_write_rate)
            / 1_000_000
@@ -52,3 +52,14 @@ class TokenUsage:
             + self.cache_read * pricing.cache_read
             + self.cache_write * pricing.cache_write
         ) / 1_000_000
+
+    def total_input_tokens(self) -> int:
+        """All input tokens, including non-cached, cache-read, and cache-write."""
+        return self.input + self.cache_read + self.cache_write
+
+    def cache_hit_rate_percent(self) -> float:
+        """Percent of total input tokens served from cache."""
+        total_input = self.total_input_tokens()
+        if total_input == 0:
+            return 0.0
+        return (self.cache_read / total_input) * 100.0
