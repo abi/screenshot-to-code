@@ -188,16 +188,22 @@ def _extract_usage(chunk: types.GenerateContentResponse) -> TokenUsage | None:
 
     Gemini reports thinking tokens separately; they are folded into ``output``
     to match the unified schema used by the other providers.
+
+    ``prompt_token_count`` *includes* ``cached_content_token_count``, so we
+    subtract cached tokens to get the non-cached input count (same approach
+    as the OpenAI provider).
     """
     meta = chunk.usage_metadata
     if meta is None:
         return None
     candidates = meta.candidates_token_count or 0
     thoughts = meta.thoughts_token_count or 0
+    prompt_tokens = meta.prompt_token_count or 0
+    cached_tokens = meta.cached_content_token_count or 0
     return TokenUsage(
-        input=meta.prompt_token_count or 0,
+        input=prompt_tokens - cached_tokens,
         output=candidates + thoughts,
-        cache_read=meta.cached_content_token_count or 0,
+        cache_read=cached_tokens,
         cache_write=0,
         total=meta.total_token_count or 0,
     )
