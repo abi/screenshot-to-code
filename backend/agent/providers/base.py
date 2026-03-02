@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Literal, Optional, Protocol
 
+from agent.providers.token_usage import TokenUsage
 from agent.tools import ToolCall, ToolExecutionResult
 
 
@@ -46,6 +47,12 @@ class ProviderSession(Protocol):
         turn: ProviderTurn,
         executed_tool_calls: list[ExecutedToolCall],
     ) -> None:
+        ...
+
+    def get_total_usage(self) -> TokenUsage:
+        ...
+
+    def get_total_cost_usd(self) -> float:
         ...
 
     async def close(self) -> None:

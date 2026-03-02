@@ -463,6 +463,22 @@ class OpenAIProviderSession(ProviderSession):
             )
         self._input_items.extend(tool_output_items)
 
+    def get_total_usage(self) -> TokenUsage:
+        usage = self._total_usage
+        return TokenUsage(
+            input=usage.input,
+            output=usage.output,
+            cache_read=usage.cache_read,
+            cache_write=usage.cache_write,
+            total=usage.total,
+        )
+
+    def get_total_cost_usd(self) -> float:
+        usage = self._total_usage
+        model_name = get_openai_api_name(self._model)
+        pricing = MODEL_PRICING.get(model_name)
+        return usage.cost(pricing) if pricing else 0.0
+
     async def close(self) -> None:
         u = self._total_usage
         model_name = get_openai_api_name(self._model)

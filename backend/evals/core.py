@@ -49,4 +49,5 @@ async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> s
         initial_file_state=None,
         option_codes=None,
     )
-    return await runner.run(model, prompt_messages)
+    completion, _, _ = await runner.run(model, prompt_messages)
+    return completion

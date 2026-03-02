@@ -1,12 +1,13 @@
 from enum import Enum
 import httpx
 from openai.types.chat import ChatCompletionMessageParam
-from typing import List
+from typing import Any, List, cast
 import json
 
+from agent.providers.token_usage import TokenUsage
 from config import BACKEND_SAAS_API_SECRET, BACKEND_SAAS_URL, IS_PROD
 from custom_types import InputMode
-from llm import Completion, Llm
+from llm import Llm
 from prompts.prompt_types import Stack
 
 SaasOtherInfoValue = str | bool | int | float | None
@@ -32,10 +33,11 @@ async def send_to_saas_backend(
     stack: Stack,
     is_imported_from_code: bool,
     input_mode: InputMode,
+    token_usage: TokenUsage,
+    llm_cost_usd: float,
     other_info: dict[str, SaasOtherInfoValue] | None = None,
     video_data_url: str | None = None,
-    video_generation_cost: float | None = None,
-):
+) -> dict[str, Any] | None:
     if IS_PROD:
         normalized_other_info = other_info or {}
         async with httpx.AsyncClient() as client:
@@ -54,9 +56,16 @@ async def send_to_saas_backend(
                     "is_imported_from_code": is_imported_from_code,
                     "includes_result_image": False,  # Deprecated
                     "input_mode": input_mode,
+                    "llm_usage": {
+                        "llm_input_tokens": token_usage.input,
+                        "llm_output_tokens": token_usage.output,
+                        "llm_cache_read_tokens": token_usage.cache_read,
+                        "llm_cache_write_tokens": token_usage.cache_write,
+                        "llm_total_tokens": token_usage.total,
+                        "llm_cost_usd": llm_cost_usd,
+                    },
                     "other_info": normalized_other_info,
                     "video_data_url": video_data_url,
-                    "video_generation_cost": video_generation_cost,
                 }
             )
 
@@ -67,5 +76,7 @@ async def send_to_saas_backend(
 
             response = await client.post(url, content=data, headers=headers, timeout=10)
             response.raise_for_status()
-            response_data = response.json()
+            response_data = cast(dict[str, Any], response.json())
             return response_data
+
+    return None

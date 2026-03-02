@@ -7,7 +7,12 @@ from openai.types.chat import ChatCompletionMessageParam
 from codegen.utils import extract_html_content
 from llm import Llm
 
-from agent.providers.base import ExecutedToolCall, ProviderSession, StreamEvent
+from agent.providers.base import (
+    ExecutedToolCall,
+    ProviderSession,
+    StreamEvent,
+)
+from agent.providers.token_usage import TokenUsage
 from agent.providers.factory import create_provider_session
 from agent.state import AgentFileState, seed_file_state_from_messages
 from agent.tools import (
@@ -225,7 +230,9 @@ class AgentEngine:
 
         raise Exception("Agent exceeded max tool turns")
 
-    async def run(self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]) -> str:
+    async def run(
+        self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]
+    ) -> tuple[str, TokenUsage, float]:
         seed_file_state_from_messages(self.file_state, prompt_messages)
 
         session = create_provider_session(
@@ -238,7 +245,8 @@ class AgentEngine:
             gemini_api_key=self.gemini_api_key,
         )
         try:
-            return await self._run_with_session(session)
+            completion = await self._run_with_session(session)
+            return completion, session.get_total_usage(), session.get_total_cost_usd()
         finally:
             await session.close()
 

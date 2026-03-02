@@ -699,7 +699,6 @@ class AgenticGenerationStage:
         self.edit_base_variant_index = edit_base_variant_index
         self.edit_base_generation_type = edit_base_generation_type
 
-
     async def process_variants(
         self,
         variant_models: List[Llm],
@@ -758,7 +757,9 @@ class AgenticGenerationStage:
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,
             )
-            completion = await runner.run(model, prompt_messages)
+            completion, token_usage, llm_cost_usd = await runner.run(
+                model, prompt_messages
+            )
             if completion:
                 await self.send_message("setCode", completion, index, None, None)
             await self.send_message(
@@ -801,12 +802,14 @@ class AgenticGenerationStage:
                         stack=self.stack,
                         is_imported_from_code=False,
                         input_mode=self.input_mode,
+                        token_usage=token_usage,
+                        llm_cost_usd=llm_cost_usd,
                         other_info=other_info,
                         video_data_url=video_data_url,
-                        video_generation_cost=None,
                     )
                     if isinstance(saas_response, dict):
-                        generation_id = saas_response.get("generation_id")
+                        response_payload = cast(dict[str, Any], saas_response)
+                        generation_id = response_payload.get("generation_id")
                         if isinstance(generation_id, str) and generation_id:
                             await self.send_message(
                                 "variantGenerationId",

@@ -344,6 +344,22 @@ class GeminiProviderSession(ProviderSession):
 
         self._contents.append(types.Content(role="tool", parts=tool_result_parts))
 
+    def get_total_usage(self) -> TokenUsage:
+        usage = self._total_usage
+        return TokenUsage(
+            input=usage.input,
+            output=usage.output,
+            cache_read=usage.cache_read,
+            cache_write=usage.cache_write,
+            total=usage.total,
+        )
+
+    def get_total_cost_usd(self) -> float:
+        usage = self._total_usage
+        model_name = _get_gemini_api_model_name(self._model)
+        pricing = MODEL_PRICING.get(model_name)
+        return usage.cost(pricing) if pricing else 0.0
+
     async def close(self) -> None:
         u = self._total_usage
         model_name = _get_gemini_api_model_name(self._model)
