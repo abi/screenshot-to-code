@@ -199,7 +199,7 @@ function App() {
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
   };
 
-  // Used for code generation failure as well
+  // Used for user-initiated cancellation and failed edit rollbacks
   const cancelCodeGenerationAndReset = (commit: Commit) => {
     // When the current commit is the first version, reset the entire app state
     if (commit.type === "ai_create") {
@@ -297,6 +297,18 @@ function App() {
         endedAt: Date.now(),
       });
       delete lastToolEventIdRef.current[variantIndex];
+    };
+
+    const finishInFlightEvents = (status: "complete" | "error") => {
+      Object.keys(lastThinkingEventIdRef.current).forEach((key) => {
+        finishThinkingEvent(Number(key), status);
+      });
+      Object.keys(lastAssistantEventIdRef.current).forEach((key) => {
+        finishAssistantEvent(Number(key), status);
+      });
+      Object.keys(lastToolEventIdRef.current).forEach((key) => {
+        finishToolEvent(Number(key), status);
+      });
     };
 
     generateCode(wsRef, updatedParams, {
@@ -414,19 +426,31 @@ function App() {
           delete lastToolEventIdRef.current[variantIndex];
         }
       },
-      onCancel: () => {
+      onCancel: (reason, errorMessage) => {
+        // Close any running agent events when the socket ends without per-event
+        // terminal messages, otherwise they remain stuck in "running" state.
+        finishInFlightEvents(reason === "request_failed" ? "error" : "complete");
+
+        if (reason === "request_failed" && commit.type === "ai_create") {
+          const latestCreateCommit = useProjectStore.getState().commits[commit.hash];
+          latestCreateCommit?.variants.forEach((variant, variantIndex) => {
+            if (variant.status === "generating") {
+              updateVariantStatus(
+                commit.hash,
+                variantIndex,
+                "error",
+                errorMessage || "Generation failed. Please retry."
+              );
+            }
+          });
+          setAppState(AppState.CODE_READY);
+          return;
+        }
+
         cancelCodeGenerationAndReset(commit);
       },
       onComplete: () => {
-        Object.keys(lastThinkingEventIdRef.current).forEach((key) => {
-          finishThinkingEvent(Number(key), "complete");
-        });
-        Object.keys(lastAssistantEventIdRef.current).forEach((key) => {
-          finishAssistantEvent(Number(key), "complete");
-        });
-        Object.keys(lastToolEventIdRef.current).forEach((key) => {
-          finishToolEvent(Number(key), "complete");
-        });
+        finishInFlightEvents("complete");
         setAppState(AppState.CODE_READY);
       },
     });
