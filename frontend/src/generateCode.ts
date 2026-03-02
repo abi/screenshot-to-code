@@ -46,7 +46,10 @@ interface CodeGenerationCallbacks {
   onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
   onToolStart: (data: any, variantIndex: number, eventId?: string) => void;
   onToolResult: (data: any, variantIndex: number, eventId?: string) => void;
-  onCancel: () => void;
+  onCancel: (
+    reason: "user_cancelled" | "request_failed" | "connection_error",
+    errorMessage?: string
+  ) => void;
   onComplete: () => void;
 }
 
@@ -107,14 +110,14 @@ export function generateCode(
     console.log("Connection closed", event.code, event.reason);
     if (event.code === USER_CLOSE_WEB_SOCKET_CODE) {
       toast.success(CANCEL_MESSAGE);
-      callbacks.onCancel();
+      callbacks.onCancel("user_cancelled");
     } else if (event.code === APP_ERROR_WEB_SOCKET_CODE) {
       console.error("Known server error", event);
-      callbacks.onCancel();
+      callbacks.onCancel("request_failed", event.reason || ERROR_MESSAGE);
     } else if (event.code !== 1000) {
       console.error("Unknown server or connection error", event);
       toast.error(ERROR_MESSAGE);
-      callbacks.onCancel();
+      callbacks.onCancel("connection_error", event.reason || ERROR_MESSAGE);
     } else {
       callbacks.onComplete();
     }

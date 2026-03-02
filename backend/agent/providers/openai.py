@@ -15,6 +15,8 @@ from agent.providers.base import (
     ProviderTurn,
     StreamEvent,
 )
+from agent.providers.pricing import MODEL_PRICING
+from agent.providers.token_usage import TokenUsage
 from agent.state import ensure_str
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
 from llm import Llm, get_openai_api_name, get_openai_reasoning_effort
@@ -128,6 +130,32 @@ class OpenAIResponsesParseState:
     output_items_by_index: Dict[int, Dict[str, Any]] = field(default_factory=dict)
     saw_reasoning_summary_text_delta: bool = False
     last_emitted_reasoning_summary_part: str = ""
+    turn_usage: TokenUsage | None = None
+
+
+def _extract_openai_usage(response: Any) -> TokenUsage:
+    """Extract unified token usage from an OpenAI Responses ``response.completed`` event.
+
+    OpenAI includes cached tokens inside ``input_tokens``, so they are subtracted
+    to get the non-cached input count.
+    """
+    usage = _get_event_attr(response, "usage")
+    if usage is None:
+        return TokenUsage()
+    input_tokens = _get_event_attr(usage, "input_tokens", 0) or 0
+    output_tokens = _get_event_attr(usage, "output_tokens", 0) or 0
+    total_tokens = _get_event_attr(usage, "total_tokens", 0) or 0
+
+    details = _get_event_attr(usage, "input_tokens_details") or {}
+    cached_tokens = _get_event_attr(details, "cached_tokens", 0) or 0
+
+    return TokenUsage(
+        input=input_tokens - cached_tokens,
+        output=output_tokens,
+        cache_read=cached_tokens,
+        cache_write=0,
+        total=total_tokens,
+    )
 
 
 async def parse_event(
@@ -142,6 +170,10 @@ async def parse_event(
         "response.done",
         "response.output_item.done",
     ):
+        if event_type == "response.completed":
+            response = _get_event_attr(event, "response")
+            if response:
+                state.turn_usage = _extract_openai_usage(response)
         if event_type == "response.output_item.done":
             output_index = _get_event_attr(event, "output_index")
             item = _get_event_attr(event, "item")
@@ -383,6 +415,7 @@ class OpenAIProviderSession(ProviderSession):
         self._client = client
         self._model = model
         self._tools = tools
+        self._total_usage = TokenUsage()
         self._input_items: List[Dict[str, Any]] = [
             _convert_message_to_responses_input(message) for message in prompt_messages
         ]
@@ -404,6 +437,10 @@ class OpenAIProviderSession(ProviderSession):
         stream = await self._client.responses.create(**params)  # type: ignore
         async for event in stream:  # type: ignore
             await parse_event(event, state, on_event)
+
+        if state.turn_usage is not None:
+            self._total_usage.accumulate(state.turn_usage)
+
         return _build_provider_turn(state)
 
     def append_tool_results(
@@ -427,4 +464,14 @@ class OpenAIProviderSession(ProviderSession):
         self._input_items.extend(tool_output_items)
 
     async def close(self) -> None:
+        u = self._total_usage
+        model_name = get_openai_api_name(self._model)
+        pricing = MODEL_PRICING.get(model_name)
+        cost_str = f" cost=${u.cost(pricing):.4f}" if pricing else ""
+        print(
+            f"[TOKEN USAGE] provider=openai model={model_name} | "
+            f"input={u.input} output={u.output} "
+            f"cache_read={u.cache_read} cache_write={u.cache_write} "
+            f"total={u.total}{cost_str}"
+        )
         await self._client.close()
