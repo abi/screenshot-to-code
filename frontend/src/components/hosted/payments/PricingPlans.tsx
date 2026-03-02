@@ -141,7 +141,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
           <ul className="space-y-2">
             <li className="flex items-center gap-2 text-xs dark:text-white">
               <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
-              300 credits / mo
+              500 credits / mo
             </li>
             <li className="flex items-center gap-2 text-xs dark:text-white">
               <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
