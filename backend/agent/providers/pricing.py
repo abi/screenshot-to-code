@@ -1,6 +1,16 @@
+from dataclasses import dataclass
 from typing import Dict
 
-from agent.providers.token_usage import ModelPricing
+
+@dataclass
+class ModelPricing:
+    """Per-million-token pricing in USD."""
+
+    input: float = 0.0
+    output: float = 0.0
+    cache_read: float = 0.0
+    cache_write: float = 0.0
+
 
 # Pricing keyed by the API model name string sent to the provider.
 MODEL_PRICING: Dict[str, ModelPricing] = {

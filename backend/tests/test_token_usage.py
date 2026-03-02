@@ -2,8 +2,8 @@
 
 from types import SimpleNamespace
 
-from agent.providers.pricing import MODEL_PRICING
-from agent.providers.token_usage import ModelPricing, TokenUsage
+from agent.providers.pricing import MODEL_PRICING, ModelPricing
+from agent.providers.token_usage import TokenUsage
 from agent.providers.anthropic import _extract_anthropic_usage
 from agent.providers.gemini import _extract_usage as _extract_gemini_usage
 from agent.providers.openai import _extract_openai_usage

@@ -2,15 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-@dataclass
-class ModelPricing:
-    """Per-million-token pricing in USD."""
-
-    input: float = 0.0
-    output: float = 0.0
-    cache_read: float = 0.0
-    cache_write: float = 0.0
+from agent.providers.pricing import ModelPricing
 
 
 @dataclass
