@@ -271,6 +271,7 @@ class AnthropicProviderSession(ProviderSession):
             "system": self._system_prompt,
             "messages": self._messages,
             "tools": self._tools,
+            "cache_control": {"type": "ephemeral"},
         }
 
         if self._model.value in ADAPTIVE_THINKING_MODELS:
