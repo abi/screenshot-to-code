@@ -231,7 +231,6 @@ class AgentEngine:
         session = create_provider_session(
             model=model,
             prompt_messages=prompt_messages,
-            should_generate_images=self.should_generate_images,
             openai_api_key=self.openai_api_key,
             openai_base_url=self.openai_base_url,
             anthropic_api_key=self.anthropic_api_key,

@@ -16,15 +16,12 @@ from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
 def create_provider_session(
     model: Llm,
     prompt_messages: list[ChatCompletionMessageParam],
-    should_generate_images: bool,
     openai_api_key: Optional[str],
     openai_base_url: Optional[str],
     anthropic_api_key: Optional[str],
     gemini_api_key: Optional[str],
 ) -> ProviderSession:
-    canonical_tools = canonical_tool_definitions(
-        image_generation_enabled=should_generate_images
-    )
+    canonical_tools = canonical_tool_definitions()
 
     if model in OPENAI_MODELS:
         if not openai_api_key:
