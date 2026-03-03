@@ -11,8 +11,13 @@ const DELAYED_PAYWALL_OVERRIDE_EMAILS: string[] = [
 /**
  * Deterministically assign a user to an experiment group based on their user ID.
  * Uses a simple hash to split users ~50/50.
+ *
+ * DISABLED: A/B test disabled — all users now get the paywall immediately.
  */
 export function getExperimentGroup(userId: string): ExperimentGroup {
+  // A/B test disabled: always return control so every user sees the paywall.
+  return "control";
+
   if (DELAYED_PAYWALL_OVERRIDE_EMAILS.includes(userId.toLowerCase())) {
     return "delayed_paywall";
   }
