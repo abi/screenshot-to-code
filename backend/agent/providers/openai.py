@@ -427,7 +427,9 @@ class OpenAIProviderSession(ProviderSession):
             "tools": self._tools,
             "tool_choice": "auto",
             "stream": True,
+            "store": False,
             "max_output_tokens": 50000,
+            "include": ["reasoning.encrypted_content"],
         }
         reasoning_effort = get_openai_reasoning_effort(self._model)
         if reasoning_effort:
