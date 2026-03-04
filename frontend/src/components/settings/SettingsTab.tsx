@@ -86,11 +86,17 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                   }
                 >
                   <SelectTrigger className="w-[140px]">
-                    {capitalize(settings.editorTheme)}
+                    <span className="notranslate" translate="no">
+                      {capitalize(settings.editorTheme)}
+                    </span>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cobalt">Cobalt</SelectItem>
-                    <SelectItem value="espresso">Espresso</SelectItem>
+                    <SelectItem value="cobalt">
+                      <span className="notranslate" translate="no">Cobalt</span>
+                    </SelectItem>
+                    <SelectItem value="espresso">
+                      <span className="notranslate" translate="no">Espresso</span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
