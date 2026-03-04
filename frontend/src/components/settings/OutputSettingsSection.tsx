@@ -7,7 +7,6 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Stack } from "../../lib/stacks";
-import { addEvent } from "../../lib/analytics";
 import StackLabel from "../core/StackLabel";
 
 interface Props {

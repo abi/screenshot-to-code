@@ -185,14 +185,14 @@ files = [
 
 [[package]]
 name = "anthropic"
-version = "0.78.0"
+version = "0.84.0"
 description = "The official Python library for the anthropic API"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "anthropic-0.78.0-py3-none-any.whl", hash = "sha256:2a9887d2e99d1b0f9fe08857a1e9fe5d2d4030455dbf9ac65aab052e2efaeac4"},
-    {file = "anthropic-0.78.0.tar.gz", hash = "sha256:55fd978ab9b049c61857463f4c4e9e092b24f892519c6d8078cee1713d8af06e"},
+    {file = "anthropic-0.84.0-py3-none-any.whl", hash = "sha256:861c4c50f91ca45f942e091d83b60530ad6d4f98733bfe648065364da05d29e7"},
+    {file = "anthropic-0.84.0.tar.gz", hash = "sha256:72f5f90e5aebe62dca316cb013629cfa24996b0f5a4593b8c3d712bc03c43c37"},
 ]
 
 [package.dependencies]
@@ -208,6 +208,7 @@ typing-extensions = ">=4.10,<5"
 [package.extras]
 aiohttp = ["aiohttp", "httpx-aiohttp (>=0.1.9)"]
 bedrock = ["boto3 (>=1.28.57)", "botocore (>=1.31.57)"]
+mcp = ["mcp (>=1.0) ; python_version >= \"3.10\""]
 vertex = ["google-auth[requests] (>=2,<3)"]
 
 [[package]]
@@ -3015,4 +3016,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "a84f8a6da0dba55d90118b2383ba77fad49c21461a97d6defe79f22cfcd5665b"
+content-hash = "f42906a6a0ab3a3e3841061024190a400b8895c380b7253d41f1e21797a540a8"
