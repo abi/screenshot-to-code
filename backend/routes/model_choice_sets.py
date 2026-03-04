@@ -26,11 +26,11 @@ ALL_KEYS_MODELS_TEXT_CREATE = (
     Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
 )
 
-# Text + Video (Update)
+# Image + Text (Update)
 
 ALL_KEYS_MODELS_UPDATE = (
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-    Llm.GPT_5_2_CODEX_LOW,
+    Llm.GPT_5_3_CODEX_LOW,
 )
 
 # Key subset fallbacks.

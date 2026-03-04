@@ -532,14 +532,6 @@ class ModelSelectionStage:
                 )
             return list(VIDEO_VARIANT_MODELS)
 
-        # Edit/update mode prefers one Gemini + one OpenAI model for fast,
-        # complementary deltas.
-        if generation_type == "update" and gemini_api_key and openai_api_key:
-            return [
-                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-                Llm.GPT_5_2_CODEX_LOW,
-            ]
-
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key and openai_api_key:
             if input_mode == "text" and generation_type == "create":
