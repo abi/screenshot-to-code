@@ -27,7 +27,7 @@ class TestModelSelectionAllKeys:
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.GPT_5_2_CODEX_HIGH,
             Llm.CLAUDE_OPUS_4_6,
-            Llm.GEMINI_3_PRO_PREVIEW_LOW,
+            Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
         ]
         assert models == expected
 

@@ -27,8 +27,6 @@ class Llm(Enum):
     GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)"
     GEMINI_3_1_PRO_PREVIEW_MEDIUM = "gemini-3.1-pro-preview (medium thinking)"
     GEMINI_3_1_PRO_PREVIEW_LOW = "gemini-3.1-pro-preview (low thinking)"
-    GEMINI_3_PRO_PREVIEW_HIGH = "gemini-3-pro-preview (high thinking)"
-    GEMINI_3_PRO_PREVIEW_LOW = "gemini-3-pro-preview (low thinking)"
 
 
 class Completion(TypedDict):
@@ -62,8 +60,6 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GEMINI_3_1_PRO_PREVIEW_HIGH: "gemini",
     Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM: "gemini",
     Llm.GEMINI_3_1_PRO_PREVIEW_LOW: "gemini",
-    Llm.GEMINI_3_PRO_PREVIEW_HIGH: "gemini",
-    Llm.GEMINI_3_PRO_PREVIEW_LOW: "gemini",
 }
 
 # Convenience sets for membership checks

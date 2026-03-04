@@ -9,7 +9,7 @@ const StackLabel: React.FC<StackLabelProps> = ({ stack }) => {
   const stackComponents = STACK_DESCRIPTIONS[stack].components;
 
   return (
-    <div>
+    <div className="notranslate" translate="no">
       {stackComponents.map((component, index) => (
         <React.Fragment key={index}>
           <span className="font-semibold">{component}</span>

@@ -46,19 +46,16 @@ def _get_gemini_api_model_name(model: Llm) -> str:
         Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
     ]:
         return "gemini-3.1-pro-preview"
-    if model in [Llm.GEMINI_3_PRO_PREVIEW_HIGH, Llm.GEMINI_3_PRO_PREVIEW_LOW]:
-        return "gemini-3-pro-preview"
     return model.value
 
 
 def _get_thinking_level_for_model(model: Llm) -> str:
     if model in [
         Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
-        Llm.GEMINI_3_PRO_PREVIEW_HIGH,
         Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
     ]:
         return "high"
-    if model in [Llm.GEMINI_3_PRO_PREVIEW_LOW, Llm.GEMINI_3_1_PRO_PREVIEW_LOW]:
+    if model == Llm.GEMINI_3_1_PRO_PREVIEW_LOW:
         return "low"
     if model == Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM:
         return "medium"
@@ -365,9 +362,10 @@ class GeminiProviderSession(ProviderSession):
         model_name = _get_gemini_api_model_name(self._model)
         pricing = MODEL_PRICING.get(model_name)
         cost_str = f" cost=${u.cost(pricing):.4f}" if pricing else ""
+        cache_hit_rate_str = f" cache_hit_rate={u.cache_hit_rate_percent():.2f}%"
         print(
             f"[TOKEN USAGE] provider=gemini model={model_name} | "
             f"input={u.input} output={u.output} "
             f"cache_read={u.cache_read} cache_write={u.cache_write} "
-            f"total={u.total}{cost_str}"
+            f"total={u.total}{cache_hit_rate_str}{cost_str}"
         )

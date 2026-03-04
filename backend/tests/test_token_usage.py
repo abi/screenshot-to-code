@@ -86,6 +86,23 @@ class TestCost:
         assert abs(usage.cost(pricing) - expected) < 1e-9
 
 
+class TestCacheHitRate:
+    def test_zero_total_input_is_zero_percent(self) -> None:
+        usage = TokenUsage()
+        assert usage.total_input_tokens() == 0
+        assert usage.cache_hit_rate_percent() == 0.0
+
+    def test_cache_hit_rate_without_cache_write(self) -> None:
+        usage = TokenUsage(input=300, cache_read=100)
+        assert usage.total_input_tokens() == 400
+        assert abs(usage.cache_hit_rate_percent() - 25.0) < 1e-9
+
+    def test_cache_hit_rate_includes_cache_write_in_denominator(self) -> None:
+        usage = TokenUsage(input=300, cache_read=100, cache_write=100)
+        assert usage.total_input_tokens() == 500
+        assert abs(usage.cache_hit_rate_percent() - 20.0) < 1e-9
+
+
 # ---------------------------------------------------------------------------
 # Gemini: _extract_usage
 # ---------------------------------------------------------------------------
