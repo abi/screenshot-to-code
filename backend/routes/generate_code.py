@@ -75,6 +75,9 @@ from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 router = APIRouter()
 
+# Temporary debug override to focus on OpenAI prompt caching behavior.
+FORCE_OPENAI_SINGLE_VARIANT = True
+
 
 @dataclass
 class PipelineContext:
@@ -366,6 +369,14 @@ class ModelSelectionStage:
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
+            if FORCE_OPENAI_SINGLE_VARIANT and input_mode != "video":
+                if not openai_api_key:
+                    raise Exception("OpenAI API key required for single-variant debug mode")
+                variant_models = [Llm.GPT_5_2_CODEX_HIGH]
+                print("Variant models:")
+                print(f"Variant 1: {variant_models[0].value}")
+                return variant_models
+
             num_variants = 2 if generation_type == "update" else NUM_VARIANTS
             variant_models = self._get_variant_models(
                 generation_type,
@@ -698,11 +709,14 @@ class StatusBroadcastMiddleware(Middleware):
         assert context.extracted_params is not None
         is_video_mode = context.extracted_params.input_mode == "video"
         is_update = context.extracted_params.generation_type == "update"
-        num_variants = (
-            NUM_VARIANTS_VIDEO
-            if is_video_mode
-            else 2 if is_update else NUM_VARIANTS
-        )
+        if FORCE_OPENAI_SINGLE_VARIANT and not is_video_mode:
+            num_variants = 1
+        else:
+            num_variants = (
+                NUM_VARIANTS_VIDEO
+                if is_video_mode
+                else 2 if is_update else NUM_VARIANTS
+            )
 
         # Tell frontend how many variants we're using
         await context.send_message("variantCount", str(num_variants), 0)
