@@ -4,6 +4,7 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "../ui/select";
 import { Stack } from "../../lib/stacks";
 import StackLabel from "../core/StackLabel";
@@ -26,7 +27,7 @@ function OutputSettingsSection({
       <div className="grid grid-cols-3 items-center gap-4">
         <span>{label}</span>
         <Select
-          value={stack}
+          value={stack ?? ""}
           onValueChange={(value: string) => setStack(value as Stack)}
           disabled={shouldDisableUpdates}
         >
@@ -35,7 +36,7 @@ function OutputSettingsSection({
             id="output-settings-js"
             data-testid="stack-select"
           >
-            {stack ? <StackLabel stack={stack} /> : "Select a stack"}
+            <SelectValue placeholder="Select a stack" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
