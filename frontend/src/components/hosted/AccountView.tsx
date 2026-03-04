@@ -41,13 +41,13 @@ export default function AccountView() {
       try {
         const res: CreditsUsage = await authenticatedFetch(
           SAAS_BACKEND_URL + "/credits/usage",
-          "POST"
+          "POST",
         );
         setUsedCredits(res.used_monthly_credits);
         setTotalCredits(res.total_monthly_credits);
       } catch (e) {
         toast.error(
-          "Failed to fetch credit usage. Please contact support to get this issue fixed."
+          "Failed to fetch credit usage. Please contact support to get this issue fixed.",
         );
       } finally {
         setIsLoadingUsage(false);
@@ -128,7 +128,7 @@ export default function AccountView() {
                   {isLoadingUsage ? (
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400">
                       <Spinner />
-                      Loading credit usage...
+                      <span>Loading credit usage...</span>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -140,22 +140,23 @@ export default function AccountView() {
                       </div>
                       <Progress value={(usedCredits / totalCredits) * 100} />
                       <p className="text-xs text-gray-500 dark:text-zinc-400">
-                        {usedCredits} out of {totalCredits} credits used for{" "}
-                        {new Date().toLocaleString("default", {
-                          month: "long",
-                        })}
-                        .
+                        <span>
+                          {usedCredits} out of {totalCredits} credits used for{" "}
+                          {new Date().toLocaleString("default", {
+                            month: "long",
+                          })}
+                          .
+                        </span>
                         {subscriberTier !== "pro" && (
-                          <>
-                            {" "}
+                          <span>
                             <button
                               onClick={openPricingDialog}
-                              className="text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+                              className="ml-1 text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
                             >
-                              Upgrade to Pro
-                            </button>{" "}
-                            to get more credits.
-                          </>
+                              <span>Upgrade to Pro</span>
+                            </button>
+                            <span> to get more credits.</span>
+                          </span>
                         )}
                       </p>
                     </div>
