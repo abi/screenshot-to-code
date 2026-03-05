@@ -1,5 +1,6 @@
 # pyright: reportUnknownVariableType=false
 import asyncio
+import difflib
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from codegen.utils import extract_html_content
@@ -88,6 +89,30 @@ class AgentToolRuntime:
             updated_content=self.file_state.content,
         )
 
+    @staticmethod
+    def _generate_diff(old_content: str, new_content: str, path: str) -> Dict[str, Any]:
+        """Generate a unified diff between old and new content."""
+        old_lines = old_content.splitlines(keepends=True)
+        new_lines = new_content.splitlines(keepends=True)
+        diff_lines = list(
+            difflib.unified_diff(old_lines, new_lines, fromfile=path, tofile=path)
+        )
+        diff_str = "".join(diff_lines)
+
+        # Find the first changed line number from the diff hunks
+        first_changed_line: Optional[int] = None
+        for line in diff_lines:
+            if line.startswith("@@"):
+                # Parse hunk header like "@@ -l,s +l,s @@"
+                try:
+                    plus_part = line.split("+")[1].split("@@")[0].strip()
+                    first_changed_line = int(plus_part.split(",")[0])
+                except (IndexError, ValueError):
+                    pass
+                break
+
+        return {"diff": diff_str, "firstChangedLine": first_changed_line}
+
     def _apply_single_edit(
         self,
         content: str,
@@ -131,6 +156,7 @@ class AgentToolRuntime:
             )
 
         content = self.file_state.content
+        original_content = content
         summary_edits: List[Dict[str, Any]] = []
         for edit in edits:
             old_text = ensure_str(edit.get("old_text"))
@@ -163,17 +189,23 @@ class AgentToolRuntime:
             )
 
         self.file_state.content = content
+        path = self.file_state.path or "index.html"
+        diff_info = self._generate_diff(original_content, content, path)
         summary = {
-            "path": self.file_state.path,
+            "path": path,
             "edits": summary_edits,
             "contentLength": len(self.file_state.content),
+            "diff": diff_info["diff"],
+            "firstChangedLine": diff_info["firstChangedLine"],
         }
         result = {
-            "content": f"Successfully edited file at {self.file_state.path}.",
+            "content": f"Successfully edited file at {path}.",
             "details": {
-                "path": self.file_state.path,
+                "path": path,
                 "edits": summary_edits,
                 "contentLength": len(self.file_state.content),
+                "diff": diff_info["diff"],
+                "firstChangedLine": diff_info["firstChangedLine"],
             },
         }
         return ToolExecutionResult(
