@@ -1,10 +1,17 @@
 import asyncio
 import httpx
-from typing import Any, Mapping, cast
+from typing import Any, Literal, Mapping, cast
 
 
 REPLICATE_API_BASE_URL = "https://api.replicate.com/v1"
-FLUX_MODEL_PATH = "black-forest-labs/flux-2-klein-4b"
+ReplicateImageModel = Literal["z_image_turbo", "flux_2_klein"]
+Z_IMAGE_TURBO_MODEL_PATH = "prunaai/z-image-turbo"
+FLUX_2_KLEIN_MODEL_PATH = "black-forest-labs/flux-2-klein-4b"
+MODEL_PATHS: dict[ReplicateImageModel, str] = {
+    "z_image_turbo": Z_IMAGE_TURBO_MODEL_PATH,
+    "flux_2_klein": FLUX_2_KLEIN_MODEL_PATH,
+}
+DEFAULT_IMAGE_MODEL: ReplicateImageModel = "z_image_turbo"
 REMOVE_BACKGROUND_VERSION = (
     "a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc"
 )
@@ -90,7 +97,7 @@ def _extract_output_url(result: Any, context: str) -> str:
             return url
 
     if isinstance(result, list) and len(result) > 0:
-        first: Any = result[0]
+        first = cast(Any, result[0])
         if isinstance(first, str) and first:
             return first
         if isinstance(first, Mapping):
@@ -136,6 +143,11 @@ async def remove_background(image_url: str, api_token: str) -> str:
     return _extract_output_url(result, "background remover")
 
 
-async def call_replicate(input: dict[str, str | int], api_token: str) -> str:
-    result = await call_replicate_model(FLUX_MODEL_PATH, input, api_token)
-    return _extract_output_url(result, "Flux prediction")
+async def call_replicate(
+    input: dict[str, str | int | float | bool],
+    api_token: str,
+    model: ReplicateImageModel = DEFAULT_IMAGE_MODEL,
+) -> str:
+    model_path = MODEL_PATHS[model]
+    result = await call_replicate_model(model_path, input, api_token)
+    return _extract_output_url(result, f"Replicate image model prediction ({model})")
