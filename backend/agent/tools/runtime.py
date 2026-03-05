@@ -169,8 +169,12 @@ class AgentToolRuntime:
             "contentLength": len(self.file_state.content),
         }
         result = {
-            "path": self.file_state.path,
-            "content": self.file_state.content,
+            "content": f"Successfully edited file at {self.file_state.path}.",
+            "details": {
+                "path": self.file_state.path,
+                "edits": summary_edits,
+                "contentLength": len(self.file_state.content),
+            },
         }
         return ToolExecutionResult(
             ok=True,
