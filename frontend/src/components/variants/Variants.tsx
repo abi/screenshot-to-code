@@ -139,7 +139,7 @@ function Variants() {
                   <span className={`w-2 h-2 rounded-full mr-1.5 ${statusColor}`} />
                   Option {index + 1}
                 </span>
-                {variant.status === "generating" && (
+                {variant.status === "generating" ? (
                   <div
                     className="ml-auto shrink-0 inline-flex items-center"
                     role="status"
@@ -148,6 +148,12 @@ function Variants() {
                   >
                     <WorkingPulse />
                   </div>
+                ) : (
+                  index < 9 && (
+                    <kbd className="ml-auto shrink-0 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+                      ⌥{index + 1}
+                    </kbd>
+                  )
                 )}
               </div>
             </div>
