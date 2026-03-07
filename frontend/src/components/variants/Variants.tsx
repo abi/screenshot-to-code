@@ -138,23 +138,22 @@ function Variants() {
                 <span className="inline-flex min-w-0 items-center text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                   <span className={`w-2 h-2 rounded-full mr-1.5 ${statusColor}`} />
                   Option {index + 1}
-                </span>
-                <div className="ml-auto shrink-0 inline-flex items-center gap-1">
-                  {variant.status === "generating" && (
-                    <div
-                      role="status"
-                      aria-live="polite"
-                      aria-label="Working"
-                    >
-                      <WorkingPulse />
-                    </div>
-                  )}
                   {index < 9 && (
-                    <kbd className="text-[10px] text-gray-400 dark:text-gray-500 font-mono">
-                      ⌥{index + 1}
-                    </kbd>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono ml-1">
+                      (⌥{index + 1})
+                    </span>
                   )}
-                </div>
+                </span>
+                {variant.status === "generating" && (
+                  <div
+                    className="ml-auto shrink-0 inline-flex items-center"
+                    role="status"
+                    aria-live="polite"
+                    aria-label="Working"
+                  >
+                    <WorkingPulse />
+                  </div>
+                )}
               </div>
             </div>
           );
