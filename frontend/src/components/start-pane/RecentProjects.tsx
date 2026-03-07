@@ -28,7 +28,10 @@ const MAX_RECENT = 3;
 const formatDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
-    return formatRelative(date.toLocaleString(), new Date());
+    if (isNaN(date.getTime())) {
+      return "unknown";
+    }
+    return formatRelative(date, new Date());
   } catch (error) {
     Sentry.captureException(error);
     return "unknown";

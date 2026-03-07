@@ -37,8 +37,10 @@ const PREVIEW_DESKTOP_HEIGHT = 900;
 const formatDate = (dateString: string) => {
   try {
     const date = new Date(dateString);
-    Sentry.setContext("Local Variables", { date });
-    return formatRelative(date.toLocaleString(), new Date());
+    if (isNaN(date.getTime())) {
+      return "unknown";
+    }
+    return formatRelative(date, new Date());
   } catch (error) {
     Sentry.captureException(error);
     console.error("Failed to format date:", error);
