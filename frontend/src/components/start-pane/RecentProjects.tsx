@@ -29,7 +29,7 @@ const formatDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return "unknown";
+      throw new RangeError(`Invalid time value: ${dateString}`);
     }
     return formatRelative(date, new Date());
   } catch (error) {
