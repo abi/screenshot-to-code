@@ -99,6 +99,9 @@ def _make_responses_schema_strict(schema: Dict[str, Any]) -> Dict[str, Any]:
 
         if in_object_property and node_type is not None:
             node["type"] = _nullable_type(node_type)
+            enum_values = node.get("enum")
+            if isinstance(enum_values, list) and None not in enum_values:
+                node["enum"] = [*enum_values, None]
 
     transform(schema_copy, in_object_property=False)
     return schema_copy
