@@ -228,7 +228,7 @@ class AgentEngine:
     async def run(self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]) -> str:
         seed_file_state_from_messages(self.file_state, prompt_messages)
 
-        session = create_provider_session(
+        session = await create_provider_session(
             model=model,
             prompt_messages=prompt_messages,
             should_generate_images=self.should_generate_images,
