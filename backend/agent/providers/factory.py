@@ -13,7 +13,7 @@ from agent.tools import canonical_tool_definitions
 from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
 
 
-def create_provider_session(
+async def create_provider_session(
     model: Llm,
     prompt_messages: list[ChatCompletionMessageParam],
     should_generate_images: bool,
@@ -31,24 +31,32 @@ def create_provider_session(
             raise Exception("OpenAI API key is missing.")
 
         client = AsyncOpenAI(api_key=openai_api_key, base_url=openai_base_url)
-        return OpenAIProviderSession(
-            client=client,
-            model=model,
-            prompt_messages=prompt_messages,
-            tools=serialize_openai_tools(canonical_tools),
-        )
+        try:
+            return OpenAIProviderSession(
+                client=client,
+                model=model,
+                prompt_messages=prompt_messages,
+                tools=serialize_openai_tools(canonical_tools),
+            )
+        except BaseException:
+            await client.close()
+            raise
 
     if model in ANTHROPIC_MODELS:
         if not anthropic_api_key:
             raise Exception("Anthropic API key is missing.")
 
         client = AsyncAnthropic(api_key=anthropic_api_key)
-        return AnthropicProviderSession(
-            client=client,
-            model=model,
-            prompt_messages=prompt_messages,
-            tools=serialize_anthropic_tools(canonical_tools),
-        )
+        try:
+            return AnthropicProviderSession(
+                client=client,
+                model=model,
+                prompt_messages=prompt_messages,
+                tools=serialize_anthropic_tools(canonical_tools),
+            )
+        except BaseException:
+            await client.close()
+            raise
 
     if model in GEMINI_MODELS:
         if not gemini_api_key:
