@@ -246,6 +246,41 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
             </div>
           </div>
         </div>
+
+          {/* Figma Import */}
+          <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">
+              <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                Figma Import
+              </h2>
+            </div>
+            <div className="p-4">
+              <p className="text-xs text-gray-500 dark:text-zinc-400">
+                To import designs directly from Figma, add a personal access
+                token.{" "}
+                <a
+                  href="https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens"
+                  className="text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+                  target="_blank"
+                >
+                  Learn how to create one.
+                </a>
+              </p>
+              <Input
+                id="figma-access-token"
+                className="mt-3"
+                placeholder="Figma personal access token"
+                value={settings.figmaAccessToken || ""}
+                onChange={(e) =>
+                  setSettings((s) => ({
+                    ...s,
+                    figmaAccessToken: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

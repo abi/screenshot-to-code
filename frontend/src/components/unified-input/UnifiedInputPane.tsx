@@ -6,6 +6,7 @@ import UploadTab from "./tabs/UploadTab";
 import UrlTab from "./tabs/UrlTab";
 import TextTab from "./tabs/TextTab";
 import ImportTab from "./tabs/ImportTab";
+import FigmaTab from "./tabs/FigmaTab";
 
 interface Props {
   doCreate: (
@@ -19,7 +20,7 @@ interface Props {
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
 }
 
-type InputTab = "upload" | "url" | "text" | "import";
+type InputTab = "upload" | "url" | "figma" | "text" | "import";
 
 function UnifiedInputPane({
   doCreate,
@@ -44,7 +45,7 @@ function UnifiedInputPane({
         onValueChange={(value) => setActiveTab(value as InputTab)}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger
             value="upload"
             className="flex items-center gap-2"
@@ -60,6 +61,14 @@ function UnifiedInputPane({
           >
             <UrlIcon />
             <span className="hidden sm:inline">URL</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="figma"
+            className="flex items-center gap-2"
+            data-testid="tab-figma"
+          >
+            <FigmaIcon />
+            <span className="hidden sm:inline">Figma</span>
           </TabsTrigger>
           <TabsTrigger
             value="text"
@@ -91,6 +100,15 @@ function UnifiedInputPane({
           <UrlTab
             doCreate={doCreate}
             screenshotOneApiKey={settings.screenshotOneApiKey}
+            stack={settings.generatedCodeConfig}
+            setStack={setStack}
+          />
+        </TabsContent>
+
+        <TabsContent value="figma" className="mt-0">
+          <FigmaTab
+            doCreate={doCreate}
+            figmaAccessToken={settings.figmaAccessToken}
             stack={settings.generatedCodeConfig}
             setStack={setStack}
           />
@@ -167,6 +185,44 @@ function TextIcon() {
       <path d="M17 6.1H3" />
       <path d="M21 12.1H3" />
       <path d="M15.1 18H3" />
+    </svg>
+  );
+}
+
+function FigmaIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 38 57"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38C23.2533 38 19 33.7467 19 28.5Z"
+        fill="currentColor"
+        opacity="0.8"
+      />
+      <path
+        d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z"
+        fill="currentColor"
+        opacity="0.4"
+      />
+      <path
+        d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z"
+        fill="currentColor"
+        opacity="0.6"
+      />
+      <path
+        d="M0 9.5C0 14.7467 4.25329 19 9.5 19H19V0H9.5C4.25329 0 0 4.25329 0 9.5Z"
+        fill="currentColor"
+        opacity="0.5"
+      />
+      <path
+        d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z"
+        fill="currentColor"
+        opacity="0.7"
+      />
     </svg>
   );
 }

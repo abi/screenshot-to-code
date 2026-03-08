@@ -86,6 +86,7 @@ function App() {
       openAiBaseURL: null,
       anthropicApiKey: null,
       screenshotOneApiKey: null,
+      figmaAccessToken: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,

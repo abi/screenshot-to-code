@@ -12,6 +12,9 @@ OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", None)
 # Image generation (optional)
 REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)
 
+# Figma
+FIGMA_ACCESS_TOKEN = os.environ.get("FIGMA_ACCESS_TOKEN", None)
+
 # Debugging-related
 IS_DEBUG_ENABLED = bool(os.environ.get("IS_DEBUG_ENABLED", False))
 DEBUG_DIR = os.environ.get("DEBUG_DIR", "")

@@ -7,7 +7,7 @@ import OutputSettingsSection from "../../settings/OutputSettingsSection";
 import { Stack } from "../../../lib/stacks";
 
 interface Props {
-  screenshotOneApiKey: string | null;
+  figmaAccessToken: string | null;
   doCreate: (
     urls: string[],
     inputMode: "image" | "video",
@@ -17,40 +17,28 @@ interface Props {
   setStack: (stack: Stack) => void;
 }
 
-function isFigmaUrl(url: string): boolean {
-  return /^https?:\/\/([\w.-]*\.)?figma\.com\//i.test(url.trim());
-}
-
-function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
+function FigmaTab({ doCreate, figmaAccessToken, stack, setStack }: Props) {
   const [isLoading, setIsLoading] = useState(false);
-  const [referenceUrl, setReferenceUrl] = useState("");
+  const [figmaUrl, setFigmaUrl] = useState("");
 
-  async function takeScreenshot() {
-    const trimmedReferenceUrl = referenceUrl.trim();
+  async function exportFromFigma() {
+    const trimmedUrl = figmaUrl.trim();
 
-    if (!screenshotOneApiKey) {
+    if (!trimmedUrl) {
+      toast.error("Please enter a Figma URL");
+      return;
+    }
+
+    if (!/figma\.com\//i.test(trimmedUrl)) {
       toast.error(
-        "Please add a ScreenshotOne API key in Settings. You can also upload screenshots directly in the Upload tab.",
-        { duration: 6000 },
+        "Please enter a valid Figma URL (e.g. https://www.figma.com/design/...)",
       );
       return;
     }
 
-    if (!trimmedReferenceUrl) {
-      toast.error("Please enter a URL");
-      return;
-    }
-
-    if (trimmedReferenceUrl.toLowerCase().startsWith("file://")) {
+    if (!figmaAccessToken) {
       toast.error(
-        "file:// URLs can't be screenshot. If you're trying to import a local file, please use the Import tab.",
-      );
-      return;
-    }
-
-    if (isFigmaUrl(trimmedReferenceUrl)) {
-      toast.error(
-        "For Figma URLs, use the Figma tab to import designs directly.",
+        "Please add a Figma personal access token in Settings.",
         { duration: 6000 },
       );
       return;
@@ -58,11 +46,11 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${HTTP_BACKEND_URL}/api/screenshot`, {
+      const response = await fetch(`${HTTP_BACKEND_URL}/api/figma/export`, {
         method: "POST",
         body: JSON.stringify({
-          url: trimmedReferenceUrl,
-          apiKey: screenshotOneApiKey,
+          figmaUrl: trimmedUrl,
+          accessToken: figmaAccessToken,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -70,14 +58,21 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to capture screenshot");
+        const error = await response.json().catch(() => null);
+        throw new Error(
+          error?.detail || "Failed to export from Figma",
+        );
       }
 
       const res = await response.json();
       doCreate([res.url], "image");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to capture screenshot. Check console for details.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to export from Figma. Check console for details.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -89,52 +84,71 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
         <div className="flex flex-col items-center gap-6 p-8 border border-gray-200 dark:border-zinc-700 rounded-xl bg-gray-50/50 dark:bg-zinc-900/50">
           <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
             <svg
-              xmlns="http://www.w3.org/2000/svg"
               width="28"
               height="28"
-              viewBox="0 0 24 24"
+              viewBox="0 0 38 57"
               fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              xmlns="http://www.w3.org/2000/svg"
               className="text-gray-400 dark:text-zinc-500"
             >
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              <path
+                d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38C23.2533 38 19 33.7467 19 28.5Z"
+                fill="currentColor"
+                opacity="0.8"
+              />
+              <path
+                d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z"
+                fill="currentColor"
+                opacity="0.4"
+              />
+              <path
+                d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z"
+                fill="currentColor"
+                opacity="0.6"
+              />
+              <path
+                d="M0 9.5C0 14.7467 4.25329 19 9.5 19H19V0H9.5C4.25329 0 0 4.25329 0 9.5Z"
+                fill="currentColor"
+                opacity="0.5"
+              />
+              <path
+                d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z"
+                fill="currentColor"
+                opacity="0.7"
+              />
             </svg>
           </div>
 
           <div className="text-center">
-            <h3 className="text-gray-700 dark:text-zinc-200 font-medium">Screenshot from URL</h3>
+            <h3 className="text-gray-700 dark:text-zinc-200 font-medium">
+              Import from Figma
+            </h3>
+            <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">
+              Paste a Figma file or frame URL to export it as an image
+            </p>
           </div>
 
           <div className="w-full space-y-3">
             <Input
-              placeholder="https://"
-              onChange={(e) => setReferenceUrl(e.target.value)}
-              value={referenceUrl}
+              placeholder="https://www.figma.com/design/..."
+              onChange={(e) => setFigmaUrl(e.target.value)}
+              value={figmaUrl}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !isLoading) {
-                  takeScreenshot();
+                  exportFromFigma();
                 }
               }}
               className="w-full"
-              data-testid="url-input"
+              data-testid="figma-url-input"
             />
-            {isFigmaUrl(referenceUrl) && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                For Figma URLs, use the Figma tab to import designs directly.
-              </p>
-            )}
             <OutputSettingsSection stack={stack} setStack={setStack} />
 
             <Button
-              onClick={takeScreenshot}
+              onClick={exportFromFigma}
               disabled={isLoading}
               className="w-full"
               size="lg"
-              data-testid="url-capture"
+              data-testid="figma-export"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -158,16 +172,16 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Capturing...
+                  Exporting...
                 </span>
               ) : (
-                "Capture & Generate"
+                "Import & Generate"
               )}
             </Button>
           </div>
 
           <p className="text-xs text-gray-400 dark:text-zinc-500 text-center">
-            Requires ScreenshotOne API key.
+            Requires a Figma personal access token (set in Settings).
           </p>
         </div>
       </div>
@@ -175,4 +189,4 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
   );
 }
 
-export default UrlTab;
+export default FigmaTab;
