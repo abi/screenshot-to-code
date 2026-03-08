@@ -15,7 +15,7 @@ from agent.providers.base import (
     ProviderTurn,
     StreamEvent,
 )
-from agent.providers.claude_image import process_image
+from agent.providers.anthropic.image import process_image
 from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
