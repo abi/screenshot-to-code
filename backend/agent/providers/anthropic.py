@@ -1,16 +1,12 @@
 # pyright: reportUnknownVariableType=false
-import base64
 import copy
-import io
 import json
-import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, cast
 
 from anthropic import AsyncAnthropic
 from openai.types.chat import ChatCompletionMessageParam
-from PIL import Image
 
 from agent.providers.base import (
     EventSink,
@@ -19,14 +15,11 @@ from agent.providers.base import (
     ProviderTurn,
     StreamEvent,
 )
+from agent.providers.claude_image import process_image
 from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
 from llm import Llm
-
-
-CLAUDE_IMAGE_MAX_SIZE = 5 * 1024 * 1024
-CLAUDE_MAX_IMAGE_DIMENSION = 7990
 
 THINKING_MODELS = {
     Llm.CLAUDE_4_5_SONNET_2025_09_29.value,
@@ -36,54 +29,6 @@ ADAPTIVE_THINKING_MODELS = {
     Llm.CLAUDE_OPUS_4_6.value,
     Llm.CLAUDE_SONNET_4_6.value,
 }
-
-
-def _process_image(image_data_url: str) -> tuple[str, str]:
-    media_type = image_data_url.split(";")[0].split(":")[1]
-    base64_data = image_data_url.split(",")[1]
-    image_bytes = base64.b64decode(base64_data)
-
-    img = Image.open(io.BytesIO(image_bytes))
-
-    is_under_dimension_limit = (
-        img.width < CLAUDE_MAX_IMAGE_DIMENSION
-        and img.height < CLAUDE_MAX_IMAGE_DIMENSION
-    )
-    is_under_size_limit = len(base64_data) <= CLAUDE_IMAGE_MAX_SIZE
-
-    if is_under_dimension_limit and is_under_size_limit:
-        return (media_type, base64_data)
-
-    start_time = time.time()
-
-    if not is_under_dimension_limit:
-        if img.width > img.height:
-            new_width = CLAUDE_MAX_IMAGE_DIMENSION
-            new_height = int((CLAUDE_MAX_IMAGE_DIMENSION / img.width) * img.height)
-        else:
-            new_height = CLAUDE_MAX_IMAGE_DIMENSION
-            new_width = int((CLAUDE_MAX_IMAGE_DIMENSION / img.height) * img.width)
-
-        img = img.resize((new_width, new_height), Image.DEFAULT_STRATEGY)
-
-    quality = 95
-    output = io.BytesIO()
-    img = img.convert("RGB")
-    img.save(output, format="JPEG", quality=quality)
-
-    while (
-        len(base64.b64encode(output.getvalue())) > CLAUDE_IMAGE_MAX_SIZE
-        and quality > 10
-    ):
-        output = io.BytesIO()
-        img.save(output, format="JPEG", quality=quality)
-        quality -= 5
-
-    end_time = time.time()
-    processing_time = end_time - start_time
-    print(f"[CLAUDE IMAGE PROCESSING] processing time: {processing_time:.2f} seconds")
-
-    return ("image/jpeg", base64.b64encode(output.getvalue()).decode("utf-8"))
 
 
 def _convert_openai_messages_to_claude(
@@ -104,7 +49,7 @@ def _convert_openai_messages_to_claude(
 
             content["type"] = "image"
             image_data_url = cast(str, content["image_url"]["url"])
-            media_type, base64_data = _process_image(image_data_url)
+            media_type, base64_data = process_image(image_data_url)
             del content["image_url"]
             content["source"] = {
                 "type": "base64",
