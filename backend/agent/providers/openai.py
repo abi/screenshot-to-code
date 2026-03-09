@@ -19,6 +19,8 @@ from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.state import ensure_str
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
+from config import IS_DEBUG_ENABLED
+from fs_logging.openai_turn_inputs import OpenAITurnInputLogger
 from llm import Llm, get_openai_api_name, get_openai_reasoning_effort
 
 
@@ -416,11 +418,17 @@ class OpenAIProviderSession(ProviderSession):
         self._model = model
         self._tools = tools
         self._total_usage = TokenUsage()
+        self._turn_input_logger = OpenAITurnInputLogger(
+            model,
+            enabled=IS_DEBUG_ENABLED,
+        )
         self._input_items: List[Dict[str, Any]] = [
             _convert_message_to_responses_input(message) for message in prompt_messages
         ]
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
+        self._turn_input_logger.record_turn_input(self._input_items)
+
         params: Dict[str, Any] = {
             "model": get_openai_api_name(self._model),
             "input": self._input_items,
@@ -439,6 +447,7 @@ class OpenAIProviderSession(ProviderSession):
             await parse_event(event, state, on_event)
 
         if state.turn_usage is not None:
+            self._turn_input_logger.record_turn_usage(state.turn_usage)
             self._total_usage.accumulate(state.turn_usage)
 
         return _build_provider_turn(state)
@@ -475,4 +484,7 @@ class OpenAIProviderSession(ProviderSession):
             f"cache_read={u.cache_read} cache_write={u.cache_write} "
             f"total={u.total}{cache_hit_rate_str}{cost_str}"
         )
+        report_path = self._turn_input_logger.write_html_report()
+        if report_path:
+            print(f"[OPENAI TURN INPUT] HTML report: {report_path}")
         await self._client.close()

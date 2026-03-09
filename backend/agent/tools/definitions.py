@@ -117,7 +117,8 @@ def canonical_tool_definitions(
             name="edit_file",
             description=(
                 "Edit the main HTML file using exact string replacements. Do not "
-                "regenerate the entire file. Returns the updated file content."
+                "regenerate the entire file. Returns a success message plus edit "
+                "details, including a unified diff and first changed line."
             ),
             parameters=_edit_schema(),
         ),
