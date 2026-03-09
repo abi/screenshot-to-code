@@ -50,7 +50,7 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
 
     if (isFigmaUrl(trimmedReferenceUrl)) {
       toast.error(
-        "Direct Figma import is not supported. Please take a screenshot of your Figma design or export the artboards as images, then use the Upload tab.",
+        "Direct Figma import is not supported. Take a screenshot of your design or export the artboards as images, then use the Upload tab.",
         { duration: 6000 },
       );
       return;
