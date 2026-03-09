@@ -8,7 +8,7 @@ from llm import Llm
 def test_openai_turn_input_logger_writes_html_report(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("LOGS_PATH", str(tmp_path))
 
-    logger = OpenAITurnInputLogger(model=Llm.GPT_5_2_CODEX_LOW)
+    logger = OpenAITurnInputLogger(model=Llm.GPT_5_2_CODEX_LOW, enabled=True)
     logger.record_turn_input(
         [
             {
@@ -57,7 +57,7 @@ def test_openai_turn_input_logger_truncates_large_payloads(
 ) -> None:
     monkeypatch.setenv("LOGS_PATH", str(tmp_path))
 
-    logger = OpenAITurnInputLogger(model=Llm.GPT_5_3_CODEX_LOW)
+    logger = OpenAITurnInputLogger(model=Llm.GPT_5_3_CODEX_LOW, enabled=True)
     logger.record_turn_input(
         [
             {
@@ -73,3 +73,16 @@ def test_openai_turn_input_logger_truncates_large_payloads(
     html = Path(report_path).read_text(encoding="utf-8")
     assert "Usage unavailable for this turn." in html
     assert "truncated 50 chars" in html
+
+
+def test_openai_turn_input_logger_disabled_writes_nothing(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOGS_PATH", str(tmp_path))
+
+    logger = OpenAITurnInputLogger(model=Llm.GPT_5_2_CODEX_LOW)
+    logger.record_turn_input([{"role": "user", "content": "Build this page"}])
+    logger.record_turn_usage(TokenUsage(input=100, output=50, total=150))
+
+    report_path = logger.write_html_report()
+
+    assert report_path is None
+    assert not (tmp_path / "run_logs").exists()

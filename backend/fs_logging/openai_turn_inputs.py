@@ -234,11 +234,15 @@ class OpenAITurnInputReport:
 @dataclass
 class OpenAITurnInputLogger:
     model: Llm
+    enabled: bool = False
     report_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     _turn_index: int = 0
     _turns: list[OpenAITurnInputReport] = field(default_factory=list)
 
     def record_turn_input(self, input_items: Sequence[Any]) -> None:
+        if not self.enabled:
+            return
+
         self._turn_index += 1
         if _is_openai_turn_input_console_enabled():
             _log_openai_turn_input(self.model, self._turn_index, input_items)
@@ -259,7 +263,7 @@ class OpenAITurnInputLogger:
         )
 
     def record_turn_usage(self, usage: TokenUsage) -> None:
-        if not self._turns:
+        if not self.enabled or not self._turns:
             return
 
         pricing = MODEL_PRICING.get(get_openai_api_name(self.model))
@@ -275,6 +279,9 @@ class OpenAITurnInputLogger:
         )
 
     def write_html_report(self) -> str | None:
+        if not self.enabled:
+            return None
+
         try:
             logs_path = os.environ.get("LOGS_PATH", os.getcwd())
             logs_directory = os.path.join(logs_path, "run_logs")

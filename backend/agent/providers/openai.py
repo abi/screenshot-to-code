@@ -19,6 +19,7 @@ from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.state import ensure_str
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
+from config import IS_DEBUG_ENABLED
 from fs_logging.openai_turn_inputs import OpenAITurnInputLogger
 from llm import Llm, get_openai_api_name, get_openai_reasoning_effort
 
@@ -417,7 +418,10 @@ class OpenAIProviderSession(ProviderSession):
         self._model = model
         self._tools = tools
         self._total_usage = TokenUsage()
-        self._turn_input_logger = OpenAITurnInputLogger(model)
+        self._turn_input_logger = OpenAITurnInputLogger(
+            model,
+            enabled=IS_DEBUG_ENABLED,
+        )
         self._input_items: List[Dict[str, Any]] = [
             _convert_message_to_responses_input(message) for message in prompt_messages
         ]
