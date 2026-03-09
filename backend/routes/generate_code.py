@@ -16,7 +16,6 @@ from config import (
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
     REPLICATE_API_KEY,
-    TEST_OPENAI_LOW_VARIANT_OVERRIDE,
 )
 from custom_types import InputMode
 from llm import (
@@ -74,38 +73,8 @@ from ws.constants import APP_ERROR_WEB_SOCKET_CODE  # type: ignore
 
 router = APIRouter()
 
-OPENAI_LOW_VARIANTS = [
-    Llm.GPT_5_2_CODEX_LOW,
-    Llm.GPT_5_3_CODEX_LOW,
-]
-
-
-def _get_openai_test_variant_override(
-    input_mode: InputMode,
-    openai_api_key: str | None,
-) -> List[Llm] | None:
-    if not TEST_OPENAI_LOW_VARIANT_OVERRIDE:
-        return None
-    if input_mode == "video" or not openai_api_key:
-        return None
-    return list(OPENAI_LOW_VARIANTS)
-
-
-def _get_variant_count_for_request(extracted_params: "ExtractedParams") -> int:
-    override_models = _get_openai_test_variant_override(
-        extracted_params.input_mode,
-        extracted_params.openai_api_key,
-    )
-    if override_models is not None:
-        return len(override_models)
-
-    is_video_mode = extracted_params.input_mode == "video"
-    is_update = extracted_params.generation_type == "update"
-    return (
-        NUM_VARIANTS_VIDEO
-        if is_video_mode
-        else 2 if is_update else NUM_VARIANTS
-    )
+# Temporary debug override to focus on OpenAI prompt caching behavior.
+FORCE_OPENAI_SINGLE_VARIANT = True
 
 
 @dataclass
@@ -398,15 +367,12 @@ class ModelSelectionStage:
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
-            override_models = _get_openai_test_variant_override(
-                input_mode,
-                openai_api_key,
-            )
-            if override_models is not None:
-                variant_models = override_models
+            if FORCE_OPENAI_SINGLE_VARIANT and input_mode != "video":
+                if not openai_api_key:
+                    raise Exception("OpenAI API key required for single-variant debug mode")
+                variant_models = [Llm.GPT_5_2_CODEX_HIGH]
                 print("Variant models:")
-                for index, model in enumerate(variant_models):
-                    print(f"Variant {index + 1}: {model.value}")
+                print(f"Variant 1: {variant_models[0].value}")
                 return variant_models
 
             num_variants = 2 if generation_type == "update" else NUM_VARIANTS
@@ -452,6 +418,14 @@ class ModelSelectionStage:
                     "Please add GEMINI_API_KEY to backend/.env or in the settings dialog"
                 )
             return list(VIDEO_VARIANT_MODELS)
+
+        # Edit/update mode prefers one Gemini + one OpenAI model for fast,
+        # complementary deltas.
+        if generation_type == "update" and gemini_api_key and openai_api_key:
+            return [
+                Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+                Llm.GPT_5_2_CODEX_LOW,
+            ]
 
         # Define models based on available API keys
         if gemini_api_key and anthropic_api_key and openai_api_key:
@@ -718,8 +692,19 @@ class StatusBroadcastMiddleware(Middleware):
     async def process(
         self, context: PipelineContext, next_func: Callable[[], Awaitable[None]]
     ) -> None:
+        # Determine variant count based on input mode and generation type.
+        # Edit/update flows use two variants to keep latency and cost down.
         assert context.extracted_params is not None
-        num_variants = _get_variant_count_for_request(context.extracted_params)
+        is_video_mode = context.extracted_params.input_mode == "video"
+        is_update = context.extracted_params.generation_type == "update"
+        if FORCE_OPENAI_SINGLE_VARIANT and not is_video_mode:
+            num_variants = 1
+        else:
+            num_variants = (
+                NUM_VARIANTS_VIDEO
+                if is_video_mode
+                else 2 if is_update else NUM_VARIANTS
+            )
 
         # Tell frontend how many variants we're using
         await context.send_message("variantCount", str(num_variants), 0)
