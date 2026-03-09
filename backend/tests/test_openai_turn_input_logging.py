@@ -52,7 +52,7 @@ def test_openai_turn_input_logger_writes_html_report(tmp_path, monkeypatch) -> N
     assert "$" in html
 
 
-def test_openai_turn_input_logger_truncates_large_payloads(
+def test_openai_turn_input_logger_preserves_full_large_payloads(
     tmp_path, monkeypatch
 ) -> None:
     monkeypatch.setenv("LOGS_PATH", str(tmp_path))
@@ -62,7 +62,7 @@ def test_openai_turn_input_logger_truncates_large_payloads(
         [
             {
                 "role": "user",
-                "content": [{"type": "input_text", "text": "x" * 450}],
+                "content": [{"type": "input_text", "text": "BEGIN-" + ("x" * 450) + "-END"}],
             }
         ]
     )
@@ -72,7 +72,11 @@ def test_openai_turn_input_logger_truncates_large_payloads(
     assert report_path is not None
     html = Path(report_path).read_text(encoding="utf-8")
     assert "Usage unavailable for this turn." in html
-    assert "truncated 50 chars" in html
+    assert "Raw JSON payload" in html
+    assert "string (460 chars)" in html
+    assert "BEGIN-" in html
+    assert "-END" in html
+    assert "truncated 50 chars" not in html
 
 
 def test_openai_turn_input_logger_disabled_writes_nothing(tmp_path, monkeypatch) -> None:
@@ -86,3 +90,34 @@ def test_openai_turn_input_logger_disabled_writes_nothing(tmp_path, monkeypatch)
 
     assert report_path is None
     assert not (tmp_path / "run_logs").exists()
+
+
+def test_openai_turn_input_logger_summarizes_function_call_output(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setenv("LOGS_PATH", str(tmp_path))
+
+    logger = OpenAITurnInputLogger(model=Llm.GPT_5_2_CODEX_LOW, enabled=True)
+    logger.record_turn_input(
+        [
+            {
+                "type": "function_call_output",
+                "call_id": "call-1",
+                "output": (
+                    '{"content":"Successfully edited file at index.html.",'
+                    '"details":{"diff":"--- index.html\\n+++ index.html\\n@@ -1 +1 @@\\n-a\\n+b\\n",'
+                    '"firstChangedLine":1}}'
+                ),
+            }
+        ]
+    )
+
+    report_path = logger.write_html_report()
+
+    assert report_path is not None
+    html = Path(report_path).read_text(encoding="utf-8")
+    assert "type=function_call_output call_id=call-1" in html
+    assert "path=index.html" in html
+    assert "first_changed_line=1" in html
+    assert "diff_chars=" in html
+    assert 'preview=&#x27;{&quot;content&quot;:' not in html

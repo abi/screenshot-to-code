@@ -68,21 +68,6 @@ def _to_serializable(value: Any) -> Any:
     return ensure_str(value)
 
 
-def _truncate_nested_strings(value: Any, max_len: int = 400) -> Any:
-    if isinstance(value, str):
-        if len(value) <= max_len:
-            return value
-        return f"{value[:max_len]}... (truncated {len(value) - max_len} chars)"
-    if isinstance(value, list):
-        return [_truncate_nested_strings(v, max_len=max_len) for v in value]
-    if isinstance(value, dict):
-        return {
-            ensure_str(k): _truncate_nested_strings(v, max_len=max_len)
-            for k, v in value.items()
-        }
-    return value
-
-
 def _summarize_content_part(part: Any) -> str:
     part_dict = _as_dict(part)
     if part_dict is None:
@@ -114,6 +99,128 @@ def _summarize_content_part(part: Any) -> str:
         )
 
     return f"{part_type}(keys={sorted(part_dict.keys())})"
+
+
+def _summarize_function_call_output_payload(output_text: str) -> str:
+    try:
+        parsed = json.loads(output_text)
+    except json.JSONDecodeError:
+        return (
+            f"output_chars={len(output_text)} "
+            f"preview='{_truncate_for_log(output_text)}'"
+        )
+
+    if not isinstance(parsed, dict):
+        return (
+            f"output_type={type(parsed).__name__} "
+            f"preview='{_truncate_for_log(parsed)}'"
+        )
+
+    if "error" in parsed:
+        error_text = ensure_str(parsed.get("error"))
+        return f"error='{_truncate_for_log(error_text)}'"
+
+    summary_parts: list[str] = []
+
+    content_text = ensure_str(parsed.get("content"))
+    if content_text:
+        summary_parts.append(f"content='{_truncate_for_log(content_text, max_len=80)}'")
+
+    details = parsed.get("details")
+    if isinstance(details, dict):
+        path = ensure_str(details.get("path"))
+
+        diff_text = details.get("diff")
+        if (not path) and isinstance(diff_text, str) and diff_text:
+            for line in diff_text.splitlines():
+                if line.startswith("--- "):
+                    path = line.removeprefix("--- ").strip()
+                    break
+
+        if path:
+            summary_parts.append(f"path={path}")
+
+        edits = details.get("edits")
+        if isinstance(edits, list):
+            summary_parts.append(f"edits={len(edits)}")
+
+        content_length = details.get("contentLength")
+        if isinstance(content_length, int):
+            summary_parts.append(f"content_length={content_length}")
+
+        first_changed_line = details.get("firstChangedLine")
+        if isinstance(first_changed_line, int):
+            summary_parts.append(f"first_changed_line={first_changed_line}")
+
+        if isinstance(diff_text, str) and diff_text:
+            diff_lines = diff_text.count("\n")
+            summary_parts.append(f"diff_chars={len(diff_text)}")
+            summary_parts.append(f"diff_lines={diff_lines}")
+
+    if not summary_parts:
+        summary_parts.append(f"keys={sorted(parsed.keys())}")
+
+    return " ".join(summary_parts)
+
+
+def _render_json_scalar(value: Any) -> str:
+    if value is None:
+        return "<span class='json-null'>null</span>"
+    if isinstance(value, bool):
+        return f"<span class='json-bool'>{str(value).lower()}</span>"
+    if isinstance(value, (int, float)):
+        return f"<span class='json-number'>{escape(ensure_str(value))}</span>"
+    text = ensure_str(value)
+    if "\n" not in text and len(text) <= 160:
+        return f"<code class='json-string'>{escape(text)}</code>"
+    return (
+        "<details class='json-string-block'>"
+        f"<summary>string ({len(text)} chars)</summary>"
+        f"<pre>{escape(text)}</pre>"
+        "</details>"
+    )
+
+
+def _render_json_node(value: Any, label: str | None = None) -> str:
+    label_html = ""
+    if label is not None:
+        label_html = f"<span class='json-key'>{escape(label)}</span>: "
+
+    if isinstance(value, dict):
+        parts = [
+            "<details class='json-node'>",
+            (
+                f"<summary>{label_html}"
+                f"<span class='json-type'>object ({len(value)} keys)</span></summary>"
+            ),
+            "<div class='json-children'>",
+        ]
+        for child_key, child_value in value.items():
+            parts.append(_render_json_node(child_value, ensure_str(child_key)))
+        parts.append("</div>")
+        parts.append("</details>")
+        return "".join(parts)
+
+    if isinstance(value, list):
+        parts = [
+            "<details class='json-node'>",
+            (
+                f"<summary>{label_html}"
+                f"<span class='json-type'>array ({len(value)} items)</span></summary>"
+            ),
+            "<div class='json-children'>",
+        ]
+        for index, child_value in enumerate(value):
+            parts.append(_render_json_node(child_value, f"[{index}]"))
+        parts.append("</div>")
+        parts.append("</details>")
+        return "".join(parts)
+
+    return (
+        "<div class='json-leaf'>"
+        f"{label_html}{_render_json_scalar(value)}"
+        "</div>"
+    )
 
 
 def _summarize_responses_input_item(index: int, item: Any) -> str:
@@ -157,8 +264,7 @@ def _summarize_responses_input_item(index: int, item: Any) -> str:
         output_text = ensure_str(item_dict.get("output", ""))
         return (
             f"{index:02d} type=function_call_output call_id={item_dict.get('call_id')} "
-            f"output_chars={len(output_text)} "
-            f"preview='{_truncate_for_log(output_text)}'"
+            f"{_summarize_function_call_output_payload(output_text)}"
         )
 
     if item_type == "message":
@@ -251,7 +357,7 @@ class OpenAITurnInputLogger:
             OpenAITurnInputItem(
                 index=index,
                 summary=_summarize_responses_input_item(index, item),
-                payload=_truncate_nested_strings(_to_serializable(item)),
+                payload=_to_serializable(item),
             )
             for index, item in enumerate(input_items)
         ]
@@ -324,6 +430,16 @@ class OpenAITurnInputLogger:
             "    .usage-table { width: auto; min-width: 540px; margin-top: 10px; }",
             "    .usage-table th { width: 180px; }",
             "    .usage-none { margin-top: 10px; color: #6b7280; font-style: italic; }",
+            "    .payload-wrap { margin-top: 10px; }",
+            "    .json-view { margin-top: 8px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fcfcfd; }",
+            "    .json-node, .json-string-block { margin: 6px 0; }",
+            "    .json-node > summary, .json-string-block > summary { cursor: pointer; color: #1f2937; }",
+            "    .json-children { margin-left: 16px; border-left: 1px solid #e5e7eb; padding-left: 10px; }",
+            "    .json-leaf { margin: 6px 0; }",
+            "    .json-key { color: #7c3aed; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }",
+            "    .json-type { color: #2563eb; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }",
+            "    .json-number, .json-bool, .json-null { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #0f766e; }",
+            "    .json-string { white-space: pre-wrap; overflow-wrap: anywhere; }",
             "  </style>",
             "</head>",
             "<body>",
@@ -403,13 +519,18 @@ class OpenAITurnInputLogger:
                     item.payload,
                     indent=2,
                     ensure_ascii=False,
-                    sort_keys=True,
                 )
-                html_parts.append("    <details>")
+                html_parts.append("    <details class='payload-wrap'>")
                 html_parts.append(
                     f"      <summary>Item {item.index:02d} payload</summary>"
                 )
-                html_parts.append(f"      <pre>{escape(payload_json)}</pre>")
+                html_parts.append("      <div class='json-view'>")
+                html_parts.append(_render_json_node(item.payload, "root"))
+                html_parts.append("      </div>")
+                html_parts.append("      <details>")
+                html_parts.append("        <summary>Raw JSON payload</summary>")
+                html_parts.append(f"        <pre>{escape(payload_json)}</pre>")
+                html_parts.append("      </details>")
                 html_parts.append("    </details>")
             html_parts.append("  </section>")
 
