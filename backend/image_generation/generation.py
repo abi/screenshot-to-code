@@ -17,11 +17,12 @@ async def process_tasks(
     model: Literal["dalle3", "flux"],
 ) -> List[Union[str, None]]:
     start_time = time.time()
+    results: list[str | BaseException | None]
     if model == "dalle3":
         tasks = [generate_image_dalle(prompt, api_key, base_url) for prompt in prompts]
         results = await asyncio.gather(*tasks, return_exceptions=True)
     else:
-        results: list[str | BaseException] = []
+        results = []
         for i in range(0, len(prompts), REPLICATE_BATCH_SIZE):
             batch = prompts[i : i + REPLICATE_BATCH_SIZE]
             tasks = [generate_image_replicate(p, api_key) for p in batch]
