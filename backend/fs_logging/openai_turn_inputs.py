@@ -334,6 +334,7 @@ class OpenAITurnUsageSummary:
 class OpenAITurnInputReport:
     turn_index: int
     items: list[OpenAITurnInputItem]
+    request_payload: Any | None = None
     usage: OpenAITurnUsageSummary | None = None
 
 
@@ -345,7 +346,11 @@ class OpenAITurnInputLogger:
     _turn_index: int = 0
     _turns: list[OpenAITurnInputReport] = field(default_factory=list)
 
-    def record_turn_input(self, input_items: Sequence[Any]) -> None:
+    def record_turn_input(
+        self,
+        input_items: Sequence[Any],
+        request_payload: Any | None = None,
+    ) -> None:
         if not self.enabled:
             return
 
@@ -365,6 +370,7 @@ class OpenAITurnInputLogger:
             OpenAITurnInputReport(
                 turn_index=self._turn_index,
                 items=turn_items,
+                request_payload=_to_serializable(request_payload),
             )
         )
 
@@ -457,6 +463,24 @@ class OpenAITurnInputLogger:
             html_parts.append(
                 f"    <h2>Turn {turn.turn_index} (items={len(turn.items)})</h2>"
             )
+            if turn.request_payload is not None:
+                request_payload_json = json.dumps(
+                    turn.request_payload,
+                    indent=2,
+                    ensure_ascii=False,
+                )
+                html_parts.append("    <details class='payload-wrap' open>")
+                html_parts.append("      <summary>Request payload</summary>")
+                html_parts.append("      <div class='json-view'>")
+                html_parts.append(_render_json_node(turn.request_payload, "root"))
+                html_parts.append("      </div>")
+                html_parts.append("      <details>")
+                html_parts.append("        <summary>Raw JSON payload</summary>")
+                html_parts.append(
+                    f"        <pre>{escape(request_payload_json)}</pre>"
+                )
+                html_parts.append("      </details>")
+                html_parts.append("    </details>")
             if turn.usage is not None:
                 cost_text = "n/a"
                 if isinstance(turn.usage.cost_usd, (float, int)):
