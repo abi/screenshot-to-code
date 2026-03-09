@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock
-from routes.generate_code import ModelSelectionStage
+import routes.generate_code as generate_code
 from llm import Llm
 
 
@@ -10,7 +10,7 @@ class TestModelSelectionAllKeys:
     def setup_method(self):
         """Set up test fixtures."""
         mock_throw_error = AsyncMock()
-        self.model_selector = ModelSelectionStage(mock_throw_error)
+        self.model_selector = generate_code.ModelSelectionStage(mock_throw_error)
 
     @pytest.mark.asyncio
     async def test_gemini_anthropic_create(self):
@@ -106,7 +106,7 @@ class TestModelSelectionOpenAIAnthropic:
     def setup_method(self):
         """Set up test fixtures."""
         mock_throw_error = AsyncMock()
-        self.model_selector = ModelSelectionStage(mock_throw_error)
+        self.model_selector = generate_code.ModelSelectionStage(mock_throw_error)
 
     @pytest.mark.asyncio
     async def test_openai_anthropic(self):
@@ -134,7 +134,7 @@ class TestModelSelectionAnthropicOnly:
     def setup_method(self):
         """Set up test fixtures."""
         mock_throw_error = AsyncMock()
-        self.model_selector = ModelSelectionStage(mock_throw_error)
+        self.model_selector = generate_code.ModelSelectionStage(mock_throw_error)
 
     @pytest.mark.asyncio
     async def test_anthropic_only(self):
@@ -162,7 +162,7 @@ class TestModelSelectionOpenAIOnly:
     def setup_method(self):
         """Set up test fixtures."""
         mock_throw_error = AsyncMock()
-        self.model_selector = ModelSelectionStage(mock_throw_error)
+        self.model_selector = generate_code.ModelSelectionStage(mock_throw_error)
 
     @pytest.mark.asyncio
     async def test_openai_only(self):
@@ -190,7 +190,7 @@ class TestModelSelectionNoKeys:
     def setup_method(self):
         """Set up test fixtures."""
         mock_throw_error = AsyncMock()
-        self.model_selector = ModelSelectionStage(mock_throw_error)
+        self.model_selector = generate_code.ModelSelectionStage(mock_throw_error)
 
     @pytest.mark.asyncio
     async def test_no_keys_raises_error(self):
@@ -203,3 +203,55 @@ class TestModelSelectionNoKeys:
                 anthropic_api_key=None,
                 gemini_api_key=None,
             )
+
+
+class TestModelSelectionOpenAITestOverride:
+    def setup_method(self):
+        mock_throw_error = AsyncMock()
+        self.model_selector = generate_code.ModelSelectionStage(mock_throw_error)
+
+    @pytest.mark.asyncio
+    async def test_override_uses_openai_low_pair_for_create(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            generate_code,
+            "TEST_OPENAI_LOW_VARIANT_OVERRIDE",
+            True,
+        )
+
+        models = await self.model_selector.select_models(
+            generation_type="create",
+            input_mode="text",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+        )
+
+        assert models == [
+            Llm.GPT_5_2_CODEX_LOW,
+            Llm.GPT_5_3_CODEX_LOW,
+        ]
+
+    @pytest.mark.asyncio
+    async def test_override_uses_openai_low_pair_for_update(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            generate_code,
+            "TEST_OPENAI_LOW_VARIANT_OVERRIDE",
+            True,
+        )
+
+        models = await self.model_selector.select_models(
+            generation_type="update",
+            input_mode="image",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+        )
+
+        assert models == [
+            Llm.GPT_5_2_CODEX_LOW,
+            Llm.GPT_5_3_CODEX_LOW,
+        ]
