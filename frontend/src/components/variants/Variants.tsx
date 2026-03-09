@@ -139,7 +139,7 @@ function Variants() {
                   <span className={`w-2 h-2 rounded-full mr-1.5 ${statusColor}`} />
                   Option {index + 1}
                   {index < 9 && (
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono ml-1">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 font-mono ml-1">
                       (⌥{index + 1})
                     </span>
                   )}
