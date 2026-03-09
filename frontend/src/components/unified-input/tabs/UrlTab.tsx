@@ -18,6 +18,10 @@ interface Props {
   setStack: (stack: Stack) => void;
 }
 
+function isFigmaUrl(url: string): boolean {
+  return /^https?:\/\/([\w.-]*\.)?figma\.com\//i.test(url.trim());
+}
+
 function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
@@ -42,6 +46,14 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
     if (trimmedReferenceUrl.toLowerCase().startsWith("file://")) {
       toast.error(
         "file:// URLs can't be screenshot. If you're trying to import a local file, please use the Import tab.",
+      );
+      return;
+    }
+
+    if (isFigmaUrl(trimmedReferenceUrl)) {
+      toast.error(
+        "Direct Figma import is not supported. Take a screenshot of your design or export the artboards as images, then use the Upload tab.",
+        { duration: 6000 },
       );
       return;
     }
@@ -132,6 +144,13 @@ function UrlTab({ doCreate, screenshotOneApiKey, stack, setStack }: Props) {
               className="w-full"
               data-testid="url-input"
             />
+            {isFigmaUrl(referenceUrl) && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                Direct Figma import is not supported. Take a screenshot of your
+                design or export the artboards as images, then use the Upload
+                tab.
+              </p>
+            )}
             <OutputSettingsSection stack={stack} setStack={setStack} />
 
             <Button

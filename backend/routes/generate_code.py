@@ -9,7 +9,6 @@ from fastapi import APIRouter, WebSocket
 import openai
 import sentry_sdk
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
-from codegen.utils import extract_html_content
 from config import (
     ANTHROPIC_API_KEY,
     GEMINI_API_KEY,
@@ -28,7 +27,6 @@ from custom_types import InputMode
 from llm import (
     Llm,
 )
-from fs_logging.core import write_logs
 from typing import (
     Any,
     Coroutine,
@@ -604,22 +602,10 @@ class PostProcessingStage:
     async def process_completions(
         self,
         completions: List[str],
-        prompt_messages: List[ChatCompletionMessageParam],
         websocket: WebSocket,
     ) -> None:
-        """Process completions and perform cleanup"""
-        if IS_PROD:
-            return
-
-        # Only process non-empty completions
-        valid_completions = [comp for comp in completions if comp]
-
-        # Write the first valid completion to logs for debugging
-        if valid_completions:
-            # Strip the completion of everything except the HTML content
-            _html_content = extract_html_content(valid_completions[0])
-
-        # Note: WebSocket closing is handled by the caller
+        """Process completions and perform cleanup."""
+        return None
 
 
 class AgenticGenerationStage:
@@ -945,9 +931,7 @@ class StatusBroadcastMiddleware(Middleware):
         is_video_mode = context.extracted_params.input_mode == "video"
         is_update = context.extracted_params.generation_type == "update"
         num_variants = (
-            NUM_VARIANTS_VIDEO
-            if is_video_mode
-            else 2 if is_update else NUM_VARIANTS
+            NUM_VARIANTS_VIDEO if is_video_mode else 2 if is_update else NUM_VARIANTS
         )
 
         # Tell frontend how many variants we're using
@@ -1062,7 +1046,7 @@ class PostProcessingMiddleware(Middleware):
     ) -> None:
         post_processor = PostProcessingStage()
         await post_processor.process_completions(
-            context.completions, context.prompt_messages, context.websocket
+            context.completions, context.websocket
         )
 
         await next_func()
