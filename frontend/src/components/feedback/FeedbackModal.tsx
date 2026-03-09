@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { useAuthenticatedFetch } from "../hosted/useAuthenticatedFetch";
 import { SAAS_BACKEND_URL } from "../../config";
@@ -15,7 +15,6 @@ type Answer = boolean | null;
 interface FeedbackModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  subscriberTier: string | null;
 }
 
 interface ToggleButtonProps {
@@ -46,18 +45,13 @@ function ToggleButton({ selected, onClick, children }: ToggleButtonProps) {
 export function FeedbackModal({
   open,
   onOpenChange,
-  subscriberTier,
 }: FeedbackModalProps) {
   const authenticatedFetch = useAuthenticatedFetch();
   const [englishFluent, setEnglishFluent] = useState<Answer>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const isSubscriber = useMemo(
-    () => !!subscriberTier && subscriberTier !== "free",
-    [subscriberTier]
-  );
-  const rewardAmount = isSubscriber ? 200 : 50;
+  const rewardAmount = 100;
 
   useEffect(() => {
     if (!open) {
@@ -110,7 +104,7 @@ export function FeedbackModal({
               Get a ${rewardAmount} gift card
             </h2>
             <p className="text-emerald-100/80 mt-2 text-sm leading-relaxed max-w-md">
-              Share your feedback in a 30-minute call and receive $200 via
+              Share your feedback in a 30-minute call and receive ${rewardAmount} via
               Amazon, PayPal, or your preferred payment method.
             </p>
           </div>
