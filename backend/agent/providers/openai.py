@@ -1,6 +1,5 @@
 # pyright: reportUnknownVariableType=false
 import copy
-import hashlib
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -123,30 +122,6 @@ def serialize_openai_tools(
             }
         )
     return serialized
-
-
-def _build_prompt_cache_key(
-    model: Llm,
-    input_items: List[Dict[str, Any]],
-    tools: List[Dict[str, Any]],
-) -> str:
-    cache_identity = {
-        "version": 1,
-        "model": get_openai_api_name(model),
-        "reasoning_effort": get_openai_reasoning_effort(model),
-        "input": input_items,
-        "tools": tools,
-    }
-    payload = json.dumps(
-        cache_identity,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-    )
-    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
-    return f"s2c-openai-session-v1-{digest}"
-
-
 @dataclass
 class OpenAIResponsesParseState:
     assistant_text: str = ""
@@ -448,11 +423,6 @@ class OpenAIProviderSession(ProviderSession):
         self._input_items: List[Dict[str, Any]] = [
             _convert_message_to_responses_input(message) for message in prompt_messages
         ]
-        self._prompt_cache_key = _build_prompt_cache_key(
-            model=model,
-            input_items=self._input_items,
-            tools=self._tools,
-        )
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
         model_name = get_openai_api_name(self._model)
@@ -463,7 +433,6 @@ class OpenAIProviderSession(ProviderSession):
             "tool_choice": "auto",
             "stream": True,
             "max_output_tokens": 50000,
-            "prompt_cache_key": self._prompt_cache_key,
         }
         if model_name == "gpt-5.4-2026-03-05":
             params["prompt_cache_retention"] = "24h"

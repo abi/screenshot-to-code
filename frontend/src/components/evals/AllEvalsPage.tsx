@@ -57,6 +57,18 @@ function AllEvalsPage() {
             </h2>
             <p className="text-gray-600">Score outputs from a single model</p>
           </Link>
+
+          <Link
+            to="/evals/openai-input-compare"
+            className="block w-full p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200"
+          >
+            <h2 className="text-xl font-semibold text-gray-800">
+              OpenAI Input Compare
+            </h2>
+            <p className="text-gray-600">
+              Find the first diverging input block between two requests
+            </p>
+          </Link>
         </div>
       </div>
     </div>

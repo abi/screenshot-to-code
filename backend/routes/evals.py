@@ -12,6 +12,10 @@ from typing import List, Dict
 from llm import Llm
 from prompts.prompt_types import Stack
 from pathlib import Path
+from fs_logging.openai_input_compare import (
+    compare_openai_inputs,
+    format_openai_input_comparison,
+)
 
 router = APIRouter()
 
@@ -181,6 +185,76 @@ class RunEvalsRequest(BaseModel):
     stack: Stack
     files: List[str] = []  # Optional list of specific file paths to run evals on
     diff_mode: bool = False
+
+
+class OpenAIInputCompareRequest(BaseModel):
+    left_json: str
+    right_json: str
+
+
+class OpenAIInputCompareDifferenceResponse(BaseModel):
+    item_index: int
+    path: str
+    left_summary: str
+    right_summary: str
+    left_value: object | None
+    right_value: object | None
+
+
+class OpenAIInputCompareResponse(BaseModel):
+    common_prefix_items: int
+    left_item_count: int
+    right_item_count: int
+    difference: OpenAIInputCompareDifferenceResponse | None
+    formatted: str
+
+
+def _load_openai_input_compare_payload(raw_json: str, side: str) -> object:
+    try:
+        payload = json.loads(raw_json)
+    except json.JSONDecodeError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Invalid {side} JSON: {error.msg} "
+                f"(line {error.lineno}, column {error.colno})"
+            ),
+        )
+
+    try:
+        compare_openai_inputs(payload, payload)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=f"Invalid {side} payload: {error}")
+
+    return payload
+
+
+@router.post("/openai-input-compare", response_model=OpenAIInputCompareResponse)
+async def compare_openai_inputs_for_evals(
+    request: OpenAIInputCompareRequest,
+) -> OpenAIInputCompareResponse:
+    left_payload = _load_openai_input_compare_payload(request.left_json, "left")
+    right_payload = _load_openai_input_compare_payload(request.right_json, "right")
+    comparison = compare_openai_inputs(left_payload, right_payload)
+
+    difference = None
+    if comparison.difference is not None:
+        difference = OpenAIInputCompareDifferenceResponse(
+            item_index=comparison.difference.item_index,
+            path=comparison.difference.path,
+            left_summary=comparison.difference.left_summary,
+            right_summary=comparison.difference.right_summary,
+            left_value=comparison.difference.left_value,
+            right_value=comparison.difference.right_value,
+        )
+
+    return OpenAIInputCompareResponse(
+        common_prefix_items=comparison.common_prefix_items,
+        left_item_count=comparison.left_item_count,
+        right_item_count=comparison.right_item_count,
+        difference=difference,
+        formatted=format_openai_input_comparison(comparison),
+    )
 
 
 @router.post("/run_evals", response_model=List[str])

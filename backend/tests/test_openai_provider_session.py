@@ -57,7 +57,7 @@ def _test_tools() -> list[dict[str, Any]]:
 
 
 @pytest.mark.asyncio
-async def test_openai_provider_session_reuses_prompt_cache_key_across_turns() -> None:
+async def test_openai_provider_session_omits_prompt_cache_key_across_turns() -> None:
     client = _FakeOpenAIClient()
     session = OpenAIProviderSession(
         client=client,  # type: ignore[arg-type]
@@ -108,9 +108,8 @@ async def test_openai_provider_session_reuses_prompt_cache_key_across_turns() ->
     first_input = first_call["input"]
     second_input = second_call["input"]
 
-    assert first_call["prompt_cache_key"] == second_call["prompt_cache_key"]
-    assert isinstance(first_call["prompt_cache_key"], str)
-    assert str(first_call["prompt_cache_key"]).startswith("s2c-openai-session-v1-")
+    assert "prompt_cache_key" not in first_call
+    assert "prompt_cache_key" not in second_call
     assert "prompt_cache_retention" not in first_call
     assert "prompt_cache_retention" not in second_call
     assert isinstance(first_input, list)
@@ -119,7 +118,7 @@ async def test_openai_provider_session_reuses_prompt_cache_key_across_turns() ->
 
 
 @pytest.mark.asyncio
-async def test_openai_provider_session_prompt_cache_key_is_deterministic() -> None:
+async def test_openai_provider_session_omits_prompt_cache_key_for_all_prompts() -> None:
     first_client = _FakeOpenAIClient()
     second_client = _FakeOpenAIClient()
     different_prompt_client = _FakeOpenAIClient()
@@ -147,12 +146,9 @@ async def test_openai_provider_session_prompt_cache_key_is_deterministic() -> No
     await second_session.stream_turn(_noop_event_sink)
     await different_prompt_session.stream_turn(_noop_event_sink)
 
-    first_key = first_client.responses.calls[0]["prompt_cache_key"]
-    second_key = second_client.responses.calls[0]["prompt_cache_key"]
-    different_prompt_key = different_prompt_client.responses.calls[0]["prompt_cache_key"]
-
-    assert first_key == second_key
-    assert first_key != different_prompt_key
+    assert "prompt_cache_key" not in first_client.responses.calls[0]
+    assert "prompt_cache_key" not in second_client.responses.calls[0]
+    assert "prompt_cache_key" not in different_prompt_client.responses.calls[0]
 
 
 @pytest.mark.asyncio
