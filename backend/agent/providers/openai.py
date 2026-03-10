@@ -455,8 +455,9 @@ class OpenAIProviderSession(ProviderSession):
         )
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
+        model_name = get_openai_api_name(self._model)
         params: Dict[str, Any] = {
-            "model": get_openai_api_name(self._model),
+            "model": model_name,
             "input": self._input_items,
             "tools": self._tools,
             "tool_choice": "auto",
@@ -464,6 +465,8 @@ class OpenAIProviderSession(ProviderSession):
             "max_output_tokens": 50000,
             "prompt_cache_key": self._prompt_cache_key,
         }
+        if model_name == "gpt-5.4-2026-03-05":
+            params["prompt_cache_retention"] = "24h"
         reasoning_effort = get_openai_reasoning_effort(self._model)
         if reasoning_effort:
             params["reasoning"] = {"effort": reasoning_effort, "summary": "auto"}

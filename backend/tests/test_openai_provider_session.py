@@ -111,6 +111,8 @@ async def test_openai_provider_session_reuses_prompt_cache_key_across_turns() ->
     assert first_call["prompt_cache_key"] == second_call["prompt_cache_key"]
     assert isinstance(first_call["prompt_cache_key"], str)
     assert str(first_call["prompt_cache_key"]).startswith("s2c-openai-session-v1-")
+    assert "prompt_cache_retention" not in first_call
+    assert "prompt_cache_retention" not in second_call
     assert isinstance(first_input, list)
     assert isinstance(second_input, list)
     assert len(second_input) > len(first_input)
@@ -168,6 +170,7 @@ async def test_openai_provider_session_uses_gpt_5_4_none_reasoning_effort() -> N
     first_call = client.responses.calls[0]
 
     assert first_call["model"] == "gpt-5.4-2026-03-05"
+    assert first_call["prompt_cache_retention"] == "24h"
     assert first_call["reasoning"] == {"effort": "none", "summary": "auto"}
 
 
@@ -186,4 +189,5 @@ async def test_openai_provider_session_uses_gpt_5_4_high_reasoning_effort() -> N
     first_call = client.responses.calls[0]
 
     assert first_call["model"] == "gpt-5.4-2026-03-05"
+    assert first_call["prompt_cache_retention"] == "24h"
     assert first_call["reasoning"] == {"effort": "high", "summary": "auto"}
