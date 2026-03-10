@@ -824,7 +824,11 @@ function App() {
             setMobilePane("preview");
           }}
           onOpenFeedback={
-            SHOW_FEEDBACK_CALL_UI ? () => setIsFeedbackOpen(true) : undefined
+            SHOW_FEEDBACK_CALL_UI &&
+            subscriberTier &&
+            subscriberTier !== "free"
+              ? () => setIsFeedbackOpen(true)
+              : undefined
           }
           onContactSupport={
             IS_RUNNING_ON_CLOUD
@@ -1027,7 +1031,6 @@ function App() {
         <FeedbackModal
           open={isFeedbackOpen}
           onOpenChange={setIsFeedbackOpen}
-          subscriberTier={subscriberTier}
         />
       )}
     </div>

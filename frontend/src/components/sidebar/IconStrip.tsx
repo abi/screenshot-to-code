@@ -139,7 +139,7 @@ function IconStrip({
         <button
           onClick={onOpenFeedback}
           className="flex items-center justify-center rounded-lg p-2 transition-colors text-purple-500 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 lg:flex-col lg:gap-1 lg:px-2 lg:py-1.5"
-          title="Get $200 for feedback"
+          title="Get $100 for feedback"
         >
           <LuGift className="w-[18px] h-[18px]" />
           <span className="hidden text-[10px] leading-none lg:block">
