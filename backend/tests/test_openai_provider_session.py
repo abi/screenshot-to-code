@@ -57,7 +57,7 @@ def _test_tools() -> list[dict[str, Any]]:
 
 
 @pytest.mark.asyncio
-async def test_openai_provider_session_reuses_prompt_cache_key_across_turns() -> None:
+async def test_openai_provider_session_omits_prompt_cache_key_across_turns() -> None:
     client = _FakeOpenAIClient()
     session = OpenAIProviderSession(
         client=client,  # type: ignore[arg-type]
@@ -108,16 +108,17 @@ async def test_openai_provider_session_reuses_prompt_cache_key_across_turns() ->
     first_input = first_call["input"]
     second_input = second_call["input"]
 
-    assert first_call["prompt_cache_key"] == second_call["prompt_cache_key"]
-    assert isinstance(first_call["prompt_cache_key"], str)
-    assert str(first_call["prompt_cache_key"]).startswith("s2c-openai-session-v1-")
+    assert "prompt_cache_key" not in first_call
+    assert "prompt_cache_key" not in second_call
+    assert "prompt_cache_retention" not in first_call
+    assert "prompt_cache_retention" not in second_call
     assert isinstance(first_input, list)
     assert isinstance(second_input, list)
     assert len(second_input) > len(first_input)
 
 
 @pytest.mark.asyncio
-async def test_openai_provider_session_prompt_cache_key_is_deterministic() -> None:
+async def test_openai_provider_session_omits_prompt_cache_key_for_all_prompts() -> None:
     first_client = _FakeOpenAIClient()
     second_client = _FakeOpenAIClient()
     different_prompt_client = _FakeOpenAIClient()
@@ -145,9 +146,44 @@ async def test_openai_provider_session_prompt_cache_key_is_deterministic() -> No
     await second_session.stream_turn(_noop_event_sink)
     await different_prompt_session.stream_turn(_noop_event_sink)
 
-    first_key = first_client.responses.calls[0]["prompt_cache_key"]
-    second_key = second_client.responses.calls[0]["prompt_cache_key"]
-    different_prompt_key = different_prompt_client.responses.calls[0]["prompt_cache_key"]
+    assert "prompt_cache_key" not in first_client.responses.calls[0]
+    assert "prompt_cache_key" not in second_client.responses.calls[0]
+    assert "prompt_cache_key" not in different_prompt_client.responses.calls[0]
 
-    assert first_key == second_key
-    assert first_key != different_prompt_key
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_uses_gpt_5_4_none_reasoning_effort() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_4_2026_03_05_NONE,
+        prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_call = client.responses.calls[0]
+
+    assert first_call["model"] == "gpt-5.4-2026-03-05"
+    assert first_call["prompt_cache_retention"] == "24h"
+    assert first_call["reasoning"] == {"effort": "none", "summary": "auto"}
+
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_uses_gpt_5_4_high_reasoning_effort() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_4_2026_03_05_HIGH,
+        prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_call = client.responses.calls[0]
+
+    assert first_call["model"] == "gpt-5.4-2026-03-05"
+    assert first_call["prompt_cache_retention"] == "24h"
+    assert first_call["reasoning"] == {"effort": "high", "summary": "auto"}

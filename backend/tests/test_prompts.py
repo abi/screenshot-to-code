@@ -87,6 +87,10 @@ class TestCreatePrompt:
         "missing assets when needed."
     )
 
+    @staticmethod
+    def wrapped_file(content: str) -> str:
+        return f'<file path="index.html">\n{content}\n</file>'
+
     def test_plan_create_uses_create_from_input(self) -> None:
         plan = derive_prompt_construction_plan(
             stack=self.TEST_STACK,
@@ -238,7 +242,10 @@ class TestCreatePrompt:
                         "role": "system",
                         "content": self.MOCK_SYSTEM_PROMPT,
                     },
-                    {"role": "assistant", "content": "<html>Initial code</html>"},
+                    {
+                        "role": "assistant",
+                        "content": self.wrapped_file("<html>Initial code</html>"),
+                    },
                     {
                         "role": "user",
                         "content": (
@@ -247,7 +254,10 @@ class TestCreatePrompt:
                             "Make the background blue"
                         ),
                     },
-                    {"role": "assistant", "content": "<html>Updated code</html>"},
+                    {
+                        "role": "assistant",
+                        "content": self.wrapped_file("<html>Updated code</html>"),
+                    },
                     {"role": "user", "content": "Add a header"},
                 ],
             }
@@ -365,7 +375,7 @@ class TestCreatePrompt:
                     },
                     {
                         "role": "assistant",
-                        "content": "<html>Initial dashboard</html>"
+                        "content": self.wrapped_file("<html>Initial dashboard</html>")
                     },
                     {
                         "role": "user",
@@ -377,7 +387,9 @@ class TestCreatePrompt:
                     },
                     {
                         "role": "assistant",
-                        "content": "<html>Dashboard with sidebar</html>"
+                        "content": self.wrapped_file(
+                            "<html>Dashboard with sidebar</html>"
+                        )
                     },
                     {
                         "role": "user",
@@ -496,7 +508,10 @@ class TestCreatePrompt:
                         "role": "system",
                         "content": self.MOCK_SYSTEM_PROMPT,
                     },
-                    {"role": "assistant", "content": "<html>Initial code</html>"},
+                    {
+                        "role": "assistant",
+                        "content": self.wrapped_file("<html>Initial code</html>"),
+                    },
                     {
                         "role": "user",
                         "content": [
@@ -517,7 +532,10 @@ class TestCreatePrompt:
                             },
                         ],
                     },
-                    {"role": "assistant", "content": "<html>Code with button</html>"},
+                    {
+                        "role": "assistant",
+                        "content": self.wrapped_file("<html>Code with button</html>"),
+                    },
                 ],
             }
 
@@ -561,7 +579,10 @@ class TestCreatePrompt:
                         "role": "system",
                         "content": self.MOCK_SYSTEM_PROMPT,
                     },
-                    {"role": "assistant", "content": "<html>Initial code</html>"},
+                    {
+                        "role": "assistant",
+                        "content": self.wrapped_file("<html>Initial code</html>"),
+                    },
                     {
                         "role": "user",
                         "content": [
@@ -589,7 +610,10 @@ class TestCreatePrompt:
                             },
                         ],
                     },
-                    {"role": "assistant", "content": "<html>Styled code</html>"},
+                    {
+                        "role": "assistant",
+                        "content": self.wrapped_file("<html>Styled code</html>"),
+                    },
                 ],
             }
 
@@ -631,7 +655,10 @@ class TestCreatePrompt:
                         "role": "system",
                         "content": self.MOCK_SYSTEM_PROMPT,
                     },
-                    {"role": "assistant", "content": "<html>Initial code</html>"},
+                    {
+                        "role": "assistant",
+                        "content": self.wrapped_file("<html>Initial code</html>"),
+                    },
                     {
                         "role": "user",
                         "content": (
@@ -640,7 +667,10 @@ class TestCreatePrompt:
                             "Make it blue"
                         ),
                     },  # Text-only message
-                    {"role": "assistant", "content": "<html>Blue code</html>"},
+                    {
+                        "role": "assistant",
+                        "content": self.wrapped_file("<html>Blue code</html>"),
+                    },
                 ],
             }
 

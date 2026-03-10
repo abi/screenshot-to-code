@@ -10,157 +10,11 @@ from typing import Any, Sequence
 from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.state import ensure_str
+from fs_logging.openai_input_formatting import (
+    summarize_responses_input_item,
+    to_serializable,
+)
 from llm import Llm, get_openai_api_name
-
-
-def _truncate_for_log(value: Any, max_len: int = 120) -> str:
-    text = ensure_str(value).replace("\n", "\\n")
-    if len(text) <= max_len:
-        return text
-    return f"{text[:max_len]}..."
-
-
-def _as_dict(value: Any) -> dict[str, Any] | None:
-    if isinstance(value, dict):
-        return value
-
-    model_dump = getattr(value, "model_dump", None)
-    if callable(model_dump):
-        dumped = model_dump()
-        if isinstance(dumped, dict):
-            return dumped
-
-    to_dict = getattr(value, "to_dict", None)
-    if callable(to_dict):
-        dumped = to_dict()
-        if isinstance(dumped, dict):
-            return dumped
-
-    dict_method = getattr(value, "dict", None)
-    if callable(dict_method):
-        dumped = dict_method()
-        if isinstance(dumped, dict):
-            return dumped
-
-    raw_dict = getattr(value, "__dict__", None)
-    if isinstance(raw_dict, dict):
-        normalized = {k: v for k, v in raw_dict.items() if not k.startswith("_")}
-        if normalized:
-            return normalized
-
-    return None
-
-
-def _to_serializable(value: Any) -> Any:
-    if value is None or isinstance(value, (bool, int, float, str)):
-        return value
-
-    if isinstance(value, dict):
-        return {ensure_str(k): _to_serializable(v) for k, v in value.items()}
-
-    if isinstance(value, (list, tuple)):
-        return [_to_serializable(v) for v in value]
-
-    as_dict = _as_dict(value)
-    if as_dict is not None:
-        return _to_serializable(as_dict)
-
-    return ensure_str(value)
-
-
-def _summarize_content_part(part: Any) -> str:
-    part_dict = _as_dict(part)
-    if part_dict is None:
-        return f"{type(part).__name__}"
-
-    part_type = part_dict.get("type", "unknown")
-
-    if part_type in ("input_text", "text", "output_text", "summary_text"):
-        text = ensure_str(part_dict.get("text", ""))
-        return (
-            f"{part_type}(chars={len(text)} "
-            f"preview='{_truncate_for_log(text, max_len=80)}')"
-        )
-
-    if part_type in ("input_image", "image_url"):
-        image_url_value: Any = part_dict.get("image_url", "")
-        detail: str | None = None
-        if isinstance(image_url_value, dict):
-            detail = ensure_str(image_url_value.get("detail", ""))
-            image_url_value = image_url_value.get("url", "")
-        else:
-            detail = ensure_str(part_dict.get("detail", ""))
-
-        url_text = ensure_str(image_url_value)
-        detail_text = detail or "-"
-        return (
-            f"{part_type}(detail={detail_text} "
-            f"url='{_truncate_for_log(url_text, max_len=80)}')"
-        )
-
-    return f"{part_type}(keys={sorted(part_dict.keys())})"
-
-
-def _summarize_function_call_output_payload(output_text: str) -> str:
-    try:
-        parsed = json.loads(output_text)
-    except json.JSONDecodeError:
-        return (
-            f"output_chars={len(output_text)} "
-            f"preview='{_truncate_for_log(output_text)}'"
-        )
-
-    if not isinstance(parsed, dict):
-        return (
-            f"output_type={type(parsed).__name__} "
-            f"preview='{_truncate_for_log(parsed)}'"
-        )
-
-    if "error" in parsed:
-        error_text = ensure_str(parsed.get("error"))
-        return f"error='{_truncate_for_log(error_text)}'"
-
-    summary_parts: list[str] = []
-
-    content_text = ensure_str(parsed.get("content"))
-    if content_text:
-        summary_parts.append(f"content='{_truncate_for_log(content_text, max_len=80)}'")
-
-    details = parsed.get("details")
-    if isinstance(details, dict):
-        path = ensure_str(details.get("path"))
-
-        diff_text = details.get("diff")
-        if (not path) and isinstance(diff_text, str) and diff_text:
-            for line in diff_text.splitlines():
-                if line.startswith("--- "):
-                    path = line.removeprefix("--- ").strip()
-                    break
-
-        if path:
-            summary_parts.append(f"path={path}")
-
-        edits = details.get("edits")
-        if isinstance(edits, list):
-            summary_parts.append(f"edits={len(edits)}")
-
-        content_length = details.get("contentLength")
-        if isinstance(content_length, int):
-            summary_parts.append(f"content_length={content_length}")
-
-        first_changed_line = details.get("firstChangedLine")
-        if isinstance(first_changed_line, int):
-            summary_parts.append(f"first_changed_line={first_changed_line}")
-
-        if isinstance(diff_text, str) and diff_text:
-            diff_lines = diff_text.count("\n")
-            summary_parts.append(f"diff_chars={len(diff_text)}")
-            summary_parts.append(f"diff_lines={diff_lines}")
-
-    if not summary_parts:
-        summary_parts.append(f"keys={sorted(parsed.keys())}")
-
-    return " ".join(summary_parts)
 
 
 def _render_json_scalar(value: Any) -> str:
@@ -223,76 +77,15 @@ def _render_json_node(value: Any, label: str | None = None) -> str:
     )
 
 
-def _summarize_responses_input_item(index: int, item: Any) -> str:
-    item_dict = _as_dict(item)
-    if item_dict is None:
-        return f"{index:02d} item_type={type(item).__name__}"
-
-    if "role" in item_dict:
-        role = ensure_str(item_dict.get("role", "unknown"))
-        content = item_dict.get("content", "")
-        if isinstance(content, str):
-            return (
-                f"{index:02d} role={role} content=str chars={len(content)} "
-                f"preview='{_truncate_for_log(content)}'"
-            )
-        if isinstance(content, list):
-            part_summaries = [_summarize_content_part(part) for part in content]
-            return (
-                f"{index:02d} role={role} content_parts={len(content)} "
-                f"[{'; '.join(part_summaries)}]"
-            )
-        return f"{index:02d} role={role} content_type={type(content).__name__}"
-
-    item_type = ensure_str(item_dict.get("type", "unknown"))
-
-    if item_type in ("function_call", "custom_tool_call"):
-        raw_args = (
-            item_dict.get("input")
-            if item_type == "custom_tool_call"
-            else item_dict.get("arguments")
-        )
-        args_text = ensure_str(raw_args or "")
-        call_id = item_dict.get("call_id") or item_dict.get("id")
-        return (
-            f"{index:02d} type={item_type} name={item_dict.get('name')} "
-            f"call_id={call_id} args_chars={len(args_text)} "
-            f"preview='{_truncate_for_log(args_text)}'"
-        )
-
-    if item_type == "function_call_output":
-        output_text = ensure_str(item_dict.get("output", ""))
-        return (
-            f"{index:02d} type=function_call_output call_id={item_dict.get('call_id')} "
-            f"{_summarize_function_call_output_payload(output_text)}"
-        )
-
-    if item_type == "message":
-        role = ensure_str(item_dict.get("role", "unknown"))
-        content = item_dict.get("content", [])
-        if isinstance(content, list):
-            part_summaries = [_summarize_content_part(part) for part in content]
-            return (
-                f"{index:02d} type=message role={role} parts={len(content)} "
-                f"[{'; '.join(part_summaries)}]"
-            )
-        return (
-            f"{index:02d} type=message role={role} "
-            f"content_type={type(content).__name__}"
-        )
-
-    if item_type == "reasoning":
-        summary = item_dict.get("summary")
-        if isinstance(summary, list):
-            summary_parts = [_summarize_content_part(part) for part in summary]
-            return (
-                f"{index:02d} type=reasoning summary_parts={len(summary)} "
-                f"[{'; '.join(summary_parts)}]"
-            )
-        return f"{index:02d} type=reasoning summary_type={type(summary).__name__}"
-
-    return f"{index:02d} type={item_type} keys={sorted(item_dict.keys())}"
-
+def _render_copy_controls(copy_target_id: str, button_label: str) -> str:
+    return (
+        "<div class='copy-controls'>"
+        f"<button type='button' class='copy-button' data-copy-target='{escape(copy_target_id)}'>"
+        f"{escape(button_label)}"
+        "</button>"
+        "<span class='copy-status' aria-live='polite'></span>"
+        "</div>"
+    )
 
 def _log_openai_turn_input(model: Llm, turn_index: int, input_items: Sequence[Any]) -> None:
     model_name = get_openai_api_name(model)
@@ -303,7 +96,7 @@ def _log_openai_turn_input(model: Llm, turn_index: int, input_items: Sequence[An
     for index, item in enumerate(input_items):
         print(
             f"[OPENAI TURN INPUT] "
-            f"{_summarize_responses_input_item(index, item)}"
+            f"{summarize_responses_input_item(index, item)}"
         )
 
 
@@ -361,8 +154,8 @@ class OpenAITurnInputLogger:
         turn_items = [
             OpenAITurnInputItem(
                 index=index,
-                summary=_summarize_responses_input_item(index, item),
-                payload=_to_serializable(item),
+                summary=summarize_responses_input_item(index, item),
+                payload=to_serializable(item),
             )
             for index, item in enumerate(input_items)
         ]
@@ -370,7 +163,7 @@ class OpenAITurnInputLogger:
             OpenAITurnInputReport(
                 turn_index=self._turn_index,
                 items=turn_items,
-                request_payload=_to_serializable(request_payload),
+                request_payload=to_serializable(request_payload),
             )
         )
 
@@ -446,6 +239,11 @@ class OpenAITurnInputLogger:
             "    .json-type { color: #2563eb; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }",
             "    .json-number, .json-bool, .json-null { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #0f766e; }",
             "    .json-string { white-space: pre-wrap; overflow-wrap: anywhere; }",
+            "    .copy-controls { display: flex; align-items: center; gap: 8px; margin-top: 10px; }",
+            "    .copy-button { border: 1px solid #cbd5e1; background: #fff; color: #111827; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12px; }",
+            "    .copy-button:hover { background: #f8fafc; }",
+            "    .copy-status { color: #2563eb; font-size: 12px; min-height: 16px; }",
+            "    .copy-source { display: none; }",
             "  </style>",
             "</head>",
             "<body>",
@@ -469,8 +267,25 @@ class OpenAITurnInputLogger:
                     indent=2,
                     ensure_ascii=False,
                 )
+                request_input_json: str | None = None
+                if isinstance(turn.request_payload, dict) and "input" in turn.request_payload:
+                    request_input_json = json.dumps(
+                        turn.request_payload["input"],
+                        indent=2,
+                        ensure_ascii=False,
+                    )
                 html_parts.append("    <details class='payload-wrap' open>")
                 html_parts.append("      <summary>Request payload</summary>")
+                if request_input_json is not None:
+                    request_input_id = f"request-input-turn-{turn.turn_index}"
+                    html_parts.append(
+                        "      "
+                        + _render_copy_controls(request_input_id, "Copy input JSON")
+                    )
+                    html_parts.append(
+                        f"      <pre id='{escape(request_input_id)}' class='copy-source'>"
+                        f"{escape(request_input_json)}</pre>"
+                    )
                 html_parts.append("      <div class='json-view'>")
                 html_parts.append(_render_json_node(turn.request_payload, "root"))
                 html_parts.append("      </div>")
@@ -558,5 +373,37 @@ class OpenAITurnInputLogger:
                 html_parts.append("    </details>")
             html_parts.append("  </section>")
 
-        html_parts.extend(["</body>", "</html>"])
+        html_parts.extend(
+            [
+                "  <script>",
+                "    document.addEventListener('click', async (event) => {",
+                "      const target = event.target;",
+                "      if (!(target instanceof HTMLButtonElement)) {",
+                "        return;",
+                "      }",
+                "      const copyTargetId = target.dataset.copyTarget;",
+                "      if (!copyTargetId) {",
+                "        return;",
+                "      }",
+                "      const source = document.getElementById(copyTargetId);",
+                "      const status = target.parentElement?.querySelector('.copy-status');",
+                "      if (!source) {",
+                "        if (status) { status.textContent = 'Missing source'; }",
+                "        return;",
+                "      }",
+                "      try {",
+                "        await navigator.clipboard.writeText(source.textContent || '');",
+                "        if (status) { status.textContent = 'Copied'; }",
+                "      } catch (_error) {",
+                "        if (status) { status.textContent = 'Copy failed'; }",
+                "      }",
+                "      window.setTimeout(() => {",
+                "        if (status) { status.textContent = ''; }",
+                "      }, 1600);",
+                "    });",
+                "  </script>",
+                "</body>",
+                "</html>",
+            ]
+        )
         return "\n".join(html_parts)

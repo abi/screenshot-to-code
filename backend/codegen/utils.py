@@ -3,7 +3,15 @@ import re
 import sentry_sdk
 
 
-def extract_html_content(text: str):
+def extract_html_content(text: str) -> str:
+    file_match = re.search(
+        r"<file\s+path=\"[^\"]+\">\s*(.*?)\s*</file>",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    )
+    if file_match:
+        return extract_html_content(file_match.group(1).strip())
+
     # First, strip markdown code fences if present
     text = re.sub(r'^```html?\s*\n?', '', text, flags=re.MULTILINE)
     text = re.sub(r'\n?```\s*$', '', text, flags=re.MULTILINE)

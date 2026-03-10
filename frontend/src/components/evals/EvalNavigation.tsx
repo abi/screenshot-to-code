@@ -40,6 +40,13 @@ function EvalNavigation() {
         >
           Single
         </Link>
+
+        <Link
+          to="/evals/openai-input-compare"
+          className="hover:text-blue-300 transition-colors"
+        >
+          Input Compare
+        </Link>
       </div>
       
       <Link

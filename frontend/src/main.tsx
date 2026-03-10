@@ -8,6 +8,7 @@ import PairwiseEvalsPage from "./components/evals/PairwiseEvalsPage";
 import RunEvalsPage from "./components/evals/RunEvalsPage.tsx";
 import BestOfNEvalsPage from "./components/evals/BestOfNEvalsPage.tsx";
 import AllEvalsPage from "./components/evals/AllEvalsPage.tsx";
+import OpenAIInputComparePage from "./components/evals/OpenAIInputComparePage.tsx";
 
 import AppContainer from "./components/hosted/AppContainer.tsx";
 import EvalsPage from "./components/evals/EvalsPage.tsx";
@@ -52,6 +53,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
           <Route path="/evals/best-of-n" element={<BestOfNEvalsPage />} />
           <Route path="/evals/run" element={<RunEvalsPage />} />
+          <Route
+            path="/evals/openai-input-compare"
+            element={<OpenAIInputComparePage />}
+          />
 
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/faqs" element={<FaqsPage />} />
@@ -62,5 +67,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         toastOptions={{ className: "dark:bg-zinc-950 dark:text-white" }}
       />
     </ClerkProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

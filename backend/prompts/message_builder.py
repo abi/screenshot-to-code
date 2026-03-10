@@ -7,6 +7,13 @@ from prompts.prompt_types import PromptHistoryMessage
 Prompt = list[ChatCompletionMessageParam]
 
 
+def _wrap_assistant_file_content(content: str, path: str = "index.html") -> str:
+    stripped = content.strip()
+    if stripped.startswith("<file ") and stripped.endswith("</file>"):
+        return stripped
+    return f'<file path="{path}">\n{stripped}\n</file>'
+
+
 def build_history_message(item: PromptHistoryMessage) -> ChatCompletionMessageParam:
     role = item["role"]
     image_urls = item.get("images", [])
@@ -43,6 +50,10 @@ def build_history_message(item: PromptHistoryMessage) -> ChatCompletionMessagePa
         ChatCompletionMessageParam,
         {
             "role": role,
-            "content": item.get("text", ""),
+            "content": (
+                _wrap_assistant_file_content(item.get("text", ""))
+                if role == "assistant"
+                else item.get("text", "")
+            ),
         },
     )
