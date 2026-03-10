@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Literal, Optional
 
 from openai.types.chat import ChatCompletionMessageParam
 
@@ -37,6 +37,7 @@ class AgentEngine:
         anthropic_api_key: Optional[str],
         gemini_api_key: Optional[str],
         should_generate_images: bool,
+        generation_type: Literal["create", "update"] = "create",
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
     ):
@@ -47,6 +48,7 @@ class AgentEngine:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
+        self.generation_type = generation_type
 
         self.file_state = AgentFileState()
         if initial_file_state and initial_file_state.get("content"):
@@ -58,6 +60,7 @@ class AgentEngine:
             should_generate_images=should_generate_images,
             openai_api_key=openai_api_key,
             openai_base_url=openai_base_url,
+            generation_type=generation_type,
             option_codes=option_codes,
         )
         self._tool_preview_lengths: Dict[str, int] = {}
@@ -233,6 +236,7 @@ class AgentEngine:
     async def run(
         self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]
     ) -> tuple[str, TokenUsage, float]:
+        self.tool_runtime.current_model = model
         seed_file_state_from_messages(self.file_state, prompt_messages)
 
         session = create_provider_session(

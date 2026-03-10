@@ -1,16 +1,26 @@
 # pyright: reportUnknownVariableType=false
 import asyncio
 import difflib
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from codegen.utils import extract_html_content
-from config import REPLICATE_API_KEY
+from config import IS_PROD, REPLICATE_API_KEY
 from image_generation.generation import process_tasks
 from image_generation.replicate import remove_background
+from llm import Llm, OPENAI_MODELS, get_openai_api_name
 
 from agent.state import AgentFileState, ensure_str
-from agent.tools.types import ToolCall, ToolExecutionResult
 from agent.tools.summaries import summarize_text
+from agent.tools.types import ToolCall, ToolExecutionResult
+
+if IS_PROD:
+    import sentry_sdk
+else:
+    sentry_sdk = None
+
+
+class UnexpectedCreateFileInNonCreateGeneration(Exception):
+    pass
 
 
 class AgentToolRuntime:
@@ -20,12 +30,16 @@ class AgentToolRuntime:
         should_generate_images: bool,
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
+        generation_type: Literal["create", "update"] = "create",
+        current_model: Optional[Llm] = None,
         option_codes: Optional[List[str]] = None,
     ):
         self.file_state = file_state
         self.should_generate_images = should_generate_images
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
+        self.generation_type = generation_type
+        self.current_model = current_model
         self.option_codes = option_codes or []
 
     async def execute(self, tool_call: ToolCall) -> ToolExecutionResult:
@@ -65,6 +79,29 @@ class AgentToolRuntime:
                 result={"error": "create_file requires non-empty content"},
                 summary={"error": "Missing content"},
             )
+
+        if (
+            IS_PROD
+            and sentry_sdk is not None
+            and self.generation_type != "create"
+        ):
+            with sentry_sdk.push_scope() as scope:
+                scope.set_tag("tool_name", "create_file")
+                scope.set_tag("generation_type", self.generation_type)
+                if self.current_model is not None:
+                    scope.set_tag("model", self.current_model.value)
+                    if self.current_model in OPENAI_MODELS:
+                        scope.set_tag(
+                            "model_api_name",
+                            get_openai_api_name(self.current_model),
+                        )
+                scope.set_extra("path", path)
+                scope.set_extra("content_length", len(content))
+                sentry_sdk.capture_exception(
+                    UnexpectedCreateFileInNonCreateGeneration(
+                        "create_file used outside create generation"
+                    )
+                )
 
         extracted = extract_html_content(content)
         self.file_state.path = path
