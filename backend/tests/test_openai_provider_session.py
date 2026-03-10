@@ -151,3 +151,39 @@ async def test_openai_provider_session_prompt_cache_key_is_deterministic() -> No
 
     assert first_key == second_key
     assert first_key != different_prompt_key
+
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_uses_gpt_5_4_none_reasoning_effort() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_4_2026_03_05_NONE,
+        prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_call = client.responses.calls[0]
+
+    assert first_call["model"] == "gpt-5.4-2026-03-05"
+    assert first_call["reasoning"] == {"effort": "none", "summary": "auto"}
+
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_uses_gpt_5_4_high_reasoning_effort() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_4_2026_03_05_HIGH,
+        prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_call = client.responses.calls[0]
+
+    assert first_call["model"] == "gpt-5.4-2026-03-05"
+    assert first_call["reasoning"] == {"effort": "high", "summary": "auto"}
