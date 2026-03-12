@@ -11,6 +11,8 @@ interface Store {
   setProjectsPanelOpen: (isOpen: boolean) => void;
   isAccountPanelOpen: boolean;
   setAccountPanelOpen: (isOpen: boolean) => void;
+  accountCreditsHighlightKey: number;
+  showAccountCreditsWarning: () => void;
   subscriberTier: string;
   setSubscriberTier: (tier: string) => void;
   billingInterval: BillingInterval | null;
@@ -43,6 +45,14 @@ export const useStore = create<Store>((set) => ({
   isAccountPanelOpen: false,
   setAccountPanelOpen: (isOpen: boolean) =>
     set(() => ({ isAccountPanelOpen: isOpen })),
+  accountCreditsHighlightKey: 0,
+  showAccountCreditsWarning: () =>
+    set((state) => ({
+      isPricingDialogOpen: false,
+      isProjectsPanelOpen: false,
+      isAccountPanelOpen: true,
+      accountCreditsHighlightKey: state.accountCreditsHighlightKey + 1,
+    })),
   subscriberTier: "",
   setSubscriberTier: (tier: string) => set(() => ({ subscriberTier: tier })),
   billingInterval: null,

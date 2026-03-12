@@ -11,6 +11,10 @@ const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console AND the backend logs for details. Feel free to open a Github issue.";
 
 const CANCEL_MESSAGE = "Code generation cancelled";
+const OUT_OF_CREDITS_MESSAGE =
+  "You have run out of credits. Please upgrade your plan to add more credits.";
+const OPEN_PRICING_DIALOG_ERROR_PATTERNS = ["subscribe"];
+const OUT_OF_CREDITS_ERROR_PATTERNS = ["run out of monthly credits"];
 
 type WebSocketResponse = {
   type:
@@ -97,7 +101,19 @@ export function generateCode(
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
       const msg = response.value || "";
-      if (msg.includes("subscribe")) {
+      const normalizedMsg = msg.toLowerCase();
+      if (
+        OUT_OF_CREDITS_ERROR_PATTERNS.some((pattern) =>
+          normalizedMsg.includes(pattern)
+        )
+      ) {
+        toast.error(OUT_OF_CREDITS_MESSAGE);
+        useStore.getState().showAccountCreditsWarning();
+      } else if (
+        OPEN_PRICING_DIALOG_ERROR_PATTERNS.some((pattern) =>
+          normalizedMsg.includes(pattern)
+        )
+      ) {
         // Open pricing dialog instead of showing a generic error toast
         useStore.getState().setPricingDialogOpen(true);
       } else {

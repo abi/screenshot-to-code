@@ -7,7 +7,7 @@ import { Progress } from "../ui/progress";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { SAAS_BACKEND_URL } from "../../config";
 import { CreditsUsage } from "./types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { showNewMessage } from "@intercom/messenger-js-sdk";
 import {
@@ -28,7 +28,13 @@ export default function AccountView() {
   const currentPeriodEnd = useStore((state) => state.currentPeriodEnd);
   const cancelAtPeriodEnd = useStore((state) => state.cancelAtPeriodEnd);
   const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
+  const accountCreditsHighlightKey = useStore(
+    (state) => state.accountCreditsHighlightKey,
+  );
   const isFreeUser = subscriberTier === "free" || !subscriberTier;
+  const creditsSectionRef = useRef<HTMLDivElement | null>(null);
+  const [isCreditsSectionHighlighted, setIsCreditsSectionHighlighted] =
+    useState(false);
 
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useClerk();
@@ -59,6 +65,24 @@ export default function AccountView() {
 
     fetchUsage();
   }, [authenticatedFetch, isFreeUser, subscriberTier]);
+
+  useEffect(() => {
+    if (!accountCreditsHighlightKey || isFreeUser) return;
+
+    setIsCreditsSectionHighlighted(true);
+    creditsSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      setIsCreditsSectionHighlighted(false);
+    }, 2600);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [accountCreditsHighlightKey, isFreeUser]);
 
   if (!isLoaded || !isSignedIn) return null;
 
@@ -143,12 +167,26 @@ export default function AccountView() {
 
                   {/* Credit usage */}
                   {isLoadingUsage ? (
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400">
+                    <div
+                      ref={creditsSectionRef}
+                      className={`flex items-center gap-2 rounded-xl px-3 py-3 text-sm text-gray-500 transition-all dark:text-zinc-400 ${
+                        isCreditsSectionHighlighted
+                          ? "bg-amber-50 ring-2 ring-amber-400 dark:bg-amber-500/10 dark:ring-amber-300"
+                          : ""
+                      }`}
+                    >
                       <Spinner />
                       <span>Loading credit usage...</span>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div
+                      ref={creditsSectionRef}
+                      className={`space-y-2 rounded-xl px-3 py-3 transition-all ${
+                        isCreditsSectionHighlighted
+                          ? "bg-amber-50 shadow-[0_0_0_1px_rgba(251,191,36,0.45),0_0_0_10px_rgba(251,191,36,0.14)] ring-2 ring-amber-400 dark:bg-amber-500/10 dark:ring-amber-300"
+                          : ""
+                      }`}
+                    >
                       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
                         <span>Monthly credits</span>
                         <span>
