@@ -11,6 +11,9 @@ from config import (
     GEMINI_API_KEY,
     IS_DEBUG_ENABLED,
     IS_PROD,
+    LITELLM_API_BASE,
+    LITELLM_API_KEY,
+    LITELLM_MODEL,
     NUM_VARIANTS,
     NUM_VARIANTS_VIDEO,
     OPENAI_API_KEY,
@@ -62,6 +65,7 @@ from routes.model_choice_sets import (
     GEMINI_ANTHROPIC_MODELS,
     GEMINI_OPENAI_MODELS,
     GEMINI_ONLY_MODELS,
+    LITELLM_ONLY_MODELS,
     OPENAI_ANTHROPIC_MODELS,
     OPENAI_ONLY_MODELS,
     VIDEO_VARIANT_MODELS,
@@ -366,6 +370,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
+        litellm_model: str | None = None,
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
@@ -377,6 +382,7 @@ class ModelSelectionStage:
                 openai_api_key,
                 anthropic_api_key,
                 gemini_api_key,
+                litellm_model,
             )
 
             # Print the variant models (one per line)
@@ -387,8 +393,8 @@ class ModelSelectionStage:
             return variant_models
         except Exception:
             await self.throw_error(
-                "No OpenAI, Anthropic, or Gemini API key found. Please add the environment variable "
-                "OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY to backend/.env or in the settings dialog. "
+                "No OpenAI, Anthropic, Gemini, or LiteLLM API key found. Please add the environment variable "
+                "OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, or LITELLM_MODEL to backend/.env or in the settings dialog. "
                 "If you add it to .env, make sure to restart the backend server."
             )
             raise Exception("No API key")
@@ -401,6 +407,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        litellm_model: str | None = None,
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
@@ -433,8 +440,14 @@ class ModelSelectionStage:
             models = list(ANTHROPIC_ONLY_MODELS)
         elif openai_api_key:
             models = list(OPENAI_ONLY_MODELS)
+        elif litellm_model:
+            models = list(LITELLM_ONLY_MODELS)
         else:
             raise Exception("No OpenAI or Anthropic key")
+
+        # If LiteLLM is configured alongside other providers, prepend it
+        if litellm_model and Llm.LITELLM not in models:
+            models = [Llm.LITELLM] + models
 
         # Cycle through models: [A, B] with num=5 becomes [A, B, A, B, A]
         selected_models: List[Llm] = []
@@ -503,6 +516,9 @@ class AgenticGenerationStage:
         should_generate_images: bool,
         file_state: Dict[str, str] | None,
         option_codes: List[str] | None,
+        litellm_model: str | None = None,
+        litellm_api_key: str | None = None,
+        litellm_api_base: str | None = None,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -512,6 +528,9 @@ class AgenticGenerationStage:
         self.should_generate_images = should_generate_images
         self.file_state = file_state
         self.option_codes = option_codes or []
+        self.litellm_model = litellm_model
+        self.litellm_api_key = litellm_api_key
+        self.litellm_api_base = litellm_api_base
 
     async def process_variants(
         self,
@@ -569,6 +588,9 @@ class AgenticGenerationStage:
                 should_generate_images=self.should_generate_images,
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,
+                litellm_model=self.litellm_model,
+                litellm_api_key=self.litellm_api_key,
+                litellm_api_base=self.litellm_api_base,
             )
             completion = await runner.run(model, prompt_messages)
             if completion:
@@ -727,6 +749,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                litellm_model=LITELLM_MODEL,
             )
             if IS_DEBUG_ENABLED:
                 await context.send_message(
@@ -746,6 +769,9 @@ class CodeGenerationMiddleware(Middleware):
                 should_generate_images=context.extracted_params.should_generate_images,
                 file_state=context.extracted_params.file_state,
                 option_codes=context.extracted_params.option_codes,
+                litellm_model=LITELLM_MODEL,
+                litellm_api_key=LITELLM_API_KEY,
+                litellm_api_base=LITELLM_API_BASE,
             )
 
             context.variant_completions = await generation_stage.process_variants(

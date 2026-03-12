@@ -8,9 +8,10 @@ from openai.types.chat import ChatCompletionMessageParam
 from agent.providers.anthropic import AnthropicProviderSession, serialize_anthropic_tools
 from agent.providers.base import ProviderSession
 from agent.providers.gemini import GeminiProviderSession, serialize_gemini_tools
+from agent.providers.litellm_provider import LiteLLMProviderSession, serialize_litellm_tools
 from agent.providers.openai import OpenAIProviderSession, serialize_openai_tools
 from agent.tools import canonical_tool_definitions
-from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
+from llm import ANTHROPIC_MODELS, GEMINI_MODELS, LITELLM_MODELS, OPENAI_MODELS, Llm
 
 
 def create_provider_session(
@@ -21,6 +22,9 @@ def create_provider_session(
     openai_base_url: Optional[str],
     anthropic_api_key: Optional[str],
     gemini_api_key: Optional[str],
+    litellm_model: Optional[str] = None,
+    litellm_api_key: Optional[str] = None,
+    litellm_api_base: Optional[str] = None,
 ) -> ProviderSession:
     canonical_tools = canonical_tool_definitions(
         image_generation_enabled=should_generate_images
@@ -60,6 +64,17 @@ def create_provider_session(
             model=model,
             prompt_messages=prompt_messages,
             tools=serialize_gemini_tools(canonical_tools),
+        )
+
+    if model in LITELLM_MODELS:
+        if not litellm_model:
+            raise Exception("LITELLM_MODEL is not configured.")
+        return LiteLLMProviderSession(
+            model_string=litellm_model,
+            prompt_messages=prompt_messages,
+            tools=serialize_litellm_tools(canonical_tools),
+            api_key=litellm_api_key,
+            api_base=litellm_api_base,
         )
 
     raise ValueError(f"Unsupported model: {model.value}")

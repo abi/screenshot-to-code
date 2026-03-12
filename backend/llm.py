@@ -24,6 +24,8 @@ class Llm(Enum):
     CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
     CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101"
     CLAUDE_OPUS_4_6 = "claude-opus-4-6"
+    # LiteLLM (routes to any model via the LITELLM_MODEL env var)
+    LITELLM = "litellm"
     # Gemini
     GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)"
     GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)"
@@ -67,12 +69,15 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GEMINI_3_1_PRO_PREVIEW_HIGH: "gemini",
     Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM: "gemini",
     Llm.GEMINI_3_1_PRO_PREVIEW_LOW: "gemini",
+    # LiteLLM
+    Llm.LITELLM: "litellm",
 }
 
 # Convenience sets for membership checks
 OPENAI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "openai"}
 ANTHROPIC_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "anthropic"}
 GEMINI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "gemini"}
+LITELLM_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "litellm"}
 
 OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
     Llm.GPT_4_1_2025_04_14: {"api_name": "gpt-4.1-2025-04-14"},

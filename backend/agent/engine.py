@@ -32,6 +32,9 @@ class AgentEngine:
         anthropic_api_key: Optional[str],
         gemini_api_key: Optional[str],
         should_generate_images: bool,
+        litellm_model: Optional[str] = None,
+        litellm_api_key: Optional[str] = None,
+        litellm_api_base: Optional[str] = None,
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
     ):
@@ -42,6 +45,9 @@ class AgentEngine:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
+        self.litellm_model = litellm_model
+        self.litellm_api_key = litellm_api_key
+        self.litellm_api_base = litellm_api_base
 
         self.file_state = AgentFileState()
         if initial_file_state and initial_file_state.get("content"):
@@ -236,6 +242,9 @@ class AgentEngine:
             openai_base_url=self.openai_base_url,
             anthropic_api_key=self.anthropic_api_key,
             gemini_api_key=self.gemini_api_key,
+            litellm_model=self.litellm_model,
+            litellm_api_key=self.litellm_api_key,
+            litellm_api_base=self.litellm_api_base,
         )
         try:
             return await self._run_with_session(session)
