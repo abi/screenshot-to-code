@@ -11,8 +11,9 @@ const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console AND the backend logs for details. Feel free to open a Github issue.";
 
 const CANCEL_MESSAGE = "Code generation cancelled";
-const OUT_OF_CREDITS_MESSAGE =
-  "You have run out of credits. Please upgrade your plan to add more credits.";
+const OUT_OF_CREDITS_UPGRADE_MESSAGE = "You have run out of credits. Upgrade to Pro.";
+const OUT_OF_CREDITS_SUPPORT_MESSAGE =
+  "You have run out of credits. Contact support.";
 const OPEN_PRICING_DIALOG_ERROR_PATTERNS = ["subscribe"];
 const OUT_OF_CREDITS_ERROR_PATTERNS = ["run out of monthly credits"];
 
@@ -107,8 +108,13 @@ export function generateCode(
           normalizedMsg.includes(pattern)
         )
       ) {
-        toast.error(OUT_OF_CREDITS_MESSAGE);
-        useStore.getState().showAccountCreditsWarning();
+        const { subscriberTier, showAccountCreditsWarning } = useStore.getState();
+        toast.error(
+          subscriberTier === "pro"
+            ? OUT_OF_CREDITS_SUPPORT_MESSAGE
+            : OUT_OF_CREDITS_UPGRADE_MESSAGE
+        );
+        showAccountCreditsWarning();
       } else if (
         OPEN_PRICING_DIALOG_ERROR_PATTERNS.some((pattern) =>
           normalizedMsg.includes(pattern)

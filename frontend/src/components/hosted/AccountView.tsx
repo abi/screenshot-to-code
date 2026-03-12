@@ -41,6 +41,7 @@ export default function AccountView() {
   const authenticatedFetch = useAuthenticatedFetch();
 
   const openPricingDialog = () => setPricingDialogOpen(true);
+  const openSupport = () => showNewMessage("");
 
   useEffect(() => {
     if (isFreeUser || !subscriberTier) return;
@@ -208,7 +209,17 @@ export default function AccountView() {
                           })}
                           .
                         </span>
-                        {subscriberTier !== "pro" && (
+                        {subscriberTier === "pro" ? (
+                          <span>
+                            <button
+                              onClick={openSupport}
+                              className="ml-1 text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+                            >
+                              <span>Contact support</span>
+                            </button>
+                            <span> to buy additional credit packs: 100 credits for $8.</span>
+                          </span>
+                        ) : (
                           <span>
                             <button
                               onClick={openPricingDialog}
