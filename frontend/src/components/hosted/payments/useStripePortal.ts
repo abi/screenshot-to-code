@@ -9,7 +9,7 @@ import {
 } from "../types";
 
 const GENERIC_PORTAL_ERROR_MESSAGE =
-  "Error directing you to the billing portal. Please email support and we'll get it fixed right away.";
+  "Error directing you to the billing portal. Please contact support.";
 
 export default function useStripePortal() {
   const authenticatedFetch = useAuthenticatedFetch();

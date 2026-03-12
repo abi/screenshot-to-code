@@ -17,7 +17,7 @@ const StripeCustomerPortalLink = forwardRef<HTMLAnchorElement, Props>(
       event.preventDefault();
       await openPortal(
         { action },
-        "Error directing you to the billing portal. Please email support and we'll get it fixed right away.",
+        "Error directing you to the billing portal. Please contact support.",
       );
     };
 

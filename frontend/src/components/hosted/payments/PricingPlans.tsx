@@ -4,7 +4,6 @@ import * as React from "react";
 import useStripeCheckout from "./useStripeCheckout";
 import useStripePortal from "./useStripePortal";
 import { useStore } from "../../../store/store";
-import { capitalize } from "../utils";
 import { getPricingPlansState } from "./pricingPlansState";
 
 interface PricingPlansProps {
@@ -18,21 +17,28 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
   const billingInterval = useStore((state) => state.billingInterval);
   const cancelAtPeriodEnd = useStore((state) => state.cancelAtPeriodEnd);
   const currentPeriodEnd = useStore((state) => state.currentPeriodEnd);
-  const pricingPlansState = getPricingPlansState({
-    subscriberTier,
-    cancelAtPeriodEnd,
-    currentPeriodEnd,
-  });
-  const { isFreeUser, isCancellationScheduled } = pricingPlansState;
   const [paymentInterval, setPaymentInterval] = React.useState<
     "monthly" | "yearly"
   >("monthly");
+  const pricingPlansState = getPricingPlansState({
+    subscriberTier,
+    billingInterval,
+    selectedInterval: paymentInterval,
+    cancelAtPeriodEnd,
+    currentPeriodEnd,
+  });
+  const { isFreeUser, isCancellationScheduled, isViewingDifferentInterval } =
+    pricingPlansState;
+  const hobbyButtonIsSupportState =
+    isViewingDifferentInterval && subscriberTier !== "hobby";
+  const proButtonIsSupportState =
+    isViewingDifferentInterval && subscriberTier !== "pro";
 
   React.useEffect(() => {
-    if (!isFreeUser && billingInterval) {
+    if (billingInterval) {
       setPaymentInterval(billingInterval);
     }
-  }, [billingInterval, isFreeUser]);
+  }, [billingInterval]);
 
   const handleHobbyAction = async () => {
     if (isFreeUser) {
@@ -43,6 +49,10 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
     }
 
     if (isCancellationScheduled) {
+      return;
+    }
+
+    if (isViewingDifferentInterval) {
       return;
     }
 
@@ -66,6 +76,10 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
       return;
     }
 
+    if (isViewingDifferentInterval) {
+      return;
+    }
+
     if (subscriberTier === "hobby") {
       await openPortal(
         { action: "change_tier", target_tier: "pro" },
@@ -84,8 +98,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
               ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-700 dark:text-white"
               : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300"
           }`}
-          disabled={!isFreeUser}
-          onClick={() => isFreeUser && setPaymentInterval("monthly")}
+          onClick={() => setPaymentInterval("monthly")}
         >
           Monthly
         </button>
@@ -95,8 +108,7 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
               ? "bg-white text-gray-900 shadow-sm dark:bg-zinc-700 dark:text-white"
               : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300"
           }`}
-          disabled={!isFreeUser}
-          onClick={() => isFreeUser && setPaymentInterval("yearly")}
+          onClick={() => setPaymentInterval("yearly")}
         >
           Yearly
           <span className="ml-1.5 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">
@@ -104,10 +116,11 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
           </span>
         </button>
       </div>
-      {!isFreeUser && billingInterval && !isCancellationScheduled && (
+      {!isFreeUser && billingInterval && (
         <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-          Tier changes keep your current {capitalize(billingInterval)} billing
-          interval in v1.
+          To update your {billingInterval} subscription to{" "}
+          {billingInterval === "monthly" ? "yearly" : "monthly"}, please contact
+          support.
         </p>
       )}
       {pricingPlansState.cancellationNotice && (
@@ -156,7 +169,9 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
 
           <button
             className={`mb-4 flex w-full items-center justify-center gap-x-2 rounded-lg py-2 text-sm font-medium text-white transition-colors ${
-              pricingPlansState.hobbyButton.disabled
+              hobbyButtonIsSupportState
+                ? "cursor-default border border-gray-200 bg-gray-50 text-gray-600 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300"
+                : pricingPlansState.hobbyButton.disabled
                 ? "cursor-default bg-blue-300 dark:bg-blue-900"
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
@@ -175,14 +190,6 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             <li className="flex items-center gap-2 text-xs dark:text-white">
               <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
               100 credits / mo
-            </li>
-            <li className="flex items-center gap-2 text-xs dark:text-white">
-              <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
-              All AI models
-            </li>
-            <li className="flex items-center gap-2 text-xs dark:text-white">
-              <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
-              Full code access
             </li>
             <li className="flex items-center gap-2 text-xs dark:text-white">
               <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
@@ -214,7 +221,9 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
 
           <button
             className={`mb-4 flex w-full items-center justify-center gap-x-2 rounded-lg py-2 text-sm font-medium transition-colors ${
-              pricingPlansState.proButton.disabled
+              proButtonIsSupportState
+                ? "cursor-default border border-gray-200 bg-gray-50 text-gray-600 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300"
+                : pricingPlansState.proButton.disabled
                 ? "cursor-default bg-gray-400 text-white dark:bg-zinc-600"
                 : "bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
             }`}
@@ -236,19 +245,15 @@ function PricingPlans({ shouldShowFAQLink = true }: PricingPlansProps) {
             </li>
             <li className="flex items-center gap-2 text-xs dark:text-white">
               <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
-              All AI models
-            </li>
-            <li className="flex items-center gap-2 text-xs dark:text-white">
-              <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
-              Full code access
-            </li>
-            <li className="flex items-center gap-2 text-xs dark:text-white">
-              <FaCheckCircle className="text-blue-500 dark:text-blue-400 flex-shrink-0" />
-              Priority support
+              Chat support
             </li>
           </ul>
         </div>
       </div>
+
+      <p className="text-center text-xs font-medium text-blue-600 dark:text-blue-400">
+        Pro includes 5x more monthly credits than Hobby.
+      </p>
 
       {/* Footer note */}
       <p className="text-center text-xs text-gray-500 dark:text-gray-400">

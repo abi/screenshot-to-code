@@ -178,7 +178,7 @@ export default function AccountView() {
                             >
                               <span>Upgrade to Pro</span>
                             </button>
-                            <span> to get more credits.</span>
+                            <span> to get 5x more credits.</span>
                           </span>
                         )}
                       </p>
