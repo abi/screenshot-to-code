@@ -16,8 +16,6 @@ export default function useStripeCheckout() {
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
 
   const checkout = async (priceLookupKey: string) => {
-    const rewardfulReferralId = "xxx"; // TODO: Use later with Rewardful
-
     if (!stripe) {
       addEvent("StripeNotLoaded");
       return;
@@ -29,8 +27,7 @@ export default function useStripeCheckout() {
       // Create a Checkout Session
       const res: CreateCheckoutSessionResponse = await authenticatedFetch(
         `${SAAS_BACKEND_URL}/payments/create_checkout_session` +
-          `?price_lookup_key=${priceLookupKey}` +
-          `&rewardful_referral_id=${rewardfulReferralId}`,
+          `?price_lookup_key=${priceLookupKey}`,
         "POST"
       );
 
