@@ -1,7 +1,7 @@
 import { useClerk, useUser } from "@clerk/clerk-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { useStore } from "../../store/store";
-import { capitalize } from "./utils";
+import { capitalize, formatPlanLabel } from "./utils";
 import StripeCustomerPortalLink from "./StripeCustomerPortalLink";
 import { Progress } from "../ui/progress";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
@@ -24,6 +24,9 @@ export default function AccountView() {
   const [totalCredits, setTotalCredits] = useState(0);
 
   const subscriberTier = useStore((state) => state.subscriberTier);
+  const billingInterval = useStore((state) => state.billingInterval);
+  const currentPeriodEnd = useStore((state) => state.currentPeriodEnd);
+  const cancelAtPeriodEnd = useStore((state) => state.cancelAtPeriodEnd);
   const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
   const isFreeUser = subscriberTier === "free" || !subscriberTier;
 
@@ -55,7 +58,7 @@ export default function AccountView() {
     };
 
     fetchUsage();
-  }, [subscriberTier]);
+  }, [authenticatedFetch, isFreeUser, subscriberTier]);
 
   if (!isLoaded || !isSignedIn) return null;
 
@@ -120,9 +123,23 @@ export default function AccountView() {
                       onClick={openPricingDialog}
                       className="text-sm font-medium text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
                     >
-                      {capitalize(subscriberTier)} Subscriber
+                      {formatPlanLabel(subscriberTier, billingInterval)}
                     </button>
                   </div>
+                  <div className="flex items-center justify-between text-sm text-gray-600 dark:text-zinc-300">
+                    <span>Billing interval</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {billingInterval ? capitalize(billingInterval) : "Unknown"}
+                    </span>
+                  </div>
+                  {cancelAtPeriodEnd && currentPeriodEnd && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      Your {formatPlanLabel(subscriberTier, billingInterval)} plan
+                      remains active until{" "}
+                      {new Date(currentPeriodEnd).toLocaleDateString()} and
+                      cancels then.
+                    </p>
+                  )}
 
                   {/* Credit usage */}
                   {isLoadingUsage ? (
@@ -138,7 +155,13 @@ export default function AccountView() {
                           {usedCredits} / {totalCredits}
                         </span>
                       </div>
-                      <Progress value={(usedCredits / totalCredits) * 100} />
+                      <Progress
+                        value={
+                          totalCredits > 0
+                            ? (usedCredits / totalCredits) * 100
+                            : 0
+                        }
+                      />
                       <p className="text-xs text-gray-500 dark:text-zinc-400">
                         <span>
                           {usedCredits} out of {totalCredits} credits used for{" "}
@@ -177,10 +200,12 @@ export default function AccountView() {
               <div className="divide-y divide-gray-100 dark:divide-zinc-700">
                 <StripeCustomerPortalLink
                   label="Manage billing"
+                  action="manage"
                   className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-700/50 cursor-pointer"
                 />
                 <StripeCustomerPortalLink
                   label="Cancel subscription"
+                  action="cancel"
                   className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-700/50 cursor-pointer"
                 />
               </div>
