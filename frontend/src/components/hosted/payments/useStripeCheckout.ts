@@ -3,7 +3,9 @@ import toast from "react-hot-toast";
 import { SAAS_BACKEND_URL, STRIPE_PUBLISHABLE_KEY } from "../../../config";
 import { addEvent } from "../../../lib/analytics";
 import { Stripe, loadStripe } from "@stripe/stripe-js";
+import { useStore } from "../../../store/store";
 import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
+import { captureBillingException } from "./billingSentry";
 
 interface CreateCheckoutSessionResponse {
   sessionId: string;
@@ -17,6 +19,16 @@ export default function useStripeCheckout() {
 
   const checkout = async (priceLookupKey: string) => {
     if (!stripe) {
+      const billingState = useStore.getState();
+      captureBillingException(new Error("Stripe has not finished loading"), {
+        flow: "checkout",
+        stage: "stripe_not_loaded",
+        context: {
+          price_lookup_key: priceLookupKey,
+          subscriber_tier: billingState.subscriberTier,
+          billing_interval: billingState.billingInterval,
+        },
+      });
       addEvent("StripeNotLoaded");
       return;
     }
@@ -44,6 +56,16 @@ export default function useStripeCheckout() {
         throw new Error(error.message);
       }
     } catch (e) {
+      const billingState = useStore.getState();
+      captureBillingException(e, {
+        flow: "checkout",
+        stage: "redirect_to_checkout",
+        context: {
+          price_lookup_key: priceLookupKey,
+          subscriber_tier: billingState.subscriberTier,
+          billing_interval: billingState.billingInterval,
+        },
+      });
       toast.error("Error directing you to checkout. Please contact support.");
       addEvent("StripeCheckoutError");
     } finally {
@@ -58,6 +80,15 @@ export default function useStripeCheckout() {
         setStripe(await loadStripe(STRIPE_PUBLISHABLE_KEY));
       } catch (e) {
         console.error(e);
+        const billingState = useStore.getState();
+        captureBillingException(e, {
+          flow: "checkout",
+          stage: "load_stripe",
+          context: {
+            subscriber_tier: billingState.subscriberTier,
+            billing_interval: billingState.billingInterval,
+          },
+        });
         addEvent("StripeFailedToLoad");
       }
     }
