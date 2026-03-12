@@ -229,6 +229,7 @@ class ExtractedParams:
     should_generate_images: bool
     openai_api_key: str | None
     anthropic_api_key: str | None
+    gemini_api_key: str | None
     openai_base_url: str | None
     generation_type: Literal["create", "update"]
     prompt: UserTurnInput
@@ -268,6 +269,9 @@ class ParameterExtractionStage:
         # If neither is provided, we throw an error later only if Claude is used.
         anthropic_api_key = self._get_from_settings_dialog_or_env(
             params, "anthropicApiKey", ANTHROPIC_API_KEY
+        )
+        gemini_api_key = self._get_from_settings_dialog_or_env(
+            params, "geminiApiKey", GEMINI_API_KEY
         )
 
         # Base URL for OpenAI API
@@ -324,6 +328,7 @@ class ParameterExtractionStage:
             should_generate_images=should_generate_images,
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
+            gemini_api_key=gemini_api_key,
             openai_base_url=openai_base_url,
             generation_type=generation_type,
             prompt=prompt,
@@ -721,7 +726,7 @@ class CodeGenerationMiddleware(Middleware):
                 input_mode=context.extracted_params.input_mode,
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
-                gemini_api_key=GEMINI_API_KEY,
+                gemini_api_key=context.extracted_params.gemini_api_key,
             )
             if IS_DEBUG_ENABLED:
                 await context.send_message(
@@ -737,7 +742,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 openai_base_url=context.extracted_params.openai_base_url,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
-                gemini_api_key=GEMINI_API_KEY,
+                gemini_api_key=context.extracted_params.gemini_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
                 file_state=context.extracted_params.file_state,
                 option_codes=context.extracted_params.option_codes,

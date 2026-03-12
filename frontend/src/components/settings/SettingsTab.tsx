@@ -178,6 +178,28 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                   }
                 />
               </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                  Gemini API key
+                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                  Only stored in your browser. Never stored on servers. Overrides
+                  your .env config.
+                </p>
+                <Input
+                  id="gemini-api-key"
+                  className="mt-2"
+                  placeholder="Gemini API key"
+                  value={settings.geminiApiKey || ""}
+                  onChange={(e) =>
+                    setSettings((s) => ({
+                      ...s,
+                      geminiApiKey: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
           </div>
 

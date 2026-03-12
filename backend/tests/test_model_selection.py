@@ -44,7 +44,7 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_3_CODEX_LOW,
+            Llm.GPT_5_4_2026_03_05_LOW,
         ]
         assert models == expected
 
@@ -61,7 +61,7 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_3_CODEX_LOW,
+            Llm.GPT_5_4_2026_03_05_LOW,
         ]
         assert models == expected
 

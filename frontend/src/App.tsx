@@ -85,6 +85,7 @@ function App() {
       openAiApiKey: null,
       openAiBaseURL: null,
       anthropicApiKey: null,
+      geminiApiKey: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
