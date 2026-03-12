@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
 } from "../ui/dropdown-menu";
 import { useStore } from "../../store/store";
-import { capitalize } from "./utils";
+import { formatPlanLabel } from "./utils";
 import StripeCustomerPortalLink from "./StripeCustomerPortalLink";
 import { Progress } from "../ui/progress";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
@@ -30,6 +30,7 @@ export default function AvatarDropdown({ compact = false }: AvatarDropdownProps)
   const [totalCredits, setTotalCredits] = useState(0);
 
   const subscriberTier = useStore((state) => state.subscriberTier);
+  const billingInterval = useStore((state) => state.billingInterval);
   const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
   const isFreeUser = subscriberTier === "free" || !subscriberTier;
 
@@ -99,7 +100,7 @@ export default function AvatarDropdown({ compact = false }: AvatarDropdownProps)
           {!isFreeUser && (
             <>
               <DropdownMenuLabel onClick={openPricingDialog}>
-                {capitalize(subscriberTier) + " Subscriber"}
+                {formatPlanLabel(subscriberTier, billingInterval)}
               </DropdownMenuLabel>
 
               {/* Loading credit usage */}
@@ -113,7 +114,11 @@ export default function AvatarDropdown({ compact = false }: AvatarDropdownProps)
               {!isLoadingUsage && (
                 <>
                   <DropdownMenuItem onClick={openPricingDialog}>
-                    <Progress value={(usedCredits / totalCredits) * 100} />
+                    <Progress
+                      value={
+                        totalCredits > 0 ? (usedCredits / totalCredits) * 100 : 0
+                      }
+                    />
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-xs text-gray-700"
@@ -142,10 +147,10 @@ export default function AvatarDropdown({ compact = false }: AvatarDropdownProps)
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild={true}>
-                <StripeCustomerPortalLink label="Manage billing" />
+                <StripeCustomerPortalLink label="Manage billing" action="manage" />
               </DropdownMenuItem>
               <DropdownMenuItem asChild={true}>
-                <StripeCustomerPortalLink label="Cancel subscription" />
+                <StripeCustomerPortalLink label="Cancel subscription" action="cancel" />
               </DropdownMenuItem>
             </>
           )}

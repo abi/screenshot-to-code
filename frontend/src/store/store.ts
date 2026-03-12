@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { BillingInterval } from "../components/hosted/types";
 import { ExperimentGroup } from "../lib/experiment";
 import { SAAS_BACKEND_URL } from "../config";
 
@@ -12,6 +13,19 @@ interface Store {
   setAccountPanelOpen: (isOpen: boolean) => void;
   subscriberTier: string;
   setSubscriberTier: (tier: string) => void;
+  billingInterval: BillingInterval | null;
+  currentPriceLookupKey: string | null;
+  subscriptionStatus: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  setHostedBillingState: (billing: {
+    subscriberTier: string;
+    billingInterval: BillingInterval | null;
+    currentPriceLookupKey: string | null;
+    subscriptionStatus: string | null;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+  }) => void;
   experimentGroup: ExperimentGroup | null;
   setExperimentGroup: (group: ExperimentGroup) => void;
   freeTrialUsed: number;
@@ -31,6 +45,20 @@ export const useStore = create<Store>((set) => ({
     set(() => ({ isAccountPanelOpen: isOpen })),
   subscriberTier: "",
   setSubscriberTier: (tier: string) => set(() => ({ subscriberTier: tier })),
+  billingInterval: null,
+  currentPriceLookupKey: null,
+  subscriptionStatus: null,
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+  setHostedBillingState: (billing) =>
+    set(() => ({
+      subscriberTier: billing.subscriberTier,
+      billingInterval: billing.billingInterval,
+      currentPriceLookupKey: billing.currentPriceLookupKey,
+      subscriptionStatus: billing.subscriptionStatus,
+      currentPeriodEnd: billing.currentPeriodEnd,
+      cancelAtPeriodEnd: billing.cancelAtPeriodEnd,
+    })),
   experimentGroup: null,
   setExperimentGroup: (group: ExperimentGroup) =>
     set(() => ({ experimentGroup: group })),

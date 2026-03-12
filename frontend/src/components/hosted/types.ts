@@ -1,14 +1,27 @@
+export type BillingInterval = "monthly" | "yearly";
+
 // Keep in sync with saas backend
 export interface UserResponse {
   email: string;
-  first_name: string;
-  last_name: string;
-  subscriber_tier: string;
-  stripe_customer_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  subscriber_tier: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_lookup_key: string | null;
+  billing_interval: BillingInterval | null;
+  subscription_status: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
 }
 
 export interface PortalSessionResponse {
   url: string;
+}
+
+export interface CreatePortalSessionRequest {
+  action: "manage" | "change_tier" | "cancel";
+  target_tier?: "hobby" | "pro";
 }
 
 export interface CreditsUsage {

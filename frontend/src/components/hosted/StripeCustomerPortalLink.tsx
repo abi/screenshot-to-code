@@ -1,42 +1,30 @@
-import toast from "react-hot-toast";
-import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
-import { addEvent } from "../../lib/analytics";
-import { SAAS_BACKEND_URL } from "../../config";
-import { PortalSessionResponse } from "./types";
-import React, { forwardRef, useState } from "react";
+import React, { forwardRef } from "react";
 import Spinner from "../core/Spinner";
+import useStripePortal from "./payments/useStripePortal";
 
 interface Props extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   label: string;
+  action?: "manage" | "cancel";
 }
 
 const StripeCustomerPortalLink = forwardRef<HTMLAnchorElement, Props>(
-  ({ label, ...props }, ref) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const authenticatedFetch = useAuthenticatedFetch();
+  ({ label, action = "manage", ...props }, ref) => {
+    const { openPortal, isLoadingPortal } = useStripePortal();
 
-    const redirectToBillingPortal = async () => {
-      try {
-        setIsLoading(true);
-        const res: PortalSessionResponse = await authenticatedFetch(
-          SAAS_BACKEND_URL + "/payments/create_portal_session",
-          "POST"
-        );
-        window.open(res.url, "_blank");
-      } catch (e) {
-        toast.error(
-          "Error directing you to the billing portal. Please email support and we'll get it fixed right away."
-        );
-        addEvent("StripeBillingPortalError");
-      } finally {
-        setIsLoading(false);
-      }
+    const redirectToBillingPortal = async (
+      event: React.MouseEvent<HTMLAnchorElement>,
+    ) => {
+      event.preventDefault();
+      await openPortal(
+        { action },
+        "Error directing you to the billing portal. Please email support and we'll get it fixed right away.",
+      );
     };
 
     return (
       <a {...props} ref={ref} onClick={redirectToBillingPortal}>
         <div className="flex gap-x-2">
-          {label} {isLoading && <Spinner />}
+          {label} {isLoadingPortal && <Spinner />}
         </div>
       </a>
     );

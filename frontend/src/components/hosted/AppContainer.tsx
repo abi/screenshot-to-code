@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 import FullPageSpinner from "../core/FullPageSpinner";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
-import { UserResponse } from "./types";
 import {
   LOGROCKET_APP_ID,
   POSTHOG_HOST,
@@ -17,11 +16,11 @@ import LogRocket from "logrocket";
 import LandingPage from "./LandingPage";
 import Intercom from "@intercom/messenger-js-sdk";
 import { getExperimentGroup } from "../../lib/experiment";
+import { applyHostedUserToStore, fetchHostedUser } from "./billingState";
 
 function AppContainer() {
   const { isSignedIn, isLoaded } = useUser();
 
-  const setSubscriberTier = useStore((state) => state.setSubscriberTier);
   const setExperimentGroup = useStore((state) => state.setExperimentGroup);
   const setFreeTrialUsage = useStore((state) => state.setFreeTrialUsage);
 
@@ -37,10 +36,7 @@ function AppContainer() {
       if (isInitRequestInProgress.current) return;
       isInitRequestInProgress.current = true;
 
-      const user: UserResponse = await authenticatedFetch(
-        SAAS_BACKEND_URL + "/users/create",
-        "POST",
-      );
+      const user = await fetchHostedUser(authenticatedFetch);
 
       // If the user is not signed in, authenticatedFetch will return undefined
       if (!user) {
@@ -50,10 +46,13 @@ function AppContainer() {
 
       // Assign A/B test group for delayed paywall experiment
       const group = getExperimentGroup(user.email);
+      const firstName = user.first_name || "";
+      const lastName = user.last_name || "";
+      const fullName = `${firstName} ${lastName}`.trim();
       setExperimentGroup(group);
+      applyHostedUserToStore(user);
 
       if (!user.subscriber_tier) {
-        setSubscriberTier("free");
         // Fetch server-side free trial usage for delayed paywall users
         if (group === "delayed_paywall") {
           try {
@@ -73,7 +72,7 @@ function AppContainer() {
         Intercom({
           app_id: "c5eiaj9m",
           user_id: user.email,
-          name: user.first_name,
+          name: fullName || undefined,
           email: user.email,
           "Subscriber Tier": user.subscriber_tier || "free",
           hide_default_launcher: true,
@@ -93,21 +92,19 @@ function AppContainer() {
         // Identify the user to PostHog
         posthog.identify(user.email, {
           email: user.email,
-          first_name: user.first_name,
-          last_name: user.last_name,
+          first_name: firstName,
+          last_name: lastName,
         });
 
         // Initialize LogRocket only for paid users
         if (LOGROCKET_APP_ID) {
           LogRocket.init(LOGROCKET_APP_ID);
           LogRocket.identify(user.email, {
-            name: `${user.first_name} ${user.last_name}`.trim(),
+            name: fullName,
             email: user.email,
             subscriberTier: user.subscriber_tier || "free",
           });
         }
-
-        setSubscriberTier(user.subscriber_tier);
       }
 
       // Identify user to Sentry
@@ -117,7 +114,7 @@ function AppContainer() {
     };
 
     init();
-  }, []);
+  }, [authenticatedFetch, setExperimentGroup, setFreeTrialUsage]);
 
   // If Clerk is still loading, show a spinner
   if (!isLoaded) return <FullPageSpinner />;

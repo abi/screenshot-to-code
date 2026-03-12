@@ -1,4 +1,6 @@
 import { useAuth } from "@clerk/clerk-react";
+import { useCallback } from "react";
+import { getApiErrorMessage } from "./apiErrors";
 
 type FetchMethod = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -8,37 +10,40 @@ type FetchMethod = "GET" | "POST" | "PUT" | "DELETE";
 export const useAuthenticatedFetch = () => {
   const { getToken } = useAuth();
 
-  const authenticatedFetch = async (
-    url: string,
-    method: FetchMethod = "GET",
-    body: object | null | undefined = null
-  ) => {
-    const accessToken = await getToken();
-    if (!accessToken) return;
+  const authenticatedFetch = useCallback(
+    async (
+      url: string,
+      method: FetchMethod = "GET",
+      body: object | null | undefined = null,
+    ) => {
+      const accessToken = await getToken();
+      if (!accessToken) return;
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    };
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      };
 
-    const options: RequestInit = {
-      method,
-      headers,
-    };
+      const options: RequestInit = {
+        method,
+        headers,
+      };
 
-    if (body) {
-      options.body = JSON.stringify(body);
-    }
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
 
-    const response = await fetch(url, options);
+      const response = await fetch(url, options);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
-    }
+      if (!response.ok) {
+        throw new Error(await getApiErrorMessage(response));
+      }
 
-    const json = await response.json();
-    return json;
-  };
+      const json = await response.json();
+      return json;
+    },
+    [getToken],
+  );
 
   return authenticatedFetch;
 };
