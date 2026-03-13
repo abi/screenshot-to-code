@@ -119,6 +119,12 @@ function Variants() {
           if (variant.status === "complete") statusColor = "bg-green-500";
           else if (variant.status === "error" || variant.status === "cancelled") statusColor = "bg-red-500";
 
+          const modelDesc = variant.model
+            ? CODE_GENERATION_MODEL_DESCRIPTIONS[variant.model as CodeGenerationModel]
+            : null;
+          const modelName = modelDesc?.name || variant.model || null;
+          const pricing = modelDesc?.pricing;
+
           return (
             <div
               key={index}
@@ -127,7 +133,6 @@ function Variants() {
                   ? "ring-2 ring-blue-400 dark:ring-blue-500"
                   : "ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600"
               }`}
-              title={variant.model ? (CODE_GENERATION_MODEL_DESCRIPTIONS[variant.model as CodeGenerationModel]?.name || variant.model) : undefined}
               onClick={() => handleVariantClick(index)}
             >
               <VariantThumbnail
@@ -155,6 +160,19 @@ function Variants() {
                   </div>
                 )}
               </div>
+              {modelName && (
+                <div className="flex items-center justify-between px-2 pb-1 bg-white dark:bg-zinc-900 text-[10px] text-gray-400 dark:text-gray-500">
+                  <span className="truncate">{modelName}</span>
+                  {pricing && (
+                    <span
+                      className="ml-1 shrink-0"
+                      title={`$${pricing[0]}/M input · $${pricing[1]}/M output`}
+                    >
+                      ${pricing[0]} / ${pricing[1]}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
