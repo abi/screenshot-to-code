@@ -10,12 +10,7 @@ import { CreditsUsage } from "./types";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { showNewMessage } from "@intercom/messenger-js-sdk";
-import {
-  LuExternalLink,
-  LuLifeBuoy,
-  LuLightbulb,
-  LuLogOut,
-} from "react-icons/lu";
+import { LuLifeBuoy, LuLogOut, LuTrash2 } from "react-icons/lu";
 import Spinner from "../core/Spinner";
 
 export default function AccountView() {
@@ -278,16 +273,18 @@ export default function AccountView() {
                   Contact support
                 </button>
               )}
-              <a
-                href="https://screenshot-to-code.canny.io/feature-requests"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-700/50"
+              <button
+                onClick={() =>
+                  toast(
+                    "To delete your account and data, please contact support.",
+                    { icon: "🗑️" }
+                  )
+                }
+                className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-gray-50 dark:text-red-400 dark:hover:bg-zinc-700/50"
               >
-                <LuLightbulb className="h-4 w-4 text-gray-400 dark:text-zinc-500" />
-                Feature requests
-                <LuExternalLink className="ml-auto h-3.5 w-3.5 text-gray-400 dark:text-zinc-500" />
-              </a>
+                <LuTrash2 className="h-4 w-4" />
+                Delete account and data
+              </button>
             </div>
           </div>
 
