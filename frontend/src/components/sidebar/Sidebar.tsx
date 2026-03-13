@@ -24,6 +24,16 @@ interface SidebarProps {
 }
 
 const MAX_UPDATE_IMAGES = 5;
+const MAX_UPDATE_VIDEOS = 1;
+
+function isVideoFile(file: File): boolean {
+  return (
+    file.type.startsWith("video/") ||
+    [".mp4", ".mov", ".webm"].some((ext) =>
+      file.name.toLowerCase().endsWith(ext)
+    )
+  );
+}
 
 function extractTagName(html: string): string {
   const match = html.match(/^<(\w+)/);
@@ -87,6 +97,8 @@ function Sidebar({
     setUpdateInstruction,
     updateImages,
     setUpdateImages,
+    updateVideos,
+    setUpdateVideos,
     inSelectAndEditMode,
     toggleInSelectAndEditMode,
     selectedElement,
@@ -108,39 +120,64 @@ function Sidebar({
       e.preventDefault();
       setIsDragging(false);
 
-      const files = Array.from(e.dataTransfer.files).filter(
-        (file) => file.type === "image/png" || file.type === "image/jpeg"
+      const allFiles = Array.from(e.dataTransfer.files).filter(
+        (file) =>
+          file.type === "image/png" ||
+          file.type === "image/jpeg" ||
+          isVideoFile(file)
       );
 
-      if (files.length === 0) return;
+      if (allFiles.length === 0) return;
 
       try {
-        if (updateImages.length >= MAX_UPDATE_IMAGES) {
-          toast.error(
-            `You’ve reached the limit of ${MAX_UPDATE_IMAGES} reference images. Remove one to add another.`
-          );
-          return;
+        const videoFiles = allFiles.filter(isVideoFile);
+        const imageFiles = allFiles.filter((f) => !isVideoFile(f));
+
+        // Handle video files
+        if (videoFiles.length > 0) {
+          if (updateVideos.length >= MAX_UPDATE_VIDEOS) {
+            toast.error(
+              `You’ve reached the limit of ${MAX_UPDATE_VIDEOS} reference video. Remove it to add another.`
+            );
+          } else {
+            const videoSlotsRemaining = MAX_UPDATE_VIDEOS - updateVideos.length;
+            let videosToAdd = videoFiles;
+            if (videosToAdd.length > videoSlotsRemaining) {
+              videosToAdd = videosToAdd.slice(0, videoSlotsRemaining);
+            }
+            const newVideoPromises = videosToAdd.map((file) => fileToDataURL(file));
+            const newVideos = await Promise.all(newVideoPromises);
+            setUpdateVideos([...updateVideos, ...newVideos]);
+          }
         }
 
-        const remainingSlots = MAX_UPDATE_IMAGES - updateImages.length;
-        let filesToAdd = files;
-        if (filesToAdd.length > remainingSlots) {
-          toast.error(
-            `Only ${remainingSlots} more image${
-              remainingSlots === 1 ? "" : "s"
-            } will be added to stay within the ${MAX_UPDATE_IMAGES}-image limit.`
-          );
-          filesToAdd = filesToAdd.slice(0, remainingSlots);
+        // Handle image files
+        if (imageFiles.length > 0) {
+          if (updateImages.length >= MAX_UPDATE_IMAGES) {
+            toast.error(
+              `You’ve reached the limit of ${MAX_UPDATE_IMAGES} reference images. Remove one to add another.`
+            );
+          } else {
+            const remainingSlots = MAX_UPDATE_IMAGES - updateImages.length;
+            let filesToAdd = imageFiles;
+            if (filesToAdd.length > remainingSlots) {
+              toast.error(
+                `Only ${remainingSlots} more image${
+                  remainingSlots === 1 ? "" : "s"
+                } will be added to stay within the ${MAX_UPDATE_IMAGES}-image limit.`
+              );
+              filesToAdd = filesToAdd.slice(0, remainingSlots);
+            }
+            const newImagePromises = filesToAdd.map((file) => fileToDataURL(file));
+            const newImages = await Promise.all(newImagePromises);
+            setUpdateImages([...updateImages, ...newImages]);
+          }
         }
-
-        const newImagePromises = filesToAdd.map((file) => fileToDataURL(file));
-        const newImages = await Promise.all(newImagePromises);
-        setUpdateImages([...updateImages, ...newImages]);
       } catch (error) {
         console.error("Error reading files:", error);
       }
     },
-    [updateImages, setUpdateImages]
+    [updateImages, setUpdateImages, updateVideos, setUpdateVideos]
   );
 
   const { head, commits, latestCommitHash, setHead } = useProjectStore();
@@ -524,6 +561,8 @@ function Sidebar({
               <UpdateImagePreview
                 updateImages={updateImages}
                 setUpdateImages={setUpdateImages}
+                updateVideos={updateVideos}
+                setUpdateVideos={setUpdateVideos}
               />
               <textarea
                 ref={textareaRef}
@@ -552,6 +591,8 @@ function Sidebar({
                   <UpdateImageUpload
                     updateImages={updateImages}
                     setUpdateImages={setUpdateImages}
+                    updateVideos={updateVideos}
+                    setUpdateVideos={setUpdateVideos}
                   />
                   {showSelectAndEditFeature && (
                     <button
@@ -583,7 +624,7 @@ function Sidebar({
 
               {isDragging && (
                 <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-xl flex items-center justify-center pointer-events-none z-10">
-                  <p className="text-blue-600 dark:text-blue-400 font-medium">Drop images here</p>
+                  <p className="text-blue-600 dark:text-blue-400 font-medium">Drop images or video here</p>
                 </div>
               )}
             </div>

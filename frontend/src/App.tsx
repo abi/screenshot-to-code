@@ -73,6 +73,8 @@ function App() {
     setUpdateInstruction,
     updateImages,
     setUpdateImages,
+    updateVideos,
+    setUpdateVideos,
     appState,
     setAppState,
     selectedElement,
@@ -159,6 +161,7 @@ function App() {
     setAppState(AppState.INITIAL);
     setUpdateInstruction("");
     setUpdateImages([]);
+    setUpdateVideos([]);
     disableInSelectAndEditMode();
     resetExecutionConsoles();
 
@@ -341,6 +344,7 @@ function App() {
           const {
             updateInstruction: currentInstruction,
             updateImages: currentImages,
+            updateVideos: currentVideos,
           } = useAppStore.getState();
           const instructionUnchanged =
             currentInstruction === commit.inputs.text;
@@ -349,14 +353,21 @@ function App() {
             currentImages.every(
               (image, index) => image === commit.inputs.images[index]
             );
+          const commitVideos = commit.inputs.videos ?? [];
+          const videosUnchanged =
+            currentVideos.length === commitVideos.length &&
+            currentVideos.every(
+              (video, index) => video === commitVideos[index]
+            );
 
           // This conditional clear handles three UX scenarios:
-          // 1) All variants fail: no completion event, so keep prompt/images for retry.
-          // 2) A variant completes and user has typed/changed images: do not clear.
+          // 1) All variants fail: no completion event, so keep prompt/images/videos for retry.
+          // 2) A variant completes and user has typed/changed media: do not clear.
           // 3) A variant completes and user has not changed draft: clear for next edit.
-          if (instructionUnchanged && imagesUnchanged) {
+          if (instructionUnchanged && imagesUnchanged && videosUnchanged) {
             setUpdateInstruction("");
             setUpdateImages([]);
+            setUpdateVideos([]);
           }
         }
       },
@@ -568,9 +579,16 @@ function App() {
       upsertPromptAssets,
       nanoid
     );
+    const updateVideoAssetIds = registerAssetIds(
+      "video",
+      updateVideos,
+      getAssetsById,
+      upsertPromptAssets,
+      nanoid
+    );
     const updatedVariantHistory = [
       ...cloneVariantHistory(baseVariantHistory),
-      buildUserHistoryMessage(modifiedUpdateInstruction, updateImageAssetIds),
+      buildUserHistoryMessage(modifiedUpdateInstruction, updateImageAssetIds, updateVideoAssetIds),
     ];
     const shouldBootstrapFromFileState =
       baseVariantHistory.length === 0 && currentCode.trim().length > 0;
@@ -584,7 +602,7 @@ function App() {
       prompt: {
         text: updateInstruction,
         images: updateImages,
-        videos: [],
+        videos: updateVideos,
         selectedElementHtml,
       },
       history: updatedHistory,

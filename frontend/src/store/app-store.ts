@@ -14,6 +14,10 @@ interface AppStore {
   updateImages: string[];
   setUpdateImages: (images: string[]) => void;
 
+  // Update videos support (multiple videos)
+  updateVideos: string[];
+  setUpdateVideos: (videos: string[]) => void;
+
   inSelectAndEditMode: boolean;
   toggleInSelectAndEditMode: () => void;
   disableInSelectAndEditMode: () => void;
@@ -35,6 +39,10 @@ export const useAppStore = create<AppStore>((set) => ({
   // Update images support
   updateImages: [],
   setUpdateImages: (images: string[]) => set({ updateImages: images }),
+
+  // Update videos support
+  updateVideos: [],
+  setUpdateVideos: (videos: string[]) => set({ updateVideos: videos }),
 
   inSelectAndEditMode: false,
   toggleInSelectAndEditMode: () =>
