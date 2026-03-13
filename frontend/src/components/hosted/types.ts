@@ -1,3 +1,5 @@
+import { Stack } from "../../lib/stacks";
+
 export type BillingInterval = "monthly" | "yearly";
 
 // Keep in sync with saas backend
@@ -27,4 +29,24 @@ export interface CreatePortalSessionRequest {
 export interface CreditsUsage {
   total_monthly_credits: number;
   used_monthly_credits: number;
+}
+
+export interface ProjectHistoryGeneration {
+  id: string;
+  date_created: string;
+  completion: string;
+  stack: Stack | null;
+}
+
+export interface ProjectHistoryResponse {
+  generations: ProjectHistoryGeneration[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface DeleteGenerationsResponse {
+  deleted_ids: string[];
+  deleted_count: number;
 }

@@ -3,22 +3,13 @@ import { formatRelative } from "date-fns";
 import * as Sentry from "@sentry/react";
 import { SAAS_BACKEND_URL } from "../../config";
 import { useAuthenticatedFetch } from "../hosted/useAuthenticatedFetch";
+import { ProjectHistoryGeneration, ProjectHistoryResponse } from "../hosted/types";
 import { Stack } from "../../lib/stacks";
 import StackLabel from "../core/StackLabel";
 import { LuArrowRight } from "react-icons/lu";
 
-interface Generation {
-  date_created: string;
-  completion: string;
+interface Generation extends Omit<ProjectHistoryGeneration, "stack"> {
   stack: Stack;
-}
-
-interface ProjectHistoryResponse {
-  generations: Generation[];
-  total_count: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
 }
 
 const PREVIEW_WIDTH = 1366;
@@ -91,9 +82,11 @@ function RecentProjects({ importFromCode, onOpenProjects }: RecentProjectsProps)
   useEffect(() => {
     const load = async () => {
       try {
-        const res: ProjectHistoryResponse = await authenticatedFetch(
-          `${SAAS_BACKEND_URL}/generations/view?page=1`
+        const res: ProjectHistoryResponse | undefined = await authenticatedFetch(
+          `${SAAS_BACKEND_URL}/generations/view?page=1`,
         );
+        if (!res) return;
+
         const processed = res.generations.slice(0, MAX_RECENT).map((g) => ({
           ...g,
           stack: g.stack || Stack.HTML_TAILWIND,
@@ -106,8 +99,8 @@ function RecentProjects({ importFromCode, onOpenProjects }: RecentProjectsProps)
         setIsLoaded(true);
       }
     };
-    load();
-  }, []);
+    void load();
+  }, [authenticatedFetch]);
 
   if (!isLoaded || generations.length === 0) return null;
 
@@ -128,7 +121,7 @@ function RecentProjects({ importFromCode, onOpenProjects }: RecentProjectsProps)
       <div className="grid grid-cols-3 gap-3">
         {generations.map((generation, index) => (
           <button
-            key={index}
+            key={generation.id}
             onClick={() => importFromCode(generation.completion, generation.stack)}
             className="group text-left overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:shadow-md hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800/60 dark:hover:border-zinc-600"
           >
