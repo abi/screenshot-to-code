@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { ScreenRecorderState } from "../../types";
-import { blobToBase64DataUrl } from "./utils";
 import fixWebmDuration from "webm-duration-fix";
 import toast from "react-hot-toast";
-import OutputSettingsSection from "../settings/OutputSettingsSection";
 import { Stack } from "../../lib/stacks";
+import RecordingTimer from "./RecordingTimer";
+import VideoTrimmer from "./VideoTrimmer";
 
 interface Props {
   screenRecorderState: ScreenRecorderState;
@@ -29,9 +29,7 @@ function ScreenRecorder({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
-  const [screenRecordingDataUrl, setScreenRecordingDataUrl] = useState<
-    string | null
-  >(null);
+  const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
 
   const startScreenRecording = async () => {
     try {
@@ -50,21 +48,18 @@ function ScreenRecorder({
 
       const chunks: BlobPart[] = [];
 
-      // Accumalate chunks as data is available
+      // Accumulate chunks as data is available
       mediaRecorder.ondataavailable = (e: BlobEvent) => chunks.push(e.data);
 
-      // When media recorder is stopped, create a data URL
+      // When media recorder is stopped, store the blob for trimming
       mediaRecorder.onstop = async () => {
-        // TODO: Do I need to fix duration if it's not a webm?
         const completeBlob = await fixWebmDuration(
           new Blob(chunks, {
             type: options.mimeType,
           })
         );
 
-        const dataUrl = await blobToBase64DataUrl(completeBlob);
-
-        setScreenRecordingDataUrl(dataUrl);
+        setRecordingBlob(completeBlob);
         setScreenRecorderState(ScreenRecorderState.FINISHED);
       };
 
@@ -92,13 +87,8 @@ function ScreenRecorder({
     }
   };
 
-  const kickoffGeneration = () => {
-    if (screenRecordingDataUrl) {
-      generateCode([screenRecordingDataUrl], "video");
-    } else {
-      toast.error("Screen recording does not exist. Please try again.");
-      throw new Error("No screen recording data url");
-    }
+  const handleTrimmedVideoReady = (dataUrl: string) => {
+    generateCode([dataUrl], "video");
   };
 
   return (
@@ -112,45 +102,24 @@ function ScreenRecorder({
           <div className="flex items-center mr-2 text-xl gap-x-1">
             <span className="block h-10 w-10 bg-red-600 rounded-full mr-1 animate-pulse"></span>
             <span>Recording...</span>
+            <RecordingTimer />
           </div>
           <Button onClick={stopScreenRecording}>Finish Recording</Button>
         </div>
       )}
 
-      {screenRecorderState === ScreenRecorderState.FINISHED && (
-        <div className="flex items-center flex-col gap-y-4 w-full max-w-md">
-          <div className="flex items-center mr-2 text-xl gap-x-1">
-            <span>Screen Recording Captured.</span>
-          </div>
-          {screenRecordingDataUrl && (
-            <video
-              muted
-              autoPlay
-              loop
-              className="w-full border border-gray-200 rounded-md"
-              src={screenRecordingDataUrl}
-            />
-          )}
-          <div className="w-full">
-            <OutputSettingsSection
-              stack={stack}
-              setStack={setStack}
-            />
-          </div>
-          <div className="flex gap-x-2 w-full">
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={() =>
-                setScreenRecorderState(ScreenRecorderState.INITIAL)
-              }
-            >
-              Re-record
-            </Button>
-            <Button className="flex-1" onClick={kickoffGeneration}>Generate</Button>
-          </div>
-        </div>
-      )}
+      {screenRecorderState === ScreenRecorderState.FINISHED &&
+        recordingBlob && (
+          <VideoTrimmer
+            videoBlob={recordingBlob}
+            onTrimmedVideoReady={handleTrimmedVideoReady}
+            onRerecord={() =>
+              setScreenRecorderState(ScreenRecorderState.INITIAL)
+            }
+            stack={stack}
+            setStack={setStack}
+          />
+        )}
     </div>
   );
 }
