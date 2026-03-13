@@ -592,7 +592,10 @@ function App() {
       variantHistory: updatedVariantHistory,
       fileState: currentCode
         ? {
-            path: "index.html",
+            path:
+              settings.generatedCodeConfig === Stack.REACT_TAILWIND
+                ? "App.jsx"
+                : "index.html",
             content: currentCode,
           }
         : undefined,

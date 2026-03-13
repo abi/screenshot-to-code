@@ -5364,6 +5364,13 @@ react-router@6.30.3:
   dependencies:
     "@remix-run/router" "1.23.2"
 
+react-runner@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/react-runner/-/react-runner-1.0.5.tgz#77d97029ef07035d94759c632730ac64bac5bf18"
+  integrity sha512-eCIybRpssp6ffjqXqId024esO9UP2lV838Lvm3fC7VgMQ/dQHhR0jJwOY2IPrYD3AaM/bcvMikmASIRZqNUHsw==
+  dependencies:
+    sucrase "^3.21.0"
+
 react-style-singleton@^2.2.2, react-style-singleton@^2.2.3:
   version "2.2.3"
   resolved "https://registry.npmjs.org/react-style-singleton/-/react-style-singleton-2.2.3.tgz"
@@ -5765,7 +5772,7 @@ style-to-object@1.0.14:
   dependencies:
     inline-style-parser "0.2.7"
 
-sucrase@^3.35.0:
+sucrase@^3.21.0, sucrase@^3.35.0:
   version "3.35.1"
   resolved "https://registry.npmjs.org/sucrase/-/sucrase-3.35.1.tgz"
   integrity sha512-DhuTmvZWux4H1UOnWMB3sk0sbaCVOoQZjv8u1rDoTV0HTdGem9hkAZtl4JZy8P2z4Bg0nT+YMeOFyVr4zcG5Tw==

@@ -11,7 +11,7 @@ def extract_html_content(text: str) -> str:
         return extract_html_content(file_match.group(1).strip())
 
     # First, strip markdown code fences if present
-    text = re.sub(r'^```html?\s*\n?', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^```(?:html|jsx|tsx|javascript|js)?\s*\n?', '', text, flags=re.MULTILINE)
     text = re.sub(r'\n?```\s*$', '', text, flags=re.MULTILINE)
 
     # Try to find DOCTYPE + html tags together
@@ -26,8 +26,5 @@ def extract_html_content(text: str) -> str:
     if match:
         return match.group(1)
     else:
-        # Otherwise, we just send the previous HTML over
-        print(
-            "[HTML Extraction] No <html> tags found in the generated content"
-        )
+        # No HTML tags found - could be JSX content for React stack
         return text

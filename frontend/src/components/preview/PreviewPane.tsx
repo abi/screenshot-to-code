@@ -13,19 +13,55 @@ import {
 } from "react-icons/lu";
 import { useMemo, useState } from "react";
 import { AppState, Settings } from "../../types";
+import { Stack } from "../../lib/stacks";
 import CodeTab from "./CodeTab";
 import { Button } from "../ui/button";
 import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
+import ReactPreviewComponent from "./ReactPreviewComponent";
 import { downloadCode } from "./download";
 
-function openInNewTab(code: string) {
+function openHtmlInNewTab(code: string) {
   const newWindow = window.open("", "_blank");
   if (newWindow) {
     newWindow.document.open();
     newWindow.document.write(code);
+    newWindow.document.close();
+  }
+}
+
+function openReactInNewTab(code: string) {
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.0.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.0.0/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <style>body { margin: 0; padding: 0; }</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+${code}
+
+const App = typeof module !== 'undefined' && module.exports && module.exports.default
+  ? module.exports.default
+  : (typeof exports !== 'undefined' && exports.default ? exports.default : null);
+
+if (App) {
+  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+}
+  </script>
+</body>
+</html>`;
+  const newWindow = window.open("", "_blank");
+  if (newWindow) {
+    newWindow.document.open();
+    newWindow.document.write(html);
     newWindow.document.close();
   }
 }
@@ -63,6 +99,8 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
     commits[head] &&
     commits[head].variants[commits[head].selectedVariantIndex].status ===
       "complete";
+
+  const isReactStack = settings.generatedCodeConfig === Stack.REACT_TAILWIND;
 
   const previewCode =
     inputMode === "video" && appState === AppState.CODING
@@ -126,7 +164,11 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
                   </div>
                 )}
                 <Button
-                  onClick={() => openInNewTab(previewCode)}
+                  onClick={() =>
+                    isReactStack
+                      ? openReactInNewTab(previewCode)
+                      : openHtmlInNewTab(previewCode)
+                  }
                   variant="ghost"
                   size="icon"
                   title="Open in New Tab"
@@ -181,7 +223,12 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
           <div className="flex items-center gap-1">
             {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
               <Button
-                onClick={() => downloadCode(previewCode)}
+                onClick={() =>
+                  downloadCode(
+                    previewCode,
+                    isReactStack ? "App.jsx" : "index.html"
+                  )
+                }
                 variant="ghost"
                 size="icon"
                 title="Download Code"
@@ -212,19 +259,36 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
           </div>
         </div>
         <TabsContent value="desktop" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-          <PreviewComponent
-            code={previewCode}
-            device="desktop"
-            onScaleChange={setDesktopScale}
-            viewMode={desktopViewMode}
-          />
+          {isReactStack ? (
+            <ReactPreviewComponent
+              code={previewCode}
+              device="desktop"
+              onScaleChange={setDesktopScale}
+              viewMode={desktopViewMode}
+            />
+          ) : (
+            <PreviewComponent
+              code={previewCode}
+              device="desktop"
+              onScaleChange={setDesktopScale}
+              viewMode={desktopViewMode}
+            />
+          )}
         </TabsContent>
         <TabsContent value="mobile" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-          <PreviewComponent
-            code={previewCode}
-            device="mobile"
-            viewMode="actual"
-          />
+          {isReactStack ? (
+            <ReactPreviewComponent
+              code={previewCode}
+              device="mobile"
+              viewMode="actual"
+            />
+          ) : (
+            <PreviewComponent
+              code={previewCode}
+              device="mobile"
+              viewMode="actual"
+            />
+          )}
         </TabsContent>
         <TabsContent value="code" className="flex-1 min-h-0 mt-0 overflow-auto">
           <CodeTab
