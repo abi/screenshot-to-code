@@ -366,6 +366,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
+        has_videos: bool = False,
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
@@ -377,6 +378,7 @@ class ModelSelectionStage:
                 openai_api_key,
                 anthropic_api_key,
                 gemini_api_key,
+                has_videos=has_videos,
             )
 
             # Print the variant models (one per line)
@@ -401,11 +403,12 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        has_videos: bool = False,
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
-        # Video mode requires Gemini - 2 variants for comparison
-        if input_mode == "video":
+        # Video mode requires Gemini - applies to both creates and edits with videos
+        if input_mode == "video" or has_videos:
             if not gemini_api_key:
                 raise Exception(
                     "Video mode requires a Gemini API key. "
@@ -681,10 +684,19 @@ class StatusBroadcastMiddleware(Middleware):
         # Determine variant count based on input mode and generation type.
         # Edit/update flows use two variants to keep latency and cost down.
         assert context.extracted_params is not None
-        is_video_mode = context.extracted_params.input_mode == "video"
+        prompt_videos = context.extracted_params.prompt.get("videos", [])
+        history_has_videos = any(
+            len(msg.get("videos", [])) > 0
+            for msg in context.extracted_params.history
+        )
+        has_videos = (
+            context.extracted_params.input_mode == "video"
+            or len(prompt_videos) > 0
+            or history_has_videos
+        )
         is_update = context.extracted_params.generation_type == "update"
         num_variants = (
-            NUM_VARIANTS_VIDEO if is_video_mode else 2 if is_update else NUM_VARIANTS
+            NUM_VARIANTS_VIDEO if has_videos else 2 if is_update else NUM_VARIANTS
         )
 
         # Tell frontend how many variants we're using
@@ -720,6 +732,14 @@ class CodeGenerationMiddleware(Middleware):
             assert context.extracted_params is not None
 
             # Select models (handles video mode internally)
+            # Check if the current prompt or history contains videos
+            prompt_videos = context.extracted_params.prompt.get("videos", [])
+            history_has_videos = any(
+                len(msg.get("videos", [])) > 0
+                for msg in context.extracted_params.history
+            )
+            has_videos = len(prompt_videos) > 0 or history_has_videos
+
             model_selector = ModelSelectionStage(context.throw_error)
             context.variant_models = await model_selector.select_models(
                 generation_type=context.extracted_params.generation_type,
@@ -727,6 +747,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                has_videos=has_videos,
             )
             if IS_DEBUG_ENABLED:
                 await context.send_message(
