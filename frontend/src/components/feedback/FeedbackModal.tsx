@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { useAuthenticatedFetch } from "../hosted/useAuthenticatedFetch";
-import { SAAS_BACKEND_URL } from "../../config";
+import {
+  SAAS_BACKEND_URL,
+  SHOULD_SHOW_FEEDBACK_CALL_UI,
+} from "../../config";
 import toast from "react-hot-toast";
 import {
   FiGift,
@@ -62,6 +65,10 @@ export function FeedbackModal({
   }, [open]);
 
   const handleSubmit = async () => {
+    if (!SHOULD_SHOW_FEEDBACK_CALL_UI) {
+      toast.error("Feedback calls are currently unavailable.");
+      return;
+    }
     if (englishFluent === null) {
       toast.error("Please answer the question.");
       return;

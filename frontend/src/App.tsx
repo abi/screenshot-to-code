@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
 import { AppState, AppTheme, EditorTheme, Settings } from "./types";
-import { IS_RUNNING_ON_CLOUD } from "./config";
+import { IS_RUNNING_ON_CLOUD, SHOULD_SHOW_FEEDBACK_CALL_UI } from "./config";
 import { PicoBadge } from "./components/messages/PicoBadge";
 import OnboardingPaywall from "./components/hosted/OnboardingPaywall";
 import { usePersistedState } from "./hooks/usePersistedState";
@@ -42,8 +42,6 @@ import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 import { useGenerationFeedback } from "./hooks/useGenerationFeedback";
-// Temporary kill switch for feedback call UI.
-const SHOW_FEEDBACK_CALL_UI = true;
 
 function App() {
   // Relevant for hosted version only
@@ -824,7 +822,7 @@ function App() {
             setMobilePane("preview");
           }}
           onOpenFeedback={
-            SHOW_FEEDBACK_CALL_UI &&
+            SHOULD_SHOW_FEEDBACK_CALL_UI &&
             subscriberTier &&
             subscriberTier !== "free"
               ? () => setIsFeedbackOpen(true)
@@ -1027,7 +1025,7 @@ function App() {
         )}
       </main>
 
-      {SHOW_FEEDBACK_CALL_UI && (
+      {SHOULD_SHOW_FEEDBACK_CALL_UI && (
         <FeedbackModal
           open={isFeedbackOpen}
           onOpenChange={setIsFeedbackOpen}

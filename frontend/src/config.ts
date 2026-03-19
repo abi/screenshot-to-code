@@ -11,7 +11,9 @@ export const HTTP_BACKEND_URL =
 // Hosted version only
 
 // Feature flags
-export const SHOULD_SHOW_FEEDBACK_CALL_NOTE = false;
+export const SHOULD_SHOW_FEEDBACK_CALL_UI =
+  import.meta.env.VITE_SHOW_FEEDBACK_CALL_UI === "true";
+export const SHOULD_SHOW_FEEDBACK_CALL_NOTE = SHOULD_SHOW_FEEDBACK_CALL_UI;
 
 // SaaS Backend
 export const SAAS_BACKEND_URL = import.meta.env.VITE_SAAS_BACKEND_URL || null;
