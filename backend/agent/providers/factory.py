@@ -30,7 +30,7 @@ def create_provider_session(
         if not openai_api_key:
             raise Exception("OpenAI API key is missing.")
 
-        client = AsyncOpenAI(api_key=openai_api_key, base_url=openai_base_url)
+        client = AsyncOpenAI(api_key=openai_api_key, base_url=openai_base_url, timeout=60.0)
         return OpenAIProviderSession(
             client=client,
             model=model,
@@ -42,7 +42,7 @@ def create_provider_session(
         if not anthropic_api_key:
             raise Exception("Anthropic API key is missing.")
 
-        client = AsyncAnthropic(api_key=anthropic_api_key)
+        client = AsyncAnthropic(api_key=anthropic_api_key, timeout=60.0)
         return AnthropicProviderSession(
             client=client,
             model=model,
