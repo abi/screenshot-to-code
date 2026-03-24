@@ -69,12 +69,14 @@ from routes.model_choice_sets import (
     ALL_KEYS_MODELS_DEFAULT,
     ALL_KEYS_MODELS_TEXT_CREATE,
     ALL_KEYS_MODELS_UPDATE,
+    ALL_KEYS_MODELS_UPDATE_OVERRIDE,
     ANTHROPIC_ONLY_MODELS,
     GEMINI_ANTHROPIC_MODELS,
     GEMINI_OPENAI_MODELS,
     GEMINI_ONLY_MODELS,
     OPENAI_ANTHROPIC_MODELS,
     OPENAI_ONLY_MODELS,
+    UPDATE_MODEL_OVERRIDE_USER_IDS,
     VIDEO_VARIANT_MODELS,
 )
 
@@ -324,7 +326,6 @@ class ParameterExtractionStage:
                 )
 
         user_id = res.user_id
-
         print("Payment method: ", payment_method)
 
         if payment_method is PaymentMethod.UNKNOWN:
@@ -482,6 +483,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
+        user_id: str | None = None,
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
@@ -493,6 +495,7 @@ class ModelSelectionStage:
                 openai_api_key,
                 anthropic_api_key,
                 gemini_api_key,
+                user_id,
             )
 
             # Print the variant models (one per line)
@@ -518,6 +521,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        user_id: str | None,
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
@@ -535,7 +539,12 @@ class ModelSelectionStage:
             if input_mode == "text" and generation_type == "create":
                 models = list(ALL_KEYS_MODELS_TEXT_CREATE)
             elif generation_type == "update":
-                models = list(ALL_KEYS_MODELS_UPDATE)
+                normalized_user_id = (user_id or "").strip().lower()
+                models = list(
+                    ALL_KEYS_MODELS_UPDATE_OVERRIDE
+                    if normalized_user_id in UPDATE_MODEL_OVERRIDE_USER_IDS
+                    else ALL_KEYS_MODELS_UPDATE
+                )
             else:
                 models = list(ALL_KEYS_MODELS_DEFAULT)
         elif gemini_api_key and anthropic_api_key:
@@ -974,6 +983,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                user_id=context.extracted_params.user_id,
             )
             # Always send variant models so the frontend can track which
             # model produced each variant (used for edit-base-model logging).

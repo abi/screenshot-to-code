@@ -187,3 +187,22 @@ async def test_openai_provider_session_uses_gpt_5_4_high_reasoning_effort() -> N
     assert first_call["model"] == "gpt-5.4-2026-03-05"
     assert first_call["prompt_cache_retention"] == "24h"
     assert first_call["reasoning"] == {"effort": "high", "summary": "auto"}
+
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_uses_gpt_5_4_mini_low_reasoning_effort() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_4_MINI_LOW,
+        prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_call = client.responses.calls[0]
+
+    assert first_call["model"] == "gpt-5.4-mini"
+    assert "prompt_cache_retention" not in first_call
+    assert first_call["reasoning"] == {"effort": "low", "summary": "auto"}

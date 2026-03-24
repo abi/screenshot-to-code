@@ -1,5 +1,10 @@
 from llm import Llm
 
+UPDATE_MODEL_OVERRIDE_USER_IDS = {
+    "4e5d693c-036d-4600-bae1-124ebe10b46e",
+    "d60d5489-623f-4423-9fee-6425761d5c46",
+}
+
 # Video variants always use Gemini.
 VIDEO_VARIANT_MODELS = (
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
@@ -31,6 +36,11 @@ ALL_KEYS_MODELS_TEXT_CREATE = (
 ALL_KEYS_MODELS_UPDATE = (
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
     Llm.GPT_5_4_2026_03_05_LOW,
+)
+
+ALL_KEYS_MODELS_UPDATE_OVERRIDE = (
+    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+    Llm.GPT_5_4_MINI_LOW,
 )
 
 # Key subset fallbacks.
