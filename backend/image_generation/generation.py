@@ -45,7 +45,7 @@ async def process_tasks(
 async def generate_image_dalle(
     prompt: str, api_key: str, base_url: str | None
 ) -> Union[str, None]:
-    client = AsyncOpenAI(api_key=api_key, base_url=base_url, timeout=60.0)
+    client = AsyncOpenAI(api_key=api_key, base_url=base_url, timeout=60.0, max_retries=3)
     res = await client.images.generate(
         model="dall-e-3",
         quality="standard",
