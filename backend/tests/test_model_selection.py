@@ -44,7 +44,7 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_4_2026_03_05_LOW,
+            Llm.GPT_5_4_MINI_LOW,
         ]
         assert models == expected
 
@@ -57,24 +57,6 @@ class TestModelSelectionAllKeys:
             openai_api_key="key",
             anthropic_api_key="key",
             gemini_api_key="key",
-        )
-
-        expected = [
-            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_4_2026_03_05_LOW,
-        ]
-        assert models == expected
-
-    @pytest.mark.asyncio
-    async def test_gemini_anthropic_update_uses_gpt_5_4_mini_for_override_user_ids(self):
-        """Targeted user IDs get GPT 5.4 mini for update generations."""
-        models = await self.model_selector.select_models(
-            generation_type="update",
-            input_mode="image",
-            openai_api_key="key",
-            anthropic_api_key="key",
-            gemini_api_key="key",
-            user_id="4e5d693c-036d-4600-bae1-124ebe10b46e",
         )
 
         expected = [
