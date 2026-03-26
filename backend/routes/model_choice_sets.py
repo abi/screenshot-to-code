@@ -3,6 +3,7 @@ from llm import Llm
 UPDATE_MODEL_OVERRIDE_USER_IDS = {
     "4e5d693c-036d-4600-bae1-124ebe10b46e",
     "d60d5489-623f-4423-9fee-6425761d5c46",
+    "b4fa3ae2-8294-4e3e-9ec0-74ec637794dc",
 }
 
 # Video variants always use Gemini.
