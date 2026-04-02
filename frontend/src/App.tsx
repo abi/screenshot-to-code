@@ -398,6 +398,10 @@ function App() {
       },
       onToolStart: (data, variantIndex, eventId) => {
         if (!eventId) return;
+        const payload =
+          data && typeof data === "object"
+            ? (data as { name?: unknown; input?: unknown })
+            : {};
         const lastThinking = lastThinkingEventIdRef.current[variantIndex];
         if (lastThinking && lastThinking !== eventId) {
           finishThinkingEvent(variantIndex, "complete");
@@ -410,17 +414,21 @@ function App() {
           id: eventId,
           type: "tool",
           status: "running",
-          toolName: data?.name,
-          input: data?.input,
+          toolName: typeof payload.name === "string" ? payload.name : undefined,
+          input: payload.input,
           startedAt: Date.now(),
         });
         lastToolEventIdRef.current[variantIndex] = eventId;
       },
       onToolResult: (data, variantIndex, eventId) => {
         if (!eventId) return;
+        const payload =
+          data && typeof data === "object"
+            ? (data as { ok?: unknown; output?: unknown })
+            : {};
         finishAgentEvent(commit.hash, variantIndex, eventId, {
-          status: data?.ok === false ? "error" : "complete",
-          output: data?.output,
+          status: payload.ok === false ? "error" : "complete",
+          output: payload.output,
           endedAt: Date.now(),
         });
         if (lastToolEventIdRef.current[variantIndex] === eventId) {
