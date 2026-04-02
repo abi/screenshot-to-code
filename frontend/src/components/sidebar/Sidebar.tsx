@@ -204,6 +204,8 @@ function Sidebar({
     head &&
     commits[head] &&
     commits[head].variants[commits[head].selectedVariantIndex].errorMessage;
+  const selectedVariantIndexForDeps =
+    head && commits[head] ? commits[head].selectedVariantIndex : null;
 
   // Auto-resize textarea to fit content
   const autoResize = useCallback(() => {
@@ -241,7 +243,7 @@ function Sidebar({
   // Reset error expanded state when variant changes
   useEffect(() => {
     setIsErrorExpanded(false);
-  }, [head, commits[head || ""]?.selectedVariantIndex]);
+  }, [head, selectedVariantIndexForDeps]);
 
   // Reset prompt expanded state when commit changes and detect clamping
   useEffect(() => {

@@ -24,7 +24,26 @@ import { vs2015 } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import WorkingPulse from "../core/WorkingPulse";
 
 SyntaxHighlighterBase.registerLanguage("html", html);
-const SyntaxHighlighter = SyntaxHighlighterBase as any;
+const SyntaxHighlighter = SyntaxHighlighterBase;
+
+type GenerateImagesInput = {
+  prompts?: string[];
+  count?: number;
+};
+
+type GenerateImagesResult = {
+  images?: Array<{ url?: string; prompt?: string }>;
+  error?: string;
+};
+
+type RemoveBackgroundInput = {
+  image_urls?: string[];
+};
+
+type RemoveBackgroundResult = {
+  images?: Array<{ image_url?: string; result_url?: string }>;
+  error?: string;
+};
 
 function CodePreviewBlock({ code, isGenerating }: { code: string; isGenerating: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,8 +146,8 @@ function getEventTitle(event: AgentEvent): string {
       return event.status === "running" ? "Editing file" : "Edited file";
     }
     if (event.toolName === "generate_images") {
-      const input = event.input as any;
-      const output = event.output as any;
+      const input = (event.input ?? {}) as GenerateImagesInput;
+      const output = (event.output ?? {}) as GenerateImagesResult;
       const count = output?.images?.length || input?.count || 0;
       if (event.status === "running") {
         return count ? `Generating ${count} image${count !== 1 ? "s" : ""}` : "Generating images";
@@ -136,8 +155,8 @@ function getEventTitle(event: AgentEvent): string {
       return count ? `Generated ${count} image${count !== 1 ? "s" : ""}` : "Generated images";
     }
     if (event.toolName === "remove_background") {
-      const rbInput = event.input as any;
-      const rbOutput = event.output as any;
+      const rbInput = (event.input ?? {}) as RemoveBackgroundInput;
+      const rbOutput = (event.output ?? {}) as RemoveBackgroundResult;
       const rbCount = rbOutput?.images?.length || rbInput?.image_urls?.length || 0;
       if (event.status === "running") {
         return rbCount > 1 ? `Removing ${rbCount} backgrounds` : "Removing background";
@@ -176,13 +195,23 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
     );
   };
 
-  const output = event.output as any;
-  const input = event.input as any;
-  const hasError = Boolean(output?.error);
+  const output =
+    event.output && typeof event.output === "object"
+      ? (event.output as Record<string, unknown>)
+      : {};
+  const input = (event.input ?? {}) as GenerateImagesInput & RemoveBackgroundInput;
+  const errorMessage = typeof output.error === "string" ? output.error : undefined;
+  const hasError = Boolean(errorMessage);
+  const outputImages = output.images;
+  const outputEdits = output.edits;
   const images =
-    output && Array.isArray(output.images) ? (output.images as Array<any>) : null;
+    Array.isArray(outputImages)
+      ? (outputImages as Array<{ url?: string; prompt?: string }>)
+      : null;
   const edits =
-    output && Array.isArray(output.edits) ? (output.edits as Array<any>) : null;
+    Array.isArray(outputEdits)
+      ? (outputEdits as Array<{ old_text?: string; new_text?: string; replaced?: number }>)
+      : null;
 
   return (
     <div className="text-sm text-gray-700 dark:text-gray-200">
@@ -190,9 +219,9 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
         <div className="rounded-md border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/30 p-3">
           <div className="text-xs uppercase tracking-wide text-red-500">Error</div>
           <div className="mt-1 text-sm text-red-700 dark:text-red-200">
-            {output?.error}
+            {errorMessage}
           </div>
-          {event.input && (
+          {Boolean(event.input) && (
             <div className="mt-2">
               <div className="text-xs uppercase tracking-wide text-red-400">
                 Input
@@ -299,9 +328,10 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
             </div>
           )}
           {/* After complete: before/after side by side for each image */}
-          {event.status !== "running" && output?.images && Array.isArray(output.images) && (
+          {event.status !== "running" &&
+            Array.isArray(outputImages) && (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {output.images.map((item: any, index: number) => (
+              {(outputImages as Array<{ image_url?: string; result_url?: string }>).map((item, index: number) => (
                 <div key={`${item.image_url}-${index}`} className="flex gap-2 py-2">
                   <div className="w-1/2">
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Before</div>
@@ -347,7 +377,7 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
 
       {!event.toolName && !hasError && (
         <>
-          {event.input && (
+          {Boolean(event.input) && (
             <div>
               <div className="text-xs uppercase tracking-wide text-gray-400">
                 Input
@@ -355,7 +385,7 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
               {renderJson(event.input)}
             </div>
           )}
-          {event.output && (
+          {Boolean(event.output) && (
             <div className="mt-3">
               <div className="text-xs uppercase tracking-wide text-gray-400">
                 Output

@@ -26,7 +26,7 @@ type WebSocketResponse = {
     | "toolStart"
     | "toolResult";
   value?: string;
-  data?: any;
+  data?: unknown;
   eventId?: string;
   variantIndex: number;
 };
@@ -41,8 +41,8 @@ interface CodeGenerationCallbacks {
   onVariantModels: (models: string[]) => void;
   onThinking: (content: string, variantIndex: number, eventId?: string) => void;
   onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
-  onToolStart: (data: any, variantIndex: number, eventId?: string) => void;
-  onToolResult: (data: any, variantIndex: number, eventId?: string) => void;
+  onToolStart: (data: unknown, variantIndex: number, eventId?: string) => void;
+  onToolResult: (data: unknown, variantIndex: number, eventId?: string) => void;
   onCancel: (
     reason: "user_cancelled" | "request_failed" | "connection_error",
     errorMessage?: string
@@ -55,6 +55,16 @@ export function generateCode(
   params: FullGenerationSettings,
   callbacks: CodeGenerationCallbacks
 ) {
+  const getModels = (data: unknown): string[] => {
+    if (!data || typeof data !== "object" || !("models" in data)) {
+      return [];
+    }
+    const models = (data as { models?: unknown }).models;
+    return Array.isArray(models)
+      ? models.filter((model): model is string => typeof model === "string")
+      : [];
+  };
+
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
 
@@ -80,7 +90,7 @@ export function generateCode(
     } else if (response.type === "variantCount") {
       callbacks.onVariantCount(parseInt(response.value || "1"));
     } else if (response.type === "variantModels") {
-      callbacks.onVariantModels(response.data?.models || []);
+      callbacks.onVariantModels(getModels(response.data));
     } else if (response.type === "thinking") {
       callbacks.onThinking(response.value || "", response.variantIndex, response.eventId);
     } else if (response.type === "assistant") {
