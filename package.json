@@ -8,20 +8,16 @@
     "test:frontend": "npm --prefix frontend run test",
     "test:backend": "cd backend && poetry run pytest",
     "setup": "npm run setup:frontend && npm run setup:backend",
-    "setup:frontend": "node -e \"const fs=require('fs'); if (fs.existsSync('frontend/node_modules')) { console.log('frontend dependencies already installed'); process.exit(0);} process.exit(1);\" || npm --prefix frontend install",
+    "setup:frontend": "node -e \"const fs=require('fs'); if (fs.existsSync('frontend/node_modules')) { console.log('frontend dependencies already installed'); process.exit(0); } process.exit(1);\" || npm --prefix frontend install",
     "setup:backend": "cd backend && poetry install",
     "dev": "bash -lc 'cd backend && poetry run uvicorn main:app --reload --port 7001 & npm --prefix frontend run dev'",
     "build": "npm run build:frontend",
     "build:frontend": "npm --prefix frontend run build",
     "lint:frontend": "npm --prefix frontend run lint",
-    "typecheck:backend": "cd backend && poetry run pyright",
-    "check:backend": "cd backend && poetry run pytest && poetry run pyright"
+    "typecheck:backend": "cd backend && poetry run pyright"
   },
   "workspaces": [
     "frontend",
     "backend"
-  ],
-  "engines": {
-    "node": "20.x"
-  }
+  ]
 }
