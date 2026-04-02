@@ -1,5 +1,5 @@
 import { useProjectStore } from "../../store/project-store";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useThrottle } from "../../hooks/useThrottle";
 import {
   CODE_GENERATION_MODEL_DESCRIPTIONS,
@@ -75,10 +75,10 @@ function Variants() {
   const variants = commit?.variants || [];
   const selectedVariantIndex = commit?.selectedVariantIndex || 0;
 
-  const handleVariantClick = (index: number) => {
+  const handleVariantClick = useCallback((index: number) => {
     if (index === selectedVariantIndex || !head) return;
     updateSelectedVariantIndex(head, index);
-  };
+  }, [selectedVariantIndex, head, updateSelectedVariantIndex]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -101,7 +101,14 @@ function Variants() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [variants.length, commit?.isCommitted, selectedVariantIndex, head]);
+  }, [
+    variants.length,
+    commit,
+    commit?.isCommitted,
+    selectedVariantIndex,
+    head,
+    handleVariantClick,
+  ]);
 
   if (head === null || !commit) {
     return null;
