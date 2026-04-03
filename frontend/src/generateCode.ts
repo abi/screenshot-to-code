@@ -64,7 +64,7 @@ type GeminiGenerateResponse = {
   };
 };
 
-const GEMINI_REQUEST_TIMEOUT_MS = 45_000;
+const GEMINI_REQUEST_TIMEOUT_MS = 120_000;
 const GEMINI_IMAGE_MAX_DIMENSION = 1600;
 const GEMINI_IMAGE_JPEG_QUALITY = 0.82;
 
@@ -161,7 +161,7 @@ function extractGeminiText(json: unknown): string {
   return text;
 }
 
-function shouldUseDirectGemini(params: FullGenerationSettings): boolean {
+function shouldUseDirectGeminiFallback(params: FullGenerationSettings): boolean {
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
   const appIsRemote = Boolean(
     hostname && hostname !== "localhost" && hostname !== "127.0.0.1"
@@ -348,11 +348,6 @@ export function generateCode(
     void runDirectGeminiGeneration(params, callbacks);
   };
 
-  if (shouldUseDirectGemini(params)) {
-    startDirectFallback();
-    return;
-  }
-
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
 
@@ -401,7 +396,7 @@ export function generateCode(
 
   ws.addEventListener("close", (event) => {
     console.log("Connection closed", event.code, event.reason);
-    if (!receivedAnyMessage && params.geminiApiKey) {
+    if (!receivedAnyMessage && shouldUseDirectGeminiFallback(params)) {
       startDirectFallback();
       return;
     }
@@ -422,7 +417,7 @@ export function generateCode(
 
   ws.addEventListener("error", (error) => {
     console.error("WebSocket error", error);
-    if (!receivedAnyMessage && params.geminiApiKey) {
+    if (!receivedAnyMessage && shouldUseDirectGeminiFallback(params)) {
       startDirectFallback();
       return;
     }
