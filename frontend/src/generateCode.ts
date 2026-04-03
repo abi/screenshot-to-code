@@ -4,6 +4,7 @@ import {
   APP_ERROR_WEB_SOCKET_CODE,
   USER_CLOSE_WEB_SOCKET_CODE,
 } from "./constants";
+import { Stack } from "./lib/stacks";
 import { FullGenerationSettings } from "./types";
 
 const ERROR_MESSAGE =
@@ -50,6 +51,163 @@ interface CodeGenerationCallbacks {
   onComplete: () => void;
 }
 
+type GeminiGenerateResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+  }>;
+  error?: {
+    message?: string;
+  };
+};
+
+function extractCodeFromResponse(text: string): string {
+  const fenced = text.match(/```(?:html|tsx|jsx|vue|css)?\s*([\s\S]*?)```/i);
+  return (fenced?.[1] || text).trim();
+}
+
+function getGeminiApiModel(requestedModel: string): string {
+  if (requestedModel.toLowerCase().includes("pro")) {
+    return "gemini-2.5-pro";
+  }
+  return "gemini-2.5-flash";
+}
+
+function getStackInstruction(stack: Stack): string {
+  switch (stack) {
+    case Stack.REACT_TAILWIND:
+      return "Return a single React component file written in TSX with Tailwind classes. Do not include extra explanation.";
+    case Stack.VUE_TAILWIND:
+      return "Return a single Vue SFC using Tailwind classes. Do not include extra explanation.";
+    case Stack.BOOTSTRAP:
+      return "Return a single HTML file that uses Bootstrap classes. Do not include extra explanation.";
+    case Stack.IONIC_TAILWIND:
+      return "Return a single TSX file for Ionic React using Tailwind classes where appropriate. Do not include extra explanation.";
+    case Stack.HTML_CSS:
+      return "Return a single self-contained HTML file with embedded CSS and JS when needed. Do not include extra explanation.";
+    case Stack.HTML_TAILWIND:
+    default:
+      return "Return a single self-contained HTML file that uses Tailwind via CDN. Do not include extra explanation.";
+  }
+}
+
+function dataUrlToInlineData(dataUrl: string): { mimeType: string; data: string } | null {
+  const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+  if (!match) {
+    return null;
+  }
+  return {
+    mimeType: match[1],
+    data: match[2],
+  };
+}
+
+function shouldUseDirectGemini(params: FullGenerationSettings): boolean {
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const appIsRemote = Boolean(
+    hostname && hostname !== "localhost" && hostname !== "127.0.0.1"
+  );
+  const backendLooksLocal = /127\.0\.0\.1|localhost/.test(WS_BACKEND_URL);
+  return Boolean(params.geminiApiKey) && appIsRemote && backendLooksLocal;
+}
+
+async function runDirectGeminiGeneration(
+  params: FullGenerationSettings,
+  callbacks: CodeGenerationCallbacks
+): Promise<void> {
+  const apiKey = params.geminiApiKey;
+  if (!apiKey) {
+    throw new Error("Gemini API key is missing.");
+  }
+
+  const model = getGeminiApiModel(params.codeGenerationModel);
+  const instruction = [
+    "You are an expert frontend engineer.",
+    getStackInstruction(params.generatedCodeConfig),
+    "Match the provided screenshot or prompt as closely as possible.",
+    "Make the output responsive and production-like.",
+    "Return only the code for the requested file.",
+  ].join(" ");
+
+  const userTextParts: string[] = [];
+  if (params.generationType === "update") {
+    userTextParts.push("Update the existing implementation based on the user's request.");
+    if (params.fileState?.content) {
+      userTextParts.push("Current code:");
+      userTextParts.push(params.fileState.content);
+    }
+  } else {
+    userTextParts.push("Create a fresh implementation from the provided input.");
+  }
+
+  if (params.prompt.text?.trim()) {
+    userTextParts.push(`User request: ${params.prompt.text.trim()}`);
+  }
+
+  if (!params.prompt.text?.trim() && params.prompt.images.length > 0) {
+    userTextParts.push("Recreate the provided screenshot as code.");
+  }
+
+  const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
+    { text: `${instruction}\n\n${userTextParts.join("\n\n")}` },
+  ];
+
+  params.prompt.images.forEach((image) => {
+    const inlineData = dataUrlToInlineData(image);
+    if (inlineData) {
+      parts.push({ inlineData });
+    }
+  });
+
+  callbacks.onVariantCount(1);
+  callbacks.onVariantModels([model]);
+  callbacks.onStatusUpdate("Starting direct Gemini generation...", 0);
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts,
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+        },
+      }),
+    }
+  );
+
+  const json = (await response.json()) as GeminiGenerateResponse;
+  if (!response.ok) {
+    throw new Error(json.error?.message || "Gemini request failed.");
+  }
+
+  const text =
+    json.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text || "")
+      .join("")
+      .trim() || "";
+
+  if (!text) {
+    throw new Error("Gemini returned an empty response.");
+  }
+
+  const code = extractCodeFromResponse(text);
+  callbacks.onSetCode(code, 0);
+  callbacks.onVariantComplete(0);
+  callbacks.onComplete();
+}
+
 export function generateCode(
   wsRef: React.MutableRefObject<WebSocket | null>,
   params: FullGenerationSettings,
@@ -83,6 +241,28 @@ export function generateCode(
     }
   };
 
+  let didFallback = false;
+  let receivedAnyMessage = false;
+
+  const startDirectFallback = () => {
+    if (didFallback) {
+      return;
+    }
+    didFallback = true;
+    wsRef.current = null;
+    void runDirectGeminiGeneration(params, callbacks).catch((error) => {
+      const message = error instanceof Error ? error.message : ERROR_MESSAGE;
+      console.error("Direct Gemini fallback failed", error);
+      toast.error(message);
+      callbacks.onCancel("request_failed", message);
+    });
+  };
+
+  if (shouldUseDirectGemini(params)) {
+    startDirectFallback();
+    return;
+  }
+
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
 
@@ -94,13 +274,13 @@ export function generateCode(
   });
 
   ws.addEventListener("message", async (event: MessageEvent) => {
+    receivedAnyMessage = true;
     const response = parseResponse(event.data);
     if (!response) {
       toast.error(ERROR_MESSAGE);
       callbacks.onCancel("request_failed", ERROR_MESSAGE);
       return;
     }
-
     if (response.type === "chunk") {
       callbacks.onChange(response.value || "", response.variantIndex);
     } else if (response.type === "status") {
@@ -131,6 +311,10 @@ export function generateCode(
 
   ws.addEventListener("close", (event) => {
     console.log("Connection closed", event.code, event.reason);
+    if (!receivedAnyMessage && params.geminiApiKey) {
+      startDirectFallback();
+      return;
+    }
     if (event.code === USER_CLOSE_WEB_SOCKET_CODE) {
       toast.success(CANCEL_MESSAGE);
       callbacks.onCancel("user_cancelled");
@@ -148,6 +332,10 @@ export function generateCode(
 
   ws.addEventListener("error", (error) => {
     console.error("WebSocket error", error);
+    if (!receivedAnyMessage && params.geminiApiKey) {
+      startDirectFallback();
+      return;
+    }
     toast.error(ERROR_MESSAGE);
   });
 }
