@@ -1,65 +1,32 @@
 // Keep in sync with backend (llm.py)
-// Order here matches dropdown order
-export enum CodeGenerationModel {
-  CLAUDE_OPUS_4_6 = "claude-opus-4-6",
-  CLAUDE_SONNET_4_6 = "claude-sonnet-4-6",
-  CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101",
-  CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929",
-  GPT_5_2_CODEX_LOW = "gpt-5.2-codex (low thinking)",
-  GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
-  GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)",
-  GPT_5_2_CODEX_XHIGH = "gpt-5.2-codex (xhigh thinking)",
-  GPT_5_3_CODEX_LOW = "gpt-5.3-codex (low thinking)",
-  GPT_5_3_CODEX_MEDIUM = "gpt-5.3-codex (medium thinking)",
-  GPT_5_3_CODEX_HIGH = "gpt-5.3-codex (high thinking)",
-  GPT_5_3_CODEX_XHIGH = "gpt-5.3-codex (xhigh thinking)",
-  GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
-  GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
-  GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)",
-  GEMINI_3_1_PRO_PREVIEW_MEDIUM = "gemini-3.1-pro-preview (medium thinking)",
-  GEMINI_3_1_PRO_PREVIEW_LOW = "gemini-3.1-pro-preview (low thinking)",
-}
+// Runtime model values are Gemini-only. Legacy enum members are preserved as aliases
+// so existing persisted state and older references do not break the frontend.
+export const CodeGenerationModel = {
+  CLAUDE_OPUS_4_6: "gemini-3.1-pro-preview (high thinking)",
+  CLAUDE_SONNET_4_6: "gemini-3.1-pro-preview (medium thinking)",
+  CLAUDE_4_5_OPUS_2025_11_01: "gemini-3.1-pro-preview (high thinking)",
+  CLAUDE_4_5_SONNET_2025_09_29: "gemini-3.1-pro-preview (medium thinking)",
+  GPT_5_2_CODEX_LOW: "gemini-3-flash-preview (minimal thinking)",
+  GPT_5_2_CODEX_MEDIUM: "gemini-3-flash-preview (high thinking)",
+  GPT_5_2_CODEX_HIGH: "gemini-3.1-pro-preview (high thinking)",
+  GPT_5_2_CODEX_XHIGH: "gemini-3.1-pro-preview (high thinking)",
+  GPT_5_3_CODEX_LOW: "gemini-3-flash-preview (minimal thinking)",
+  GPT_5_3_CODEX_MEDIUM: "gemini-3-flash-preview (high thinking)",
+  GPT_5_3_CODEX_HIGH: "gemini-3.1-pro-preview (high thinking)",
+  GPT_5_3_CODEX_XHIGH: "gemini-3.1-pro-preview (high thinking)",
+  GEMINI_3_FLASH_PREVIEW_HIGH: "gemini-3-flash-preview (high thinking)",
+  GEMINI_3_FLASH_PREVIEW_MINIMAL: "gemini-3-flash-preview (minimal thinking)",
+  GEMINI_3_1_PRO_PREVIEW_HIGH: "gemini-3.1-pro-preview (high thinking)",
+  GEMINI_3_1_PRO_PREVIEW_MEDIUM: "gemini-3.1-pro-preview (medium thinking)",
+  GEMINI_3_1_PRO_PREVIEW_LOW: "gemini-3.1-pro-preview (low thinking)",
+} as const;
 
-// Will generate a static error if a model in the enum above is not in the descriptions
+export type CodeGenerationModel =
+  (typeof CodeGenerationModel)[keyof typeof CodeGenerationModel];
+
 export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   [key in CodeGenerationModel]: { name: string; inBeta: boolean };
 } = {
-  "gpt-5.2-codex (low thinking)": {
-    name: "GPT 5.2 Codex (low)",
-    inBeta: true,
-  },
-  "gpt-5.2-codex (medium thinking)": {
-    name: "GPT 5.2 Codex (medium)",
-    inBeta: true,
-  },
-  "gpt-5.2-codex (high thinking)": {
-    name: "GPT 5.2 Codex (high)",
-    inBeta: true,
-  },
-  "gpt-5.2-codex (xhigh thinking)": {
-    name: "GPT 5.2 Codex (xhigh)",
-    inBeta: true,
-  },
-  "gpt-5.3-codex (low thinking)": {
-    name: "GPT 5.3 Codex (low)",
-    inBeta: true,
-  },
-  "gpt-5.3-codex (medium thinking)": {
-    name: "GPT 5.3 Codex (medium)",
-    inBeta: true,
-  },
-  "gpt-5.3-codex (high thinking)": {
-    name: "GPT 5.3 Codex (high)",
-    inBeta: true,
-  },
-  "gpt-5.3-codex (xhigh thinking)": {
-    name: "GPT 5.3 Codex (xhigh)",
-    inBeta: true,
-  },
-  "claude-opus-4-5-20251101": { name: "Claude Opus 4.5", inBeta: false },
-  "claude-opus-4-6": { name: "Claude Opus 4.6", inBeta: false },
-  "claude-sonnet-4-6": { name: "Claude Sonnet 4.6", inBeta: false },
-  "claude-sonnet-4-5-20250929": { name: "Claude Sonnet 4.5", inBeta: false },
   "gemini-3-flash-preview (high thinking)": {
     name: "Gemini 3 Flash (high)",
     inBeta: true,

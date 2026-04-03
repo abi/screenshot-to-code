@@ -42,27 +42,26 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
   const [desktopScale, setDesktopScale] = useState(1);
   const [desktopViewMode, setDesktopViewMode] = useState<"fit" | "actual">("fit");
 
-  // Sorted commit list for version navigation
-  const sortedCommits = useMemo(() =>
-    Object.values(commits).sort(
-      (a, b) => new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
-    ), [commits]);
+  const sortedCommits = useMemo(
+    () =>
+      Object.values(commits).sort(
+        (a, b) =>
+          new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
+      ),
+    [commits]
+  );
 
-  const currentVersionIndex = sortedCommits.findIndex(c => c.hash === head);
+  const currentVersionIndex = sortedCommits.findIndex((c) => c.hash === head);
   const totalVersions = sortedCommits.length;
   const canGoPrev = currentVersionIndex > 0;
-  const canGoNext = currentVersionIndex < totalVersions - 1;
+  const canGoNext = currentVersionIndex >= 0 && currentVersionIndex < totalVersions - 1;
 
-  const currentCommit = head && commits[head] ? commits[head] : "";
-  const currentCode = currentCommit
-    ? currentCommit.variants[currentCommit.selectedVariantIndex].code
-    : "";
+  const currentCommit = head ? commits[head] : undefined;
+  const selectedVariantIndex = currentCommit?.selectedVariantIndex ?? 0;
+  const selectedVariant = currentCommit?.variants?.[selectedVariantIndex];
+  const currentCode = selectedVariant?.code ?? "";
 
-  const isSelectedVariantComplete =
-    head &&
-    commits[head] &&
-    commits[head].variants[commits[head].selectedVariantIndex].status ===
-      "complete";
+  const isSelectedVariantComplete = selectedVariant?.status === "complete";
 
   const previewCode =
     inputMode === "video" && appState === AppState.CODING
@@ -138,11 +137,15 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
             )}
           </div>
 
-          {/* Version navigation */}
-          {totalVersions > 0 && (
+          {totalVersions > 0 && currentVersionIndex >= 0 && (
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center justify-center gap-1 bg-gray-100/50 dark:bg-zinc-800/50 rounded-full p-1 border border-gray-200/50 dark:border-zinc-700/50 backdrop-blur-sm">
               <Button
-                onClick={() => canGoPrev && setHead(sortedCommits[currentVersionIndex - 1].hash)}
+                onClick={() => {
+                  const prevCommit = sortedCommits[currentVersionIndex - 1];
+                  if (prevCommit) {
+                    setHead(prevCommit.hash);
+                  }
+                }}
                 variant="ghost"
                 size="icon"
                 title="Previous version"
@@ -166,7 +169,12 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
                 )}
               </div>
               <Button
-                onClick={() => canGoNext && setHead(sortedCommits[currentVersionIndex + 1].hash)}
+                onClick={() => {
+                  const nextCommit = sortedCommits[currentVersionIndex + 1];
+                  if (nextCommit) {
+                    setHead(nextCommit.hash);
+                  }
+                }}
                 variant="ghost"
                 size="icon"
                 title="Next version"

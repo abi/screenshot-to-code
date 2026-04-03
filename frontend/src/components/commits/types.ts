@@ -13,8 +13,8 @@ export type AgentEvent = {
   status: AgentEventStatus;
   content?: string;
   toolName?: string;
-  input?: any;
-  output?: any;
+  input?: unknown;
+  output?: unknown;
   startedAt: number;
   endedAt?: number;
 };

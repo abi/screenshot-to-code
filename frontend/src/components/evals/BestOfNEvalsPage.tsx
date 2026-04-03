@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { HTTP_BACKEND_URL } from "../../config";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import EvalNavigation from "./EvalNavigation";
@@ -137,7 +137,7 @@ function BestOfNEvalsPage() {
   const filteredIndices = getFilteredIndices();
 
   // Navigation functions
-  const goToPrevious = () => {
+  const goToPrevious = useCallback(() => {
     if (winnerFilter === "all") {
       setCurrentComparisonIndex((prev) => Math.max(0, prev - 1));
     } else {
@@ -148,9 +148,9 @@ function BestOfNEvalsPage() {
         setCurrentComparisonIndex(filteredIndices[currentFilteredIndex - 1]);
       }
     }
-  };
+  }, [winnerFilter, filteredIndices, currentComparisonIndex]);
 
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
     if (winnerFilter === "all") {
       setCurrentComparisonIndex((prev) => Math.min(evals.length - 1, prev + 1));
     } else {
@@ -161,11 +161,17 @@ function BestOfNEvalsPage() {
         setCurrentComparisonIndex(filteredIndices[currentFilteredIndex + 1]);
       }
     }
-  };
+  }, [winnerFilter, evals.length, filteredIndices, currentComparisonIndex]);
 
   const goToComparison = (index: number) => {
     setCurrentComparisonIndex(Math.max(0, Math.min(evals.length - 1, index)));
   };
+
+  const handleVote = useCallback((index: number, outcome: Outcome) => {
+    const newOutcomes = [...outcomes];
+    newOutcomes[index] = outcome;
+    setOutcomes(newOutcomes);
+  }, [outcomes]);
 
   // Update current index when filter changes
   useEffect(() => {
@@ -211,15 +217,17 @@ function BestOfNEvalsPage() {
         case "7":
         case "8":
         case "9":
-          e.preventDefault();
-          const modelIndex = parseInt(e.key) - 1;
-          if (modelIndex < folderNames.length) {
-            if (e.shiftKey) {
-              // Shift + number = switch to model tab
-              setCurrentModelIndex(modelIndex);
-            } else {
-              // Number = vote for model
-              handleVote(currentComparisonIndex, modelIndex);
+          {
+            e.preventDefault();
+            const modelIndex = parseInt(e.key) - 1;
+            if (modelIndex < folderNames.length) {
+              if (e.shiftKey) {
+                // Shift + number = switch to model tab
+                setCurrentModelIndex(modelIndex);
+              } else {
+                // Number = vote for model
+                handleVote(currentComparisonIndex, modelIndex);
+              }
             }
           }
           break;
@@ -236,7 +244,14 @@ function BestOfNEvalsPage() {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [currentComparisonIndex, evals.length, folderNames.length]);
+  }, [
+    currentComparisonIndex,
+    evals.length,
+    folderNames.length,
+    goToNext,
+    goToPrevious,
+    handleVote,
+  ]);
 
   // Add/remove folder input fields
   const addFolderInput = () => {
@@ -306,12 +321,6 @@ function BestOfNEvalsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleVote = (index: number, outcome: Outcome) => {
-    const newOutcomes = [...outcomes];
-    newOutcomes[index] = outcome;
-    setOutcomes(newOutcomes);
   };
 
   const stats = calculateStats();
