@@ -14,7 +14,10 @@
     "build": "npm run build:frontend",
     "build:frontend": "npm --prefix frontend run build",
     "lint:frontend": "npm --prefix frontend run lint",
-    "typecheck:backend": "cd backend && poetry run pyright"
+    "typecheck:backend": "cd backend && poetry run pyright",
+    "oneblock:setup": "bash scripts/oneblock-gemini-local.sh setup",
+    "oneblock:dev": "bash scripts/oneblock-gemini-local.sh dev",
+    "oneblock:generate": "cd backend && poetry run python scripts/generate_oneblock_from_screenshot.py"
   },
   "workspaces": [
     "frontend",
