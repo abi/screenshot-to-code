@@ -7,7 +7,7 @@ import {
 import { FullGenerationSettings } from "./types";
 
 const ERROR_MESSAGE =
-  "Error generating code. Check the Developer Console AND the backend logs for details. Feel free to open a Github issue.";
+  "Error starting generation. Check the browser console and backend logs for details. Make sure a Gemini key is configured if you are running locally.";
 
 const CANCEL_MESSAGE = "Code generation cancelled";
 
@@ -65,6 +65,24 @@ export function generateCode(
       : [];
   };
 
+  const parseResponse = (raw: string): WebSocketResponse | null => {
+    try {
+      const parsed = JSON.parse(raw) as Partial<WebSocketResponse>;
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        typeof parsed.type !== "string" ||
+        typeof parsed.variantIndex !== "number"
+      ) {
+        return null;
+      }
+      return parsed as WebSocketResponse;
+    } catch (error) {
+      console.error("Failed to parse websocket response", error, raw);
+      return null;
+    }
+  };
+
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
 
@@ -76,7 +94,13 @@ export function generateCode(
   });
 
   ws.addEventListener("message", async (event: MessageEvent) => {
-    const response = JSON.parse(event.data) as WebSocketResponse;
+    const response = parseResponse(event.data);
+    if (!response) {
+      toast.error(ERROR_MESSAGE);
+      callbacks.onCancel("request_failed", ERROR_MESSAGE);
+      return;
+    }
+
     if (response.type === "chunk") {
       callbacks.onChange(response.value || "", response.variantIndex);
     } else if (response.type === "status") {
