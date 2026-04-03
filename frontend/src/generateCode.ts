@@ -29,7 +29,7 @@ type WebSocketResponse = {
   value?: string;
   data?: unknown;
   eventId?: string;
-  variantIndex?: number;
+  variantIndex: number;
 };
 
 interface CodeGenerationCallbacks {
@@ -64,9 +64,45 @@ type GeminiGenerateResponse = {
   };
 };
 
+type GenerateDebugPacket = {
+  title: string;
+  message: string;
+  pathUsed: "direct-gemini" | "websocket";
+  request: {
+    generationType: string;
+    inputMode: string;
+    generatedCodeConfig: string;
+    promptTextPreview: string;
+    promptImageCount: number;
+    promptVideoCount: number;
+    hasGeminiKey: boolean;
+  };
+  transport: {
+    currentHost: string;
+    endpoint?: string;
+    wsUrl?: string;
+    httpStatus?: number;
+    httpOk?: boolean;
+    httpStatusText?: string;
+    closeCode?: number;
+    closeReason?: string;
+    receivedAnyMessage?: boolean;
+  };
+  response: {
+    errorMessage?: string;
+    rawResponsePreview?: string;
+    lastWsMessageType?: string;
+    lastWsMessageValue?: string;
+  };
+  state: {
+    currentCodeLength: number;
+  };
+};
+
 const GEMINI_REQUEST_TIMEOUT_MS = 120_000;
 const GEMINI_IMAGE_MAX_DIMENSION = 1600;
 const GEMINI_IMAGE_JPEG_QUALITY = 0.82;
+const DIRECT_GEMINI_MODEL = "gemini-3-flash-preview";
 
 function extractCodeFromResponse(text: string): string {
   const fenced = text.match(/```(?:html|tsx|jsx|vue|css)?\s*([\s\S]*?)```/i);
@@ -146,7 +182,7 @@ function extractGeminiText(json: unknown): string {
   const parts = candidate?.content?.parts;
 
   if (!Array.isArray(parts)) {
-    throw new Error("Gemini did not return content parts.");
+    throw new Error(parsed.error?.message || "Gemini did not return content parts.");
   }
 
   const text = parts
@@ -161,8 +197,83 @@ function extractGeminiText(json: unknown): string {
   return text;
 }
 
-function shouldUseDirectGeminiFallback(params: FullGenerationSettings): boolean {
-  return Boolean(params.geminiApiKey?.trim());
+function buildDebugPacket(
+  params: FullGenerationSettings,
+  extra: {
+    pathUsed: "direct-gemini" | "websocket";
+    endpoint?: string;
+    wsUrl?: string;
+    httpStatus?: number;
+    httpOk?: boolean;
+    httpStatusText?: string;
+    closeCode?: number;
+    closeReason?: string;
+    receivedAnyMessage?: boolean;
+    errorMessage?: string;
+    rawResponsePreview?: string;
+    lastWsMessageType?: string;
+    lastWsMessageValue?: string;
+    currentCodeLength?: number;
+  }
+): GenerateDebugPacket {
+  const currentHost =
+    typeof window !== "undefined" ? window.location.host : "unknown";
+
+  return {
+    title: "Generation failed",
+    message: extra.errorMessage || ERROR_MESSAGE,
+    pathUsed: extra.pathUsed,
+    request: {
+      generationType: params.generationType,
+      inputMode: params.inputMode,
+      generatedCodeConfig: params.generatedCodeConfig,
+      promptTextPreview: (params.prompt.text || "").slice(0, 300),
+      promptImageCount: Array.isArray(params.prompt.images)
+        ? params.prompt.images.length
+        : 0,
+      promptVideoCount: Array.isArray(params.prompt.videos)
+        ? params.prompt.videos.length
+        : 0,
+      hasGeminiKey: Boolean(params.geminiApiKey),
+    },
+    transport: {
+      currentHost,
+      endpoint: extra.endpoint,
+      wsUrl: extra.wsUrl,
+      httpStatus: extra.httpStatus,
+      httpOk: extra.httpOk,
+      httpStatusText: extra.httpStatusText,
+      closeCode: extra.closeCode,
+      closeReason: extra.closeReason,
+      receivedAnyMessage: extra.receivedAnyMessage,
+    },
+    response: {
+      errorMessage: extra.errorMessage,
+      rawResponsePreview: extra.rawResponsePreview?.slice(0, 1500),
+      lastWsMessageType: extra.lastWsMessageType,
+      lastWsMessageValue: extra.lastWsMessageValue,
+    },
+    state: {
+      currentCodeLength: extra.currentCodeLength || 0,
+    },
+  };
+}
+
+function showErrorModal(packet: GenerateDebugPacket) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.alert(JSON.stringify(packet, null, 2));
+  } catch (error) {
+    console.error("Failed to display error modal", error, packet);
+  }
+}
+
+function isRemoteHost(): boolean {
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  return Boolean(hostname && hostname !== "localhost" && hostname !== "127.0.0.1");
 }
 
 async function runDirectGeminiGeneration(
@@ -171,10 +282,19 @@ async function runDirectGeminiGeneration(
 ): Promise<void> {
   const apiKey = params.geminiApiKey;
   if (!apiKey) {
-    throw new Error("Gemini API key is missing.");
+    const packet = buildDebugPacket(params, {
+      pathUsed: "direct-gemini",
+      endpoint:
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent",
+      errorMessage: "Gemini API key is missing.",
+    });
+    showErrorModal(packet);
+    callbacks.onVariantError(0, packet.message);
+    callbacks.onCancel("request_failed", packet.message);
+    return;
   }
 
-  const model = "gemini-2.5-flash";
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${DIRECT_GEMINI_MODEL}:generateContent`;
   const instruction = [
     "You are an expert frontend engineer.",
     getStackInstruction(params.generatedCodeConfig),
@@ -203,10 +323,12 @@ async function runDirectGeminiGeneration(
   }
 
   callbacks.onVariantCount(1);
-  callbacks.onVariantModels([model]);
+  callbacks.onVariantModels([DIRECT_GEMINI_MODEL]);
+
+  let currentCodeLength = 0;
 
   try {
-    callbacks.onStatusUpdate("Preparing image…", 0);
+    callbacks.onStatusUpdate("Preparing request…", 0);
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
       { text: `${instruction}\n\n${userTextParts.join("\n\n")}` },
     ];
@@ -228,27 +350,27 @@ async function runDirectGeminiGeneration(
 
     let response: Response;
     try {
-      response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          signal: controller.signal,
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts,
-              },
-            ],
-            generationConfig: {
-              temperature: 0.2,
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-goog-api-key": apiKey,
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts,
             },
-          }),
-        }
-      );
+          ],
+          generationConfig: {
+            thinkingConfig: {
+              thinkingLevel: "minimal",
+            },
+          },
+        }),
+      });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         throw new Error(
@@ -262,11 +384,24 @@ async function runDirectGeminiGeneration(
       window.clearTimeout(timeout);
     }
 
+    const rawResponseText = await response.text();
+
     let json: unknown;
     try {
-      json = await response.json();
+      json = JSON.parse(rawResponseText);
     } catch {
-      throw new Error("Gemini returned a non-JSON response.");
+      const packet = buildDebugPacket(params, {
+        pathUsed: "direct-gemini",
+        endpoint,
+        httpStatus: response.status,
+        httpOk: response.ok,
+        httpStatusText: response.statusText,
+        errorMessage: "Gemini returned a non-JSON response.",
+        rawResponsePreview: rawResponseText,
+        currentCodeLength,
+      });
+      showErrorModal(packet);
+      throw new Error(packet.message);
     }
 
     if (!response.ok) {
@@ -274,19 +409,47 @@ async function runDirectGeminiGeneration(
         json && typeof json === "object" && "error" in json
           ? ((json as GeminiGenerateResponse).error?.message ?? "Gemini request failed.")
           : "Gemini request failed.";
+      const packet = buildDebugPacket(params, {
+        pathUsed: "direct-gemini",
+        endpoint,
+        httpStatus: response.status,
+        httpOk: response.ok,
+        httpStatusText: response.statusText,
+        errorMessage,
+        rawResponsePreview: rawResponseText,
+        currentCodeLength,
+      });
+      showErrorModal(packet);
       throw new Error(errorMessage);
     }
 
     callbacks.onStatusUpdate("Finishing generation…", 0);
     const text = extractGeminiText(json);
     const code = extractCodeFromResponse(text);
+    currentCodeLength = code.length;
+
+    if (!code.trim()) {
+      const packet = buildDebugPacket(params, {
+        pathUsed: "direct-gemini",
+        endpoint,
+        httpStatus: response.status,
+        httpOk: response.ok,
+        httpStatusText: response.statusText,
+        errorMessage: "Gemini returned empty code.",
+        rawResponsePreview: rawResponseText,
+        currentCodeLength,
+      });
+      showErrorModal(packet);
+      throw new Error(packet.message);
+    }
+
     callbacks.onSetCode(code, 0);
     callbacks.onVariantComplete(0);
     callbacks.onComplete();
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Direct Gemini generation failed.";
-    console.error("Direct Gemini fallback failed", error);
+    console.error("Direct Gemini generation failed", error);
     toast.error(message);
     callbacks.onStatusUpdate(
       message.toLowerCase().includes("timed out")
@@ -294,6 +457,7 @@ async function runDirectGeminiGeneration(
         : "Generation failed.",
       0
     );
+    callbacks.onVariantError(0, message);
     callbacks.onCancel("request_failed", message);
   }
 }
@@ -303,6 +467,11 @@ export function generateCode(
   params: FullGenerationSettings,
   callbacks: CodeGenerationCallbacks
 ) {
+  if (isRemoteHost()) {
+    void runDirectGeminiGeneration(params, callbacks);
+    return;
+  }
+
   const getModels = (data: unknown): string[] => {
     if (!data || typeof data !== "object" || !("models" in data)) {
       return [];
@@ -319,7 +488,8 @@ export function generateCode(
       if (
         typeof parsed !== "object" ||
         parsed === null ||
-        typeof parsed.type !== "string"
+        typeof parsed.type !== "string" ||
+        typeof parsed.variantIndex !== "number"
       ) {
         return null;
       }
@@ -330,17 +500,9 @@ export function generateCode(
     }
   };
 
-  let didFallback = false;
   let receivedAnyMessage = false;
-
-  const startDirectFallback = () => {
-    if (didFallback) {
-      return;
-    }
-    didFallback = true;
-    wsRef.current = null;
-    void runDirectGeminiGeneration(params, callbacks);
-  };
+  let lastWsMessageType = "";
+  let lastWsMessageValue = "";
 
   const wsUrl = `${WS_BACKEND_URL}/generate-code`;
   console.log("Connecting to backend @ ", wsUrl);
@@ -356,34 +518,60 @@ export function generateCode(
     receivedAnyMessage = true;
     const response = parseResponse(event.data);
     if (!response) {
+      const packet = buildDebugPacket(params, {
+        pathUsed: "websocket",
+        wsUrl,
+        receivedAnyMessage,
+        errorMessage: ERROR_MESSAGE,
+        rawResponsePreview:
+          typeof event.data === "string" ? event.data : JSON.stringify(event.data),
+        lastWsMessageType,
+        lastWsMessageValue,
+      });
+      showErrorModal(packet);
       toast.error(ERROR_MESSAGE);
       callbacks.onCancel("request_failed", ERROR_MESSAGE);
       return;
     }
-    const variantIndex = typeof response.variantIndex === "number" ? response.variantIndex : 0;
+
+    lastWsMessageType = response.type;
+    lastWsMessageValue =
+      typeof response.value === "string"
+        ? response.value
+        : JSON.stringify(response.data ?? "");
+
     if (response.type === "chunk") {
-      callbacks.onChange(response.value || "", variantIndex);
+      callbacks.onChange(response.value || "", response.variantIndex);
     } else if (response.type === "status") {
-      callbacks.onStatusUpdate(response.value || "", variantIndex);
+      callbacks.onStatusUpdate(response.value || "", response.variantIndex);
     } else if (response.type === "setCode") {
-      callbacks.onSetCode(response.value || "", variantIndex);
+      callbacks.onSetCode(response.value || "", response.variantIndex);
     } else if (response.type === "variantComplete") {
-      callbacks.onVariantComplete(variantIndex);
+      callbacks.onVariantComplete(response.variantIndex);
     } else if (response.type === "variantError") {
-      callbacks.onVariantError(variantIndex, response.value || "");
+      callbacks.onVariantError(response.variantIndex, response.value || "");
     } else if (response.type === "variantCount") {
       callbacks.onVariantCount(parseInt(response.value || "1"));
     } else if (response.type === "variantModels") {
       callbacks.onVariantModels(getModels(response.data));
     } else if (response.type === "thinking") {
-      callbacks.onThinking(response.value || "", variantIndex, response.eventId);
+      callbacks.onThinking(response.value || "", response.variantIndex, response.eventId);
     } else if (response.type === "assistant") {
-      callbacks.onAssistant(response.value || "", variantIndex, response.eventId);
+      callbacks.onAssistant(response.value || "", response.variantIndex, response.eventId);
     } else if (response.type === "toolStart") {
-      callbacks.onToolStart(response.data, variantIndex, response.eventId);
+      callbacks.onToolStart(response.data, response.variantIndex, response.eventId);
     } else if (response.type === "toolResult") {
-      callbacks.onToolResult(response.data, variantIndex, response.eventId);
+      callbacks.onToolResult(response.data, response.variantIndex, response.eventId);
     } else if (response.type === "error") {
+      const packet = buildDebugPacket(params, {
+        pathUsed: "websocket",
+        wsUrl,
+        receivedAnyMessage,
+        errorMessage: response.value || ERROR_MESSAGE,
+        lastWsMessageType,
+        lastWsMessageValue,
+      });
+      showErrorModal(packet);
       console.error("Error generating code", response.value);
       toast.error(response.value || ERROR_MESSAGE);
     }
@@ -391,17 +579,35 @@ export function generateCode(
 
   ws.addEventListener("close", (event) => {
     console.log("Connection closed", event.code, event.reason);
-    if (!receivedAnyMessage && shouldUseDirectGeminiFallback(params)) {
-      startDirectFallback();
-      return;
-    }
     if (event.code === USER_CLOSE_WEB_SOCKET_CODE) {
       toast.success(CANCEL_MESSAGE);
       callbacks.onCancel("user_cancelled");
     } else if (event.code === APP_ERROR_WEB_SOCKET_CODE) {
+      const packet = buildDebugPacket(params, {
+        pathUsed: "websocket",
+        wsUrl,
+        closeCode: event.code,
+        closeReason: event.reason,
+        receivedAnyMessage,
+        errorMessage: event.reason || ERROR_MESSAGE,
+        lastWsMessageType,
+        lastWsMessageValue,
+      });
+      showErrorModal(packet);
       console.error("Known server error", event);
       callbacks.onCancel("request_failed", event.reason || ERROR_MESSAGE);
     } else if (event.code !== 1000) {
+      const packet = buildDebugPacket(params, {
+        pathUsed: "websocket",
+        wsUrl,
+        closeCode: event.code,
+        closeReason: event.reason,
+        receivedAnyMessage,
+        errorMessage: ERROR_MESSAGE,
+        lastWsMessageType,
+        lastWsMessageValue,
+      });
+      showErrorModal(packet);
       console.error("Unknown server or connection error", event);
       toast.error(ERROR_MESSAGE);
       callbacks.onCancel("connection_error", event.reason || ERROR_MESSAGE);
@@ -411,11 +617,16 @@ export function generateCode(
   });
 
   ws.addEventListener("error", (error) => {
+    const packet = buildDebugPacket(params, {
+      pathUsed: "websocket",
+      wsUrl,
+      receivedAnyMessage,
+      errorMessage: ERROR_MESSAGE,
+      lastWsMessageType,
+      lastWsMessageValue,
+    });
+    showErrorModal(packet);
     console.error("WebSocket error", error);
-    if (!receivedAnyMessage && shouldUseDirectGeminiFallback(params)) {
-      startDirectFallback();
-      return;
-    }
     toast.error(ERROR_MESSAGE);
   });
 }

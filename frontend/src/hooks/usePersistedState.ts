@@ -1,25 +1,41 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 type PersistedState<T> = [T, Dispatch<SetStateAction<T>>];
 
+function readPersistedValue<T>(key: string, defaultValue: T): T {
+  if (typeof window === "undefined") {
+    return defaultValue;
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(key);
+    return storedValue ? (JSON.parse(storedValue) as T) : defaultValue;
+  } catch (error) {
+    console.error(`Failed to parse persisted state for "${key}"`, error);
+
+    try {
+      window.localStorage.removeItem(key);
+    } catch (removeError) {
+      console.error(`Failed to clear persisted state for "${key}"`, removeError);
+    }
+
+    return defaultValue;
+  }
+}
+
 function usePersistedState<T>(defaultValue: T, key: string): PersistedState<T> {
-  const [value, setValue] = useState<T>(() => {
-    const persistedValue = window.localStorage.getItem(key);
-    if (!persistedValue) {
-      return defaultValue;
+  const [value, setValue] = useState<T>(() => readPersistedValue(key, defaultValue));
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
     }
 
     try {
-      return JSON.parse(persistedValue) as T;
+      window.localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
-      console.warn(`Invalid JSON in localStorage for key "${key}". Resetting value.`, error);
-      window.localStorage.removeItem(key);
-      return defaultValue;
+      console.error(`Failed to persist state for "${key}"`, error);
     }
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(key, JSON.stringify(value));
   }, [key, value]);
 
   return [value, setValue];

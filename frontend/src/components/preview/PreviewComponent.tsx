@@ -14,6 +14,56 @@ interface Props {
 const MOBILE_VIEWPORT_WIDTH = 375;
 export const DESKTOP_VIEWPORT_WIDTH = 1366;
 
+const EMPTY_PREVIEW_DOCUMENT = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preview pending</title>
+    <style>
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #fafafa;
+        color: #3f3f46;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .card {
+        max-width: 420px;
+        width: 100%;
+        border: 1px solid #e4e4e7;
+        border-radius: 16px;
+        background: #ffffff;
+        padding: 20px;
+        box-sizing: border-box;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        font-size: 16px;
+        color: #18181b;
+      }
+      p {
+        margin: 10px 0 0;
+        line-height: 1.6;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Preview pending</h1>
+      <p>The preview will appear here once the generated code is ready.</p>
+    </div>
+  </body>
+</html>`;
+
 function PreviewComponent({
   code,
   device,
@@ -23,10 +73,8 @@ function PreviewComponent({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  // Don't update code more often than every 200ms.
   const throttledCode = useThrottle(code, 200);
 
-  // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
   const activeMode = viewMode ?? "fit";
   const handleIframeClick = useCallback((event: MouseEvent) => {
@@ -42,18 +90,14 @@ function PreviewComponent({
     }
   }, []);
 
-  const {
-    inSelectAndEditMode,
-    selectedElement,
-    setSelectedElement,
-  } = useAppStore();
+  const { inSelectAndEditMode, selectedElement, setSelectedElement } =
+    useAppStore();
 
   const inSelectAndEditModeRef = useRef(inSelectAndEditMode);
   useEffect(() => {
     inSelectAndEditModeRef.current = inSelectAndEditMode;
   }, [inSelectAndEditMode]);
 
-  // Handle click events to select elements
   useEffect(() => {
     if (!inSelectAndEditModeRef.current || !clickEvent) {
       return;
@@ -64,25 +108,21 @@ function PreviewComponent({
     const targetElement = clickEvent.target as HTMLElement;
     if (!targetElement) return;
 
-    // Remove highlight from previous element
     if (selectedElement) {
       removeHighlight(selectedElement);
     }
 
-    // Highlight and store the new selected element
     addHighlight(targetElement);
     setSelectedElement(targetElement);
-  }, [clickEvent, setSelectedElement]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [clickEvent, selectedElement, setSelectedElement]);
 
-  // Clean up highlight when exiting select-and-edit mode
   useEffect(() => {
     if (!inSelectAndEditMode && selectedElement) {
       removeHighlight(selectedElement);
       setSelectedElement(null);
     }
-  }, [inSelectAndEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [inSelectAndEditMode, selectedElement, setSelectedElement]);
 
-  // Apply a fixed viewport per device and scale to fit the available pane.
   useEffect(() => {
     const updateScale = () => {
       const wrapper = wrapperRef.current;
@@ -97,7 +137,8 @@ function PreviewComponent({
           activeMode === "fit"
             ? Math.min(1, viewportWidth / DESKTOP_VIEWPORT_WIDTH)
             : 1;
-        const iframeHeight = scaleValue > 0 ? viewportHeight / scaleValue : viewportHeight;
+        const iframeHeight =
+          scaleValue > 0 ? viewportHeight / scaleValue : viewportHeight;
 
         onScaleChange?.(scaleValue);
         iframe.style.width = `${DESKTOP_VIEWPORT_WIDTH}px`;
@@ -153,8 +194,10 @@ function PreviewComponent({
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
-    if (iframe.srcdoc !== throttledCode) {
-      iframe.srcdoc = throttledCode;
+    const nextDocument =
+      throttledCode.trim().length > 0 ? throttledCode : EMPTY_PREVIEW_DOCUMENT;
+    if (iframe.srcdoc !== nextDocument) {
+      iframe.srcdoc = nextDocument;
     }
   }, [throttledCode]);
 
@@ -176,11 +219,9 @@ function PreviewComponent({
           id={`preview-${device}`}
           ref={iframeRef}
           title="Preview"
-          className={classNames(
-            {
-              "border-0": true,
-            }
-          )}
+          className={classNames({
+            "border-0": true,
+          })}
         ></iframe>
       </div>
     </div>
