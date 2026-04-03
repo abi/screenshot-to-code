@@ -4,34 +4,6 @@
 
 ---
 
-
-## 0) ใช้งานแบบเร็วด้วยสคริปต์ที่เพิ่มให้แล้ว
-
-รีโปนี้มีสคริปต์พร้อมใช้ทันที:
-
-```bash
-# เตรียม env + ติดตั้ง dependency ทั้งหมด
-GEMINI_API_KEY=your_google_gemini_api_key npm run oneblock:setup
-
-# รัน backend + frontend พร้อมกัน
-npm run oneblock:dev
-```
-
-สคริปต์จะเขียนค่า `backend/.env` ให้เป็น Gemini-only (`GEMINI_API_KEY` + clear OpenAI/Anthropic key) และใช้พอร์ต `7001/5173` ตามเอกสารนี้
-
-### สร้างไฟล์โปรแกรม (index.html) จาก screenshot ทันที
-
-```bash
-# หลัง setup แล้ว สร้างไฟล์ oneblock HTML จากภาพที่ต้องการ
-GEMINI_API_KEY=your_google_gemini_api_key \
-  npm run oneblock:generate -- --image /absolute/path/to/screenshot.png --output /absolute/path/to/index.html
-```
-
-สคริปต์จะเรียก Gemini โดยตรงและเขียนไฟล์ HTML ที่พร้อมใช้งานจริง 1 ไฟล์ตาม oneblock constraints
-
-
----
-
 ## 1) โครงสร้างที่ต้องใช้ (ตามรีโปปัจจุบัน)
 
 ```text
@@ -255,13 +227,24 @@ curl -f http://localhost:7001/health || curl -f http://localhost:7001/api/health
 ## 11) คำสั่งใช้งานจริงแบบสั้น (copy/run ได้ทันที)
 
 ```bash
-# 1) setup แบบ Gemini-only
-GEMINI_API_KEY=your_google_gemini_api_key npm run oneblock:setup
+# 1) backend env
+cat > backend/.env <<'ENV'
+GEMINI_API_KEY=your_google_gemini_api_key
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+ENV
 
-# 2) run dev ครบทั้ง backend + frontend
-npm run oneblock:dev
+# 2) install
+cd backend && poetry install
+cd ../frontend && yarn
 
-# 3) open app
+# 3) run backend
+cd ../backend && poetry run uvicorn main:app --reload --port 7001
+
+# 4) another terminal: run frontend
+cd /workspace/screenshot-to-code/frontend && yarn dev
+
+# 5) open app
 # http://localhost:5173
 ```
 
