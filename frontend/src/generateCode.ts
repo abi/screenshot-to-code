@@ -64,16 +64,13 @@ type GeminiGenerateResponse = {
   };
 };
 
+const GEMINI_REQUEST_TIMEOUT_MS = 45_000;
+const GEMINI_IMAGE_MAX_DIMENSION = 1600;
+const GEMINI_IMAGE_JPEG_QUALITY = 0.82;
+
 function extractCodeFromResponse(text: string): string {
   const fenced = text.match(/```(?:html|tsx|jsx|vue|css)?\s*([\s\S]*?)```/i);
   return (fenced?.[1] || text).trim();
-}
-
-function getGeminiApiModel(requestedModel: string): string {
-  if (requestedModel.toLowerCase().includes("pro")) {
-    return "gemini-2.5-pro";
-  }
-  return "gemini-2.5-flash";
 }
 
 function getStackInstruction(stack: Stack): string {
@@ -105,6 +102,65 @@ function dataUrlToInlineData(dataUrl: string): { mimeType: string; data: string 
   };
 }
 
+async function resizeImageDataUrl(dataUrl: string): Promise<string> {
+  const source = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not load the selected image."));
+    image.src = dataUrl;
+  });
+
+  const originalWidth = source.naturalWidth || source.width;
+  const originalHeight = source.naturalHeight || source.height;
+  if (!originalWidth || !originalHeight) {
+    throw new Error("Image has invalid dimensions.");
+  }
+
+  const ratio = Math.min(
+    1,
+    GEMINI_IMAGE_MAX_DIMENSION / Math.max(originalWidth, originalHeight)
+  );
+  const targetWidth = Math.max(1, Math.round(originalWidth * ratio));
+  const targetHeight = Math.max(1, Math.round(originalHeight * ratio));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("Could not process image in browser.");
+  }
+
+  context.drawImage(source, 0, 0, targetWidth, targetHeight);
+  return canvas.toDataURL("image/jpeg", GEMINI_IMAGE_JPEG_QUALITY);
+}
+
+function extractGeminiText(json: unknown): string {
+  if (!json || typeof json !== "object") {
+    throw new Error("Gemini returned an invalid response.");
+  }
+
+  const parsed = json as GeminiGenerateResponse;
+  const candidate = parsed.candidates?.[0];
+  const parts = candidate?.content?.parts;
+
+  if (!Array.isArray(parts)) {
+    throw new Error("Gemini did not return content parts.");
+  }
+
+  const text = parts
+    .map((part) => (part && typeof part.text === "string" ? part.text : ""))
+    .join("")
+    .trim();
+
+  if (!text) {
+    throw new Error("Gemini returned an empty response.");
+  }
+
+  return text;
+}
+
 function shouldUseDirectGemini(params: FullGenerationSettings): boolean {
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
   const appIsRemote = Boolean(
@@ -123,7 +179,7 @@ async function runDirectGeminiGeneration(
     throw new Error("Gemini API key is missing.");
   }
 
-  const model = getGeminiApiModel(params.codeGenerationModel);
+  const model = "gemini-2.5-flash";
   const instruction = [
     "You are an expert frontend engineer.",
     getStackInstruction(params.generatedCodeConfig),
@@ -151,61 +207,100 @@ async function runDirectGeminiGeneration(
     userTextParts.push("Recreate the provided screenshot as code.");
   }
 
-  const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
-    { text: `${instruction}\n\n${userTextParts.join("\n\n")}` },
-  ];
-
-  params.prompt.images.forEach((image) => {
-    const inlineData = dataUrlToInlineData(image);
-    if (inlineData) {
-      parts.push({ inlineData });
-    }
-  });
-
   callbacks.onVariantCount(1);
   callbacks.onVariantModels([model]);
-  callbacks.onStatusUpdate("Starting direct Gemini generation...", 0);
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts,
-          },
-        ],
-        generationConfig: {
-          temperature: 0.2,
-        },
-      }),
+  try {
+    callbacks.onStatusUpdate("Preparing image…", 0);
+    const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
+      { text: `${instruction}\n\n${userTextParts.join("\n\n")}` },
+    ];
+
+    const firstImage = params.prompt.images[0];
+    if (firstImage) {
+      const resizedImageDataUrl = await resizeImageDataUrl(firstImage);
+      const inlineData = dataUrlToInlineData(resizedImageDataUrl);
+      if (!inlineData) {
+        throw new Error("Could not prepare image for Gemini.");
+      }
+      parts.push({ inlineData });
     }
-  );
 
-  const json = (await response.json()) as GeminiGenerateResponse;
-  if (!response.ok) {
-    throw new Error(json.error?.message || "Gemini request failed.");
+    callbacks.onStatusUpdate("Sending request…", 0);
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), GEMINI_REQUEST_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts,
+              },
+            ],
+            generationConfig: {
+              temperature: 0.2,
+            },
+          }),
+        }
+      );
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw new Error(
+          `Gemini request timed out after ${Math.round(
+            GEMINI_REQUEST_TIMEOUT_MS / 1000
+          )} seconds. Please try again.`
+        );
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+
+    let json: unknown;
+    try {
+      json = await response.json();
+    } catch {
+      throw new Error("Gemini returned a non-JSON response.");
+    }
+
+    if (!response.ok) {
+      const errorMessage =
+        json && typeof json === "object" && "error" in json
+          ? ((json as GeminiGenerateResponse).error?.message ?? "Gemini request failed.")
+          : "Gemini request failed.";
+      throw new Error(errorMessage);
+    }
+
+    callbacks.onStatusUpdate("Finishing generation…", 0);
+    const text = extractGeminiText(json);
+    const code = extractCodeFromResponse(text);
+    callbacks.onSetCode(code, 0);
+    callbacks.onVariantComplete(0);
+    callbacks.onComplete();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Direct Gemini generation failed.";
+    console.error("Direct Gemini fallback failed", error);
+    toast.error(message);
+    callbacks.onStatusUpdate(
+      message.toLowerCase().includes("timed out")
+        ? "Request timed out."
+        : "Generation failed.",
+      0
+    );
+    callbacks.onCancel("request_failed", message);
   }
-
-  const text =
-    json.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text || "")
-      .join("")
-      .trim() || "";
-
-  if (!text) {
-    throw new Error("Gemini returned an empty response.");
-  }
-
-  const code = extractCodeFromResponse(text);
-  callbacks.onSetCode(code, 0);
-  callbacks.onVariantComplete(0);
-  callbacks.onComplete();
 }
 
 export function generateCode(
@@ -250,12 +345,7 @@ export function generateCode(
     }
     didFallback = true;
     wsRef.current = null;
-    void runDirectGeminiGeneration(params, callbacks).catch((error) => {
-      const message = error instanceof Error ? error.message : ERROR_MESSAGE;
-      console.error("Direct Gemini fallback failed", error);
-      toast.error(message);
-      callbacks.onCancel("request_failed", message);
-    });
+    void runDirectGeminiGeneration(params, callbacks);
   };
 
   if (shouldUseDirectGemini(params)) {
