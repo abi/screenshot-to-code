@@ -1,15 +1,26 @@
 {
-  "name": "screenshot-to-code",
+  "name": "screenshot-to-code-next",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "test": "npm run test:frontend && npm run test:backend",
-    "test:frontend": "cd frontend && yarn test",
-    "test:backend": "cd backend && poetry run pytest"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
-  "workspaces": [
-    "frontend",
-    "backend"
-  ]
+  "dependencies": {
+    "next": "15.2.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.14.1",
+    "@types/react": "19.0.12",
+    "@types/react-dom": "19.0.5",
+    "eslint": "9.23.0",
+    "eslint-config-next": "15.2.4",
+    "tailwindcss": "4.1.1",
+    "typescript": "5.8.2"
+  }
 }
