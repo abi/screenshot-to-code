@@ -29,7 +29,7 @@ type WebSocketResponse = {
   value?: string;
   data?: unknown;
   eventId?: string;
-  variantIndex: number;
+  variantIndex?: number;
 };
 
 interface CodeGenerationCallbacks {
@@ -162,12 +162,7 @@ function extractGeminiText(json: unknown): string {
 }
 
 function shouldUseDirectGeminiFallback(params: FullGenerationSettings): boolean {
-  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-  const appIsRemote = Boolean(
-    hostname && hostname !== "localhost" && hostname !== "127.0.0.1"
-  );
-  const backendLooksLocal = /127\.0\.0\.1|localhost/.test(WS_BACKEND_URL);
-  return Boolean(params.geminiApiKey) && appIsRemote && backendLooksLocal;
+  return Boolean(params.geminiApiKey?.trim());
 }
 
 async function runDirectGeminiGeneration(
@@ -324,8 +319,7 @@ export function generateCode(
       if (
         typeof parsed !== "object" ||
         parsed === null ||
-        typeof parsed.type !== "string" ||
-        typeof parsed.variantIndex !== "number"
+        typeof parsed.type !== "string"
       ) {
         return null;
       }
@@ -366,28 +360,29 @@ export function generateCode(
       callbacks.onCancel("request_failed", ERROR_MESSAGE);
       return;
     }
+    const variantIndex = typeof response.variantIndex === "number" ? response.variantIndex : 0;
     if (response.type === "chunk") {
-      callbacks.onChange(response.value || "", response.variantIndex);
+      callbacks.onChange(response.value || "", variantIndex);
     } else if (response.type === "status") {
-      callbacks.onStatusUpdate(response.value || "", response.variantIndex);
+      callbacks.onStatusUpdate(response.value || "", variantIndex);
     } else if (response.type === "setCode") {
-      callbacks.onSetCode(response.value || "", response.variantIndex);
+      callbacks.onSetCode(response.value || "", variantIndex);
     } else if (response.type === "variantComplete") {
-      callbacks.onVariantComplete(response.variantIndex);
+      callbacks.onVariantComplete(variantIndex);
     } else if (response.type === "variantError") {
-      callbacks.onVariantError(response.variantIndex, response.value || "");
+      callbacks.onVariantError(variantIndex, response.value || "");
     } else if (response.type === "variantCount") {
       callbacks.onVariantCount(parseInt(response.value || "1"));
     } else if (response.type === "variantModels") {
       callbacks.onVariantModels(getModels(response.data));
     } else if (response.type === "thinking") {
-      callbacks.onThinking(response.value || "", response.variantIndex, response.eventId);
+      callbacks.onThinking(response.value || "", variantIndex, response.eventId);
     } else if (response.type === "assistant") {
-      callbacks.onAssistant(response.value || "", response.variantIndex, response.eventId);
+      callbacks.onAssistant(response.value || "", variantIndex, response.eventId);
     } else if (response.type === "toolStart") {
-      callbacks.onToolStart(response.data, response.variantIndex, response.eventId);
+      callbacks.onToolStart(response.data, variantIndex, response.eventId);
     } else if (response.type === "toolResult") {
-      callbacks.onToolResult(response.data, response.variantIndex, response.eventId);
+      callbacks.onToolResult(response.data, variantIndex, response.eventId);
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
       toast.error(response.value || ERROR_MESSAGE);
