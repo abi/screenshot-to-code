@@ -1,0 +1,438 @@
+import toast from "react-hot-toast";
+import { WS_BACKEND_URL } from "./config";
+import {
+  APP_ERROR_WEB_SOCKET_CODE,
+  USER_CLOSE_WEB_SOCKET_CODE,
+} from "./constants";
+import { Stack } from "./lib/stacks";
+import { FullGenerationSettings } from "./types";
+
+const ERROR_MESSAGE =
+  "Error starting generation. Check the browser console and backend logs for details. Make sure a Gemini key is configured if you are running locally.";
+
+const CANCEL_MESSAGE = "Code generation cancelled";
+const DIRECT_GEMINI_TIMEOUT_MS = 45000;
+const DIRECT_GEMINI_IMAGE_MAX_EDGE = 1400;
+const DIRECT_GEMINI_IMAGE_QUALITY = 0.82;
+
+type WebSocketResponse = {
+  type:
+    | "chunk"
+    | "status"
+    | "setCode"
+    | "error"
+    | "variantComplete"
+    | "variantError"
+    | "variantCount"
+    | "variantModels"
+    | "thinking"
+    | "assistant"
+    | "toolStart"
+    | "toolResult";
+  value?: string;
+  data?: unknown;
+  eventId?: string;
+  variantIndex: number;
+};
+
+interface CodeGenerationCallbacks {
+  onChange: (chunk: string, variantIndex: number) => void;
+  onSetCode: (code: string, variantIndex: number) => void;
+  onStatusUpdate: (status: string, variantIndex: number) => void;
+  onVariantComplete: (variantIndex: number) => void;
+  onVariantError: (variantIndex: number, error: string) => void;
+  onVariantCount: (count: number) => void;
+  onVariantModels: (models: string[]) => void;
+  onThinking: (content: string, variantIndex: number, eventId?: string) => void;
+  onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
+  onToolStart: (data: unknown, variantIndex: number, eventId?: string) => void;
+  onToolResult: (data: unknown, variantIndex: number, eventId?: string) => void;
+  onCancel: (
+    reason: "user_cancelled" | "request_failed" | "connection_error",
+    errorMessage?: string
+  ) => void;
+  onComplete: () => void;
+}
+
+type GeminiGenerateResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+    finishReason?: string;
+  }>;
+  error?: {
+    message?: string;
+  };
+};
+
+function extractCodeFromResponse(text: string): string {
+  const fenced = text.match(/```(?:html|tsx|jsx|vue|css)?\s*([\s\S]*?)```/i);
+  return (fenced?.[1] || text).trim();
+}
+
+function getGeminiApiModel(
+  requestedModel: string,
+  hasVisualInput: boolean
+): string {
+  if (hasVisualInput) {
+    return "gemini-2.5-flash";
+  }
+  if (requestedModel.toLowerCase().includes("pro")) {
+    return "gemini-2.5-pro";
+  }
+  return "gemini-2.5-flash";
+}
+
+function getStackInstruction(stack: Stack): string {
+  switch (stack) {
+    case Stack.REACT_TAILWIND:
+      return "Return a single React component file written in TSX with Tailwind classes. Do not include extra explanation.";
+    case Stack.VUE_TAILWIND:
+      return "Return a single Vue SFC using Tailwind classes. Do not include extra explanation.";
+    case Stack.BOOTSTRAP:
+      return "Return a single HTML file that uses Bootstrap classes. Do not include extra explanation.";
+    case Stack.IONIC_TAILWIND:
+      return "Return a single TSX file for Ionic React using Tailwind classes where appropriate. Do not include extra explanation.";
+    case Stack.HTML_CSS:
+      return "Return a single self-contained HTML file with embedded CSS and JS when needed. Do not include extra explanation.";
+    case Stack.HTML_TAILWIND:
+    default:
+      return "Return a single self-contained HTML file that uses Tailwind via CDN. Do not include extra explanation.";
+  }
+}
+
+function dataUrlToInlineData(
+  dataUrl: string
+): { mimeType: string; data: string } | null {
+  const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+  if (!match) {
+    return null;
+  }
+  return {
+    mimeType: match[1],
+    data: match[2],
+  };
+}
+
+function shouldUseDirectGemini(params: FullGenerationSettings): boolean {
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const appIsRemote = Boolean(
+    hostname && hostname !== "localhost" && hostname !== "127.0.0.1"
+  );
+  const backendLooksLocal = /127\.0\.0\.1|localhost/.test(WS_BACKEND_URL);
+  return Boolean(params.geminiApiKey) && appIsRemote && backendLooksLocal;
+}
+
+function loadImage(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Failed to load image for Gemini request."));
+    image.src = dataUrl;
+  });
+}
+
+async function normalizeImageForGemini(dataUrl: string): Promise<string> {
+  if (typeof document === "undefined") {
+    return dataUrl;
+  }
+
+  const image = await loadImage(dataUrl);
+  const longestEdge = Math.max(image.width, image.height);
+  const scale =
+    longestEdge > DIRECT_GEMINI_IMAGE_MAX_EDGE
+      ? DIRECT_GEMINI_IMAGE_MAX_EDGE / longestEdge
+      : 1;
+  const targetWidth = Math.max(1, Math.round(image.width * scale));
+  const targetHeight = Math.max(1, Math.round(image.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return dataUrl;
+  }
+
+  context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+  try {
+    return canvas.toDataURL("image/jpeg", DIRECT_GEMINI_IMAGE_QUALITY);
+  } catch {
+    return dataUrl;
+  }
+}
+
+async function prepareImagesForGemini(images: string[]): Promise<string[]> {
+  const limitedImages = images.slice(0, 1);
+  return Promise.all(
+    limitedImages.map(async (image) => {
+      try {
+        return await normalizeImageForGemini(image);
+      } catch (error) {
+        console.error("Failed to normalize image for Gemini", error);
+        return image;
+      }
+    })
+  );
+}
+
+async function runDirectGeminiGeneration(
+  params: FullGenerationSettings,
+  callbacks: CodeGenerationCallbacks
+): Promise<void> {
+  const apiKey = params.geminiApiKey;
+  if (!apiKey) {
+    throw new Error("Gemini API key is missing.");
+  }
+
+  const preparedImages = await prepareImagesForGemini(params.prompt.images);
+  const hasVisualInput = preparedImages.length > 0;
+  const model = getGeminiApiModel(params.codeGenerationModel, hasVisualInput);
+  const instruction = [
+    "You are an expert frontend engineer.",
+    getStackInstruction(params.generatedCodeConfig),
+    "Match the provided screenshot or prompt as closely as possible.",
+    "Make the output responsive and production-like.",
+    "Return only the code for the requested file.",
+  ].join(" ");
+
+  const userTextParts: string[] = [];
+  if (params.generationType === "update") {
+    userTextParts.push("Update the existing implementation based on the user's request.");
+    if (params.fileState?.content) {
+      userTextParts.push("Current code:");
+      userTextParts.push(params.fileState.content);
+    }
+  } else {
+    userTextParts.push("Create a fresh implementation from the provided input.");
+  }
+
+  if (params.prompt.text?.trim()) {
+    userTextParts.push(`User request: ${params.prompt.text.trim()}`);
+  }
+
+  if (!params.prompt.text?.trim() && hasVisualInput) {
+    userTextParts.push("Recreate the provided screenshot as code.");
+  }
+
+  const parts: Array<{
+    text?: string;
+    inlineData?: { mimeType: string; data: string };
+  }> = [{ text: `${instruction}\n\n${userTextParts.join("\n\n")}` }];
+
+  preparedImages.forEach((image) => {
+    const inlineData = dataUrlToInlineData(image);
+    if (inlineData) {
+      parts.push({ inlineData });
+    }
+  });
+
+  callbacks.onVariantCount(1);
+  callbacks.onVariantModels([model]);
+  callbacks.onStatusUpdate(
+    hasVisualInput
+      ? "Preparing image for Gemini..."
+      : "Starting direct Gemini generation...",
+    0
+  );
+
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => {
+    controller.abort("Gemini request timed out.");
+  }, DIRECT_GEMINI_TIMEOUT_MS);
+
+  try {
+    callbacks.onStatusUpdate("Sending request to Gemini...", 0);
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
+        apiKey
+      )}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts,
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+          },
+        }),
+      }
+    );
+
+    const json = (await response.json()) as GeminiGenerateResponse;
+    if (!response.ok) {
+      throw new Error(json.error?.message || "Gemini request failed.");
+    }
+
+    const text =
+      json.candidates?.[0]?.content?.parts
+        ?.map((part) => part.text || "")
+        .join("")
+        .trim() || "";
+
+    if (!text) {
+      throw new Error("Gemini returned an empty response.");
+    }
+
+    callbacks.onStatusUpdate("Finishing generation...", 0);
+    const code = extractCodeFromResponse(text);
+    callbacks.onSetCode(code, 0);
+    callbacks.onVariantComplete(0);
+    callbacks.onComplete();
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(
+        "Gemini request timed out. Try a smaller screenshot or retry once."
+      );
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+export function generateCode(
+  wsRef: React.MutableRefObject<WebSocket | null>,
+  params: FullGenerationSettings,
+  callbacks: CodeGenerationCallbacks
+) {
+  const getModels = (data: unknown): string[] => {
+    if (!data || typeof data !== "object" || !("models" in data)) {
+      return [];
+    }
+    const models = (data as { models?: unknown }).models;
+    return Array.isArray(models)
+      ? models.filter((model): model is string => typeof model === "string")
+      : [];
+  };
+
+  const parseResponse = (raw: string): WebSocketResponse | null => {
+    try {
+      const parsed = JSON.parse(raw) as Partial<WebSocketResponse>;
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        typeof parsed.type !== "string" ||
+        typeof parsed.variantIndex !== "number"
+      ) {
+        return null;
+      }
+      return parsed as WebSocketResponse;
+    } catch (error) {
+      console.error("Failed to parse websocket response", error, raw);
+      return null;
+    }
+  };
+
+  let didFallback = false;
+  let receivedAnyMessage = false;
+
+  const startDirectFallback = () => {
+    if (didFallback) {
+      return;
+    }
+    didFallback = true;
+    wsRef.current = null;
+    void runDirectGeminiGeneration(params, callbacks).catch((error) => {
+      const message = error instanceof Error ? error.message : ERROR_MESSAGE;
+      console.error("Direct Gemini fallback failed", error);
+      toast.error(message);
+      callbacks.onCancel("request_failed", message);
+    });
+  };
+
+  if (shouldUseDirectGemini(params)) {
+    startDirectFallback();
+    return;
+  }
+
+  const wsUrl = `${WS_BACKEND_URL}/generate-code`;
+  console.log("Connecting to backend @ ", wsUrl);
+
+  const ws = new WebSocket(wsUrl);
+  wsRef.current = ws;
+
+  ws.addEventListener("open", () => {
+    ws.send(JSON.stringify(params));
+  });
+
+  ws.addEventListener("message", async (event: MessageEvent) => {
+    receivedAnyMessage = true;
+    const response = parseResponse(event.data);
+    if (!response) {
+      toast.error(ERROR_MESSAGE);
+      callbacks.onCancel("request_failed", ERROR_MESSAGE);
+      return;
+    }
+    if (response.type === "chunk") {
+      callbacks.onChange(response.value || "", response.variantIndex);
+    } else if (response.type === "status") {
+      callbacks.onStatusUpdate(response.value || "", response.variantIndex);
+    } else if (response.type === "setCode") {
+      callbacks.onSetCode(response.value || "", response.variantIndex);
+    } else if (response.type === "variantComplete") {
+      callbacks.onVariantComplete(response.variantIndex);
+    } else if (response.type === "variantError") {
+      callbacks.onVariantError(response.variantIndex, response.value || "");
+    } else if (response.type === "variantCount") {
+      callbacks.onVariantCount(parseInt(response.value || "1"));
+    } else if (response.type === "variantModels") {
+      callbacks.onVariantModels(getModels(response.data));
+    } else if (response.type === "thinking") {
+      callbacks.onThinking(response.value || "", response.variantIndex, response.eventId);
+    } else if (response.type === "assistant") {
+      callbacks.onAssistant(response.value || "", response.variantIndex, response.eventId);
+    } else if (response.type === "toolStart") {
+      callbacks.onToolStart(response.data, response.variantIndex, response.eventId);
+    } else if (response.type === "toolResult") {
+      callbacks.onToolResult(response.data, response.variantIndex, response.eventId);
+    } else if (response.type === "error") {
+      console.error("Error generating code", response.value);
+      toast.error(response.value || ERROR_MESSAGE);
+    }
+  });
+
+  ws.addEventListener("close", (event) => {
+    console.log("Connection closed", event.code, event.reason);
+    if (!receivedAnyMessage && params.geminiApiKey) {
+      startDirectFallback();
+      return;
+    }
+    if (event.code === USER_CLOSE_WEB_SOCKET_CODE) {
+      toast.success(CANCEL_MESSAGE);
+      callbacks.onCancel("user_cancelled");
+    } else if (event.code === APP_ERROR_WEB_SOCKET_CODE) {
+      console.error("Known server error", event);
+      callbacks.onCancel("request_failed", event.reason || ERROR_MESSAGE);
+    } else if (event.code !== 1000) {
+      console.error("Unknown server or connection error", event);
+      toast.error(ERROR_MESSAGE);
+      callbacks.onCancel("connection_error", event.reason || ERROR_MESSAGE);
+    } else {
+      callbacks.onComplete();
+    }
+  });
+
+  ws.addEventListener("error", (error) => {
+    console.error("WebSocket error", error);
+    if (!receivedAnyMessage && params.geminiApiKey) {
+      startDirectFallback();
+      return;
+    }
+    toast.error(ERROR_MESSAGE);
+  });
+}
