@@ -21,7 +21,6 @@
     "eslint": "9.23.0",
     "eslint-config-next": "15.2.4",
     "tailwindcss": "4.1.1",
-    "typescript": "5.8.2",
-    "@tailwindcss/postcss": "4.1.1"
+    "typescript": "5.8.2"
   }
 }
