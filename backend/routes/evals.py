@@ -17,7 +17,28 @@ from fs_logging.openai_input_compare import (
     format_openai_input_comparison,
 )
 
-router = APIRouter()
+import secrets
+from fastapi import Depends, Header
+from config import EVALS_API_KEY
+
+
+def verify_api_key(x_api_key: str = Header(None)) -> None:
+    """Enforce API key authentication for eval endpoints.
+
+    Authentication is only active when the EVALS_API_KEY environment variable
+    is set.  Callers must supply a matching X-Api-Key request header.
+    Uses a timing-safe comparison to prevent timing-based key enumeration.
+    """
+    if EVALS_API_KEY:
+        if x_api_key is None or not secrets.compare_digest(x_api_key, EVALS_API_KEY):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or missing API key",
+                headers={"WWW-Authenticate": "ApiKey"},
+            )
+
+
+router = APIRouter(dependencies=[Depends(verify_api_key)])
 
 # Update this if the number of outputs generated per input changes
 N = 1

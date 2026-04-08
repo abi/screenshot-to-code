@@ -19,3 +19,7 @@ DEBUG_DIR = os.environ.get("DEBUG_DIR", "")
 # Set to True when running in production (on the hosted version)
 # Used as a feature flag to enable or disable certain features
 IS_PROD = os.environ.get("IS_PROD", False)
+
+# Optional API key to protect eval endpoints from unauthorized access.
+# When set, all /eval* routes require an X-Api-Key header matching this value.
+EVALS_API_KEY = os.environ.get("EVALS_API_KEY", None)
