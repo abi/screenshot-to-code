@@ -19,3 +19,6 @@ DEBUG_DIR = os.environ.get("DEBUG_DIR", "")
 # Set to True when running in production (on the hosted version)
 # Used as a feature flag to enable or disable certain features
 IS_PROD = os.environ.get("IS_PROD", False)
+
+# Secret key required to access eval endpoints (set to enable auth)
+EVALS_SECRET = os.environ.get("EVALS_SECRET", None)
