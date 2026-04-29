@@ -3,7 +3,9 @@ import asyncio
 import json
 from fastapi import APIRouter, Query, Request, HTTPException
 from fastapi.responses import StreamingResponse
+from fastapi import Depends, Header
 from pydantic import BaseModel
+from config import EVALS_SECRET
 from evals.utils import image_to_data_url
 from evals.config import EVALS_DIR
 from typing import Set
@@ -17,7 +19,13 @@ from fs_logging.openai_input_compare import (
     format_openai_input_comparison,
 )
 
-router = APIRouter()
+def _require_evals_secret(x_evals_secret: str = Header(default="")) -> None:
+    """Reject requests when EVALS_SECRET is configured and the header doesn't match."""
+    if EVALS_SECRET and x_evals_secret != EVALS_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+router = APIRouter(dependencies=[Depends(_require_evals_secret)])
 
 # Update this if the number of outputs generated per input changes
 N = 1
