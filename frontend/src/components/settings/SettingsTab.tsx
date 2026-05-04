@@ -2,6 +2,10 @@ import React from "react";
 import { AppTheme, EditorTheme, Settings } from "../../types";
 import { capitalize } from "../../lib/utils";
 import {
+  CODE_GENERATION_MODEL_DESCRIPTIONS,
+  CodeGenerationModel,
+} from "../../lib/models";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -100,6 +104,46 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">
+              <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                Model
+              </h2>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <span className="text-sm text-gray-700 dark:text-zinc-300">
+                  Code Generation Model
+                </span>
+                <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
+                  Choose the model used for page generation and edits.
+                </p>
+              </div>
+              <Select
+                name="code-generation-model"
+                value={settings.codeGenerationModel}
+                onValueChange={(value) =>
+                  setSettings((s) => ({
+                    ...s,
+                    codeGenerationModel: value as CodeGenerationModel,
+                  }))
+                }
+              >
+                <SelectTrigger className="w-[240px]">
+                  {CODE_GENERATION_MODEL_DESCRIPTIONS[settings.codeGenerationModel]
+                    ?.name || settings.codeGenerationModel}
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(CodeGenerationModel).map((model) => (
+                    <SelectItem key={model} value={model}>
+                      {CODE_GENERATION_MODEL_DESCRIPTIONS[model]?.name || model}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

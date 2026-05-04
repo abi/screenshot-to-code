@@ -34,6 +34,10 @@ import SettingsTab from "./components/settings/SettingsTab";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 
+function isOpenAIModel(model: CodeGenerationModel): boolean {
+  return model.startsWith("gpt-");
+}
+
 function App() {
   const {
     // Inputs
@@ -90,7 +94,7 @@ function App() {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
-      codeGenerationModel: CodeGenerationModel.CLAUDE_4_5_OPUS_2025_11_01,
+      codeGenerationModel: CodeGenerationModel.GPT_5_3_CODEX_HIGH,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
@@ -127,6 +131,40 @@ function App() {
       }));
     }
   }, [settings.generatedCodeConfig, setSettings]);
+
+  useEffect(() => {
+    if (!settings.codeGenerationModel) {
+      setSettings((prev) => ({
+        ...prev,
+        codeGenerationModel: CodeGenerationModel.GPT_5_3_CODEX_HIGH,
+      }));
+    }
+  }, [settings.codeGenerationModel, setSettings]);
+
+  useEffect(() => {
+    const hasOpenAIConfig = Boolean(settings.openAiApiKey || settings.openAiBaseURL);
+    const hasOtherProviderKeys = Boolean(
+      settings.anthropicApiKey || settings.geminiApiKey
+    );
+
+    if (
+      hasOpenAIConfig &&
+      !hasOtherProviderKeys &&
+      !isOpenAIModel(settings.codeGenerationModel)
+    ) {
+      setSettings((prev) => ({
+        ...prev,
+        codeGenerationModel: CodeGenerationModel.GPT_5_3_CODEX_HIGH,
+      }));
+    }
+  }, [
+    settings.openAiApiKey,
+    settings.openAiBaseURL,
+    settings.anthropicApiKey,
+    settings.geminiApiKey,
+    settings.codeGenerationModel,
+    setSettings,
+  ]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

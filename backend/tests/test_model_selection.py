@@ -25,7 +25,7 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_2_CODEX_HIGH,
+            Llm.GPT_5_3_CODEX_HIGH,
             Llm.CLAUDE_OPUS_4_6,
             Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
         ]
@@ -110,7 +110,7 @@ class TestModelSelectionOpenAIAnthropic:
 
     @pytest.mark.asyncio
     async def test_openai_anthropic(self):
-        """OpenAI + Anthropic: Claude Opus 4.6, GPT 5.2 Codex (high/medium), cycling"""
+        """OpenAI + Anthropic: Claude Opus 4.6, GPT 5.3 Codex (high/medium), cycling"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -121,8 +121,8 @@ class TestModelSelectionOpenAIAnthropic:
 
         expected = [
             Llm.CLAUDE_OPUS_4_6,
-            Llm.GPT_5_2_CODEX_HIGH,
-            Llm.GPT_5_2_CODEX_MEDIUM,
+            Llm.GPT_5_3_CODEX_HIGH,
+            Llm.GPT_5_3_CODEX_MEDIUM,
             Llm.CLAUDE_OPUS_4_6,
         ]
         assert models == expected
@@ -166,7 +166,7 @@ class TestModelSelectionOpenAIOnly:
 
     @pytest.mark.asyncio
     async def test_openai_only(self):
-        """OpenAI only: GPT 5.2 Codex (high/medium) only"""
+        """OpenAI only: GPT 5.3 Codex (high/medium) only"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -176,10 +176,10 @@ class TestModelSelectionOpenAIOnly:
         )
 
         expected = [
-            Llm.GPT_5_2_CODEX_HIGH,
-            Llm.GPT_5_2_CODEX_MEDIUM,
-            Llm.GPT_5_2_CODEX_HIGH,
-            Llm.GPT_5_2_CODEX_MEDIUM,
+            Llm.GPT_5_3_CODEX_HIGH,
+            Llm.GPT_5_3_CODEX_MEDIUM,
+            Llm.GPT_5_3_CODEX_HIGH,
+            Llm.GPT_5_3_CODEX_MEDIUM,
         ]
         assert models == expected
 
