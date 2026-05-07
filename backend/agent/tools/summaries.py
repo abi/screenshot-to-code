@@ -69,4 +69,21 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
             "index": args.get("index"),
         }
 
+    if tool_call.name == "annotate":
+        annotations = args.get("annotations") or []
+        if isinstance(annotations, list):
+            return {
+                "count": len(annotations),
+                "annotations": [
+                    {
+                        "selector": ensure_str(a.get("selector")),
+                        "description": summarize_text(
+                            ensure_str(a.get("description")), 160
+                        ),
+                    }
+                    for a in annotations
+                    if isinstance(a, dict)
+                ],
+            }
+
     return args
