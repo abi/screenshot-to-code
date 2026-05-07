@@ -30,6 +30,8 @@ class Llm(Enum):
     GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)"
     GEMINI_3_1_PRO_PREVIEW_MEDIUM = "gemini-3.1-pro-preview (medium thinking)"
     GEMINI_3_1_PRO_PREVIEW_LOW = "gemini-3.1-pro-preview (low thinking)"
+    # LiteLLM - any model via unified SDK (set LITELLM_MODEL env var)
+    LITELLM_CUSTOM = "litellm-custom"
 
 
 class Completion(TypedDict):
@@ -67,12 +69,15 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GEMINI_3_1_PRO_PREVIEW_HIGH: "gemini",
     Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM: "gemini",
     Llm.GEMINI_3_1_PRO_PREVIEW_LOW: "gemini",
+    # LiteLLM
+    Llm.LITELLM_CUSTOM: "litellm",
 }
 
 # Convenience sets for membership checks
 OPENAI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "openai"}
 ANTHROPIC_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "anthropic"}
 GEMINI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "gemini"}
+LITELLM_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "litellm"}
 
 OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
     Llm.GPT_4_1_2025_04_14: {"api_name": "gpt-4.1-2025-04-14"},

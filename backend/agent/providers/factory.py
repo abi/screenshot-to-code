@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from anthropic import AsyncAnthropic
@@ -8,9 +9,10 @@ from openai.types.chat import ChatCompletionMessageParam
 from agent.providers.anthropic import AnthropicProviderSession, serialize_anthropic_tools
 from agent.providers.base import ProviderSession
 from agent.providers.gemini import GeminiProviderSession, serialize_gemini_tools
+from agent.providers.litellm import LiteLLMProviderSession, serialize_litellm_tools
 from agent.providers.openai import OpenAIProviderSession, serialize_openai_tools
 from agent.tools import canonical_tool_definitions
-from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
+from llm import ANTHROPIC_MODELS, GEMINI_MODELS, LITELLM_MODELS, OPENAI_MODELS, Llm
 
 
 def create_provider_session(
@@ -60,6 +62,16 @@ def create_provider_session(
             model=model,
             prompt_messages=prompt_messages,
             tools=serialize_gemini_tools(canonical_tools),
+        )
+
+    if model in LITELLM_MODELS:
+        litellm_model = os.environ.get("LITELLM_MODEL", "openai/gpt-4o")
+        litellm_api_key = os.environ.get("LITELLM_API_KEY")
+        return LiteLLMProviderSession(
+            model=litellm_model,
+            prompt_messages=prompt_messages,
+            tools=serialize_litellm_tools(canonical_tools),
+            api_key=litellm_api_key,
         )
 
     raise ValueError(f"Unsupported model: {model.value}")
