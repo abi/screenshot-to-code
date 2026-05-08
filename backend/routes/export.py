@@ -133,6 +133,16 @@ def add_candidate(candidates: dict[str, AssetCandidate], raw_url: str) -> None:
     candidates[url] = AssetCandidate(url=url, extension_hint=extension_from_url(url))
 
 
+def display_asset_url(url: str) -> str:
+    parsed = urlparse(url)
+    if not parsed.netloc:
+        return url[:120]
+    path = parsed.path
+    if len(path) > 80:
+        path = f"{path[:36]}...{path[-36:]}"
+    return f"{parsed.scheme}://{parsed.netloc}{path}"
+
+
 def collect_asset_candidates(soup: BeautifulSoup) -> list[AssetCandidate]:
     candidates: dict[str, AssetCandidate] = {}
 
@@ -247,6 +257,10 @@ async def fetch_remote_asset(
 
     for _ in range(MAX_REDIRECTS + 1):
         if not await is_public_http_url(current_url):
+            print(
+                "Export asset skipped: "
+                f"reason=non_public_url url={display_asset_url(current_url)}"
+            )
             return None
 
         response = await client.get(current_url, follow_redirects=False)
@@ -255,16 +269,32 @@ async def fetch_remote_asset(
 
         location = response.headers.get("location")
         if not location:
+            print(
+                "Export asset skipped: "
+                f"reason=redirect_without_location url={display_asset_url(current_url)}"
+            )
             return None
         current_url = urljoin(current_url, location)
 
     if response is None or response.is_redirect:
+        print(
+            "Export asset skipped: "
+            f"reason=too_many_redirects url={display_asset_url(fetch_url)}"
+        )
         return None
     if not response.is_success:
+        print(
+            "Export asset skipped: "
+            f"reason=http_status_{response.status_code} url={display_asset_url(current_url)}"
+        )
         return None
 
     content = response.content
     if len(content) > MAX_ASSET_BYTES:
+        print(
+            "Export asset skipped: "
+            f"reason=too_large bytes={len(content)} url={display_asset_url(current_url)}"
+        )
         return None
 
     content_type = response.headers.get("content-type", "")
@@ -273,6 +303,11 @@ async def fetch_remote_asset(
         and not content_type.lower().startswith("image/")
         and extension_hint == "bin"
     ):
+        print(
+            "Export asset skipped: "
+            f"reason=non_image_content_type contentType={content_type} "
+            f"url={display_asset_url(current_url)}"
+        )
         return None
 
     return content, extension_from_mime_type(content_type)
@@ -286,6 +321,10 @@ async def fetch_asset(
 ) -> ExportedAsset | None:
     fetch_url = resolve_fetch_url(candidate.url, base_url)
     if not fetch_url:
+        print(
+            "Export asset skipped: "
+            f"reason=unresolved_relative_url url={display_asset_url(candidate.url)}"
+        )
         return None
 
     try:
@@ -295,7 +334,11 @@ async def fetch_asset(
             decoded = await fetch_remote_asset(
                 client, fetch_url, candidate.extension_hint
             )
-    except Exception:
+    except Exception as exc:
+        print(
+            "Export asset skipped: "
+            f"reason={type(exc).__name__} url={display_asset_url(fetch_url)}"
+        )
         return None
 
     if not decoded:
@@ -406,6 +449,11 @@ async def export_code(request: ExportRequest) -> Response:
         rewrite_html_assets(soup, asset_path_by_url)
 
     zip_content = create_project_zip(str(soup), assets)
+    print(
+        "Export complete: "
+        f"candidates={len(candidates)} assets={len(assets)} "
+        f"skipped={len(candidates) - len(assets)} responseBytes={len(zip_content)}"
+    )
     return Response(
         content=zip_content,
         media_type="application/zip",
