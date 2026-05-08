@@ -51,6 +51,7 @@ MIME_EXTENSION_MAP = {
 }
 
 CSS_URL_RE = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.IGNORECASE)
+RAW_URL_RE = re.compile(r"https?://[^\s'\"<>\\)]+")
 MAX_ASSETS = 50
 MAX_ASSET_BYTES = 20 * 1024 * 1024
 MAX_REDIRECTS = 5
@@ -133,6 +134,16 @@ def add_candidate(candidates: dict[str, AssetCandidate], raw_url: str) -> None:
     candidates[url] = AssetCandidate(url=url, extension_hint=extension_from_url(url))
 
 
+def add_script_url_candidate(
+    candidates: dict[str, AssetCandidate], raw_url: str
+) -> None:
+    url = raw_url.rstrip(".,;:")
+    parsed = urlparse(url)
+    if parsed.hostname != "replicate.delivery" and extension_from_url(url) == "bin":
+        return
+    add_candidate(candidates, url)
+
+
 def display_asset_url(url: str) -> str:
     parsed = urlparse(url)
     if not parsed.netloc:
@@ -171,6 +182,13 @@ def collect_asset_candidates(soup: BeautifulSoup) -> list[AssetCandidate]:
         if style:
             for url in extract_css_urls(style):
                 add_candidate(candidates, url)
+
+    for script_element in soup.select("script"):
+        script_text = script_element.string
+        if not isinstance(script_text, str):
+            continue
+        for match in RAW_URL_RE.finditer(script_text):
+            add_script_url_candidate(candidates, match.group(0))
 
     return list(candidates.values())[:MAX_ASSETS]
 
@@ -412,6 +430,13 @@ def rewrite_html_assets(soup: BeautifulSoup, asset_path_by_url: dict[str, str]) 
             element["style"] = rewrite_css_urls(style, asset_path_by_url)
 
 
+def rewrite_raw_asset_urls(index_html: str, asset_path_by_url: dict[str, str]) -> str:
+    for original_url, asset_path in asset_path_by_url.items():
+        index_html = index_html.replace(original_url, asset_path)
+        index_html = index_html.replace(original_url.replace("/", "\\/"), asset_path)
+    return index_html
+
+
 def create_project_zip(index_html: str, assets: Iterable[ExportedAsset]) -> bytes:
     buffer = BytesIO()
     with ZipFile(buffer, "w", ZIP_DEFLATED) as zip_file:
@@ -448,7 +473,8 @@ async def export_code(request: ExportRequest) -> Response:
     if asset_path_by_url:
         rewrite_html_assets(soup, asset_path_by_url)
 
-    zip_content = create_project_zip(str(soup), assets)
+    index_html = rewrite_raw_asset_urls(str(soup), asset_path_by_url)
+    zip_content = create_project_zip(index_html, assets)
     print(
         "Export complete: "
         f"candidates={len(candidates)} assets={len(assets)} "

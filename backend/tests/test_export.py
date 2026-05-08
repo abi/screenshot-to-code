@@ -1,6 +1,7 @@
 from io import BytesIO
 from zipfile import ZipFile
 
+import httpx
 import pytest
 
 from routes.export import ExportRequest, export_code
@@ -35,6 +36,43 @@ async def test_export_code_rewrites_data_url_images_into_zip_assets() -> None:
         assert 'url("assets/image-2.svg")' in index_html
         assert archive.read("assets/image-1.png") == b"\x89PNG\r\n\x1a\n"
         assert archive.read("assets/image-2.svg").startswith(b"<svg")
+
+
+@pytest.mark.asyncio
+async def test_export_code_rewrites_script_image_urls_into_zip_assets(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    image_url = "https://replicate.delivery/example/output.png"
+    code = f"""
+    <html>
+      <body>
+        <div id="root"></div>
+        <script type="text/babel">
+          function App() {{
+            return <img src="{image_url}" />;
+          }}
+        </script>
+      </body>
+    </html>
+    """
+
+    async def mock_fetch_remote_asset(
+        _client: httpx.AsyncClient, fetch_url: str, extension_hint: str
+    ) -> tuple[bytes, str] | None:
+        assert fetch_url == image_url
+        assert extension_hint == "png"
+        return b"\x89PNG\r\n\x1a\n", "png"
+
+    monkeypatch.setattr("routes.export.fetch_remote_asset", mock_fetch_remote_asset)
+
+    response = await export_code(ExportRequest(code=code))
+
+    with ZipFile(BytesIO(response.body)) as archive:
+        assert sorted(archive.namelist()) == ["assets/image-1.png", "index.html"]
+        index_html = archive.read("index.html").decode("utf-8")
+        assert image_url not in index_html
+        assert 'src="assets/image-1.png"' in index_html
+        assert archive.read("assets/image-1.png") == b"\x89PNG\r\n\x1a\n"
 
 
 @pytest.mark.asyncio
