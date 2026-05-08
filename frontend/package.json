@@ -46,7 +46,6 @@
     "codemirror": "^6.0.1",
     "copy-to-clipboard": "^3.3.3",
     "date-fns": "^4.1.0",
-    "fflate": "^0.8.2",
     "html2canvas": "^1.4.1",
     "logrocket": "^11.0.0",
     "nanoid": "^5.0.7",
