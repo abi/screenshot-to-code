@@ -15,7 +15,7 @@ Testing policy:
 
 ## Frontend
 
-- Frontend: `cd frontend && yarn lint`
+- Frontend: `cd frontend && pnpm lint`
 
 If changes touch both, run both sets.
 

@@ -22,7 +22,8 @@ export interface Settings {
   codeGenerationModel: CodeGenerationModel;
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
-  anthropicApiKey: string | null; // Added property for anthropic API key
+  anthropicApiKey: string | null;
+  geminiApiKey: string | null;
 }
 
 export enum AppState {

@@ -1,3 +1,11 @@
+<p align="center">
+  <a href="https://github.com/abi/lilo">
+    <img src="https://raw.githubusercontent.com/abi/lilo/main/frontend/public/readme-logo.png" alt="Sponsored by Lilo" width="180" />
+  </a>
+  <br />
+  Sponsored by <a href="https://github.com/abi/lilo">Lilo</a>
+</p>
+
 # screenshot-to-code
 
 A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. Now supporting Gemini 3 and Claude Opus 4.5!
