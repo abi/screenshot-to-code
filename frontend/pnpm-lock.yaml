@@ -11,9 +11,21 @@ importers:
       '@clerk/clerk-react':
         specifier: 5.4.2
         version: 5.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@codemirror/commands':
+        specifier: 6.10.3
+        version: 6.10.3
       '@codemirror/lang-html':
         specifier: ^6.4.6
         version: 6.4.11
+      '@codemirror/language':
+        specifier: 6.12.3
+        version: 6.12.3
+      '@codemirror/state':
+        specifier: 6.6.0
+        version: 6.6.0
+      '@codemirror/view':
+        specifier: 6.41.1
+        version: 6.41.1
       '@intercom/messenger-js-sdk':
         specifier: ^0.0.11
         version: 0.0.11
