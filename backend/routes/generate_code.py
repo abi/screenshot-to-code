@@ -5,6 +5,7 @@ import traceback
 from typing import Callable, Awaitable
 from fastapi import APIRouter, WebSocket
 import openai
+from starlette.websockets import WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from config import (
     ANTHROPIC_API_KEY,
@@ -202,7 +203,7 @@ class WebSocketCommunicator:
             try:
                 await self.websocket.send_json({"type": "error", "value": message})
                 await self.websocket.close(APP_ERROR_WEB_SOCKET_CODE)
-            except (ConnectionClosedOK, ConnectionClosedError):
+            except (ConnectionClosedOK, ConnectionClosedError, RuntimeError, WebSocketDisconnect):
                 print("WebSocket already closed by client")
             self.is_closed = True
 
@@ -217,8 +218,8 @@ class WebSocketCommunicator:
         if not self.is_closed:
             try:
                 await self.websocket.close()
-            except (ConnectionClosedOK, ConnectionClosedError):
-                pass  # Already closed by client
+            except (ConnectionClosedOK, ConnectionClosedError, RuntimeError, WebSocketDisconnect):
+                pass  # Already closed by client or ASGI layer
             self.is_closed = True
 
 
