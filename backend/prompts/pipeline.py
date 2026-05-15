@@ -17,6 +17,7 @@ async def build_prompt_messages(
     history: list[PromptHistoryMessage],
     file_state: dict[str, str] | None = None,
     image_generation_enabled: bool = True,
+    design_system: str | None = None,
 ) -> Prompt:
     plan = derive_prompt_construction_plan(
         stack=stack,
@@ -32,6 +33,7 @@ async def build_prompt_messages(
             stack=stack,
             history=history,
             image_generation_enabled=image_generation_enabled,
+            design_system=design_system,
         )
     if strategy == "update_from_file_snapshot":
         assert file_state is not None
@@ -40,10 +42,12 @@ async def build_prompt_messages(
             prompt=prompt,
             file_state=file_state,
             image_generation_enabled=image_generation_enabled,
+            design_system=design_system,
         )
     return build_create_prompt_from_input(
         input_mode,
         stack,
         prompt,
         image_generation_enabled,
+        design_system,
     )

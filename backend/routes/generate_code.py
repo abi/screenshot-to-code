@@ -253,6 +253,7 @@ class ExtractedParams:
     edit_base_model: str | None = None
     edit_base_variant_index: int | None = None
     edit_base_generation_type: Literal["create", "update", "code_create"] | None = None
+    design_system: str | None = None
 
 
 class ParameterExtractionStage:
@@ -432,6 +433,13 @@ class ParameterExtractionStage:
             else None
         )
 
+        raw_design_system = params.get("designSystem")
+        design_system = (
+            raw_design_system.strip()
+            if isinstance(raw_design_system, str) and raw_design_system.strip()
+            else None
+        )
+
         return ExtractedParams(
             user_id=user_id,
             stack=validated_stack,
@@ -450,6 +458,7 @@ class ParameterExtractionStage:
             edit_base_model=edit_base_model,
             edit_base_variant_index=edit_base_variant_index,
             edit_base_generation_type=edit_base_generation_type,
+            design_system=design_system,
         )
 
     def _get_from_settings_dialog_or_env(
@@ -580,6 +589,7 @@ class PromptCreationStage:
                 history=extracted_params.history,
                 file_state=extracted_params.file_state,
                 image_generation_enabled=extracted_params.should_generate_images,
+                design_system=extracted_params.design_system,
             )
             print_prompt_preview(prompt_messages)
 

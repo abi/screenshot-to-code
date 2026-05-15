@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
 import { AppState, AppTheme, EditorTheme, Settings } from "./types";
 import { IS_RUNNING_ON_CLOUD, SHOULD_SHOW_FEEDBACK_CALL_UI } from "./config";
+import { NEW_DESIGN_SYSTEM_CONTENT } from "./lib/design-systems";
 import { PicoBadge } from "./components/messages/PicoBadge";
 import OnboardingPaywall from "./components/hosted/OnboardingPaywall";
 import { usePersistedState } from "./hooks/usePersistedState";
@@ -27,6 +28,7 @@ import {
 // import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
+import { useDesignSystems } from "./hooks/useDesignSystems";
 import { removeHighlight } from "./components/select-and-edit/utils";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
@@ -34,6 +36,7 @@ import HistoryDisplay from "./components/history/HistoryDisplay";
 import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
 import SettingsTab from "./components/settings/SettingsTab";
+import DesignSystemsModal from "./components/settings/DesignSystemsModal";
 import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
@@ -129,6 +132,7 @@ function App() {
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
       codeGenerationModel: CodeGenerationModel.CLAUDE_4_5_OPUS_2025_11_01,
+      selectedDesignSystemId: null,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
     },
@@ -147,6 +151,51 @@ function App() {
   const [isVersionsPanelOpen, setIsVersionsPanelOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [mobilePane, setMobilePane] = useState<"preview" | "chat">("preview");
+  const [isDesignSystemsModalOpen, setIsDesignSystemsModalOpen] =
+    useState(false);
+  const [designSystemsModalInitialId, setDesignSystemsModalInitialId] =
+    useState<string | null>(null);
+  const {
+    designSystems,
+    isLoading: areDesignSystemsLoading,
+    createDesignSystem,
+    updateDesignSystem,
+    deleteDesignSystem,
+  } = useDesignSystems();
+
+  const setSelectedDesignSystemId = useCallback(
+    (id: string | null) => {
+      setSettings((prev) => ({ ...prev, selectedDesignSystemId: id }));
+    },
+    [setSettings]
+  );
+
+  const openDesignSystemsManager = useCallback((focusedId?: string | null) => {
+    setDesignSystemsModalInitialId(focusedId ?? null);
+    setIsDesignSystemsModalOpen(true);
+  }, []);
+
+  const handleAddNewDesignSystem = useCallback(async () => {
+    try {
+      const isFirst = designSystems.length === 0;
+      const created = await createDesignSystem({
+        name: `Design system ${designSystems.length + 1}`,
+        content: NEW_DESIGN_SYSTEM_CONTENT,
+      });
+      if (isFirst) {
+        setSelectedDesignSystemId(created.id);
+      }
+      openDesignSystemsManager(created.id);
+    } catch (error) {
+      console.error("Failed to create design system", error);
+      toast.error("Could not create design system.");
+    }
+  }, [
+    createDesignSystem,
+    designSystems.length,
+    openDesignSystemsManager,
+    setSelectedDesignSystemId,
+  ]);
   const showSelectAndEditFeature =
     settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
     settings.generatedCodeConfig === Stack.HTML_CSS;
@@ -165,6 +214,35 @@ function App() {
       }));
     }
   }, [settings.generatedCodeConfig, setSettings]);
+
+  useEffect(() => {
+    if (!("selectedDesignSystemId" in settings)) {
+      setSettings((prev) => ({
+        ...prev,
+        selectedDesignSystemId: null,
+      }));
+    }
+  }, [settings, setSettings]);
+
+  useEffect(() => {
+    if (
+      settings.selectedDesignSystemId &&
+      !areDesignSystemsLoading &&
+      !designSystems.some(
+        (designSystem) => designSystem.id === settings.selectedDesignSystemId
+      )
+    ) {
+      setSettings((prev) => ({
+        ...prev,
+        selectedDesignSystemId: null,
+      }));
+    }
+  }, [
+    areDesignSystemsLoading,
+    designSystems,
+    settings.selectedDesignSystemId,
+    setSettings,
+  ]);
 
   useEffect(() => {
     if (!isSettingsOpen) return;
@@ -289,6 +367,10 @@ function App() {
 
     const { variantHistory, ...requestParams } = params;
 
+    const selectedDesignSystem = designSystems.find(
+      (designSystem) => designSystem.id === settings.selectedDesignSystemId
+    );
+
     // Merge settings with params
     const authToken = await getToken();
     const isFreeTrial =
@@ -300,6 +382,7 @@ function App() {
       ...settings,
       authToken: authToken || undefined,
       ...(isFreeTrial ? { isFreeTrial: true } : {}),
+      designSystem: selectedDesignSystem?.content ?? null,
     };
 
     // Use 4 variants for create, 2 for edits to match backend counts
@@ -918,6 +1001,13 @@ function App() {
                   regenerate={regenerate}
                   submitGenerationFeedback={submitGenerationFeedback}
                   cancelCodeGeneration={cancelCodeGeneration}
+                  designSystem={{
+                    designSystems,
+                    selectedDesignSystemId: settings.selectedDesignSystemId,
+                    setSelectedDesignSystemId,
+                    onAddNew: handleAddNewDesignSystem,
+                    onManage: () => openDesignSystemsManager(),
+                  }}
                   onOpenVersions={() => {
                     setProjectsPanelOpen(false);
                     setIsVersionsPanelOpen(true);
@@ -992,6 +1082,9 @@ function App() {
                     }
                   : undefined
               }
+              designSystems={designSystems}
+              onAddNewDesignSystem={handleAddNewDesignSystem}
+              onManageDesignSystems={() => openDesignSystemsManager()}
             />
           ))}
 
@@ -1032,6 +1125,18 @@ function App() {
           onOpenChange={setIsFeedbackOpen}
         />
       )}
+
+      <DesignSystemsModal
+        open={isDesignSystemsModalOpen}
+        onOpenChange={setIsDesignSystemsModalOpen}
+        designSystems={designSystems}
+        selectedDesignSystemId={settings.selectedDesignSystemId}
+        setSelectedDesignSystemId={setSelectedDesignSystemId}
+        initialEditingId={designSystemsModalInitialId}
+        createDesignSystem={createDesignSystem}
+        updateDesignSystem={updateDesignSystem}
+        deleteDesignSystem={deleteDesignSystem}
+      />
     </div>
   );
 }

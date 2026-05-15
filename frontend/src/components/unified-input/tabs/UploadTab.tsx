@@ -6,6 +6,7 @@ import { Button } from "../../ui/button";
 import { ScreenRecorderState } from "../../../types";
 import ScreenRecorder from "../../recording/ScreenRecorder";
 import OutputSettingsSection from "../../settings/OutputSettingsSection";
+import { DesignSystemSelectorProps } from "../../settings/DesignSystemSelector";
 import { Stack } from "../../../lib/stacks";
 
 function fileToDataURL(file: File): Promise<string> {
@@ -48,9 +49,10 @@ interface Props {
   ) => void;
   stack: Stack;
   setStack: (stack: Stack) => void;
+  designSystem: DesignSystemSelectorProps;
 }
 
-function UploadTab({ doCreate, stack, setStack }: Props) {
+function UploadTab({ doCreate, stack, setStack, designSystem }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadedDataUrls, setUploadedDataUrls] = useState<string[]>([]);
   const [uploadedInputMode, setUploadedInputMode] = useState<
@@ -466,6 +468,7 @@ function UploadTab({ doCreate, stack, setStack }: Props) {
             <OutputSettingsSection
               stack={stack}
               setStack={setStack}
+              designSystem={designSystem}
             />
           </div>
 
@@ -498,6 +501,7 @@ function UploadTab({ doCreate, stack, setStack }: Props) {
             generateCode={handleScreenRecorderGenerate}
             stack={stack}
             setStack={setStack}
+            designSystem={designSystem}
           />
         </div>
       )}

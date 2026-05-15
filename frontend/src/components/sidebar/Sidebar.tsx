@@ -16,6 +16,9 @@ import { removeHighlight } from "../select-and-edit/utils";
 import { CodeGenerationModel } from "../../lib/models";
 import GenerationFeedbackButtons from "./GenerationFeedbackButtons";
 import FreeTrialBanner from "../hosted/FreeTrialBanner";
+import DesignSystemSelector, {
+  DesignSystemSelectorProps,
+} from "../settings/DesignSystemSelector";
 
 interface SidebarProps {
   showSelectAndEditFeature: boolean;
@@ -25,6 +28,7 @@ interface SidebarProps {
   cancelCodeGeneration: () => void;
   onOpenVersions: () => void;
   freeTrialInfo?: { used: number; limit: number };
+  designSystem: DesignSystemSelectorProps;
 }
 
 const MAX_UPDATE_IMAGES = 5;
@@ -76,6 +80,7 @@ function Sidebar({
   cancelCodeGeneration,
   onOpenVersions,
   freeTrialInfo,
+  designSystem,
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const middlePaneRef = useRef<HTMLDivElement>(null);
@@ -254,7 +259,7 @@ function Sidebar({
   // Reset error expanded state when variant changes
   useEffect(() => {
     setIsErrorExpanded(false);
-  }, [head, commits[head || ""]?.selectedVariantIndex]);
+  }, [head, selectedVariantIndex]);
 
   // Reset prompt expanded state when commit changes and detect clamping
   useEffect(() => {
@@ -592,6 +597,7 @@ function Sidebar({
                       <LuMousePointerClick className="w-[18px] h-[18px]" />
                     </button>
                   )}
+                  <DesignSystemSelector {...designSystem} compact />
                 </div>
                 <button
                   onClick={() => doUpdate(updateInstruction)}

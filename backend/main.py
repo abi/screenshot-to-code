@@ -8,7 +8,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import IS_DEBUG_ENABLED
-from routes import screenshot, generate_code, home, evals, export
+from routes import screenshot, generate_code, home, evals, export, design_systems
 from config import IS_PROD
 
 # Setup Sentry (only relevant in prod)
@@ -49,3 +49,4 @@ app.include_router(screenshot.router)
 app.include_router(home.router)
 # app.include_router(evals.router)
 app.include_router(export.router)
+app.include_router(design_systems.router)

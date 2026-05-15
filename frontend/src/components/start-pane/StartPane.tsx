@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings } from "../../types";
+import { DesignSystem, Settings } from "../../types";
 import { Stack } from "../../lib/stacks";
 import { IS_RUNNING_ON_CLOUD } from "../../config";
 import UnifiedInputPane from "../unified-input/UnifiedInputPane";
@@ -18,6 +18,9 @@ interface Props {
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
   freeTrialInfo?: { used: number; limit: number };
+  designSystems: DesignSystem[];
+  onAddNewDesignSystem: () => void;
+  onManageDesignSystems: () => void;
 }
 
 const StartPane: React.FC<Props> = ({
@@ -28,6 +31,9 @@ const StartPane: React.FC<Props> = ({
   settings,
   setSettings,
   freeTrialInfo,
+  designSystems,
+  onAddNewDesignSystem,
+  onManageDesignSystems,
 }) => {
   return (
     <div className="flex flex-col justify-center items-center py-8">
@@ -45,6 +51,9 @@ const StartPane: React.FC<Props> = ({
         importFromCode={importFromCode}
         settings={settings}
         setSettings={setSettings}
+        designSystems={designSystems}
+        onAddNewDesignSystem={onAddNewDesignSystem}
+        onManageDesignSystems={onManageDesignSystems}
       />
       {IS_RUNNING_ON_CLOUD && (
         <RecentProjects

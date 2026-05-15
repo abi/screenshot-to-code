@@ -8,12 +8,16 @@ import {
 } from "../ui/select";
 import { Stack } from "../../lib/stacks";
 import StackLabel from "../core/StackLabel";
+import DesignSystemSelector, {
+  DesignSystemSelectorProps,
+} from "./DesignSystemSelector";
 
 interface Props {
   stack: Stack | undefined;
   setStack: (config: Stack) => void;
   label?: string;
   shouldDisableUpdates?: boolean;
+  designSystem?: DesignSystemSelectorProps;
 }
 
 function OutputSettingsSection({
@@ -21,6 +25,7 @@ function OutputSettingsSection({
   setStack,
   label = "Stack:",
   shouldDisableUpdates = false,
+  designSystem,
 }: Props) {
   return (
     <div className="flex flex-col gap-y-2 justify-between text-sm">
@@ -51,6 +56,9 @@ function OutputSettingsSection({
           </SelectContent>
         </Select>
       </div>
+      {designSystem && (
+        <DesignSystemSelector {...designSystem} />
+      )}
     </div>
   );
 }

@@ -101,6 +101,35 @@ class TestCreatePrompt:
         )
         assert plan["construction_strategy"] == "create_from_input"
 
+    @pytest.mark.asyncio
+    async def test_create_prompt_includes_design_system(self) -> None:
+        messages = await build_prompt_messages(
+            stack="html_css",
+            input_mode="image",
+            generation_type="create",
+            prompt={
+                "text": "Make a marketing mockup",
+                "images": [self.TEST_IMAGE_URL],
+                "videos": [],
+            },
+            history=[],
+            image_generation_enabled=True,
+            design_system="Reuse .mockup-frame and keep border radius 0.",
+        )
+
+        user_content = messages[1].get("content")
+        assert isinstance(user_content, list)
+        text_part = next(
+            part
+            for part in user_content
+            if isinstance(part, dict) and part.get("type") == "text"
+        )
+        text = text_part.get("text")
+        assert isinstance(text, str)
+
+        assert "## Design system" in text
+        assert "Reuse .mockup-frame" in text
+
     def test_plan_update_with_history_uses_history_strategy(self) -> None:
         plan = derive_prompt_construction_plan(
             stack=self.TEST_STACK,
