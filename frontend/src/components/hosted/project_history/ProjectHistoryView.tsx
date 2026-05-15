@@ -7,6 +7,7 @@ import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
 import {
   DeleteGenerationsResponse,
   ProjectHistoryGeneration,
+  ProjectHistoryProject,
   ProjectHistoryResponse,
 } from "../types";
 import { Stack } from "../../../lib/stacks";
@@ -42,6 +43,10 @@ interface Generation extends Omit<ProjectHistoryGeneration, "stack"> {
   stack: Stack;
 }
 
+interface Project extends Omit<ProjectHistoryProject, "generations"> {
+  generations: Generation[];
+}
+
 const formatDate = (dateString: string) => {
   try {
     const date = new Date(dateString);
@@ -55,6 +60,30 @@ const formatDate = (dateString: string) => {
     return "unknown";
   }
 };
+
+function groupGenerationsIntoProjects(
+  generations: ProjectHistoryGeneration[],
+): ProjectHistoryProject[] {
+  const projectsById = new Map<string, ProjectHistoryProject>();
+
+  generations.forEach((generation) => {
+    const projectKey = generation.generation_group_id ?? generation.id;
+    const existingProject = projectsById.get(projectKey);
+    if (existingProject) {
+      existingProject.generations.push(generation);
+      return;
+    }
+
+    projectsById.set(projectKey, {
+      id: projectKey,
+      generation_group_id: generation.generation_group_id,
+      date_created: generation.date_created,
+      generations: [generation],
+    });
+  });
+
+  return Array.from(projectsById.values());
+}
 
 interface PaginationSectionProps {
   currentPage: number;
@@ -176,16 +205,20 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const authenticatedFetch = useAuthenticatedFetch();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [generations, setGenerations] = useState<Generation[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [totalCount, setTotalCount] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedGenerationIds, setSelectedGenerationIds] = useState<string[]>(
-    [],
-  );
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [selectedVariantByProjectId, setSelectedVariantByProjectId] = useState<
+    Record<string, string>
+  >({});
   const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
+  const [pendingDeleteProjectIds, setPendingDeleteProjectIds] = useState<
+    string[]
+  >([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -198,22 +231,29 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
         );
         if (!res) return;
 
-        const processedGenerations = res.generations.map((generation) => ({
-          ...generation,
-          stack: generation.stack || Stack.HTML_TAILWIND,
-          date_created: formatDate(generation.date_created),
+        const processedProjects = (
+          res.projects ?? groupGenerationsIntoProjects(res.generations)
+        ).map((project) => ({
+          ...project,
+          date_created: formatDate(project.date_created),
+          generations: project.generations.map((generation) => ({
+            ...generation,
+            stack: generation.stack || Stack.HTML_TAILWIND,
+            date_created: formatDate(generation.date_created),
+          })),
         }));
-        if (page > 1 && processedGenerations.length === 0) {
+        if (page > 1 && processedProjects.length === 0) {
           setCurrentPage(page - 1);
           return;
         }
 
-        setGenerations(processedGenerations);
-        Sentry.setContext("Local Variables", { processedGenerations });
+        setProjects(processedProjects);
+        Sentry.setContext("Local Variables", { processedProjects });
         setTotalPages(res.total_pages);
         setTotalCount(res.total_count);
         setIsSelectionMode(false);
-        setSelectedGenerationIds([]);
+        setSelectedProjectIds([]);
+        setSelectedVariantByProjectId({});
       } catch (error) {
         Sentry.captureException(error);
         console.error("Failed to load project history:", error);
@@ -237,18 +277,23 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
     addEvent("ProjectHistory:LoadInEditor");
   };
 
-  const toggleSelection = (generationId: string) => {
+  const toggleSelection = (projectId: string) => {
     if (!isSelectionMode) return;
-    setSelectedGenerationIds((previousIds) =>
-      previousIds.includes(generationId)
-        ? previousIds.filter((id) => id !== generationId)
-        : [...previousIds, generationId],
+    setSelectedProjectIds((previousIds) =>
+      previousIds.includes(projectId)
+        ? previousIds.filter((id) => id !== projectId)
+        : [...previousIds, projectId],
     );
   };
 
-  const openDeleteDialog = (generationIds: string[]) => {
-    if (generationIds.length === 0) return;
-    setPendingDeleteIds(generationIds);
+  const openDeleteDialog = (projectsToDelete: Project[]) => {
+    if (projectsToDelete.length === 0) return;
+    setPendingDeleteIds(
+      projectsToDelete.flatMap((project) =>
+        project.generations.map((generation) => generation.id),
+      ),
+    );
+    setPendingDeleteProjectIds(projectsToDelete.map((project) => project.id));
     setIsDeleteDialogOpen(true);
   };
 
@@ -257,6 +302,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
     setIsDeleteDialogOpen(open);
     if (!open) {
       setPendingDeleteIds([]);
+      setPendingDeleteProjectIds([]);
     }
   };
 
@@ -274,26 +320,40 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
       if (!response) return;
 
       const deletedIds = new Set(response.deleted_ids);
-      const remainingGenerations = generations.filter(
-        (generation) => !deletedIds.has(generation.id),
-      );
-      const nextTotalCount = Math.max(0, totalCount - response.deleted_count);
+      const remainingProjects = projects
+        .map((project) => ({
+          ...project,
+          generations: project.generations.filter(
+            (generation) => !deletedIds.has(generation.id),
+          ),
+        }))
+        .filter((project) => project.generations.length > 0);
+      const deletedProjectCount = projects.length - remainingProjects.length;
+      const nextTotalCount = Math.max(0, totalCount - deletedProjectCount);
       const nextTotalPages = Math.ceil(nextTotalCount / PAGE_SIZE);
 
-      setGenerations(remainingGenerations);
+      setProjects(remainingProjects);
       setTotalCount(nextTotalCount);
       setTotalPages(nextTotalPages);
-      setSelectedGenerationIds((previousIds) =>
-        previousIds.filter((id) => !deletedIds.has(id)),
+      setSelectedProjectIds((previousIds) =>
+        previousIds.filter((id) => !pendingDeleteProjectIds.includes(id)),
       );
+      setSelectedVariantByProjectId((previousSelections) => {
+        const nextSelections = { ...previousSelections };
+        pendingDeleteProjectIds.forEach((projectId) => {
+          delete nextSelections[projectId];
+        });
+        return nextSelections;
+      });
       setIsSelectionMode(false);
       setIsDeleteDialogOpen(false);
       setPendingDeleteIds([]);
+      setPendingDeleteProjectIds([]);
       toast.success(
-        response.deleted_count === 1 ? "Deleted project" : "Deleted projects",
+        deletedProjectCount === 1 ? "Deleted project" : "Deleted projects",
       );
 
-      if (remainingGenerations.length === 0 && currentPage > 1) {
+      if (remainingProjects.length === 0 && currentPage > 1) {
         setIsLoading(true);
         setCurrentPage(currentPage - 1);
       }
@@ -310,13 +370,13 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   const onPageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setIsSelectionMode(false);
-      setSelectedGenerationIds([]);
+      setSelectedProjectIds([]);
       setCurrentPage(newPage);
     }
   };
 
-  const selectedCount = selectedGenerationIds.length;
-  const isBulkDelete = pendingDeleteIds.length > 1;
+  const selectedCount = selectedProjectIds.length;
+  const isBulkDelete = pendingDeleteProjectIds.length > 1;
 
   return (
     <>
@@ -360,7 +420,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
             </h1>
             {totalCount > 0 && (
               <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-                {totalCount} generation{totalCount !== 1 ? "s" : ""}
+                {totalCount} project{totalCount !== 1 ? "s" : ""}
               </p>
             )}
           </div>
@@ -369,7 +429,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
             <div className="flex h-64 items-center justify-center">
               <Spinner />
             </div>
-          ) : generations.length === 0 ? (
+          ) : projects.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 px-6 py-20 dark:border-zinc-700 dark:bg-zinc-800/30">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-700">
                 <LuFolderOpen className="h-6 w-6 text-gray-400 dark:text-zinc-400" />
@@ -397,7 +457,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                       className="rounded-lg border border-gray-300 bg-white px-3.5 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-600"
                       onClick={() => {
                         setIsSelectionMode(false);
-                        setSelectedGenerationIds([]);
+                        setSelectedProjectIds([]);
                       }}
                     >
                       Cancel
@@ -413,22 +473,29 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {generations.map((generation, index) => {
-                  const isSelected = selectedGenerationIds.includes(
-                    generation.id,
-                  );
+                {projects.map((project, index) => {
+                  const selectedVariantId =
+                    selectedVariantByProjectId[project.id];
+                  const selectedGeneration =
+                    project.generations.find(
+                      (generation) => generation.id === selectedVariantId,
+                    ) ?? project.generations[0];
+                  if (!selectedGeneration) return null;
+
+                  const isSelected = selectedProjectIds.includes(project.id);
+
                   return (
                     <div
-                      key={generation.id}
+                      key={project.id}
                       role="button"
                       tabIndex={0}
                       onClick={() => {
                         if (isSelectionMode) {
-                          toggleSelection(generation.id);
+                          toggleSelection(project.id);
                         } else {
                           onLoadGeneration(
-                            generation.completion,
-                            generation.stack,
+                            selectedGeneration.completion,
+                            selectedGeneration.stack,
                           );
                         }
                       }}
@@ -436,11 +503,11 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           if (isSelectionMode) {
-                            toggleSelection(generation.id);
+                            toggleSelection(project.id);
                           } else {
                             onLoadGeneration(
-                              generation.completion,
-                              generation.stack,
+                              selectedGeneration.completion,
+                              selectedGeneration.stack,
                             );
                           }
                         }
@@ -481,25 +548,25 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                       )}
 
                       <PreviewIframe
-                        srcDoc={generation.completion}
-                        title={`Generation ${index + 1}`}
+                        srcDoc={selectedGeneration.completion}
+                        title={`Project ${index + 1}`}
                       />
 
                       {/* Footer */}
                       <div className="flex items-center gap-3 px-3 py-2.5">
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-medium text-gray-800 dark:text-zinc-200">
-                            <StackLabel stack={generation.stack} />
+                            <StackLabel stack={selectedGeneration.stack} />
                           </div>
                           <p className="mt-0.5 text-xs text-gray-400 dark:text-zinc-500">
-                            {generation.date_created}
+                            {selectedGeneration.date_created}
                           </p>
                         </div>
                         {!isSelectionMode && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              openDeleteDialog([generation.id]);
+                              openDeleteDialog([project]);
                             }}
                             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-zinc-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                             title="Delete"
@@ -508,6 +575,42 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
                           </button>
                         )}
                       </div>
+                      {!isSelectionMode && (
+                        <div className="flex items-center gap-1.5 border-t border-gray-100 px-3 py-2 dark:border-zinc-700">
+                          <span className="mr-1 text-[11px] font-medium uppercase text-gray-400 dark:text-zinc-500">
+                            {project.generations.length} variant
+                            {project.generations.length !== 1 ? "s" : ""}
+                          </span>
+                          {project.generations.map((generation, variantIndex) => {
+                            const isActive =
+                              generation.id === selectedGeneration.id;
+
+                            return (
+                              <button
+                                key={generation.id}
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setSelectedVariantByProjectId(
+                                    (previousSelections) => ({
+                                      ...previousSelections,
+                                      [project.id]: generation.id,
+                                    }),
+                                  );
+                                }}
+                                className={`h-6 min-w-6 rounded-md px-2 text-xs font-medium transition-colors ${
+                                  isActive
+                                    ? "bg-blue-600 text-white dark:bg-blue-500"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
+                                }`}
+                                aria-label={`Use variant ${variantIndex + 1}`}
+                              >
+                                {variantIndex + 1}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -536,14 +639,14 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
             <button
               className="text-sm font-medium text-gray-700 transition-colors hover:text-gray-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               onClick={() =>
-                setSelectedGenerationIds(
-                  selectedCount === generations.length
+                setSelectedProjectIds(
+                  selectedCount === projects.length
                     ? []
-                    : generations.map((g) => g.id),
+                    : projects.map((project) => project.id),
                 )
               }
             >
-              {selectedCount === generations.length
+              {selectedCount === projects.length
                 ? "Deselect all"
                 : "Select all"}
             </button>
@@ -554,7 +657,13 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
               size="sm"
               className="gap-1.5 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
               disabled={isDeleting || selectedCount === 0}
-              onClick={() => openDeleteDialog(selectedGenerationIds)}
+              onClick={() =>
+                openDeleteDialog(
+                  projects.filter((project) =>
+                    selectedProjectIds.includes(project.id),
+                  ),
+                )
+              }
             >
               <LuTrash2 className="h-3.5 w-3.5" />
               Delete
@@ -562,7 +671,7 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
             <button
               onClick={() => {
                 setIsSelectionMode(false);
-                setSelectedGenerationIds([]);
+                setSelectedProjectIds([]);
               }}
               className="flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
             >

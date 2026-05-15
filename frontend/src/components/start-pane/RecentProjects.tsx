@@ -3,13 +3,21 @@ import { formatRelative } from "date-fns";
 import * as Sentry from "@sentry/react";
 import { SAAS_BACKEND_URL } from "../../config";
 import { useAuthenticatedFetch } from "../hosted/useAuthenticatedFetch";
-import { ProjectHistoryGeneration, ProjectHistoryResponse } from "../hosted/types";
+import {
+  ProjectHistoryGeneration,
+  ProjectHistoryProject,
+  ProjectHistoryResponse,
+} from "../hosted/types";
 import { Stack } from "../../lib/stacks";
 import StackLabel from "../core/StackLabel";
 import { LuArrowRight } from "react-icons/lu";
 
 interface Generation extends Omit<ProjectHistoryGeneration, "stack"> {
   stack: Stack;
+}
+
+interface Project extends Omit<ProjectHistoryProject, "generations"> {
+  generations: Generation[];
 }
 
 const PREVIEW_WIDTH = 1366;
@@ -28,6 +36,30 @@ const formatDate = (dateString: string): string => {
     return "unknown";
   }
 };
+
+function groupGenerationsIntoProjects(
+  generations: ProjectHistoryGeneration[],
+): ProjectHistoryProject[] {
+  const projectsById = new Map<string, ProjectHistoryProject>();
+
+  generations.forEach((generation) => {
+    const projectKey = generation.generation_group_id ?? generation.id;
+    const existingProject = projectsById.get(projectKey);
+    if (existingProject) {
+      existingProject.generations.push(generation);
+      return;
+    }
+
+    projectsById.set(projectKey, {
+      id: projectKey,
+      generation_group_id: generation.generation_group_id,
+      date_created: generation.date_created,
+      generations: [generation],
+    });
+  });
+
+  return Array.from(projectsById.values());
+}
 
 function SmallPreview({ srcDoc, title }: { srcDoc: string; title: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,7 +108,10 @@ interface RecentProjectsProps {
 
 function RecentProjects({ importFromCode, onOpenProjects }: RecentProjectsProps) {
   const authenticatedFetch = useAuthenticatedFetch();
-  const [generations, setGenerations] = useState<Generation[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedVariantByProjectId, setSelectedVariantByProjectId] = useState<
+    Record<string, string>
+  >({});
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -87,12 +122,18 @@ function RecentProjects({ importFromCode, onOpenProjects }: RecentProjectsProps)
         );
         if (!res) return;
 
-        const processed = res.generations.slice(0, MAX_RECENT).map((g) => ({
-          ...g,
-          stack: g.stack || Stack.HTML_TAILWIND,
-          date_created: formatDate(g.date_created),
-        }));
-        setGenerations(processed);
+        const processed = (res.projects ?? groupGenerationsIntoProjects(res.generations))
+          .slice(0, MAX_RECENT)
+          .map((project) => ({
+            ...project,
+            date_created: formatDate(project.date_created),
+            generations: project.generations.map((generation) => ({
+              ...generation,
+              stack: generation.stack || Stack.HTML_TAILWIND,
+              date_created: formatDate(generation.date_created),
+            })),
+          }));
+        setProjects(processed);
       } catch (error) {
         Sentry.captureException(error);
       } finally {
@@ -102,7 +143,7 @@ function RecentProjects({ importFromCode, onOpenProjects }: RecentProjectsProps)
     void load();
   }, [authenticatedFetch]);
 
-  if (!isLoaded || generations.length === 0) return null;
+  if (!isLoaded || projects.length === 0) return null;
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 mt-8">
@@ -119,26 +160,79 @@ function RecentProjects({ importFromCode, onOpenProjects }: RecentProjectsProps)
         </button>
       </div>
       <div className="grid grid-cols-3 gap-3">
-        {generations.map((generation, index) => (
-          <button
-            key={generation.id}
-            onClick={() => importFromCode(generation.completion, generation.stack)}
-            className="group text-left overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:shadow-md hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800/60 dark:hover:border-zinc-600"
-          >
-            <SmallPreview
-              srcDoc={generation.completion}
-              title={`Recent project ${index + 1}`}
-            />
-            <div className="px-3 py-2">
-              <div className="text-xs font-medium text-gray-700 dark:text-zinc-300">
-                <StackLabel stack={generation.stack} />
+        {projects.map((project, index) => {
+          const selectedVariantId = selectedVariantByProjectId[project.id];
+          const selectedGeneration =
+            project.generations.find(
+              (generation) => generation.id === selectedVariantId,
+            ) ?? project.generations[0];
+          if (!selectedGeneration) return null;
+
+          return (
+            <div
+              key={project.id}
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                importFromCode(selectedGeneration.completion, selectedGeneration.stack)
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  importFromCode(
+                    selectedGeneration.completion,
+                    selectedGeneration.stack,
+                  );
+                }
+              }}
+              className="group cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white text-left transition-all hover:border-gray-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800/60 dark:hover:border-zinc-600"
+            >
+              <SmallPreview
+                srcDoc={selectedGeneration.completion}
+                title={`Recent project ${index + 1}`}
+              />
+              <div className="px-3 py-2">
+                <div className="text-xs font-medium text-gray-700 dark:text-zinc-300">
+                  <StackLabel stack={selectedGeneration.stack} />
+                </div>
+                <p className="mt-0.5 text-xs text-gray-400 dark:text-zinc-500">
+                  {selectedGeneration.date_created}
+                </p>
               </div>
-              <p className="mt-0.5 text-xs text-gray-400 dark:text-zinc-500">
-                {generation.date_created}
-              </p>
+              <div className="flex items-center gap-1.5 border-t border-gray-100 px-3 py-2 dark:border-zinc-700">
+                <span className="mr-1 text-[11px] font-medium uppercase text-gray-400 dark:text-zinc-500">
+                  {project.generations.length} variant
+                  {project.generations.length !== 1 ? "s" : ""}
+                </span>
+                {project.generations.map((generation, variantIndex) => {
+                  const isActive = generation.id === selectedGeneration.id;
+
+                  return (
+                    <button
+                      key={generation.id}
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedVariantByProjectId((previousSelections) => ({
+                          ...previousSelections,
+                          [project.id]: generation.id,
+                        }));
+                      }}
+                      className={`h-6 min-w-6 rounded-md px-2 text-xs font-medium transition-colors ${
+                        isActive
+                          ? "bg-blue-600 text-white dark:bg-blue-500"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
+                      }`}
+                      aria-label={`Use variant ${variantIndex + 1}`}
+                    >
+                      {variantIndex + 1}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
