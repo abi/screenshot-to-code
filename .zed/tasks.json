@@ -8,6 +8,14 @@
     "reveal": "always"
   },
   {
+    "label": "Frontend dev hosted",
+    "command": "pnpm run dev-hosted",
+    "cwd": "$ZED_WORKTREE_ROOT/frontend",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always"
+  },
+  {
     "label": "Backend dev",
     "command": "poetry run uvicorn main:app --reload --port 7001",
     "cwd": "$ZED_WORKTREE_ROOT/backend",
