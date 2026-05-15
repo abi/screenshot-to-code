@@ -1,8 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { generateCode } from "./generateCode";
 import { AppState, AppTheme, EditorTheme, Settings } from "./types";
-import { IS_RUNNING_ON_CLOUD, SHOULD_SHOW_FEEDBACK_CALL_UI } from "./config";
-import { NEW_DESIGN_SYSTEM_CONTENT } from "./lib/design-systems";
+import {
+  IS_RUNNING_ON_CLOUD,
+  SAAS_BACKEND_URL,
+  SHOULD_SHOW_FEEDBACK_CALL_UI,
+} from "./config";
+import {
+  createDesignSystemsClient,
+  defaultDesignSystemsClient,
+  DesignSystemsRequestOptions,
+  NEW_DESIGN_SYSTEM_CONTENT,
+} from "./lib/design-systems";
 import { PicoBadge } from "./components/messages/PicoBadge";
 import OnboardingPaywall from "./components/hosted/OnboardingPaywall";
 import { usePersistedState } from "./hooks/usePersistedState";
@@ -45,6 +54,7 @@ import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
 import { useGenerationFeedback } from "./hooks/useGenerationFeedback";
+import { getApiErrorMessage } from "./components/hosted/apiErrors";
 
 function App() {
   // Relevant for hosted version only
@@ -155,13 +165,50 @@ function App() {
     useState(false);
   const [designSystemsModalInitialId, setDesignSystemsModalInitialId] =
     useState<string | null>(null);
+  const designSystemsClient = useMemo(() => {
+    if (!IS_RUNNING_ON_CLOUD || !SAAS_BACKEND_URL) {
+      return defaultDesignSystemsClient;
+    }
+
+    return createDesignSystemsClient(
+      async <T,>(path: string, options: DesignSystemsRequestOptions = {}) => {
+        const token = await getToken();
+        if (!token) {
+          throw new Error("Not authenticated");
+        }
+
+        const { method = "GET", body } = options;
+        const response = await fetch(
+          `${SAAS_BACKEND_URL.replace(/\/$/, "")}${path}`,
+          {
+            method,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: body === undefined ? undefined : JSON.stringify(body),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(await getApiErrorMessage(response));
+        }
+
+        if (response.status === 204) {
+          return undefined as T;
+        }
+
+        return response.json() as Promise<T>;
+      }
+    );
+  }, [getToken]);
   const {
     designSystems,
     isLoading: areDesignSystemsLoading,
     createDesignSystem,
     updateDesignSystem,
     deleteDesignSystem,
-  } = useDesignSystems();
+  } = useDesignSystems(designSystemsClient);
 
   const setSelectedDesignSystemId = useCallback(
     (id: string | null) => {
