@@ -307,11 +307,14 @@ function UploadTab({ doCreate, stack, setStack, designSystem }: Props) {
             </div>
             <div className="text-center">
               <p className="text-gray-700 dark:text-zinc-200 font-medium">
-                Drop up to {MAX_FILES} screenshots or a single video
+                Drop a screenshot to turn it into code
+              </p>
+              <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
+                Or drag in up to {MAX_FILES} screenshots — or a short screen recording.
               </p>
             </div>
             <p className="text-xs text-gray-400 dark:text-zinc-500 mt-2">
-              Supports PNG, JPG, MP4, MOV, WebM (max 20MB each, 30s video)
+              PNG, JPG, MP4, MOV, WebM · 20MB each · videos up to 30s
             </p>
             <button
               type="button"
