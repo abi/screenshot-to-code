@@ -1,4 +1,5 @@
 import { SAAS_BACKEND_URL } from "../../config";
+import { getFirstTouchAttribution } from "../../lib/attribution";
 import { useStore } from "../../store/store";
 import { UserResponse } from "./types";
 
@@ -11,7 +12,9 @@ type AuthenticatedFetch = (
 export async function fetchHostedUser(
   authenticatedFetch: AuthenticatedFetch,
 ): Promise<UserResponse | undefined> {
-  return authenticatedFetch(SAAS_BACKEND_URL + "/users/create", "POST");
+  return authenticatedFetch(SAAS_BACKEND_URL + "/users/create", "POST", {
+    attribution: getFirstTouchAttribution(),
+  });
 }
 
 export function applyHostedUserToStore(user: UserResponse) {

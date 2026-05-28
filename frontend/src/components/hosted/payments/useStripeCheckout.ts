@@ -6,6 +6,10 @@ import { Stripe, loadStripe } from "@stripe/stripe-js";
 import { useStore } from "../../../store/store";
 import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
 import { captureBillingException } from "./billingSentry";
+import {
+  getAttributionEventProps,
+  getFirstTouchAttribution,
+} from "../../../lib/attribution";
 
 interface CreateCheckoutSessionResponse {
   sessionId: string;
@@ -40,8 +44,16 @@ export default function useStripeCheckout() {
       const res: CreateCheckoutSessionResponse = await authenticatedFetch(
         `${SAAS_BACKEND_URL}/payments/create_checkout_session` +
           `?price_lookup_key=${priceLookupKey}`,
-        "POST"
+        "POST",
+        {
+          attribution: getFirstTouchAttribution(),
+        },
       );
+
+      addEvent("Checkout Started", {
+        ...getAttributionEventProps(),
+        price_lookup_key: priceLookupKey,
+      });
 
       // Track going to checkout page as a conversion
       gtag("event", "conversion", {

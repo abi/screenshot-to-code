@@ -17,6 +17,7 @@ import "./index.css";
 import PricingPage from "./components/hosted/PricingPage.tsx";
 import CheckoutSuccessPage from "./components/hosted/CheckoutSuccessPage.tsx";
 import FaqsPage from "./components/hosted/FaqsPage.tsx";
+import { captureFirstTouchAttribution } from "./lib/attribution.ts";
 
 // Set up Sentry
 Sentry.init({
@@ -35,6 +36,8 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 });
+
+captureFirstTouchAttribution();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

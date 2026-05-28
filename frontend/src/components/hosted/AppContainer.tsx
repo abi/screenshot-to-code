@@ -17,6 +17,11 @@ import LandingPage from "./LandingPage";
 import Intercom from "@intercom/messenger-js-sdk";
 import { getExperimentGroup } from "../../lib/experiment";
 import { applyHostedUserToStore, fetchHostedUser } from "./billingState";
+import { addEvent, addTikTokEvent } from "../../lib/analytics";
+import {
+  getAttributionEventProps,
+  shouldTrackSignupCompleted,
+} from "../../lib/attribution";
 
 function AppContainer() {
   const { isSignedIn, isLoaded } = useUser();
@@ -51,6 +56,12 @@ function AppContainer() {
       const fullName = `${firstName} ${lastName}`.trim();
       setExperimentGroup(group);
       applyHostedUserToStore(user);
+
+      if (shouldTrackSignupCompleted(user.email)) {
+        const attributionProps = getAttributionEventProps();
+        addEvent("Signup Completed", attributionProps);
+        addTikTokEvent("CompleteRegistration", attributionProps);
+      }
 
       if (!user.subscriber_tier) {
         // Fetch server-side free trial usage for delayed paywall users

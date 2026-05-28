@@ -1,10 +1,16 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { addEvent, addTikTokEvent } from "../../lib/analytics";
+import { getAttributionEventProps } from "../../lib/attribution";
 
 const CheckoutSuccessPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const attributionProps = getAttributionEventProps();
+    addEvent("Paid Conversion", attributionProps);
+    addTikTokEvent("CompletePayment", attributionProps);
+
     // Redirect to home page after a short delay
     const redirectTimer = setTimeout(() => {
       navigate("/");
