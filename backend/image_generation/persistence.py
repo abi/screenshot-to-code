@@ -6,10 +6,12 @@ from config import BACKEND_SAAS_API_SECRET, BACKEND_SAAS_URL, IS_PROD
 
 
 SourceProvider = Literal["replicate", "openai"]
+SourceType = Literal["user_upload", "generated", "background_removed"]
 
 
 async def persist_asset_image_url(
     source_url: str,
+    source_type: SourceType,
     source_provider: SourceProvider,
     image_generation_model: str,
     generation_group_id: str | None,
@@ -26,6 +28,7 @@ async def persist_asset_image_url(
             f"{BACKEND_SAAS_URL}/assets/store_image_url",
             json={
                 "source_url": source_url,
+                "source_type": source_type,
                 "source_provider": source_provider,
                 "image_generation_model": image_generation_model,
                 "generation_group_id": generation_group_id,

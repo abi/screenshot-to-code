@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from codegen.utils import extract_html_content
 from config import IS_PROD, REPLICATE_API_KEY
 from image_generation.generation import process_tasks
-from image_generation.persistence import SourceProvider, persist_asset_image_url
+from image_generation.persistence import (
+    SourceProvider,
+    SourceType,
+    persist_asset_image_url,
+)
 from image_generation.replicate import (
     FLUX_MODEL_PATH,
     REMOVE_BACKGROUND_VERSION,
@@ -54,6 +58,7 @@ class AgentToolRuntime:
     async def _persist_image_url(
         self,
         source_url: str,
+        source_type: SourceType,
         source_provider: SourceProvider,
         image_generation_model: str,
         prompt: str | None,
@@ -61,6 +66,7 @@ class AgentToolRuntime:
         try:
             return await persist_asset_image_url(
                 source_url=source_url,
+                source_type=source_type,
                 source_provider=source_provider,
                 image_generation_model=image_generation_model,
                 generation_group_id=self.generation_group_id,
@@ -76,6 +82,7 @@ class AgentToolRuntime:
     async def _persist_image_urls(
         self,
         items: List[Tuple[str, str | None]],
+        source_type: SourceType,
         source_provider: SourceProvider,
         image_generation_model: str,
     ) -> List[str | None]:
@@ -87,6 +94,7 @@ class AgentToolRuntime:
             async with semaphore:
                 return await self._persist_image_url(
                     source_url=url,
+                    source_type=source_type,
                     source_provider=source_provider,
                     image_generation_model=image_generation_model,
                     prompt=prompt,
@@ -349,6 +357,7 @@ class AgentToolRuntime:
         source_provider = "replicate" if model == "flux" else "openai"
         persisted = await self._persist_image_urls(
             items=list(zip(unique_prompts, generated)),
+            source_type="generated",
             source_provider=source_provider,
             image_generation_model=image_generation_model,
         )
@@ -412,6 +421,7 @@ class AgentToolRuntime:
 
         persisted_urls = await self._persist_image_urls(
             items=[("", raw) for _, _, raw in successful_results],
+            source_type="background_removed",
             source_provider="replicate",
             image_generation_model=REMOVE_BACKGROUND_VERSION,
         )

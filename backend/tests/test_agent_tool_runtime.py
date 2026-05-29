@@ -79,6 +79,7 @@ async def test_generate_images_returns_persisted_url(
 
     async def fake_persist_asset_image_url(**kwargs):
         nonlocal concurrent, max_concurrent
+        assert kwargs["source_type"] == "generated"
         assert kwargs["source_provider"] == "replicate"
         assert kwargs["generation_group_id"] == "group-1"
         assert kwargs["variant_index"] == 2
