@@ -8,17 +8,11 @@ export enum CodeGenerationModel {
   CLAUDE_OPUS_4_8_MAX = "claude-opus-4-8 (max effort)",
   CLAUDE_OPUS_4_6 = "claude-opus-4-6",
   CLAUDE_SONNET_4_6 = "claude-sonnet-4-6",
-  CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101",
-  CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929",
   GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)",
   GPT_5_2_CODEX_LOW = "gpt-5.2-codex (low thinking)",
   GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
   GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)",
   GPT_5_2_CODEX_XHIGH = "gpt-5.2-codex (xhigh thinking)",
-  GPT_5_3_CODEX_LOW = "gpt-5.3-codex (low thinking)",
-  GPT_5_3_CODEX_MEDIUM = "gpt-5.3-codex (medium thinking)",
-  GPT_5_3_CODEX_HIGH = "gpt-5.3-codex (high thinking)",
-  GPT_5_3_CODEX_XHIGH = "gpt-5.3-codex (xhigh thinking)",
   GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
   GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
@@ -50,22 +44,9 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   "gpt-5.2-codex (xhigh thinking)": {
     name: "GPT 5.2 Codex (xhigh)",
   },
-  "gpt-5.3-codex (low thinking)": {
-    name: "GPT 5.3 Codex (low)",
-  },
-  "gpt-5.3-codex (medium thinking)": {
-    name: "GPT 5.3 Codex (medium)",
-  },
-  "gpt-5.3-codex (high thinking)": {
-    name: "GPT 5.3 Codex (high)",
-  },
-  "gpt-5.3-codex (xhigh thinking)": {
-    name: "GPT 5.3 Codex (xhigh)",
-  },
   "gpt-5.4-mini (low thinking)": {
     name: "GPT 5.4 Mini (low)",
   },
-  "claude-opus-4-5-20251101": { name: "Claude Opus 4.5" },
   "claude-opus-4-8 (low effort)": {
     name: "Claude Opus 4.8 (low)",
   },
@@ -83,7 +64,6 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "claude-opus-4-6": { name: "Claude Opus 4.6" },
   "claude-sonnet-4-6": { name: "Claude Sonnet 4.6" },
-  "claude-sonnet-4-5-20250929": { name: "Claude Sonnet 4.5" },
   "gemini-3.5-flash (high thinking)": {
     name: "Gemini 3.5 Flash (high)",
   },

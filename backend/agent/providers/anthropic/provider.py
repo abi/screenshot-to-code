@@ -21,10 +21,7 @@ from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
 from llm import Llm
 
-THINKING_MODELS = {
-    Llm.CLAUDE_4_5_SONNET_2025_09_29.value,
-    Llm.CLAUDE_4_5_OPUS_2025_11_01.value,
-}
+THINKING_MODELS: set[str] = set()
 ADAPTIVE_THINKING_MODELS = {
     Llm.CLAUDE_OPUS_4_6.value,
     Llm.CLAUDE_OPUS_4_8_LOW.value,

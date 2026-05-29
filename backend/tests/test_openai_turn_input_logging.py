@@ -57,7 +57,7 @@ def test_openai_turn_input_logger_preserves_full_large_payloads(
 ) -> None:
     monkeypatch.setenv("LOGS_PATH", str(tmp_path))
 
-    logger = OpenAITurnInputLogger(model=Llm.GPT_5_3_CODEX_LOW, enabled=True)
+    logger = OpenAITurnInputLogger(model=Llm.GPT_5_2_CODEX_LOW, enabled=True)
     logger.record_turn_input(
         [
             {

@@ -5,15 +5,10 @@ from typing import TypedDict
 # Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
     # GPT
-    GPT_4_1_2025_04_14 = "gpt-4.1-2025-04-14"
     GPT_5_2_CODEX_LOW = "gpt-5.2-codex (low thinking)"
     GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)"
     GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)"
     GPT_5_2_CODEX_XHIGH = "gpt-5.2-codex (xhigh thinking)"
-    GPT_5_3_CODEX_LOW = "gpt-5.3-codex (low thinking)"
-    GPT_5_3_CODEX_MEDIUM = "gpt-5.3-codex (medium thinking)"
-    GPT_5_3_CODEX_HIGH = "gpt-5.3-codex (high thinking)"
-    GPT_5_3_CODEX_XHIGH = "gpt-5.3-codex (xhigh thinking)"
     GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)"
     GPT_5_4_2026_03_05_NONE = "gpt-5.4-2026-03-05 (no thinking)"
     GPT_5_4_2026_03_05_LOW = "gpt-5.4-2026-03-05 (low thinking)"
@@ -23,8 +18,6 @@ class Llm(Enum):
     GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)"
     # Claude
     CLAUDE_SONNET_4_6 = "claude-sonnet-4-6"
-    CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
-    CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101"
     CLAUDE_OPUS_4_6 = "claude-opus-4-6"
     CLAUDE_OPUS_4_8_LOW = "claude-opus-4-8 (low effort)"
     CLAUDE_OPUS_4_8_MEDIUM = "claude-opus-4-8 (medium effort)"
@@ -53,15 +46,10 @@ class Completion(TypedDict):
 # models elsewhere in the codebase.
 MODEL_PROVIDER: dict[Llm, str] = {
     # OpenAI models
-    Llm.GPT_4_1_2025_04_14: "openai",
     Llm.GPT_5_2_CODEX_LOW: "openai",
     Llm.GPT_5_2_CODEX_MEDIUM: "openai",
     Llm.GPT_5_2_CODEX_HIGH: "openai",
     Llm.GPT_5_2_CODEX_XHIGH: "openai",
-    Llm.GPT_5_3_CODEX_LOW: "openai",
-    Llm.GPT_5_3_CODEX_MEDIUM: "openai",
-    Llm.GPT_5_3_CODEX_HIGH: "openai",
-    Llm.GPT_5_3_CODEX_XHIGH: "openai",
     Llm.GPT_5_4_MINI_LOW: "openai",
     Llm.GPT_5_4_2026_03_05_NONE: "openai",
     Llm.GPT_5_4_2026_03_05_LOW: "openai",
@@ -71,8 +59,6 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GPT_5_5_XHIGH: "openai",
     # Anthropic models
     Llm.CLAUDE_SONNET_4_6: "anthropic",
-    Llm.CLAUDE_4_5_SONNET_2025_09_29: "anthropic",
-    Llm.CLAUDE_4_5_OPUS_2025_11_01: "anthropic",
     Llm.CLAUDE_OPUS_4_6: "anthropic",
     Llm.CLAUDE_OPUS_4_8_LOW: "anthropic",
     Llm.CLAUDE_OPUS_4_8_MEDIUM: "anthropic",
@@ -97,15 +83,10 @@ ANTHROPIC_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "anthropic"}
 GEMINI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "gemini"}
 
 OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
-    Llm.GPT_4_1_2025_04_14: {"api_name": "gpt-4.1-2025-04-14"},
     Llm.GPT_5_2_CODEX_LOW: {"api_name": "gpt-5.2-codex", "reasoning_effort": "low"},
     Llm.GPT_5_2_CODEX_MEDIUM: {"api_name": "gpt-5.2-codex", "reasoning_effort": "medium"},
     Llm.GPT_5_2_CODEX_HIGH: {"api_name": "gpt-5.2-codex", "reasoning_effort": "high"},
     Llm.GPT_5_2_CODEX_XHIGH: {"api_name": "gpt-5.2-codex", "reasoning_effort": "xhigh"},
-    Llm.GPT_5_3_CODEX_LOW: {"api_name": "gpt-5.3-codex", "reasoning_effort": "low"},
-    Llm.GPT_5_3_CODEX_MEDIUM: {"api_name": "gpt-5.3-codex", "reasoning_effort": "medium"},
-    Llm.GPT_5_3_CODEX_HIGH: {"api_name": "gpt-5.3-codex", "reasoning_effort": "high"},
-    Llm.GPT_5_3_CODEX_XHIGH: {"api_name": "gpt-5.3-codex", "reasoning_effort": "xhigh"},
     Llm.GPT_5_4_MINI_LOW: {"api_name": "gpt-5.4-mini", "reasoning_effort": "low"},
     Llm.GPT_5_4_2026_03_05_NONE: {
         "api_name": "gpt-5.4-2026-03-05",
