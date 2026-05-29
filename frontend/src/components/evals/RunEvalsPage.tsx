@@ -345,7 +345,7 @@ function RunEvalsPage() {
                 <div>
                   <span className="font-medium">Output path:</span>
                   <code className="ml-2 bg-gray-100 px-2 py-0.5 rounded">
-                    backend/evals_data/outputs
+                    backend/evals_data/results
                   </code>
                 </div>
               </div>

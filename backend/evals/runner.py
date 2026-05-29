@@ -26,7 +26,7 @@ def _output_html_filename(original_filename: str, attempt_idx: int) -> str:
 
 def get_eval_output_subfolder(stack: Stack, model: str) -> str:
     today = datetime.now().strftime("%b_%d_%Y")
-    output_dir = EVALS_DIR + "/outputs"
+    output_dir = EVALS_DIR + "/results"
     return os.path.join(output_dir, f"{today}_{model}_{stack}")
 
 
