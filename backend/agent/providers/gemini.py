@@ -19,6 +19,8 @@ from agent.providers.base import (
 from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall
+from config import IS_DEBUG_ENABLED
+from fs_logging.gemini_prompt_report import write_gemini_prompt_report
 from llm import Llm
 
 
@@ -38,8 +40,18 @@ def serialize_gemini_tools(tools: List[CanonicalToolDefinition]) -> List[types.T
 
 
 def _get_gemini_api_model_name(model: Llm) -> str:
-    if model in [Llm.GEMINI_3_FLASH_PREVIEW_HIGH, Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL]:
+    if model in [
+        Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
+        Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+    ]:
         return "gemini-3-flash-preview"
+    if model in [
+        Llm.GEMINI_3_5_FLASH_HIGH,
+        Llm.GEMINI_3_5_FLASH_MEDIUM,
+        Llm.GEMINI_3_5_FLASH_LOW,
+        Llm.GEMINI_3_5_FLASH_MINIMAL,
+    ]:
+        return "gemini-3.5-flash"
     if model in [
         Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
         Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM,
@@ -53,13 +65,17 @@ def _get_thinking_level_for_model(model: Llm) -> str:
     if model in [
         Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
         Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
+        Llm.GEMINI_3_5_FLASH_HIGH,
     ]:
         return "high"
-    if model == Llm.GEMINI_3_1_PRO_PREVIEW_LOW:
+    if model in [
+        Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
+        Llm.GEMINI_3_5_FLASH_LOW,
+    ]:
         return "low"
-    if model == Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM:
+    if model in [Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM, Llm.GEMINI_3_5_FLASH_MEDIUM]:
         return "medium"
-    if model == Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL:
+    if model in [Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, Llm.GEMINI_3_5_FLASH_MINIMAL]:
         return "minimal"
     return "high"
 
@@ -277,6 +293,7 @@ class GeminiProviderSession(ProviderSession):
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
         thinking_level = _get_thinking_level_for_model(self._model)
+        api_model_name = _get_gemini_api_model_name(self._model)
         config = types.GenerateContentConfig(
             temperature=1.0,
             max_output_tokens=50000,
@@ -288,8 +305,18 @@ class GeminiProviderSession(ProviderSession):
             tools=self._tools,
         )
 
+        if IS_DEBUG_ENABLED:
+            write_gemini_prompt_report(
+                model=self._model,
+                api_model_name=api_model_name,
+                thinking_level=thinking_level,
+                system_instruction=self._system_prompt,
+                contents=self._contents,
+                config=config,
+            )
+
         stream = await self._client.aio.models.generate_content_stream(
-            model=_get_gemini_api_model_name(self._model),
+            model=api_model_name,
             contents=cast(Any, self._contents),
             config=config,
         )

@@ -21,14 +21,37 @@ from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
 from llm import Llm
 
-THINKING_MODELS = {
-    Llm.CLAUDE_4_5_SONNET_2025_09_29.value,
-    Llm.CLAUDE_4_5_OPUS_2025_11_01.value,
-}
+THINKING_MODELS: set[str] = set()
 ADAPTIVE_THINKING_MODELS = {
     Llm.CLAUDE_OPUS_4_6.value,
+    Llm.CLAUDE_OPUS_4_8_LOW.value,
+    Llm.CLAUDE_OPUS_4_8_MEDIUM.value,
+    Llm.CLAUDE_OPUS_4_8_HIGH.value,
+    Llm.CLAUDE_OPUS_4_8_XHIGH.value,
+    Llm.CLAUDE_OPUS_4_8_MAX.value,
     Llm.CLAUDE_SONNET_4_6.value,
 }
+
+ANTHROPIC_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
+    Llm.CLAUDE_OPUS_4_8_LOW: {"api_name": "claude-opus-4-8", "effort": "low"},
+    Llm.CLAUDE_OPUS_4_8_MEDIUM: {"api_name": "claude-opus-4-8", "effort": "medium"},
+    Llm.CLAUDE_OPUS_4_8_HIGH: {"api_name": "claude-opus-4-8", "effort": "high"},
+    Llm.CLAUDE_OPUS_4_8_XHIGH: {"api_name": "claude-opus-4-8", "effort": "xhigh"},
+    Llm.CLAUDE_OPUS_4_8_MAX: {"api_name": "claude-opus-4-8", "effort": "max"},
+}
+
+
+def _get_anthropic_api_model_name(model: Llm) -> str:
+    return ANTHROPIC_MODEL_CONFIG.get(model, {}).get("api_name", model.value)
+
+
+def _get_anthropic_effort(model: Llm) -> str:
+    configured_effort = ANTHROPIC_MODEL_CONFIG.get(model, {}).get("effort")
+    if configured_effort:
+        return configured_effort
+    if model == Llm.CLAUDE_SONNET_4_6:
+        return "high"
+    return "max"
 
 
 def _convert_openai_messages_to_claude(
@@ -211,7 +234,7 @@ class AnthropicProviderSession(ProviderSession):
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
         stream_kwargs: Dict[str, Any] = {
-            "model": self._model.value,
+            "model": _get_anthropic_api_model_name(self._model),
             "max_tokens": 50000,
             "system": self._system_prompt,
             "messages": self._messages,
@@ -223,12 +246,9 @@ class AnthropicProviderSession(ProviderSession):
             stream_kwargs["thinking"] = {
                 "type": "adaptive",
             }
-            effort = (
-                "high"
-                if self._model.value == Llm.CLAUDE_SONNET_4_6.value
-                else "max"
-            )
-            stream_kwargs["output_config"] = {"effort": effort}
+            stream_kwargs["output_config"] = {
+                "effort": _get_anthropic_effort(self._model)
+            }
         elif self._model.value in THINKING_MODELS:
             stream_kwargs["thinking"] = {
                 "type": "enabled",
@@ -305,7 +325,7 @@ class AnthropicProviderSession(ProviderSession):
     async def close(self) -> None:
         u = self._total_usage
         model_name = self._model.value
-        pricing = MODEL_PRICING.get(model_name)
+        pricing = MODEL_PRICING.get(_get_anthropic_api_model_name(self._model))
         cost_str = f" cost=${u.cost(pricing):.4f}" if pricing else ""
         cache_hit_rate_str = f" cache_hit_rate={u.cache_hit_rate_percent():.2f}%"
         print(

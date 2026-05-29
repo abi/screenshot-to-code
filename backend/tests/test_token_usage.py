@@ -281,13 +281,16 @@ class TestAnthropicExtract:
 class TestModelPricing:
     def test_known_models_have_pricing(self) -> None:
         for name in [
-            "gpt-4.1-2025-04-14",
             "gpt-5.2-codex",
             "claude-opus-4-6",
             "claude-sonnet-4-6",
             "gemini-3-flash-preview",
             "gemini-3-pro-preview",
+            "gpt-5.4-mini",
             "gpt-5.4-2026-03-05",
+            "gpt-5.5",
+            "claude-opus-4-8",
+            "gemini-3.5-flash",
         ]:
             assert name in MODEL_PRICING, f"missing pricing for {name}"
 
@@ -299,5 +302,5 @@ class TestModelPricing:
             assert MODEL_PRICING[name].cache_write > 0
 
     def test_openai_gemini_no_cache_write(self) -> None:
-        for name in ["gpt-4.1-2025-04-14", "gemini-3-flash-preview"]:
+        for name in ["gpt-5.2-codex", "gemini-3-flash-preview"]:
             assert MODEL_PRICING[name].cache_write == 0.0

@@ -1,14 +1,6 @@
-<p align="center">
-  <a href="https://github.com/abi/lilo">
-    <img src="https://raw.githubusercontent.com/abi/lilo/main/frontend/public/readme-logo.png" alt="Sponsored by Lilo" width="180" />
-  </a>
-  <br />
-  Sponsored by <a href="https://github.com/abi/lilo">Lilo</a>
-</p>
-
 # screenshot-to-code
 
-A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI. Now supporting Gemini 3 and Claude Opus 4.5!
+A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI.
 
 https://github.com/user-attachments/assets/85b911c0-efea-4957-badb-daa97ec402ad
 
@@ -22,13 +14,14 @@ Supported stacks:
 - Ionic + Tailwind
 - SVG
 
-Supported AI models:
+Default AI models:
 
-- Gemini 3 Flash and Pro - Best models! (Google)
-- Claude Opus 4.5 - Best model! (Anthropic)
-- GPT-5.3, GPT-5.2, GPT-4.1 (OpenAI)
-- Other models are available as well but we recommend using the above models.
-- DALL-E 3 or Flux Schnell (using Replicate) for image generation
+- Gemini 3 Flash Preview, Gemini 3.1 Pro Preview, and Gemini 3.5 Flash (Google)
+- GPT-5.2 Codex and GPT-5.4 Mini (OpenAI)
+- Claude Opus 4.6 and Claude Sonnet 4.6 (Anthropic)
+- Video inputs use Gemini variants by default.
+- Additional model and effort variants are available in the codebase for testing.
+- Flux Schnell (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
 
