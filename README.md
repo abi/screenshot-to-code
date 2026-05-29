@@ -16,11 +16,9 @@ Supported stacks:
 
 Default AI models:
 
-- Gemini 3 Flash Preview, Gemini 3.1 Pro Preview, and Gemini 3.5 Flash (Google)
-- GPT-5.2 Codex and GPT-5.4 Mini (OpenAI)
-- Claude Opus 4.6 and Claude Sonnet 4.6 (Anthropic)
-- Video inputs use Gemini variants by default.
-- Additional model and effort variants are available in the codebase for testing.
+- Gemini 3 Flash Preview and Gemini 3.1 Pro Preview - best models
+- GPT-5.5, GPT-5.2 Codex and GPT-5.4 Mini
+- Claude Opus 4.6, Claude Opus 4.8
 - Flux Schnell (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
