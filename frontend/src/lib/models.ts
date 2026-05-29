@@ -19,6 +19,7 @@ export enum CodeGenerationModel {
   GPT_5_3_CODEX_MEDIUM = "gpt-5.3-codex (medium thinking)",
   GPT_5_3_CODEX_HIGH = "gpt-5.3-codex (high thinking)",
   GPT_5_3_CODEX_XHIGH = "gpt-5.3-codex (xhigh thinking)",
+  GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
   GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
   GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)",
@@ -60,6 +61,9 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gpt-5.3-codex (xhigh thinking)": {
     name: "GPT 5.3 Codex (xhigh)",
+  },
+  "gpt-5.4-mini (low thinking)": {
+    name: "GPT 5.4 Mini (low)",
   },
   "claude-opus-4-5-20251101": { name: "Claude Opus 4.5" },
   "claude-opus-4-8 (low effort)": {
