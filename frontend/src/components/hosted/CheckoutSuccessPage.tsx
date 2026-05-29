@@ -9,7 +9,7 @@ const CheckoutSuccessPage: React.FC = () => {
   useEffect(() => {
     const attributionProps = getAttributionEventProps();
     addEvent("Paid Conversion", attributionProps);
-    addTikTokEvent("CompletePayment", attributionProps);
+    addTikTokEvent("Purchase", attributionProps);
 
     // Redirect to home page after a short delay
     const redirectTimer = setTimeout(() => {
