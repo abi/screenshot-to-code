@@ -53,4 +53,7 @@ MODEL_PRICING: Dict[str, ModelPricing] = {
     "gemini-3.1-pro-preview": ModelPricing(
         input=2.00, output=12.00, cache_read=0.20
     ),
+    "gemini-3.5-flash": ModelPricing(
+        input=0.50, output=3.00, cache_read=0.05
+    ),
 }

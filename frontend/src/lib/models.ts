@@ -19,6 +19,10 @@ export enum CodeGenerationModel {
   GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)",
   GEMINI_3_1_PRO_PREVIEW_MEDIUM = "gemini-3.1-pro-preview (medium thinking)",
   GEMINI_3_1_PRO_PREVIEW_LOW = "gemini-3.1-pro-preview (low thinking)",
+  GEMINI_3_5_FLASH_HIGH = "gemini-3.5-flash (high thinking)",
+  GEMINI_3_5_FLASH_MEDIUM = "gemini-3.5-flash (medium thinking)",
+  GEMINI_3_5_FLASH_LOW = "gemini-3.5-flash (low thinking)",
+  GEMINI_3_5_FLASH_MINIMAL = "gemini-3.5-flash (minimal thinking)",
 }
 
 // Will generate a static error if a model in the enum above is not in the descriptions
@@ -65,6 +69,22 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   "claude-opus-4-6": { name: "Claude Opus 4.6", inBeta: false },
   "claude-sonnet-4-6": { name: "Claude Sonnet 4.6", inBeta: false },
   "claude-sonnet-4-5-20250929": { name: "Claude Sonnet 4.5", inBeta: false },
+  "gemini-3.5-flash (high thinking)": {
+    name: "Gemini 3.5 Flash (high)",
+    inBeta: true,
+  },
+  "gemini-3.5-flash (medium thinking)": {
+    name: "Gemini 3.5 Flash (medium)",
+    inBeta: true,
+  },
+  "gemini-3.5-flash (low thinking)": {
+    name: "Gemini 3.5 Flash (low)",
+    inBeta: true,
+  },
+  "gemini-3.5-flash (minimal thinking)": {
+    name: "Gemini 3.5 Flash (minimal)",
+    inBeta: true,
+  },
   "gemini-3-flash-preview (high thinking)": {
     name: "Gemini 3 Flash (high)",
     inBeta: true,
