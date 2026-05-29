@@ -27,6 +27,9 @@ MODEL_PRICING: Dict[str, ModelPricing] = {
     "gpt-5.4-2026-03-05": ModelPricing(
         input=2.50, output=15.00, cache_read=0.25
     ),
+    "gpt-5.5": ModelPricing(
+        input=2.50, output=15.00, cache_read=0.25
+    ),
     # --- Anthropic ---
     "claude-sonnet-4-6": ModelPricing(
         input=3.00, output=15.00, cache_read=0.30, cache_write=3.75
