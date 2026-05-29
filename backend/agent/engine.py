@@ -38,6 +38,7 @@ class AgentEngine:
         gemini_api_key: Optional[str],
         should_generate_images: bool,
         generation_group_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         generation_type: Literal["create", "update"] = "create",
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
@@ -50,6 +51,7 @@ class AgentEngine:
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
         self.generation_group_id = generation_group_id
+        self.user_id = user_id
         self.generation_type = generation_type
 
         self.file_state = AgentFileState()
@@ -63,6 +65,7 @@ class AgentEngine:
             openai_api_key=openai_api_key,
             openai_base_url=openai_base_url,
             generation_group_id=generation_group_id,
+            user_id=user_id,
             variant_index=variant_index + 1,
             generation_type=generation_type,
             option_codes=option_codes,

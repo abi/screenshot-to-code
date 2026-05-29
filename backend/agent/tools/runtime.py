@@ -40,6 +40,7 @@ class AgentToolRuntime:
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
         generation_group_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         variant_index: Optional[int] = None,
         generation_type: Literal["create", "update"] = "create",
         current_model: Optional[Llm] = None,
@@ -50,6 +51,7 @@ class AgentToolRuntime:
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
         self.generation_group_id = generation_group_id
+        self.user_id = user_id
         self.variant_index = variant_index
         self.generation_type = generation_type
         self.current_model = current_model
@@ -70,6 +72,7 @@ class AgentToolRuntime:
                 source_provider=source_provider,
                 image_generation_model=image_generation_model,
                 generation_group_id=self.generation_group_id,
+                user_id=self.user_id,
                 variant_index=self.variant_index,
                 prompt=prompt,
             )

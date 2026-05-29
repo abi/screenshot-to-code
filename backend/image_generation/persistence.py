@@ -15,6 +15,7 @@ async def persist_asset_image_url(
     source_provider: SourceProvider,
     image_generation_model: str,
     generation_group_id: str | None,
+    user_id: str | None,
     variant_index: int | None,
     prompt: str | None,
 ) -> str:
@@ -32,6 +33,7 @@ async def persist_asset_image_url(
                 "source_provider": source_provider,
                 "image_generation_model": image_generation_model,
                 "generation_group_id": generation_group_id,
+                "user_id": user_id,
                 "variant_index": variant_index,
                 "prompt": prompt,
             },

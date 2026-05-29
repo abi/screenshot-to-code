@@ -82,6 +82,7 @@ async def test_generate_images_returns_persisted_url(
         assert kwargs["source_type"] == "generated"
         assert kwargs["source_provider"] == "replicate"
         assert kwargs["generation_group_id"] == "group-1"
+        assert kwargs["user_id"] == "user-1"
         assert kwargs["variant_index"] == 2
         concurrent += 1
         max_concurrent = max(max_concurrent, concurrent)
@@ -105,6 +106,7 @@ async def test_generate_images_returns_persisted_url(
         openai_api_key=None,
         openai_base_url=None,
         generation_group_id="group-1",
+        user_id="user-1",
         variant_index=2,
     )
 
