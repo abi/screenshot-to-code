@@ -741,6 +741,7 @@ class AgenticGenerationStage:
                 anthropic_api_key=self.anthropic_api_key,
                 gemini_api_key=self.gemini_api_key,
                 should_generate_images=self.should_generate_images,
+                generation_group_id=self.generation_group_id,
                 generation_type=self.generation_type,
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,

@@ -6,7 +6,12 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from codegen.utils import extract_html_content
 from config import IS_PROD, REPLICATE_API_KEY
 from image_generation.generation import process_tasks
-from image_generation.replicate import remove_background
+from image_generation.persistence import SourceProvider, persist_asset_image_url
+from image_generation.replicate import (
+    FLUX_MODEL_PATH,
+    REMOVE_BACKGROUND_VERSION,
+    remove_background,
+)
 from llm import Llm, OPENAI_MODELS, get_openai_api_name
 
 from agent.state import AgentFileState, ensure_str
@@ -30,6 +35,8 @@ class AgentToolRuntime:
         should_generate_images: bool,
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
+        generation_group_id: Optional[str] = None,
+        variant_index: Optional[int] = None,
         generation_type: Literal["create", "update"] = "create",
         current_model: Optional[Llm] = None,
         option_codes: Optional[List[str]] = None,
@@ -38,9 +45,56 @@ class AgentToolRuntime:
         self.should_generate_images = should_generate_images
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
+        self.generation_group_id = generation_group_id
+        self.variant_index = variant_index
         self.generation_type = generation_type
         self.current_model = current_model
         self.option_codes = option_codes or []
+
+    async def _persist_image_url(
+        self,
+        source_url: str,
+        source_provider: SourceProvider,
+        image_generation_model: str,
+        prompt: str | None,
+    ) -> str:
+        try:
+            return await persist_asset_image_url(
+                source_url=source_url,
+                source_provider=source_provider,
+                image_generation_model=image_generation_model,
+                generation_group_id=self.generation_group_id,
+                variant_index=self.variant_index,
+                prompt=prompt,
+            )
+        except Exception as exc:
+            print(f"Failed to persist generated image URL: {exc}")
+            if sentry_sdk:
+                sentry_sdk.capture_exception(exc)
+            return source_url
+
+    async def _persist_image_urls(
+        self,
+        items: List[Tuple[str, str | None]],
+        source_provider: SourceProvider,
+        image_generation_model: str,
+    ) -> List[str | None]:
+        semaphore = asyncio.Semaphore(10)
+
+        async def persist_one(prompt: str, url: str | None) -> str | None:
+            if not url:
+                return None
+            async with semaphore:
+                return await self._persist_image_url(
+                    source_url=url,
+                    source_provider=source_provider,
+                    image_generation_model=image_generation_model,
+                    prompt=prompt,
+                )
+
+        return await asyncio.gather(
+            *(persist_one(prompt, url) for prompt, url in items)
+        )
 
     async def execute(self, tool_call: ToolCall) -> ToolExecutionResult:
         if "INVALID_JSON" in tool_call.arguments:
@@ -291,8 +345,15 @@ class AgentToolRuntime:
             base_url = self.openai_base_url
 
         generated = await process_tasks(unique_prompts, api_key, base_url, model)  # type: ignore
+        image_generation_model = FLUX_MODEL_PATH if model == "flux" else "dall-e-3"
+        source_provider = "replicate" if model == "flux" else "openai"
+        persisted = await self._persist_image_urls(
+            items=list(zip(unique_prompts, generated)),
+            source_provider=source_provider,
+            image_generation_model=image_generation_model,
+        )
         merged_results = {
-            prompt: url for prompt, url in zip(unique_prompts, generated)
+            prompt: url for prompt, url in zip(unique_prompts, persisted)
         }
         summary_items = [
             {
@@ -340,17 +401,25 @@ class AgentToolRuntime:
             tasks = [remove_background(url, REPLICATE_API_KEY) for url in batch]
             raw_results.extend(await asyncio.gather(*tasks, return_exceptions=True))
 
-        results: List[Dict[str, Any]] = []
-        for url, raw in zip(unique_urls, raw_results):
+        successful_results: List[Tuple[int, str, str]] = []
+        results: List[Dict[str, Any] | None] = [None] * len(unique_urls)
+        for index, (url, raw) in enumerate(zip(unique_urls, raw_results)):
             if isinstance(raw, BaseException):
                 print(f"Background removal failed for {url}: {raw}")
-                results.append(
-                    {"image_url": url, "result_url": None, "status": "error"}
-                )
+                results[index] = {"image_url": url, "result_url": None, "status": "error"}
             else:
-                results.append(
-                    {"image_url": url, "result_url": raw, "status": "ok"}
-                )
+                successful_results.append((index, url, raw))
+
+        persisted_urls = await self._persist_image_urls(
+            items=[("", raw) for _, _, raw in successful_results],
+            source_provider="replicate",
+            image_generation_model=REMOVE_BACKGROUND_VERSION,
+        )
+
+        for (index, url, _), persisted_url in zip(successful_results, persisted_urls):
+            results[index] = {"image_url": url, "result_url": persisted_url, "status": "ok"}
+
+        final_results = [result for result in results if result is not None]
 
         summary_items = [
             {
@@ -358,11 +427,11 @@ class AgentToolRuntime:
                 "result_url": r["result_url"],
                 "status": r["status"],
             }
-            for r in results
+            for r in final_results
         ]
         return ToolExecutionResult(
             ok=True,
-            result={"images": results},
+            result={"images": final_results},
             summary={"images": summary_items},
         )
 

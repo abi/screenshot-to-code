@@ -1,4 +1,5 @@
 import pytest
+import asyncio
 
 from agent.state import AgentFileState
 from agent.tools.runtime import AgentToolRuntime
@@ -59,6 +60,68 @@ async def test_execute_edit_file_uses_updated_result_shape() -> None:
     assert result.result["content"] == "Successfully edited file at index.html."
     assert set(result.result["details"].keys()) == {"diff", "firstChangedLine"}
     assert "--- index.html" in result.result["details"]["diff"]
+
+
+@pytest.mark.asyncio
+async def test_generate_images_returns_persisted_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_process_tasks(prompts, *_args):
+        assert prompts == ["hero image", "logo image", "card image"]
+        return [
+            "https://replicate.delivery/tmp-1.png",
+            "https://replicate.delivery/tmp-2.png",
+            "https://replicate.delivery/tmp-3.png",
+        ]
+
+    concurrent = 0
+    max_concurrent = 0
+
+    async def fake_persist_asset_image_url(**kwargs):
+        nonlocal concurrent, max_concurrent
+        assert kwargs["source_provider"] == "replicate"
+        assert kwargs["generation_group_id"] == "group-1"
+        assert kwargs["variant_index"] == 2
+        concurrent += 1
+        max_concurrent = max(max_concurrent, concurrent)
+        await asyncio.sleep(0.01)
+        concurrent -= 1
+        return str(kwargs["source_url"]).replace(
+            "https://replicate.delivery/tmp",
+            "https://cdn.example.com/asset",
+        )
+
+    monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "replicate-key")
+    monkeypatch.setattr("agent.tools.runtime.process_tasks", fake_process_tasks)
+    monkeypatch.setattr(
+        "agent.tools.runtime.persist_asset_image_url",
+        fake_persist_asset_image_url,
+    )
+
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=True,
+        openai_api_key=None,
+        openai_base_url=None,
+        generation_group_id="group-1",
+        variant_index=2,
+    )
+
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="generate_images",
+            arguments={"prompts": ["hero image", "logo image", "card image"]},
+        )
+    )
+
+    assert result.ok is True
+    assert result.result["images"] == {
+        "hero image": "https://cdn.example.com/asset-1.png",
+        "logo image": "https://cdn.example.com/asset-2.png",
+        "card image": "https://cdn.example.com/asset-3.png",
+    }
+    assert max_concurrent > 1
 
 
 def test_create_file_reports_to_sentry_on_hosted_update(
