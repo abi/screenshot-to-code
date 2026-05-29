@@ -19,6 +19,8 @@ from agent.providers.base import (
 from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall
+from config import IS_DEBUG_ENABLED
+from fs_logging.gemini_prompt_report import write_gemini_prompt_report
 from llm import Llm
 
 
@@ -277,6 +279,7 @@ class GeminiProviderSession(ProviderSession):
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
         thinking_level = _get_thinking_level_for_model(self._model)
+        api_model_name = _get_gemini_api_model_name(self._model)
         config = types.GenerateContentConfig(
             temperature=1.0,
             max_output_tokens=50000,
@@ -288,8 +291,18 @@ class GeminiProviderSession(ProviderSession):
             tools=self._tools,
         )
 
+        if IS_DEBUG_ENABLED:
+            write_gemini_prompt_report(
+                model=self._model,
+                api_model_name=api_model_name,
+                thinking_level=thinking_level,
+                system_instruction=self._system_prompt,
+                contents=self._contents,
+                config=config,
+            )
+
         stream = await self._client.aio.models.generate_content_stream(
-            model=_get_gemini_api_model_name(self._model),
+            model=api_model_name,
             contents=cast(Any, self._contents),
             config=config,
         )
