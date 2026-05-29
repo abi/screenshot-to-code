@@ -379,8 +379,6 @@ function App() {
 
   // Used when the user cancels the code generation
   const cancelCodeGeneration = () => {
-    addEvent("Cancel");
-
     wsRef.current?.close?.(USER_CLOSE_WEB_SOCKET_CODE);
   };
 
@@ -808,7 +806,6 @@ function App() {
       ? []
       : toRequestHistory(updatedVariantHistory, getAssetsById);
 
-    addEvent("Edit");
     doGenerateCode({
       generationType: "update",
       inputMode,

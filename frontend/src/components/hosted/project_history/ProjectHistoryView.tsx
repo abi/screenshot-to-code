@@ -21,7 +21,6 @@ import {
   PaginationLink,
 } from "../../ui/pagination";
 import StackLabel from "../../core/StackLabel";
-import { addEvent } from "../../../lib/analytics";
 import { LuFolderOpen, LuTrash2, LuX } from "react-icons/lu";
 import { Button } from "../../ui/button";
 import {
@@ -265,16 +264,11 @@ function ProjectHistoryView({ importFromCode }: ProjectHistoryViewProps) {
   );
 
   useEffect(() => {
-    addEvent("ViewProjectHistory");
-  }, []);
-
-  useEffect(() => {
     void loadData(currentPage);
   }, [currentPage, loadData]);
 
   const onLoadGeneration = (completion: string, stack: Stack) => {
     importFromCode(completion, stack);
-    addEvent("ProjectHistory:LoadInEditor");
   };
 
   const toggleSelection = (projectId: string) => {

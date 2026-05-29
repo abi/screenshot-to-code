@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { SAAS_BACKEND_URL, STRIPE_PUBLISHABLE_KEY } from "../../../config";
-import { addEvent } from "../../../lib/analytics";
+import { addEvent, addTikTokEvent } from "../../../lib/analytics";
 import { Stripe, loadStripe } from "@stripe/stripe-js";
 import { useStore } from "../../../store/store";
 import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
@@ -51,6 +51,10 @@ export default function useStripeCheckout() {
       );
 
       addEvent("Checkout Started", {
+        ...getAttributionEventProps(),
+        price_lookup_key: priceLookupKey,
+      });
+      addTikTokEvent("InitiateCheckout", {
         ...getAttributionEventProps(),
         price_lookup_key: priceLookupKey,
       });
