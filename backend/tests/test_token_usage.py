@@ -288,6 +288,7 @@ class TestModelPricing:
             "gemini-3-flash-preview",
             "gemini-3-pro-preview",
             "gpt-5.4-2026-03-05",
+            "claude-opus-4-8",
         ]:
             assert name in MODEL_PRICING, f"missing pricing for {name}"
 
