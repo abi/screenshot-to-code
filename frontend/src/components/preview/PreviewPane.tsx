@@ -18,7 +18,7 @@ import { Button } from "../ui/button";
 import { useAppStore } from "../../store/app-store";
 import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
-import PreviewComponent from "./PreviewComponent";
+import PreviewComponent, { Annotation } from "./PreviewComponent";
 import { downloadCode } from "./download";
 
 function openInNewTab(code: string) {
@@ -68,6 +68,26 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
     inputMode === "video" && appState === AppState.CODING
       ? extractHtml(currentCode)
       : currentCode;
+
+  // Extract annotations from the selected variant's completed annotate tool events
+  const annotations: Annotation[] = useMemo(() => {
+    if (!currentCommit) return [];
+    const variant = currentCommit.variants[currentCommit.selectedVariantIndex];
+    const events = variant?.agentEvents || [];
+    for (const event of events) {
+      if (
+        event.type === "tool" &&
+        event.toolName === "annotate" &&
+        event.status === "complete"
+      ) {
+        const output = event.output as { annotations?: Array<{ selector: string; description: string }> } | undefined;
+        if (output?.annotations && Array.isArray(output.annotations)) {
+          return output.annotations;
+        }
+      }
+    }
+    return [];
+  }, [currentCommit]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -217,6 +237,7 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
             device="desktop"
             onScaleChange={setDesktopScale}
             viewMode={desktopViewMode}
+            annotations={annotations}
           />
         </TabsContent>
         <TabsContent value="mobile" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
@@ -224,6 +245,7 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
             code={previewCode}
             device="mobile"
             viewMode="actual"
+            annotations={annotations}
           />
         </TabsContent>
         <TabsContent value="code" className="flex-1 min-h-0 mt-0 overflow-auto">

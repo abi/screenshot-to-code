@@ -4,11 +4,17 @@ import useThrottle from "../../hooks/useThrottle";
 import { useAppStore } from "../../store/app-store";
 import { addHighlight, removeHighlight } from "../select-and-edit/utils";
 
+export interface Annotation {
+  selector: string;
+  description: string;
+}
+
 interface Props {
   code: string;
   device: "mobile" | "desktop";
   onScaleChange?: (scale: number) => void;
   viewMode?: "fit" | "actual";
+  annotations?: Annotation[];
 }
 
 const MOBILE_VIEWPORT_WIDTH = 375;
@@ -19,6 +25,7 @@ function PreviewComponent({
   device,
   onScaleChange,
   viewMode,
+  annotations,
 }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -157,6 +164,67 @@ function PreviewComponent({
       iframe.srcdoc = throttledCode;
     }
   }, [throttledCode]);
+
+  // Apply annotation highlights inside the iframe when annotations change
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe || !annotations || annotations.length === 0) return;
+
+    const applyAnnotations = () => {
+      const doc = iframe.contentWindow?.document;
+      if (!doc) return;
+
+      // Remove any previously injected annotation styles
+      doc.getElementById("__annotation-styles")?.remove();
+
+      // Inject a style tag with a pulsing highlight animation
+      const style = doc.createElement("style");
+      style.id = "__annotation-styles";
+      style.textContent = `
+        @keyframes __annotation-pulse {
+          0%, 100% { outline-color: rgba(245, 158, 11, 0.8); }
+          50% { outline-color: rgba(245, 158, 11, 0.3); }
+        }
+        .__annotation-highlight {
+          outline: 2px solid rgba(245, 158, 11, 0.8);
+          outline-offset: 2px;
+          animation: __annotation-pulse 2s ease-in-out 3;
+        }
+      `;
+      doc.head.appendChild(style);
+
+      // Query each selector and apply the highlight class
+      for (const annotation of annotations) {
+        try {
+          const el = doc.querySelector(annotation.selector);
+          if (el) {
+            el.classList.add("__annotation-highlight");
+            el.setAttribute("title", annotation.description);
+          }
+        } catch {
+          // Invalid selector — skip silently
+        }
+      }
+    };
+
+    // The iframe may not have loaded yet after srcdoc changes, so listen for load
+    iframe.addEventListener("load", applyAnnotations);
+    // Also try immediately in case the iframe is already loaded
+    applyAnnotations();
+
+    return () => {
+      iframe.removeEventListener("load", applyAnnotations);
+      // Clean up highlights from iframe DOM
+      const doc = iframe.contentWindow?.document;
+      if (doc) {
+        doc.getElementById("__annotation-styles")?.remove();
+        doc.querySelectorAll(".__annotation-highlight").forEach((el) => {
+          el.classList.remove("__annotation-highlight");
+          el.removeAttribute("title");
+        });
+      }
+    };
+  }, [annotations]);
 
   return (
     <div
