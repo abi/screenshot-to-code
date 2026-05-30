@@ -53,6 +53,11 @@ MessageType = Literal[
 from prompts.pipeline import build_prompt_messages
 from prompts.request_parsing import parse_prompt_content, parse_prompt_history
 from prompts.prompt_types import PromptHistoryMessage, Stack, UserTurnInput
+from uploaded_assets import (
+    append_uploaded_asset_ids_to_history,
+    append_uploaded_asset_ids_to_prompt,
+    infer_local_asset_base_url,
+)
 from agent.runner import Agent
 from routes.model_choice_sets import (
     ALL_KEYS_MODELS_DEFAULT,
@@ -242,8 +247,13 @@ class ExtractedParams:
 class ParameterExtractionStage:
     """Handles parameter extraction and validation from WebSocket requests"""
 
-    def __init__(self, throw_error: Callable[[str], Coroutine[Any, Any, None]]):
+    def __init__(
+        self,
+        throw_error: Callable[[str], Coroutine[Any, Any, None]],
+        asset_base_url: str = "",
+    ):
         self.throw_error = throw_error
+        self.asset_base_url = asset_base_url
 
     async def extract_and_validate(self, params: Dict[str, Any]) -> ExtractedParams:
         """Extract and validate all parameters from the request"""
@@ -302,6 +312,9 @@ class ParameterExtractionStage:
         history: List[PromptHistoryMessage] = parse_prompt_history(
             params.get("history")
         )
+
+        prompt = append_uploaded_asset_ids_to_prompt(prompt, self.asset_base_url)
+        history = append_uploaded_asset_ids_to_history(history, self.asset_base_url)
 
         # Extract file state for agent edits
         raw_file_state = params.get("fileState")
@@ -669,7 +682,10 @@ class ParameterExtractionMiddleware(Middleware):
         context.params = await context.ws_comm.receive_params()
 
         # Extract and validate
-        param_extractor = ParameterExtractionStage(context.throw_error)
+        param_extractor = ParameterExtractionStage(
+            context.throw_error,
+            infer_local_asset_base_url(context.websocket),
+        )
         context.extracted_params = await param_extractor.extract_and_validate(
             context.params
         )

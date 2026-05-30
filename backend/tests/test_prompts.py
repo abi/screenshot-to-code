@@ -127,7 +127,7 @@ class TestCreatePrompt:
         text = text_part.get("text")
         assert isinstance(text, str)
 
-        assert "Reusable design system" in text
+        assert "## Design system" in text
         assert "Reuse .mockup-frame" in text
 
     def test_plan_update_with_history_uses_history_strategy(self) -> None:

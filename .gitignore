@@ -5,6 +5,7 @@ node_modules
 
 # Run logs
 backend/run_logs/*
+backend/local_assets/*
 
 # Weird Docker setup related files
 backend/backend/*

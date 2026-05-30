@@ -7,6 +7,7 @@ from codegen.utils import extract_html_content
 from config import REPLICATE_API_KEY
 from image_generation.generation import process_tasks
 from image_generation.replicate import remove_background
+from uploaded_assets.tools import run_save_assets
 
 from agent.state import AgentFileState, ensure_str
 from agent.tools.types import ToolCall, ToolExecutionResult
@@ -48,6 +49,8 @@ class AgentToolRuntime:
             return await self._generate_images(tool_call.arguments)
         if tool_call.name == "remove_background":
             return await self._remove_background(tool_call.arguments)
+        if tool_call.name == "save_assets":
+            return run_save_assets(tool_call.arguments)
         if tool_call.name == "retrieve_option":
             return self._retrieve_option(tool_call.arguments)
         return ToolExecutionResult(

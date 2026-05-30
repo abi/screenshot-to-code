@@ -15,6 +15,9 @@ REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)
 # Debugging-related
 IS_DEBUG_ENABLED = bool(os.environ.get("IS_DEBUG_ENABLED", False))
 DEBUG_DIR = os.environ.get("DEBUG_DIR", "")
+LOCAL_ASSET_DIR = os.environ.get(
+    "LOCAL_ASSET_DIR", os.path.join(os.path.dirname(__file__), "local_assets")
+)
 
 # Set to True when running in production (on the hosted version)
 # Used as a feature flag to enable or disable certain features

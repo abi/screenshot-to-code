@@ -8,8 +8,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import IS_DEBUG_ENABLED
 from routes import screenshot, generate_code, home, evals, export, design_systems
+from uploaded_assets import configure_uploaded_asset_routes
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+configure_uploaded_asset_routes(app)
 
 
 @app.on_event("startup")
