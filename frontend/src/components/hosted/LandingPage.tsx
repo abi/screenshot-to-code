@@ -1,9 +1,14 @@
 import { FaGithub, FaArrowRight } from "react-icons/fa";
 import Footer from "./LandingPage/Footer";
 import { SignUp } from "@clerk/clerk-react";
-import { useState } from "react";
+import { Component, useState, type ErrorInfo, type ReactNode } from "react";
 import { Dialog, DialogContent } from "../ui/dialog";
-import { Tweet } from "react-tweet";
+import { EmbeddedTweet, TweetSkeleton, useTweet } from "react-tweet";
+import type {
+  Tweet as TweetData,
+  TweetBase,
+  TweetEntities,
+} from "react-tweet/api";
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
@@ -32,6 +37,138 @@ const FEATURES = [
     description: "Describe any UI you want in plain English.",
   },
 ];
+
+const TESTIMONIALS = [
+  {
+    id: "1733865178905661940",
+    title: "Fast first drafts",
+    body: "Turn screenshots and mockups into editable frontend code, then keep iterating with follow-up prompts.",
+    href: "https://x.com/i/web/status/1733865178905661940",
+  },
+  {
+    id: "1727105236811366669",
+    title: "Useful for builders",
+    body: "A practical way to move from visual inspiration to working UI without rebuilding every detail by hand.",
+    href: "https://x.com/i/web/status/1727105236811366669",
+  },
+  {
+    id: "1732032876739224028",
+    title: "Open source workflow",
+    body: "Use the hosted app for speed, or inspect and run the open-source project locally when you need full control.",
+    href: "https://x.com/i/web/status/1732032876739224028",
+  },
+  {
+    id: "1728496255473459339",
+    title: "Quick UI iteration",
+    body: "Generate a starting point from an image, adjust the stack, and refine layout, spacing, colors, and behavior.",
+    href: "https://x.com/i/web/status/1728496255473459339",
+  },
+];
+
+type Testimonial = (typeof TESTIMONIALS)[number];
+
+type TweetRenderBoundaryProps = {
+  children: ReactNode;
+  fallback: ReactNode;
+};
+
+class TweetRenderBoundary extends Component<
+  TweetRenderBoundaryProps,
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Unable to render embedded tweet", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+
+function normalizeEntities(entities?: TweetEntities): TweetEntities {
+  return {
+    hashtags: Array.isArray(entities?.hashtags) ? entities.hashtags : [],
+    urls: Array.isArray(entities?.urls) ? entities.urls : [],
+    user_mentions: Array.isArray(entities?.user_mentions)
+      ? entities.user_mentions
+      : [],
+    symbols: Array.isArray(entities?.symbols) ? entities.symbols : [],
+    ...(Array.isArray(entities?.media) ? { media: entities.media } : {}),
+  };
+}
+
+function normalizeTweetBase<T extends TweetBase>(tweet: T): T {
+  return {
+    ...tweet,
+    entities: normalizeEntities(tweet.entities),
+  };
+}
+
+function normalizeTweet(tweet: TweetData): TweetData {
+  return {
+    ...normalizeTweetBase(tweet),
+    parent: tweet.parent ? normalizeTweetBase(tweet.parent) : undefined,
+    quoted_tweet: tweet.quoted_tweet
+      ? normalizeTweetBase(tweet.quoted_tweet)
+      : undefined,
+  };
+}
+
+function TweetFallback({ testimonial }: { testimonial: Testimonial }) {
+  return (
+    <a
+      href={testimonial.href}
+      target="_blank"
+      rel="noreferrer"
+      className="block h-full min-h-[220px] rounded-2xl border border-[#cfd9de] bg-white p-4 text-[#0f1419] transition-colors hover:bg-[#f7f9f9]"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-sm font-bold text-white">
+          X
+        </div>
+        <div className="min-w-0">
+          <div className="font-bold leading-5">Builder on X</div>
+          <div className="text-sm leading-5 text-[#536471]">
+            @screenshottocode
+          </div>
+        </div>
+      </div>
+      <p className="mt-4 text-[15px] leading-6">{testimonial.body}</p>
+      <div className="mt-5 text-sm text-[#536471]">
+        {testimonial.title} · View post
+      </div>
+    </a>
+  );
+}
+
+function SafeTweet({ testimonial }: { testimonial: Testimonial }) {
+  const { data, error, isLoading } = useTweet(testimonial.id);
+  const fallback = <TweetFallback testimonial={testimonial} />;
+
+  if (isLoading) {
+    return <TweetSkeleton />;
+  }
+
+  if (error || !data) {
+    return fallback;
+  }
+
+  return (
+    <TweetRenderBoundary fallback={fallback}>
+      <EmbeddedTweet tweet={normalizeTweet(data)} />
+    </TweetRenderBoundary>
+  );
+}
 
 function LandingPage() {
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
@@ -333,10 +470,9 @@ function LandingPage() {
           </div>
 
           <div className="compact-tweets grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start [&_>_div]:min-w-0">
-            <Tweet id="1733865178905661940" />
-            <Tweet id="1727105236811366669" />
-            <Tweet id="1732032876739224028" />
-            <Tweet id="1728496255473459339" />
+            {TESTIMONIALS.map((testimonial) => (
+              <SafeTweet key={testimonial.id} testimonial={testimonial} />
+            ))}
           </div>
         </div>
       </section>
