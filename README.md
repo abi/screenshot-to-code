@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/85b911c0-efea-4957-badb-daa97ec402ad
 
 Want to use Screenshot to Code without setting up API keys or running the app locally?
 
-[Try the hosted version →](https://screenshottocode.com)
+[Try the hosted version →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=top_cta)
 
 The hosted version is best if you want to:
 
@@ -48,7 +48,7 @@ Choose the path that fits what you want to do:
 - **Use the hosted app:** fastest way to try Screenshot to Code with no local setup.
 - **Run locally:** best if you want to customize, self-host, or contribute.
 
-[Open the hosted app →](https://screenshottocode.com)
+[Open the hosted app →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=getting_started_cta)
 
 Running locally requires API keys and a backend/frontend setup. The app has a React/Vite frontend and a FastAPI backend.
 
@@ -99,7 +99,7 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 
 Want to try it with your own screenshot before setting up locally?
 
-[Open the hosted app →](https://screenshottocode.com)
+[Open the hosted app →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=docker_section_cta)
 
 ## 🙋‍♂️ FAQs
 
