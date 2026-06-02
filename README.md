@@ -1,8 +1,20 @@
 # screenshot-to-code
 
-A simple tool to convert screenshots, mockups and Figma designs into clean, functional code using AI.
+Convert screenshots, mockups, Figma designs, and screen recordings into clean, functional code using AI.
 
 https://github.com/user-attachments/assets/85b911c0-efea-4957-badb-daa97ec402ad
+
+## Try it instantly
+
+Want to use Screenshot to Code without setting up API keys or running the app locally?
+
+[Try the hosted version →](https://screenshottocode.com)
+
+The hosted version is best if you want to:
+
+- Generate code without configuring OpenAI, Anthropic, or Gemini keys
+- Use the latest hosted models and improvements
+- Save project history and manage generations in one place
 
 Supported stacks:
 
@@ -29,15 +41,16 @@ We have experimental support for taking a video/screen recording of a website in
 
 [Learn more about video here](https://github.com/abi/screenshot-to-code/wiki/Screen-Recording-to-Code).
 
-[Follow me on Twitter for updates](https://twitter.com/_abi_).
-
-## 🌍 Hosted Version
-
-[Try it live on the hosted version (paid)](https://screenshottocode.com).
-
 ## 🛠 Getting Started
 
-The app has a React/Vite frontend and a FastAPI backend.
+Choose the path that fits what you want to do:
+
+- **Use the hosted app:** fastest way to try Screenshot to Code with no local setup.
+- **Run locally:** best if you want to customize, self-host, or contribute.
+
+[Open the hosted app →](https://screenshottocode.com)
+
+Running locally requires API keys and a backend/frontend setup. The app has a React/Vite frontend and a FastAPI backend.
 
 Keys needed:
 
@@ -83,6 +96,10 @@ docker-compose up -d --build
 ```
 
 The app will be up and running at http://localhost:5173. Note that you can't develop the application with this setup as the file changes won't trigger a rebuild.
+
+Want to try it with your own screenshot before setting up locally?
+
+[Open the hosted app →](https://screenshottocode.com)
 
 ## 🙋‍♂️ FAQs
 
