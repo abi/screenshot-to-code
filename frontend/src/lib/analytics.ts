@@ -13,3 +13,16 @@ export function addTikTokEvent(eventName: string, payload = {}) {
     // silently fail in non-production environments
   }
 }
+
+export function addGoogleAdsConversion(sendTo: string | null, props = {}) {
+  if (!sendTo) return;
+
+  try {
+    window.gtag?.("event", "conversion", {
+      send_to: sendTo,
+      ...props,
+    });
+  } catch (e) {
+    // silently fail in non-production environments
+  }
+}

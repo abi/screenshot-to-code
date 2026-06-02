@@ -35,3 +35,11 @@ export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || null;
 
 // LogRocket
 export const LOGROCKET_APP_ID = import.meta.env.VITE_LOGROCKET_APP_ID || null;
+
+// Google Ads
+export const GOOGLE_ADS_REGISTRATION_CONVERSION_SEND_TO =
+  "AW-16649848443/YQQoCIuo9bccEPuMooM-";
+export const GOOGLE_ADS_CHECKOUT_STARTED_CONVERSION_SEND_TO =
+  "AW-16649848443/MKvxCLvr9bccEPuMooM-";
+export const GOOGLE_ADS_PURCHASE_CONVERSION_SEND_TO =
+  "AW-16649848443/_m-eCM_J37ccEPuMooM-";

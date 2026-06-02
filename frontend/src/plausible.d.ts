@@ -16,6 +16,7 @@ declare global {
     ttq?: {
       track: (eventName: string, payload?: Record<string, unknown>) => void;
     };
+    gtag?: (...args: unknown[]) => void;
   }
 }
 

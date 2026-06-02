@@ -8,6 +8,7 @@ import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { useStore } from "../../store/store";
 import {
   LOGROCKET_APP_ID,
+  GOOGLE_ADS_REGISTRATION_CONVERSION_SEND_TO,
   POSTHOG_HOST,
   POSTHOG_KEY,
   SAAS_BACKEND_URL,
@@ -17,7 +18,11 @@ import LandingPage from "./LandingPage";
 import Intercom from "@intercom/messenger-js-sdk";
 import { getExperimentGroup } from "../../lib/experiment";
 import { applyHostedUserToStore, fetchHostedUser } from "./billingState";
-import { addEvent, addTikTokEvent } from "../../lib/analytics";
+import {
+  addEvent,
+  addGoogleAdsConversion,
+  addTikTokEvent,
+} from "../../lib/analytics";
 import {
   getAttributionEventProps,
   shouldTrackSignupCompleted,
@@ -61,6 +66,14 @@ function AppContainer() {
         const attributionProps = getAttributionEventProps();
         addEvent("Signup Completed", attributionProps);
         addTikTokEvent("CompleteRegistration", attributionProps);
+        addGoogleAdsConversion(
+          GOOGLE_ADS_REGISTRATION_CONVERSION_SEND_TO,
+          {
+            ...attributionProps,
+            value: 1.0,
+            currency: "USD",
+          },
+        );
       }
 
       if (!user.subscriber_tier) {

@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { SAAS_BACKEND_URL, STRIPE_PUBLISHABLE_KEY } from "../../../config";
-import { addEvent, addTikTokEvent } from "../../../lib/analytics";
+import {
+  GOOGLE_ADS_CHECKOUT_STARTED_CONVERSION_SEND_TO,
+  SAAS_BACKEND_URL,
+  STRIPE_PUBLISHABLE_KEY,
+} from "../../../config";
+import {
+  addEvent,
+  addGoogleAdsConversion,
+  addTikTokEvent,
+} from "../../../lib/analytics";
 import { Stripe, loadStripe } from "@stripe/stripe-js";
 import { useStore } from "../../../store/store";
 import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
@@ -58,10 +66,11 @@ export default function useStripeCheckout() {
         ...getAttributionEventProps(),
         price_lookup_key: priceLookupKey,
       });
-
-      // Track going to checkout page as a conversion
-      gtag("event", "conversion", {
-        send_to: "AW-16649848443/AKZpCJbP2cYZEPuMooM-",
+      addGoogleAdsConversion(GOOGLE_ADS_CHECKOUT_STARTED_CONVERSION_SEND_TO, {
+        ...getAttributionEventProps(),
+        price_lookup_key: priceLookupKey,
+        value: 1.0,
+        currency: "USD",
       });
 
       // Redirect to Stripe Checkout
