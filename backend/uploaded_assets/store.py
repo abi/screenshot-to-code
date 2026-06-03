@@ -7,10 +7,16 @@ import tempfile
 from dataclasses import dataclass
 from typing import Any, cast
 
+import httpx
 from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
 
-from config import LOCAL_ASSET_DIR
+from config import (
+    BACKEND_SAAS_API_SECRET,
+    BACKEND_SAAS_URL,
+    IS_PROD,
+    LOCAL_ASSET_DIR,
+)
 
 
 MAX_UPLOADED_ASSET_BYTES = 20 * 1024 * 1024
@@ -37,6 +43,9 @@ class SavedAsset:
 
 
 def configure_uploaded_asset_routes(app: FastAPI) -> None:
+    if IS_PROD:
+        return
+
     os.makedirs(LOCAL_ASSET_DIR, exist_ok=True)
     app.mount("/local-assets", StaticFiles(directory=LOCAL_ASSET_DIR), name="local-assets")
 
@@ -189,16 +198,65 @@ def persist_data_url_as_temporary_asset(
     )
 
 
+def _temporary_asset_data_url(filepath: str, content_type: str) -> str:
+    with open(filepath, "rb") as file:
+        encoded = base64.b64encode(file.read()).decode("ascii")
+    return f"data:{content_type};base64,{encoded}"
+
+
+async def _promote_temporary_asset_with_saas(
+    source_path: str,
+    content_type: str,
+    user_id: str | None,
+) -> SavedAsset | None:
+    if not BACKEND_SAAS_URL or not BACKEND_SAAS_API_SECRET:
+        return None
+
+    data_url = _temporary_asset_data_url(source_path, content_type)
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{BACKEND_SAAS_URL}/assets/store_image_data",
+            json={
+                "data_url": data_url,
+                "source_type": "user_upload",
+                "user_id": user_id,
+            },
+            headers={"Authorization": f"Bearer {BACKEND_SAAS_API_SECRET}"},
+            timeout=45,
+        )
+        response.raise_for_status()
+        response_data = response.json()
+
+    public_url = response_data.get("public_url")
+    asset_id = response_data.get("asset_id")
+    if not isinstance(public_url, str) or not public_url:
+        return None
+    if not isinstance(asset_id, str) or not asset_id:
+        return None
+
+    return SavedAsset(
+        asset_id=asset_id,
+        public_url=public_url,
+        content_type=content_type,
+    )
+
+
 async def promote_temporary_asset_id(
     asset_id: str,
     user_id: str | None = None,
 ) -> SavedAsset | None:
-    _ = user_id
     temporary_asset = _temporary_asset_path(asset_id)
     if not temporary_asset:
         return None
 
     source_path, temporary_filename, content_type, asset_base_url = temporary_asset
+    if IS_PROD:
+        return await _promote_temporary_asset_with_saas(
+            source_path,
+            content_type,
+            user_id,
+        )
+
     _, extension = os.path.splitext(temporary_filename)
     digest = _digest_for_asset_id(asset_id)
     if not digest:

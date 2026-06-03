@@ -34,7 +34,9 @@ configure_uploaded_asset_routes(app)
 @app.on_event("startup")
 async def log_debug_mode() -> None:
     debug_status = "ENABLED" if IS_DEBUG_ENABLED else "DISABLED"
+    prod_status = "ENABLED" if IS_PROD else "DISABLED"
     print(f"Backend startup complete. Debug mode is {debug_status}.")
+    print(f"Backend prod mode is {prod_status}.")
 
 # Configure CORS settings
 app.add_middleware(
