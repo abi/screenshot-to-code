@@ -21,12 +21,14 @@ class AgentToolRuntime:
         should_generate_images: bool,
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
+        user_id: Optional[str] = None,
         option_codes: Optional[List[str]] = None,
     ):
         self.file_state = file_state
         self.should_generate_images = should_generate_images
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
+        self.user_id = user_id
         self.option_codes = option_codes or []
 
     async def execute(self, tool_call: ToolCall) -> ToolExecutionResult:
@@ -50,7 +52,7 @@ class AgentToolRuntime:
         if tool_call.name == "remove_background":
             return await self._remove_background(tool_call.arguments)
         if tool_call.name == "save_assets":
-            return run_save_assets(tool_call.arguments)
+            return await run_save_assets(tool_call.arguments, user_id=self.user_id)
         if tool_call.name == "retrieve_option":
             return self._retrieve_option(tool_call.arguments)
         return ToolExecutionResult(

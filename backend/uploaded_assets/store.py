@@ -185,7 +185,11 @@ def persist_data_url_as_temporary_asset(
     )
 
 
-def promote_temporary_asset_id(asset_id: str) -> SavedAsset | None:
+async def promote_temporary_asset_id(
+    asset_id: str,
+    user_id: str | None = None,
+) -> SavedAsset | None:
+    _ = user_id
     temporary_asset = _temporary_asset_path(asset_id)
     if not temporary_asset:
         return None

@@ -52,7 +52,10 @@ def summarize_save_assets_input(args: Dict[str, Any]) -> Dict[str, Any]:
     return {"asset_ids": []}
 
 
-def run_save_assets(args: Dict[str, Any]) -> ToolExecutionResult:
+async def run_save_assets(
+    args: Dict[str, Any],
+    user_id: str | None = None,
+) -> ToolExecutionResult:
     raw_asset_ids = args.get("asset_ids")
     if not isinstance(raw_asset_ids, list) or not raw_asset_ids:
         return ToolExecutionResult(
@@ -77,7 +80,7 @@ def run_save_assets(args: Dict[str, Any]) -> ToolExecutionResult:
 
     results: List[Dict[str, Any]] = []
     for asset_id in unique_asset_ids:
-        asset = promote_temporary_asset_id(asset_id)
+        asset = await promote_temporary_asset_id(asset_id, user_id=user_id)
         if not asset:
             results.append(
                 {
