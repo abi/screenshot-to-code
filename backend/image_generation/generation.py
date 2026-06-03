@@ -4,10 +4,15 @@ from typing import List, Literal, Union
 
 from openai import AsyncOpenAI
 
-from image_generation.replicate import call_replicate
+from image_generation.replicate import (
+    DEFAULT_IMAGE_MODEL,
+    ReplicateImageModel,
+    call_replicate,
+)
 
 
 REPLICATE_BATCH_SIZE = 20
+REPLICATE_IMAGE_MODEL: ReplicateImageModel = DEFAULT_IMAGE_MODEL
 
 
 async def process_tasks(
@@ -61,12 +66,26 @@ async def generate_image_dalle(
 
 
 async def generate_image_replicate(prompt: str, api_key: str) -> str:
-    # We use Flux 2 Klein
-    return await call_replicate(
-        {
+    replicate_input: dict[str, str | int | float | bool]
+    if REPLICATE_IMAGE_MODEL == "flux_2_klein":
+        replicate_input = {
             "prompt": prompt,
             "aspect_ratio": "1:1",
             "output_format": "png",
-        },
+        }
+    else:
+        replicate_input = {
+            "prompt": prompt,
+            "width": 1024,
+            "height": 1024,
+            "go_fast": False,
+            "output_format": "png",
+            "guidance_scale": 0,
+            "num_inference_steps": 8,
+        }
+
+    return await call_replicate(
+        replicate_input,
         api_key,
+        model=REPLICATE_IMAGE_MODEL,
     )
