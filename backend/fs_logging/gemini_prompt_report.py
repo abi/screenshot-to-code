@@ -44,7 +44,9 @@ def _summarize_content(content: Any, index: int) -> str:
     parts = getattr(content, "parts", None)
     if isinstance(content, dict):
         role = content.get("role", role)
-        parts = content.get("parts", parts)
+        # ``parts`` is the legacy generateContent shape; ``content`` is the
+        # Interactions API turn shape (a list of content blocks).
+        parts = content.get("parts", content.get("content", parts))
 
     part_count = len(parts) if isinstance(parts, list) else 0
     text_preview = ""

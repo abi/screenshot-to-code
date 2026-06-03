@@ -108,31 +108,30 @@ class TestCacheHitRate:
 # ---------------------------------------------------------------------------
 
 
-def _gemini_chunk(
+def _gemini_usage(
     prompt: int = 0,
     candidates: int = 0,
     thoughts: int = 0,
     cached: int = 0,
     total: int = 0,
 ) -> SimpleNamespace:
-    """Build a fake Gemini GenerateContentResponse with usage_metadata."""
+    """Build a fake Interactions API ``Usage`` object."""
     return SimpleNamespace(
-        usage_metadata=SimpleNamespace(
-            prompt_token_count=prompt,
-            candidates_token_count=candidates,
-            thoughts_token_count=thoughts,
-            cached_content_token_count=cached,
-            total_token_count=total,
-        )
+        total_input_tokens=prompt,
+        total_output_tokens=candidates,
+        total_thought_tokens=thoughts,
+        total_cached_tokens=cached,
+        total_tokens=total,
     )
 
 
 class TestGeminiExtract:
     def test_normal_response(self) -> None:
-        chunk = _gemini_chunk(
-            prompt=1000, candidates=400, thoughts=100, cached=200, total=1500
-        )
-        usage = _extract_gemini_usage(chunk)  # type: ignore[arg-type]
+        usage = _extract_gemini_usage(
+            _gemini_usage(
+                prompt=1000, candidates=400, thoughts=100, cached=200, total=1500
+            )
+        )  # type: ignore[arg-type]
         assert usage is not None
         assert usage.input == 800  # 1000 - 200
         assert usage.output == 500  # 400 + 100
@@ -141,27 +140,26 @@ class TestGeminiExtract:
         assert usage.total == 1500
 
     def test_no_cache(self) -> None:
-        chunk = _gemini_chunk(prompt=500, candidates=200, thoughts=50, total=750)
-        usage = _extract_gemini_usage(chunk)  # type: ignore[arg-type]
+        usage = _extract_gemini_usage(
+            _gemini_usage(prompt=500, candidates=200, thoughts=50, total=750)
+        )  # type: ignore[arg-type]
         assert usage is not None
         assert usage.input == 500
         assert usage.cache_read == 0
 
     def test_no_usage_metadata_returns_none(self) -> None:
-        chunk = SimpleNamespace(usage_metadata=None)
-        assert _extract_gemini_usage(chunk) is None  # type: ignore[arg-type]
+        assert _extract_gemini_usage(None) is None  # type: ignore[arg-type]
 
     def test_none_subfields_default_to_zero(self) -> None:
-        chunk = SimpleNamespace(
-            usage_metadata=SimpleNamespace(
-                prompt_token_count=None,
-                candidates_token_count=None,
-                thoughts_token_count=None,
-                cached_content_token_count=None,
-                total_token_count=None,
+        usage = _extract_gemini_usage(
+            SimpleNamespace(
+                total_input_tokens=None,
+                total_output_tokens=None,
+                total_thought_tokens=None,
+                total_cached_tokens=None,
+                total_tokens=None,
             )
-        )
-        usage = _extract_gemini_usage(chunk)  # type: ignore[arg-type]
+        )  # type: ignore[arg-type]
         assert usage == TokenUsage()
 
 
