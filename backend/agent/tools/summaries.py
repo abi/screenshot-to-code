@@ -3,6 +3,7 @@ from typing import Any, Dict
 
 from agent.state import AgentFileState, ensure_str
 from agent.tools.types import ToolCall
+from uploaded_assets.tools import summarize_save_assets_input
 
 
 def summarize_text(value: str, limit: int = 240) -> str:
@@ -62,6 +63,9 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
                 "image_urls": [ensure_str(u) for u in image_urls],
             }
         return {"image_urls": []}
+
+    if tool_call.name == "save_assets":
+        return summarize_save_assets_input(args)
 
     if tool_call.name == "retrieve_option":
         return {

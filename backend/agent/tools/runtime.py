@@ -6,17 +6,8 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from codegen.utils import extract_html_content
 from config import IS_PROD, REPLICATE_API_KEY
 from image_generation.generation import process_tasks
-from image_generation.persistence import (
-    SourceProvider,
-    SourceType,
-    persist_asset_image_url,
-)
-from image_generation.replicate import (
-    FLUX_MODEL_PATH,
-    REMOVE_BACKGROUND_VERSION,
-    remove_background,
-)
-from llm import Llm, OPENAI_MODELS, get_openai_api_name
+from image_generation.replicate import remove_background
+from uploaded_assets.tools import run_save_assets
 
 from agent.state import AgentFileState, ensure_str
 from agent.tools.summaries import summarize_text
@@ -127,6 +118,8 @@ class AgentToolRuntime:
             return await self._generate_images(tool_call.arguments)
         if tool_call.name == "remove_background":
             return await self._remove_background(tool_call.arguments)
+        if tool_call.name == "save_assets":
+            return run_save_assets(tool_call.arguments)
         if tool_call.name == "retrieve_option":
             return self._retrieve_option(tool_call.arguments)
         return ToolExecutionResult(

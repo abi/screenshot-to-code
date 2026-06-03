@@ -16,6 +16,7 @@ import {
   BsImage,
   BsScissors,
   BsFiles,
+  BsBookmarkCheck,
 } from "react-icons/bs";
 import ReactMarkdown from "react-markdown";
 import { Light as SyntaxHighlighterBase } from "react-syntax-highlighter";
@@ -107,6 +108,9 @@ function getEventIcon(type: AgentEventType, toolName?: string) {
   if (toolName === "retrieve_option") {
     return <BsFiles className="text-slate-500" />;
   }
+  if (toolName === "save_assets") {
+    return <BsBookmarkCheck className="text-emerald-500" />;
+  }
   return <BsFileEarmarkPlus className="text-gray-500" />;
 }
 
@@ -148,6 +152,15 @@ function getEventTitle(event: AgentEvent): string {
       return event.status === "running"
         ? "Retrieving option"
         : "Retrieved option";
+    }
+    if (event.toolName === "save_assets") {
+      const saveInput = event.input as any;
+      const saveOutput = event.output as any;
+      const saveCount = saveOutput?.images?.length || saveInput?.asset_ids?.length || 0;
+      if (event.status === "running") {
+        return saveCount > 1 ? `Saving ${saveCount} assets` : "Saving asset";
+      }
+      return saveCount > 1 ? `Saved ${saveCount} assets` : "Saved asset";
     }
     return event.status === "running" ? "Running tool" : "Tool completed";
   }
@@ -337,6 +350,58 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
                         Failed
                       </div>
                     )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {event.toolName === "save_assets" && !hasError && (
+        <div className="space-y-3">
+          {event.status === "running" && input?.asset_ids && Array.isArray(input.asset_ids) && (
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {input.asset_ids.map((assetId: string, index: number) => (
+                <div key={`${assetId}-${index}`} className="py-2">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    Asset ID
+                  </div>
+                  <div className="break-all rounded bg-gray-50 p-2 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                    {assetId}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {event.status !== "running" && output?.images && Array.isArray(output.images) && (
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {output.images.map((item: any, index: number) => (
+                <div key={`${item.asset_id}-${index}`} className="flex gap-3 py-2">
+                  <div className="w-1/2">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Saved asset
+                    </div>
+                    {item.public_url ? (
+                      <img
+                        src={item.public_url}
+                        alt={`Saved uploaded asset ${index + 1}`}
+                        className="w-full rounded object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                        Failed
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-1/2 self-center">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Permanent URL
+                    </div>
+                    <div className="mt-1 break-all rounded bg-gray-50 p-2 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                      {item.public_url}
+                    </div>
                   </div>
                 </div>
               ))}

@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from agent.tools.types import CanonicalToolDefinition
+from uploaded_assets.tools import SAVE_ASSETS_TOOL_DEFINITION
 
 
 def _create_schema() -> Dict[str, Any]:
@@ -145,6 +146,7 @@ def canonical_tool_definitions(
                 ),
                 parameters=_remove_background_schema(),
             ),
+            SAVE_ASSETS_TOOL_DEFINITION,
             CanonicalToolDefinition(
                 name="retrieve_option",
                 description=(

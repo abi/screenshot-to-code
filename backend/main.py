@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import IS_DEBUG_ENABLED
 from routes import screenshot, generate_code, home, evals, export, design_systems
 from config import IS_PROD
+from uploaded_assets import configure_uploaded_asset_routes
 
 # Setup Sentry (only relevant in prod)
 if IS_PROD:
@@ -27,6 +28,7 @@ if IS_PROD:
 
 # Setup FastAPI
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+configure_uploaded_asset_routes(app)
 
 
 @app.on_event("startup")
