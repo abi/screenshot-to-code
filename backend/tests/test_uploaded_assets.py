@@ -1,6 +1,8 @@
 import base64
 from pathlib import Path
 
+import pytest
+
 from uploaded_assets import (
     append_uploaded_asset_ids_to_prompt,
     persist_data_url_as_temporary_asset,
@@ -32,7 +34,8 @@ def test_persist_data_url_as_temporary_asset_writes_tmp_file_and_returns_asset_i
     assert len(list(temp_dir.iterdir())) == 2
 
 
-def test_promote_temporary_asset_id_returns_permanent_url(
+@pytest.mark.asyncio
+async def test_promote_temporary_asset_id_returns_permanent_url(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
@@ -47,7 +50,7 @@ def test_promote_temporary_asset_id_returns_permanent_url(
     )
     assert temp_asset is not None
 
-    permanent_asset = promote_temporary_asset_id(temp_asset.asset_id)
+    permanent_asset = await promote_temporary_asset_id(temp_asset.asset_id)
 
     assert permanent_asset is not None
     assert permanent_asset.asset_id == temp_asset.asset_id

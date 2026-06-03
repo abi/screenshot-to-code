@@ -129,7 +129,7 @@ class AgentToolRuntime:
         if tool_call.name == "remove_background":
             return await self._remove_background(tool_call.arguments)
         if tool_call.name == "save_assets":
-            return run_save_assets(tool_call.arguments)
+            return await run_save_assets(tool_call.arguments, user_id=self.user_id)
         if tool_call.name == "retrieve_option":
             return self._retrieve_option(tool_call.arguments)
         return ToolExecutionResult(

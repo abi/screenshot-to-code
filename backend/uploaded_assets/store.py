@@ -42,16 +42,20 @@ def configure_uploaded_asset_routes(app: FastAPI) -> None:
 
 
 def infer_local_asset_base_url(websocket: WebSocket) -> str:
-    forwarded_host = websocket.headers.get("x-forwarded-host")
-    host = (forwarded_host or websocket.headers.get("host") or "").split(",", 1)[0]
+    headers = getattr(websocket, "headers", {})
+    forwarded_host = headers.get("x-forwarded-host")
+    host = (forwarded_host or headers.get("host") or "").split(",", 1)[0]
     host = host.strip()
 
-    forwarded_proto = websocket.headers.get("x-forwarded-proto")
-    raw_scheme = (forwarded_proto or websocket.url.scheme).split(",", 1)[0].strip()
+    websocket_url = getattr(websocket, "url", None)
+    forwarded_proto = headers.get("x-forwarded-proto")
+    raw_scheme = (
+        forwarded_proto or getattr(websocket_url, "scheme", "")
+    ).split(",", 1)[0].strip()
     scheme = "https" if raw_scheme == "wss" else "http" if raw_scheme == "ws" else raw_scheme
 
     if not host:
-        host = websocket.url.netloc
+        host = getattr(websocket_url, "netloc", "")
     if not scheme:
         scheme = "http"
 
@@ -185,7 +189,11 @@ def persist_data_url_as_temporary_asset(
     )
 
 
-def promote_temporary_asset_id(asset_id: str) -> SavedAsset | None:
+async def promote_temporary_asset_id(
+    asset_id: str,
+    user_id: str | None = None,
+) -> SavedAsset | None:
+    _ = user_id
     temporary_asset = _temporary_asset_path(asset_id)
     if not temporary_asset:
         return None
