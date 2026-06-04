@@ -610,7 +610,7 @@ class PromptCreationStage:
         except Exception as e:
             sentry_sdk.capture_exception(e)
             await self.throw_error(
-                "Error assembling prompt. Contact support at support@picoapps.xyz"
+                "Error assembling prompt. Contact support at support@getwhimsyworks.com"
             )
             raise
 

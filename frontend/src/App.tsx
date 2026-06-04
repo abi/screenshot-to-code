@@ -12,7 +12,6 @@ import {
   DesignSystemsRequestOptions,
   NEW_DESIGN_SYSTEM_CONTENT,
 } from "./lib/design-systems";
-import { PicoBadge } from "./components/messages/PicoBadge";
 import OnboardingPaywall from "./components/hosted/OnboardingPaywall";
 import { usePersistedState } from "./hooks/usePersistedState";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
@@ -883,7 +882,6 @@ function App() {
           : "min-h-screen"
       }`}
     >
-      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
           open={false}
