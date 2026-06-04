@@ -12,7 +12,8 @@ from image_generation.persistence import (
     persist_asset_image_url,
 )
 from image_generation.replicate import (
-    FLUX_MODEL_PATH,
+    DEFAULT_IMAGE_MODEL,
+    MODEL_PATHS,
     REMOVE_BACKGROUND_VERSION,
     remove_background,
 )
@@ -359,7 +360,9 @@ class AgentToolRuntime:
             base_url = self.openai_base_url
 
         generated = await process_tasks(unique_prompts, api_key, base_url, model)  # type: ignore
-        image_generation_model = FLUX_MODEL_PATH if model == "flux" else "dall-e-3"
+        image_generation_model = (
+            MODEL_PATHS[DEFAULT_IMAGE_MODEL] if model == "flux" else "dall-e-3"
+        )
         source_provider = "replicate" if model == "flux" else "openai"
         persisted = await self._persist_image_urls(
             items=list(zip(unique_prompts, generated)),
