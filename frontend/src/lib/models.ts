@@ -8,6 +8,7 @@ export enum CodeGenerationModel {
   CLAUDE_OPUS_4_8_MAX = "claude-opus-4-8 (max effort)",
   CLAUDE_OPUS_4_6 = "claude-opus-4-6",
   CLAUDE_SONNET_4_6 = "claude-sonnet-4-6",
+  GPT_5_5_HIGH = "gpt-5.5 (high thinking)",
   GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)",
   GPT_5_2_CODEX_LOW = "gpt-5.2-codex (low thinking)",
   GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
@@ -29,6 +30,9 @@ export enum CodeGenerationModel {
 export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   [key in CodeGenerationModel]: { name: string };
 } = {
+  "gpt-5.5 (high thinking)": {
+    name: "GPT 5.5 (high)",
+  },
   "gpt-5.5 (xhigh thinking)": {
     name: "GPT 5.5 (xhigh)",
   },
