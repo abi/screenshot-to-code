@@ -17,6 +17,9 @@ declare global {
       track: (eventName: string, payload?: Record<string, unknown>) => void;
     };
     gtag?: (...args: unknown[]) => void;
+    uetq?: {
+      push: (...args: unknown[]) => void;
+    };
   }
 }
 

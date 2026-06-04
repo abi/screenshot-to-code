@@ -11,8 +11,11 @@ function getAnalyticsScripts() {
   const plausibleScript =
     '<script defer="" data-domain="screenshottocode.com" src="https://plausible.io/js/script.tagged-events.outbound-links.js"></script><script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>';
 
+  const bingAdsScript =
+    '<script>(function(w, d, t, u, o) {w[u] = w[u] || [], o.ts = (new Date).getTime();var n = d.createElement(t);n.src = "https://bat.bing.net/bat.js?ti=" + o.ti + ("uetq" != u ? "&q=" + u : ""),n.async = 1, n.onload = n.onreadystatechange = function() {var s = this.readyState;s && "loaded" !== s && "complete" !== s ||(o.q = w[u], w[u] = new UET(o), w[u].push("pageLoad"),n.onload = n.onreadystatechange = null)};var i = d.getElementsByTagName(t)[0];i.parentNode.insertBefore(n, i);})(window, document, "script", "uetq", {ti: "187255558",enableAutoSpaTracking: true});</script>';
+
   const tikTokPixelId = process.env.VITE_TIKTOK_PIXEL_ID;
-  if (!tikTokPixelId) return plausibleScript;
+  if (!tikTokPixelId) return plausibleScript + bingAdsScript;
 
   const tikTokScript = `<script>
 !function (w, d, t) {
@@ -22,7 +25,7 @@ function getAnalyticsScripts() {
 }(window, document, 'ttq');
 </script>`;
 
-  return plausibleScript + tikTokScript;
+  return plausibleScript + bingAdsScript + tikTokScript;
 }
 
 // https://vitejs.dev/config/
