@@ -9,7 +9,6 @@ export enum CodeGenerationModel {
   CLAUDE_OPUS_4_6 = "claude-opus-4-6",
   CLAUDE_SONNET_4_6 = "claude-sonnet-4-6",
   GPT_5_5_NONE = "gpt-5.5 (no thinking)",
-  GPT_5_5_MINIMAL = "gpt-5.5 (minimal thinking)",
   GPT_5_5_LOW = "gpt-5.5 (low thinking)",
   GPT_5_5_MEDIUM = "gpt-5.5 (medium thinking)",
   GPT_5_5_HIGH = "gpt-5.5 (high thinking)",
@@ -36,9 +35,6 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
 } = {
   "gpt-5.5 (no thinking)": {
     name: "GPT 5.5 (none)",
-  },
-  "gpt-5.5 (minimal thinking)": {
-    name: "GPT 5.5 (minimal)",
   },
   "gpt-5.5 (low thinking)": {
     name: "GPT 5.5 (low)",

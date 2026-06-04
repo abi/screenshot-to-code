@@ -193,7 +193,6 @@ async def test_openai_provider_session_uses_gpt_5_4_high_reasoning_effort() -> N
     ("model", "effort"),
     [
         (Llm.GPT_5_5_NONE, "none"),
-        (Llm.GPT_5_5_MINIMAL, "minimal"),
         (Llm.GPT_5_5_LOW, "low"),
         (Llm.GPT_5_5_MEDIUM, "medium"),
         (Llm.GPT_5_5_HIGH, "high"),
