@@ -41,7 +41,7 @@ const PricingDialog: React.FC = () => {
               <img
                 key={companyName}
                 className="col-span-1 max-h-12 w-full object-contain grayscale opacity-50 hover:opacity-100"
-                src={`https://picoapps.xyz/logos/${companyName}.png`}
+                src={`/logos/${companyName}.png`}
                 alt={companyName}
                 width={120}
                 height={48}

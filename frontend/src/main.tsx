@@ -18,72 +18,59 @@ import PricingPage from "./components/hosted/PricingPage.tsx";
 import CheckoutSuccessPage from "./components/hosted/CheckoutSuccessPage.tsx";
 import FaqsPage from "./components/hosted/FaqsPage.tsx";
 import { captureFirstTouchAttribution } from "./lib/attribution.ts";
-import AdsLandingPage from "./components/hosted/AdsLandingPage.tsx";
 
-const isAdsLandingPage = window.location.pathname.replace(/\/$/, "") === "/ads";
+// Set up Sentry
+Sentry.init({
+  dsn: SENTRY_DSN,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: false,
+      maskAllInputs: false,
+    }),
+  ],
+  // Tracing
+  tracesSampleRate: 0.2,
 
-if (!isAdsLandingPage) {
-  // Set up Sentry
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        maskAllText: false,
-        maskAllInputs: false,
-      }),
-    ],
-    // Tracing
-    tracesSampleRate: 0.2,
-
-    // Session Replay
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-  });
-}
+  // Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
 
 captureFirstTouchAttribution();
 
 const root = ReactDOM.createRoot(document.getElementById("root")!);
 
-if (isAdsLandingPage) {
-  root.render(
-    <React.StrictMode>
-      <AdsLandingPage />
-    </React.StrictMode>,
-  );
-} else {
-  root.render(
-    <React.StrictMode>
-      <ClerkProvider
-        publishableKey={CLERK_PUBLISHABLE_KEY}
-        localization={{
-          footerPageLink__privacy:
-            "By signing up, you accept our terms of service and consent to receiving occasional product updates via email.",
-        }}
-      >
-        <Router>
-          <Routes>
-            <Route path="/" element={<AppContainer />} />
-            <Route path="/evals" element={<AllEvalsPage />} />
-            <Route path="/evals/single" element={<EvalsPage />} />
-            <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
-            <Route path="/evals/best-of-n" element={<BestOfNEvalsPage />} />
-            <Route path="/evals/run" element={<RunEvalsPage />} />
-            <Route
-              path="/evals/openai-input-compare"
-              element={<OpenAIInputComparePage />}
-            />
+root.render(
+  <React.StrictMode>
+    <ClerkProvider
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      localization={{
+        footerPageLink__privacy:
+          "By signing up, you accept our terms of service and consent to receiving occasional product updates via email.",
+      }}
+    >
+      <Router>
+        <Routes>
+          <Route path="/" element={<AppContainer />} />
+          <Route path="/evals" element={<AllEvalsPage />} />
+          <Route path="/evals/single" element={<EvalsPage />} />
+          <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
+          <Route path="/evals/best-of-n" element={<BestOfNEvalsPage />} />
+          <Route path="/evals/run" element={<RunEvalsPage />} />
+          <Route
+            path="/evals/openai-input-compare"
+            element={<OpenAIInputComparePage />}
+          />
 
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/faqs" element={<FaqsPage />} />
-            <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
-          </Routes>
-        </Router>
-        <Toaster
-          toastOptions={{ className: "dark:bg-zinc-950 dark:text-white" }}
-        />
-      </ClerkProvider>
-    </React.StrictMode>,
-  );
-}
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/faqs" element={<FaqsPage />} />
+          <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
+        </Routes>
+      </Router>
+      <Toaster
+        toastOptions={{ className: "dark:bg-zinc-950 dark:text-white" }}
+      />
+    </ClerkProvider>
+  </React.StrictMode>,
+);

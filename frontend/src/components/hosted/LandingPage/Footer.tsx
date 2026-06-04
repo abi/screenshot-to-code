@@ -47,7 +47,7 @@ const Footer = () => {
                 </li>
                 <li>
                   <a
-                    href="mailto:support@picoapps.xyz"
+                    href="mailto:support@getwhimsyworks.com"
                     className="text-sm landing-text-muted hover-line"
                   >
                     Contact
@@ -64,7 +64,7 @@ const Footer = () => {
               <ul className="space-y-4">
                 <li>
                   <a
-                    href="https://a.picoapps.xyz/camera-write"
+                    href="/legal/terms-of-service.html"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm landing-text-muted hover-line"

@@ -93,7 +93,7 @@ function OnboardingPaywall() {
               <img
                 key={name}
                 className="col-span-1 h-6 w-full object-contain opacity-40 grayscale transition-opacity hover:opacity-80"
-                src={`https://picoapps.xyz/logos/${name}.png`}
+                src={`/logos/${name}.png`}
                 alt={name}
                 width={80}
                 height={24}

@@ -210,7 +210,7 @@ function LandingPage() {
                   marginBottom: "5px",
                 },
               },
-              layout: { privacyPageUrl: "https://a.picoapps.xyz/camera-write" },
+              layout: { privacyPageUrl: "/legal/terms-of-service.html" },
             }}
           />
         </DialogContent>
@@ -447,7 +447,7 @@ function LandingPage() {
               <img
                 key={companyName}
                 className="h-8 sm:h-10 w-auto object-contain grayscale opacity-50 hover:opacity-80 transition-opacity logo-dark-invert"
-                src={`https://picoapps.xyz/logos/${companyName}.png`}
+                src={`/logos/${companyName}.png`}
                 alt={companyName}
               />
             ))}
