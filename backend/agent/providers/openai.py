@@ -26,6 +26,7 @@ from llm import Llm, get_openai_api_name, get_openai_reasoning_effort
 
 def _convert_message_to_responses_input(
     message: ChatCompletionMessageParam,
+    image_detail: str = "high",
 ) -> Dict[str, Any]:
     role = message.get("role", "user")
     content = message.get("content", "")
@@ -46,11 +47,17 @@ def _convert_message_to_responses_input(
                     {
                         "type": "input_image",
                         "image_url": image_url.get("url", ""),
-                        "detail": image_url.get("detail", "high"),
+                        "detail": image_detail,
                     }
                 )
 
     return {"role": role, "content": parts}
+
+
+def _get_image_detail_for_model(model: Llm) -> str:
+    if get_openai_api_name(model) == "gpt-5.5":
+        return "original"
+    return "high"
 
 
 def _get_event_attr(event: Any, key: str, default: Any = None) -> Any:
@@ -420,8 +427,10 @@ class OpenAIProviderSession(ProviderSession):
             model,
             enabled=IS_DEBUG_ENABLED,
         )
+        image_detail = _get_image_detail_for_model(model)
         self._input_items: List[Dict[str, Any]] = [
-            _convert_message_to_responses_input(message) for message in prompt_messages
+            _convert_message_to_responses_input(message, image_detail=image_detail)
+            for message in prompt_messages
         ]
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:

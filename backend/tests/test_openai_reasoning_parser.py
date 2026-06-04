@@ -75,7 +75,7 @@ def test_convert_image_url_defaults_to_high_detail() -> None:
     assert image_part["detail"] == "high"
 
 
-def test_convert_image_url_preserves_explicit_detail() -> None:
+def test_convert_image_url_uses_provider_detail_over_explicit_detail() -> None:
     message = {
         "role": "user",
         "content": [
@@ -85,6 +85,6 @@ def test_convert_image_url_preserves_explicit_detail() -> None:
             },
         ],
     }
-    result = _convert_message_to_responses_input(message)  # type: ignore
+    result = _convert_message_to_responses_input(message, image_detail="original")  # type: ignore
     image_part = result["content"][0]
-    assert image_part["detail"] == "low"
+    assert image_part["detail"] == "original"

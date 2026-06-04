@@ -223,3 +223,69 @@ async def test_openai_provider_session_uses_gpt_5_5_high_reasoning_effort() -> N
 
     assert first_call["model"] == "gpt-5.5"
     assert first_call["reasoning"] == {"effort": "high", "summary": "auto"}
+
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_uses_original_image_detail_for_gpt_5_5() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_5_HIGH,
+        prompt_messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Build from this screenshot."},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": "data:image/png;base64,abc",
+                            "detail": "high",
+                        },
+                    },
+                ],
+            }
+        ],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_input = client.responses.calls[0]["input"]
+    image_part = first_input[0]["content"][1]
+
+    assert image_part["type"] == "input_image"
+    assert image_part["detail"] == "original"
+
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_keeps_high_image_detail_for_non_gpt_5_5() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_4_MINI_LOW,
+        prompt_messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Build from this screenshot."},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": "data:image/png;base64,abc",
+                            "detail": "low",
+                        },
+                    },
+                ],
+            }
+        ],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_input = client.responses.calls[0]["input"]
+    image_part = first_input[0]["content"][1]
+
+    assert image_part["type"] == "input_image"
+    assert image_part["detail"] == "high"
