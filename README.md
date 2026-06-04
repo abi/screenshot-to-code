@@ -31,7 +31,7 @@ Screenshot to Code also supports taking a screen recording of a website in actio
 Choose the path that fits what you want to do:
 
 - **Run locally:** best if you want to customize, self-host, or contribute.
-- **Use the hosted app:** the fastest way to try Screenshot to Code with no local setup. [Open the hosted app →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=getting_started_cta)
+- **Use the hosted app:** the fastest way to try Screenshot to Code with no local setup. <a href="https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=getting_started_cta" target="_blank" rel="noopener noreferrer">Open the hosted app →</a>
 
 Running locally requires API keys and a backend/frontend setup. The app has a React/Vite frontend and a FastAPI backend.
 
@@ -82,7 +82,7 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 
 Want to try it with your own screenshot before setting up locally?
 
-[Open the hosted app →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=docker_section_cta)
+<a href="https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=docker_section_cta" target="_blank" rel="noopener noreferrer">Open the hosted app →</a>
 
 ## 🙋‍♂️ FAQs
 
