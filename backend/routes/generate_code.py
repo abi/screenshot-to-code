@@ -493,7 +493,7 @@ class PromptCreationStage:
             return prompt_messages
         except Exception:
             await self.throw_error(
-                "Error assembling prompt. Contact support at support@picoapps.xyz"
+                "Error assembling prompt. Contact support at support@getwhimsyworks.com"
             )
             raise
 

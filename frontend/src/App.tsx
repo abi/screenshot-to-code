@@ -3,7 +3,6 @@ import { generateCode } from "./generateCode";
 import { AppState, AppTheme, EditorTheme, Settings } from "./types";
 import { NEW_DESIGN_SYSTEM_CONTENT } from "./lib/design-systems";
 import { IS_RUNNING_ON_CLOUD } from "./config";
-import { PicoBadge } from "./components/messages/PicoBadge";
 import { OnboardingNote } from "./components/messages/OnboardingNote";
 import { usePersistedState } from "./hooks/usePersistedState";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
@@ -736,7 +735,6 @@ function App() {
           : "min-h-screen"
       }`}
     >
-      {IS_RUNNING_ON_CLOUD && <PicoBadge />}
       {IS_RUNNING_ON_CLOUD && (
         <TermsOfServiceDialog
           open={!settings.isTermOfServiceAccepted}
