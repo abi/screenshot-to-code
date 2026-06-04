@@ -80,10 +80,6 @@ docker-compose up -d --build
 
 The app will be up and running at http://localhost:5173. Note that you can't develop the application with this setup, as file changes won't trigger a rebuild.
 
-Want to try it with your own screenshot before setting up locally?
-
-<a href="https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=docker_section_cta" target="_blank" rel="noopener noreferrer">Open the hosted app →</a>
-
 ## 🙋‍♂️ FAQs
 
 - **I'm running into an error when setting up the backend. How can I fix it?** [Try this](https://github.com/abi/screenshot-to-code/issues/3#issuecomment-1814777959). If that still doesn't work, open an issue.
