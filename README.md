@@ -1,20 +1,8 @@
 # screenshot-to-code
 
-Convert screenshots, mockups, Figma designs, and screen recordings into clean, functional code using AI.
+Convert screenshots, mockups, Figma designs, and screen recordings into clean, functional code using AI. The easiest way to try this is using [the official, hosted product at screenshottocode.com →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=top_cta)
 
 https://github.com/user-attachments/assets/85b911c0-efea-4957-badb-daa97ec402ad
-
-## Try it instantly
-
-Want to use Screenshot to Code without setting up API keys or running the app locally?
-
-[Try the hosted version →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=top_cta)
-
-The hosted version is best if you want to:
-
-- Generate code without configuring OpenAI, Anthropic, or Gemini keys
-- Use the latest hosted models and improvements
-- Save project history and manage generations in one place
 
 Supported stacks:
 
@@ -24,31 +12,26 @@ Supported stacks:
 - Vue + Tailwind
 - Bootstrap
 - Ionic + Tailwind
-- SVG
 
 Default AI models:
 
 - Gemini 3 Flash Preview and Gemini 3.1 Pro Preview - best models
 - GPT-5.5, GPT-5.2 Codex and GPT-5.4 Mini
 - Claude Opus 4.6, Claude Opus 4.8
-- Flux Schnell (using Replicate) for image generation
+- z-image-turbo (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
 
-We have experimental support for taking a video/screen recording of a website in action and turning that into a functional prototype.
+Screenshot to Code also supports taking a screen recording of a website in action and turning that into a functional prototype.
 
 ![google in app quick 3](https://github.com/abi/screenshot-to-code/assets/23818/8758ffa4-9483-4b9b-bb66-abd6d1594c33)
-
-[Learn more about video here](https://github.com/abi/screenshot-to-code/wiki/Screen-Recording-to-Code).
 
 ## 🛠 Getting Started
 
 Choose the path that fits what you want to do:
 
-- **Use the hosted app:** fastest way to try Screenshot to Code with no local setup.
 - **Run locally:** best if you want to customize, self-host, or contribute.
-
-[Open the hosted app →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=getting_started_cta)
+- **Use the hosted app:** fastest way to try Screenshot to Code with no local setup. [Open the hosted app →](https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=getting_started_cta)
 
 Running locally requires API keys and a backend/frontend setup. The app has a React/Vite frontend and a FastAPI backend.
 
