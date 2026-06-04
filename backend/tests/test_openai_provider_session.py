@@ -189,12 +189,26 @@ async def test_openai_provider_session_uses_gpt_5_4_high_reasoning_effort() -> N
     assert first_call["reasoning"] == {"effort": "high", "summary": "auto"}
 
 
+@pytest.mark.parametrize(
+    ("model", "effort"),
+    [
+        (Llm.GPT_5_5_NONE, "none"),
+        (Llm.GPT_5_5_MINIMAL, "minimal"),
+        (Llm.GPT_5_5_LOW, "low"),
+        (Llm.GPT_5_5_MEDIUM, "medium"),
+        (Llm.GPT_5_5_HIGH, "high"),
+        (Llm.GPT_5_5_XHIGH, "xhigh"),
+    ],
+)
 @pytest.mark.asyncio
-async def test_openai_provider_session_uses_gpt_5_5_xhigh_reasoning_effort() -> None:
+async def test_openai_provider_session_uses_gpt_5_5_reasoning_effort(
+    model: Llm,
+    effort: str,
+) -> None:
     client = _FakeOpenAIClient()
     session = OpenAIProviderSession(
         client=client,  # type: ignore[arg-type]
-        model=Llm.GPT_5_5_XHIGH,
+        model=model,
         prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
         tools=_test_tools(),
     )
@@ -204,25 +218,7 @@ async def test_openai_provider_session_uses_gpt_5_5_xhigh_reasoning_effort() -> 
     first_call = client.responses.calls[0]
 
     assert first_call["model"] == "gpt-5.5"
-    assert first_call["reasoning"] == {"effort": "xhigh", "summary": "auto"}
-
-
-@pytest.mark.asyncio
-async def test_openai_provider_session_uses_gpt_5_5_high_reasoning_effort() -> None:
-    client = _FakeOpenAIClient()
-    session = OpenAIProviderSession(
-        client=client,  # type: ignore[arg-type]
-        model=Llm.GPT_5_5_HIGH,
-        prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
-        tools=_test_tools(),
-    )
-
-    await session.stream_turn(_noop_event_sink)
-
-    first_call = client.responses.calls[0]
-
-    assert first_call["model"] == "gpt-5.5"
-    assert first_call["reasoning"] == {"effort": "high", "summary": "auto"}
+    assert first_call["reasoning"] == {"effort": effort, "summary": "auto"}
 
 
 @pytest.mark.asyncio
