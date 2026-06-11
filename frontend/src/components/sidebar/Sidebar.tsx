@@ -558,6 +558,7 @@ function Sidebar({
                   />
                   <button
                     onClick={toggleInSelectAndEditMode}
+                    data-testid="select-edit-toggle-prompt"
                     className={`rounded-lg p-2 transition-colors ${
                       inSelectAndEditMode
                         ? "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"

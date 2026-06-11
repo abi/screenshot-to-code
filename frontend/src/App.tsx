@@ -232,6 +232,9 @@ function App() {
 
   // Functions
   const reset = () => {
+    // Stop any in-flight generation so late websocket events can't mutate
+    // state after the reset (e.g. flipping the app back to CODE_READY).
+    cancelCodeGeneration();
     setAppState(AppState.INITIAL);
     setUpdateInstruction("");
     setUpdateImages([]);
@@ -512,6 +515,10 @@ function App() {
         }
       },
       onCancel: (reason, errorMessage) => {
+        // The project may have been reset while this generation was still in
+        // flight — a stale cancellation must not mutate app state.
+        if (!useProjectStore.getState().commits[commit.hash]) return;
+
         // Close any running agent events when the socket ends without per-event
         // terminal messages, otherwise they remain stuck in "running" state.
         finishInFlightEvents(reason === "request_failed" ? "error" : "complete");
@@ -535,6 +542,9 @@ function App() {
         cancelCodeGenerationAndReset(commit);
       },
       onComplete: () => {
+        // Same guard as onCancel: a generation finishing after its project
+        // was reset must not pull the app back into the editor.
+        if (!useProjectStore.getState().commits[commit.hash]) return;
         finishInFlightEvents("complete");
         setAppState(AppState.CODE_READY);
       },
