@@ -7,6 +7,13 @@
       "runtimeArgs": ["dev"],
       "port": 5173,
       "cwd": "frontend"
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "poetry",
+      "runtimeArgs": ["run", "uvicorn", "main:app", "--port", "7001"],
+      "port": 7001,
+      "cwd": "backend"
     }
   ]
 }
