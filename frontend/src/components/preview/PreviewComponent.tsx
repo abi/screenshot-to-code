@@ -29,12 +29,27 @@ function PreviewComponent({
   // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
   const activeMode = viewMode ?? "fit";
+
+  // In select-and-edit mode, intercept clicks in the capture phase so the
+  // generated app's own handlers (React/Vue listeners, Bootstrap/Ionic
+  // behaviors, link navigation, form submits) never fire while selecting.
   const handleIframeClick = useCallback((event: MouseEvent) => {
+    if (!inSelectAndEditModeRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
     setClickEvent(event);
   }, []);
 
+  // Suppress the rest of the pointer sequence (and form submits) while
+  // selecting, since app handlers can be bound to those events too.
+  const handleIframeInteraction = useCallback((event: Event) => {
+    if (!inSelectAndEditModeRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
   const handleIframeLinkClick = useCallback((event: MouseEvent) => {
-    const target = (event.target as HTMLElement).closest("a");
+    const target = (event.target as HTMLElement).closest?.("a");
     if (!target) return;
     const href = target.getAttribute("href");
     if (href && href.startsWith("#")) {
@@ -58,8 +73,6 @@ function PreviewComponent({
     if (!inSelectAndEditModeRef.current || !clickEvent) {
       return;
     }
-
-    clickEvent.preventDefault();
 
     const targetElement = clickEvent.target as HTMLElement;
     if (!targetElement) return;
@@ -131,24 +144,42 @@ function PreviewComponent({
     const iframe = iframeRef.current;
     if (!iframe) return;
 
+    const suppressedEvents = ["pointerdown", "mousedown", "mouseup", "submit"];
+
     const handleLoad = () => {
-      const body = iframe.contentWindow?.document.body;
-      if (!body) return;
-      body.addEventListener("click", handleIframeClick);
-      body.addEventListener("click", handleIframeLinkClick);
+      const win = iframe.contentWindow;
+      if (!win) return;
+      // Intercept on the window in the capture phase: the window is the
+      // first node in the propagation path, so this runs before any handler
+      // the generated app registered, including capture-phase delegated
+      // handlers on document (e.g. Bootstrap's data API).
+      win.addEventListener("click", handleIframeClick, true);
+      for (const type of suppressedEvents) {
+        win.addEventListener(type, handleIframeInteraction, true);
+      }
+      win.document.addEventListener("click", handleIframeLinkClick);
     };
 
     iframe.addEventListener("load", handleLoad);
+    // The current document may already be loaded (e.g. the component
+    // re-rendered after the iframe's load event); attach to it directly.
+    // addEventListener dedupes identical handlers, so this is safe.
+    if (iframe.contentWindow?.document.readyState === "complete") {
+      handleLoad();
+    }
 
     return () => {
       iframe.removeEventListener("load", handleLoad);
-      const body = iframe.contentWindow?.document.body;
-      if (body) {
-        body.removeEventListener("click", handleIframeClick);
-        body.removeEventListener("click", handleIframeLinkClick);
+      const win = iframe.contentWindow;
+      if (win) {
+        win.removeEventListener("click", handleIframeClick, true);
+        for (const type of suppressedEvents) {
+          win.removeEventListener(type, handleIframeInteraction, true);
+        }
+        win.document.removeEventListener("click", handleIframeLinkClick);
       }
     };
-  }, [handleIframeClick, handleIframeLinkClick]);
+  }, [handleIframeClick, handleIframeLinkClick, handleIframeInteraction]);
 
   useEffect(() => {
     const iframe = iframeRef.current;

@@ -25,7 +25,10 @@ import {
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import { useDesignSystems } from "./hooks/useDesignSystems";
-import { removeHighlight } from "./components/select-and-edit/utils";
+import {
+  buildSelectedElementInstruction,
+  removeHighlight,
+} from "./components/select-and-edit/utils";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
 import HistoryDisplay from "./components/history/HistoryDisplay";
@@ -157,10 +160,6 @@ function App() {
     openDesignSystemsManager,
     setSelectedDesignSystemId,
   ]);
-  const showSelectAndEditFeature =
-    settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
-    settings.generatedCodeConfig === Stack.HTML_CSS;
-
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
 
@@ -637,10 +636,10 @@ function App() {
     if (selectedElement) {
       const elementHtml = removeHighlight(selectedElement).outerHTML;
       selectedElementHtml = elementHtml;
-      modifiedUpdateInstruction =
-        updateInstruction +
-        " referring to this element specifically: " +
-        elementHtml;
+      modifiedUpdateInstruction = buildSelectedElementInstruction(
+        updateInstruction,
+        elementHtml
+      );
       setSelectedElement(null);
     }
 
@@ -844,7 +843,6 @@ function App() {
                 {(appState === AppState.CODING ||
                   appState === AppState.CODE_READY) && (
                   <Sidebar
-                    showSelectAndEditFeature={showSelectAndEditFeature}
                     doUpdate={doUpdate}
                     regenerate={regenerate}
                     cancelCodeGeneration={cancelCodeGeneration}

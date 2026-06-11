@@ -19,7 +19,6 @@ import DesignSystemSelector, {
 } from "../settings/DesignSystemSelector";
 
 interface SidebarProps {
-  showSelectAndEditFeature: boolean;
   doUpdate: (instruction: string) => void;
   regenerate: () => void;
   cancelCodeGeneration: () => void;
@@ -69,7 +68,6 @@ function isSlowGeminiModel(model?: string): boolean {
 }
 
 function Sidebar({
-  showSelectAndEditFeature,
   doUpdate,
   regenerate,
   cancelCodeGeneration,
@@ -558,19 +556,17 @@ function Sidebar({
                     updateImages={updateImages}
                     setUpdateImages={setUpdateImages}
                   />
-                  {showSelectAndEditFeature && (
-                    <button
-                      onClick={toggleInSelectAndEditMode}
-                      className={`rounded-lg p-2 transition-colors ${
-                        inSelectAndEditMode
-                          ? "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
-                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                      }`}
-                      title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
-                    >
-                      <LuMousePointerClick className="w-[18px] h-[18px]" />
-                    </button>
-                  )}
+                  <button
+                    onClick={toggleInSelectAndEditMode}
+                    className={`rounded-lg p-2 transition-colors ${
+                      inSelectAndEditMode
+                        ? "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
+                        : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                    }`}
+                    title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
+                  >
+                    <LuMousePointerClick className="w-[18px] h-[18px]" />
+                  </button>
                   <DesignSystemSelector {...designSystem} compact />
                 </div>
                 <button
