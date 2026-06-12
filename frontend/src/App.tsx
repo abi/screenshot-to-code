@@ -678,6 +678,7 @@ function App() {
       inputMode,
       prompt: {
         text: updateInstruction,
+        fullText: modifiedUpdateInstruction,
         images: updateImages,
         videos: [],
         selectedElementHtml,

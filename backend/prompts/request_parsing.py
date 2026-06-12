@@ -16,11 +16,17 @@ def parse_prompt_content(raw_prompt: object) -> UserTurnInput:
 
     prompt_dict = cast(dict[str, object], raw_prompt)
     text = prompt_dict.get("text")
-    return {
+    parsed: UserTurnInput = {
         "text": text if isinstance(text, str) else "",
         "images": _to_string_list(prompt_dict.get("images")),
         "videos": _to_string_list(prompt_dict.get("videos")),
     }
+
+    full_text = prompt_dict.get("fullText")
+    if isinstance(full_text, str) and full_text.strip():
+        parsed["full_text"] = full_text
+
+    return parsed
 
 
 def parse_prompt_history(raw_history: object) -> List[PromptHistoryMessage]:

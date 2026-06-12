@@ -1,12 +1,18 @@
 from typing import List, Literal, TypedDict
 
 
-class UserTurnInput(TypedDict):
-    """Normalized current user turn payload from the request."""
-
+class _UserTurnInputRequired(TypedDict):
     text: str
     images: List[str]
     videos: List[str]
+
+
+class UserTurnInput(_UserTurnInputRequired, total=False):
+    """Normalized current user turn payload from the request."""
+
+    # Full instruction for the model when it differs from the display text
+    # (e.g. includes the selected-element reference, built by the frontend).
+    full_text: str
 
 
 class PromptHistoryMessage(TypedDict):
