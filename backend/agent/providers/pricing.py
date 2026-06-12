@@ -37,6 +37,9 @@ MODEL_PRICING: Dict[str, ModelPricing] = {
     "claude-opus-4-8": ModelPricing(
         input=5.00, output=25.00, cache_read=0.50, cache_write=6.25
     ),
+    "claude-fable-5": ModelPricing(
+        input=10.00, output=50.00, cache_read=1.00, cache_write=12.50
+    ),
     # --- Gemini ---
     "gemini-3-flash-preview": ModelPricing(
         input=0.50, output=3.00, cache_read=0.05

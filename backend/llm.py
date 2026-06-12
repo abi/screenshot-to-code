@@ -28,6 +28,11 @@ class Llm(Enum):
     CLAUDE_OPUS_4_8_HIGH = "claude-opus-4-8 (high effort)"
     CLAUDE_OPUS_4_8_XHIGH = "claude-opus-4-8 (xhigh effort)"
     CLAUDE_OPUS_4_8_MAX = "claude-opus-4-8 (max effort)"
+    CLAUDE_FABLE_5_LOW = "claude-fable-5 (low effort)"
+    CLAUDE_FABLE_5_MEDIUM = "claude-fable-5 (medium effort)"
+    CLAUDE_FABLE_5_HIGH = "claude-fable-5 (high effort)"
+    CLAUDE_FABLE_5_XHIGH = "claude-fable-5 (xhigh effort)"
+    CLAUDE_FABLE_5_MAX = "claude-fable-5 (max effort)"
     # Gemini
     GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)"
     GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)"
@@ -73,6 +78,11 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.CLAUDE_OPUS_4_8_HIGH: "anthropic",
     Llm.CLAUDE_OPUS_4_8_XHIGH: "anthropic",
     Llm.CLAUDE_OPUS_4_8_MAX: "anthropic",
+    Llm.CLAUDE_FABLE_5_LOW: "anthropic",
+    Llm.CLAUDE_FABLE_5_MEDIUM: "anthropic",
+    Llm.CLAUDE_FABLE_5_HIGH: "anthropic",
+    Llm.CLAUDE_FABLE_5_XHIGH: "anthropic",
+    Llm.CLAUDE_FABLE_5_MAX: "anthropic",
     # Gemini models
     Llm.GEMINI_3_FLASH_PREVIEW_HIGH: "gemini",
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL: "gemini",

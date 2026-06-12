@@ -30,6 +30,11 @@ ADAPTIVE_THINKING_MODELS = {
     Llm.CLAUDE_OPUS_4_8_HIGH.value,
     Llm.CLAUDE_OPUS_4_8_XHIGH.value,
     Llm.CLAUDE_OPUS_4_8_MAX.value,
+    Llm.CLAUDE_FABLE_5_LOW.value,
+    Llm.CLAUDE_FABLE_5_MEDIUM.value,
+    Llm.CLAUDE_FABLE_5_HIGH.value,
+    Llm.CLAUDE_FABLE_5_XHIGH.value,
+    Llm.CLAUDE_FABLE_5_MAX.value,
     Llm.CLAUDE_SONNET_4_6.value,
 }
 
@@ -39,6 +44,11 @@ ANTHROPIC_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
     Llm.CLAUDE_OPUS_4_8_HIGH: {"api_name": "claude-opus-4-8", "effort": "high"},
     Llm.CLAUDE_OPUS_4_8_XHIGH: {"api_name": "claude-opus-4-8", "effort": "xhigh"},
     Llm.CLAUDE_OPUS_4_8_MAX: {"api_name": "claude-opus-4-8", "effort": "max"},
+    Llm.CLAUDE_FABLE_5_LOW: {"api_name": "claude-fable-5", "effort": "low"},
+    Llm.CLAUDE_FABLE_5_MEDIUM: {"api_name": "claude-fable-5", "effort": "medium"},
+    Llm.CLAUDE_FABLE_5_HIGH: {"api_name": "claude-fable-5", "effort": "high"},
+    Llm.CLAUDE_FABLE_5_XHIGH: {"api_name": "claude-fable-5", "effort": "xhigh"},
+    Llm.CLAUDE_FABLE_5_MAX: {"api_name": "claude-fable-5", "effort": "max"},
 }
 
 
