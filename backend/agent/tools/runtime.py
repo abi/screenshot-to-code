@@ -7,18 +7,28 @@ import os
 from urllib.parse import unquote, urlparse
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from asset_extraction import extract_assets_from_images
 from codegen.utils import extract_html_content
 from config import LOCAL_ASSET_DIR, REPLICATE_API_KEY
 from image_generation.generation import process_tasks
 from image_generation.replicate import edit_image, remove_background
+from uploaded_assets.store import (
+    persist_data_url_as_temporary_asset,
+    promote_temporary_asset_id,
+)
 from uploaded_assets.tools import run_save_assets
 
 from agent.state import AgentFileState, ensure_str
-from agent.tools.types import ToolCall, ToolExecutionResult
+from agent.tools.types import ToolCall, ToolExecutionResult, ToolMultimodalPart
 from agent.tools.summaries import summarize_text
 
 
 LOCAL_ASSET_HOSTS = {"127.0.0.1", "localhost", "::1"}
+IMAGE_EXTENSION_BY_MIME_TYPE = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
 
 
 def _local_asset_url_to_data_url(image_url: str) -> str:
@@ -46,6 +56,30 @@ def _local_asset_url_to_data_url(image_url: str) -> str:
     return f"data:{content_type};base64,{encoded}"
 
 
+def _image_data_url_to_multimodal_part(
+    data_url: str,
+    display_name: str,
+) -> ToolMultimodalPart | None:
+    if not data_url.startswith("data:image/") or "," not in data_url:
+        return None
+
+    header, encoded = data_url.split(",", 1)
+    mime_type = header.removeprefix("data:").split(";", 1)[0].lower()
+    if mime_type not in {"image/png", "image/jpeg", "image/webp"}:
+        return None
+
+    try:
+        data = base64.b64decode(encoded, validate=True)
+    except ValueError:
+        return None
+
+    return ToolMultimodalPart(
+        display_name=display_name,
+        mime_type=mime_type,
+        data=data,
+    )
+
+
 class AgentToolRuntime:
     def __init__(
         self,
@@ -53,6 +87,9 @@ class AgentToolRuntime:
         should_generate_images: bool,
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
+        gemini_api_key: Optional[str] = None,
+        input_images: Optional[List[str]] = None,
+        asset_base_url: str = "",
         user_id: Optional[str] = None,
         option_codes: Optional[List[str]] = None,
     ):
@@ -60,6 +97,9 @@ class AgentToolRuntime:
         self.should_generate_images = should_generate_images
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
+        self.gemini_api_key = gemini_api_key
+        self.input_images = input_images or []
+        self.asset_base_url = asset_base_url
         self.user_id = user_id
         self.option_codes = option_codes or []
 
@@ -85,6 +125,8 @@ class AgentToolRuntime:
             return await self._remove_background(tool_call.arguments)
         if tool_call.name == "edit_image":
             return await self._edit_image(tool_call.arguments)
+        if tool_call.name == "extract_assets":
+            return await self._extract_assets(tool_call.arguments)
         if tool_call.name == "save_assets":
             return await run_save_assets(tool_call.arguments, user_id=self.user_id)
         if tool_call.name == "retrieve_option":
@@ -463,6 +505,151 @@ class AgentToolRuntime:
             }
         }
         return ToolExecutionResult(ok=True, result=result, summary=summary)
+
+    async def _extract_assets(self, args: Dict[str, Any]) -> ToolExecutionResult:
+        if not self.gemini_api_key:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "Asset extraction requires GEMINI_API_KEY."},
+                summary={"error": "Missing Gemini API key"},
+            )
+
+        if not self.input_images:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "No input images are available for asset extraction."},
+                summary={"error": "No input images"},
+            )
+
+        raw_descriptions = args.get("asset_descriptions") or args.get("descriptions")
+        if not isinstance(raw_descriptions, list) or not raw_descriptions:
+            return ToolExecutionResult(
+                ok=False,
+                result={
+                    "error": "extract_assets requires a non-empty asset_descriptions list"
+                },
+                summary={"error": "Missing asset_descriptions"},
+            )
+
+        descriptions = [
+            description.strip()
+            for description in raw_descriptions
+            if isinstance(description, str) and description.strip()
+        ]
+        if not descriptions:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "No valid asset descriptions provided"},
+                summary={"error": "No valid asset_descriptions"},
+            )
+
+        result = await extract_assets_from_images(
+            image_data_urls=self.input_images,
+            asset_descriptions=descriptions,
+            gemini_api_key=self.gemini_api_key,
+        )
+        assets = result.get("assets", [])
+        promoted_assets: List[Dict[str, Any]] = []
+        multimodal_parts: List[ToolMultimodalPart] = []
+        if isinstance(assets, list):
+            for index, asset in enumerate(assets):
+                if not isinstance(asset, dict):
+                    continue
+
+                data_url = ensure_str(asset.get("data_url"))
+                public_url: str | None = None
+                content_type: str | None = None
+                asset_id: str | None = None
+                image_part_index: int | None = None
+                image_display_name: str | None = None
+                status = ensure_str(asset.get("status")) or "missing"
+
+                if data_url:
+                    mime_type = data_url.split(";", 1)[0].removeprefix("data:")
+                    extension = IMAGE_EXTENSION_BY_MIME_TYPE.get(mime_type, ".png")
+                    display_name = f"asset_{index}{extension}"
+                    multimodal_part = _image_data_url_to_multimodal_part(
+                        data_url,
+                        display_name,
+                    )
+                    if multimodal_part:
+                        multimodal_parts.append(multimodal_part)
+                        image_part_index = len(multimodal_parts) - 1
+                        image_display_name = display_name
+
+                    temporary_asset = persist_data_url_as_temporary_asset(
+                        data_url,
+                        self.asset_base_url,
+                    )
+                    if temporary_asset:
+                        saved_asset = await promote_temporary_asset_id(
+                            temporary_asset.asset_id,
+                            user_id=self.user_id,
+                        )
+                        if saved_asset:
+                            public_url = saved_asset.public_url
+                            content_type = saved_asset.content_type
+                            asset_id = saved_asset.asset_id
+                            status = "ok"
+                        else:
+                            status = "error"
+                    else:
+                        status = "error"
+
+                promoted_assets.append(
+                    {
+                        "description": asset.get("description"),
+                        "public_url": public_url,
+                        "asset_id": asset_id,
+                        "content_type": content_type,
+                        "status": status,
+                        "image_part_index": image_part_index,
+                        "image_display_name": image_display_name,
+                        "box_2d": asset.get("box_2d"),
+                        "image_index": asset.get("image_index"),
+                        "label": asset.get("label"),
+                    }
+                )
+
+        result = {
+            **result,
+            "assets": promoted_assets,
+        }
+        if any(asset.get("status") != "ok" for asset in promoted_assets):
+            result["error"] = (
+                result.get("error")
+                or "Could not persist every extracted asset to a public URL."
+            )
+
+        summary_assets = []
+        for asset in promoted_assets:
+            public_url = ensure_str(asset.get("public_url"))
+            summary_assets.append(
+                {
+                    "description": summarize_text(
+                        ensure_str(asset.get("description")), 120
+                    ),
+                    "status": ensure_str(asset.get("status")),
+                    "public_url": public_url,
+                    "asset_id": ensure_str(asset.get("asset_id")),
+                    "content_type": ensure_str(asset.get("content_type")),
+                    "image_part_index": asset.get("image_part_index"),
+                    "image_display_name": asset.get("image_display_name"),
+                    "box_2d": asset.get("box_2d"),
+                    "image_index": asset.get("image_index"),
+                    "label": ensure_str(asset.get("label")),
+                }
+            )
+
+        return ToolExecutionResult(
+            ok=not result.get("error"),
+            result=result,
+            summary={
+                "assets": summary_assets,
+                "error": result.get("error"),
+            },
+            multimodal_parts=multimodal_parts,
+        )
 
     def _retrieve_option(self, args: Dict[str, Any]) -> ToolExecutionResult:
         raw_option_number = args.get("option_number")

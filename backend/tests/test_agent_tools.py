@@ -47,6 +47,34 @@ def test_save_assets_tool_input_summary_uses_asset_ids() -> None:
     }
 
 
+def test_canonical_tool_definitions_include_extract_assets() -> None:
+    tools = canonical_tool_definitions(True)
+    tool_names = [tool.name for tool in tools]
+    assert "extract_assets" in tool_names
+    extract_assets_tool = next(tool for tool in tools if tool.name == "extract_assets")
+    assert extract_assets_tool.parameters["required"] == ["asset_descriptions"]
+    assert (
+        extract_assets_tool.parameters["properties"]["asset_descriptions"]["type"]
+        == "array"
+    )
+
+
+def test_extract_assets_tool_input_summary_uses_asset_descriptions() -> None:
+    summary = summarize_tool_input(
+        ToolCall(
+            id="call-1",
+            name="extract_assets",
+            arguments={"asset_descriptions": ["logo", "avatar"]},
+        ),
+        AgentFileState(),
+    )
+
+    assert summary == {
+        "count": 2,
+        "asset_descriptions": ["logo", "avatar"],
+    }
+
+
 def test_canonical_tool_definitions_include_edit_image() -> None:
     tools = canonical_tool_definitions(True)
     tool_names = [tool.name for tool in tools]

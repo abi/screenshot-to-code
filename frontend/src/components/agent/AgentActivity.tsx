@@ -17,6 +17,7 @@ import {
   BsScissors,
   BsFiles,
   BsBookmarkCheck,
+  BsBoundingBox,
 } from "react-icons/bs";
 import ReactMarkdown from "react-markdown";
 import { Light as SyntaxHighlighterBase } from "react-syntax-highlighter";
@@ -86,6 +87,42 @@ function formatVariantWallClockDuration(
 }
 
 
+function getArrayField(value: unknown, field: string): unknown[] | null {
+  if (!value || typeof value !== "object") return null;
+  const fieldValue = (value as Record<string, unknown>)[field];
+  return Array.isArray(fieldValue) ? fieldValue : null;
+}
+
+function getRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function getExtractedAssetPreviewUrl(asset: unknown): string | null {
+  const assetRecord = getRecord(asset);
+  if (!assetRecord) return null;
+  if (typeof assetRecord.public_url === "string" && assetRecord.public_url) {
+    return assetRecord.public_url;
+  }
+  if (typeof assetRecord.data_url === "string" && assetRecord.data_url) {
+    return assetRecord.data_url;
+  }
+  return null;
+}
+
+function isSuccessfulExtractedAsset(asset: unknown): boolean {
+  const assetRecord = getRecord(asset);
+  if (!assetRecord) return false;
+  const status =
+    typeof assetRecord.status === "string" ? assetRecord.status : null;
+  return Boolean(
+    getExtractedAssetPreviewUrl(asset) &&
+      status !== "missing" &&
+      status !== "error"
+  );
+}
+
 function getEventIcon(type: AgentEventType, toolName?: string) {
   if (type === "thinking") {
     return <BsLightbulb className="text-yellow-500" />;
@@ -113,6 +150,9 @@ function getEventIcon(type: AgentEventType, toolName?: string) {
   }
   if (toolName === "save_assets") {
     return <BsBookmarkCheck className="text-emerald-500" />;
+  }
+  if (toolName === "extract_assets") {
+    return <BsBoundingBox className="text-orange-500" />;
   }
   return <BsFileEarmarkPlus className="text-gray-500" />;
 }
@@ -179,6 +219,32 @@ function getEventTitle(event: AgentEvent): string {
       }
       return saveCount > 1 ? `Saved ${saveCount} assets` : "Saved asset";
     }
+    if (event.toolName === "extract_assets") {
+      const extractInputDescriptions = getArrayField(event.input, "asset_descriptions");
+      const extractOutputAssets = getArrayField(event.output, "assets");
+      const requestedCount = extractInputDescriptions?.length || 0;
+      const successfulCount =
+        extractOutputAssets?.filter(isSuccessfulExtractedAsset).length || 0;
+      const extractCount =
+        extractOutputAssets?.length || extractInputDescriptions?.length || 0;
+      if (event.status === "running") {
+        return extractCount > 1
+          ? `Extracting ${extractCount} assets`
+          : "Extracting asset";
+      }
+      if (
+        extractOutputAssets &&
+        requestedCount > 0 &&
+        successfulCount < requestedCount
+      ) {
+        return successfulCount > 0
+          ? `Extracted ${successfulCount} of ${requestedCount} assets`
+          : "Could not extract assets";
+      }
+      return extractCount > 1
+        ? `Extracted ${extractCount} assets`
+        : "Extracted asset";
+    }
     return event.status === "running" ? "Running tool" : "Tool completed";
   }
   return "Activity";
@@ -213,6 +279,14 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
     output && Array.isArray(output.images) ? (output.images as Array<any>) : null;
   const edits =
     output && Array.isArray(output.edits) ? (output.edits as Array<any>) : null;
+  const extractedAssets =
+    output && Array.isArray(output.assets) ? (output.assets as Array<unknown>) : null;
+  const successfulExtractedAssets =
+    extractedAssets?.filter(isSuccessfulExtractedAsset) || null;
+  const visibleExtractedAssets =
+    hasError && successfulExtractedAssets
+      ? successfulExtractedAssets
+      : extractedAssets;
 
   return (
     <div className="text-sm text-gray-700 dark:text-gray-200">
@@ -526,6 +600,126 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
           )}
         </div>
       )}
+
+      {event.toolName === "extract_assets" &&
+        (!hasError || Boolean(visibleExtractedAssets?.length)) && (
+          <div>
+            {!hasError &&
+              event.status === "running" &&
+              input?.asset_descriptions &&
+              Array.isArray(input.asset_descriptions) && (
+                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {input.asset_descriptions.map((description: string, index: number) => (
+                    <div key={`${description}-${index}`} className="py-2">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        Asset {index + 1}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-300">
+                        {description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            {event.status !== "running" && visibleExtractedAssets && (
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {visibleExtractedAssets.map((asset, index) => {
+                  const assetRecord =
+                    asset && typeof asset === "object"
+                      ? (asset as Record<string, unknown>)
+                      : {};
+                  const description =
+                    typeof assetRecord.description === "string"
+                      ? assetRecord.description
+                      : `Asset ${index + 1}`;
+                  const publicUrl =
+                    typeof assetRecord.public_url === "string"
+                      ? assetRecord.public_url
+                      : null;
+                  const previewUrl =
+                    publicUrl ||
+                    (typeof assetRecord.data_url === "string"
+                      ? assetRecord.data_url
+                      : null);
+                  const boxText = Array.isArray(assetRecord.box_2d)
+                    ? assetRecord.box_2d.join(", ")
+                    : "No box";
+                  const statusLabel =
+                    typeof assetRecord.status === "string"
+                      ? assetRecord.status
+                      : previewUrl
+                        ? "ok"
+                        : "missing";
+                  return (
+                    <div key={`${description}-${index}`} className="flex gap-3 py-2">
+                      <div className="w-1/2 shrink-0">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          Extracted crop
+                        </div>
+                        {previewUrl ? (
+                          <img
+                            src={previewUrl}
+                            alt={description}
+                            className="max-h-48 w-full rounded object-contain bg-gray-50 dark:bg-gray-800"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                            Missing
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-1/2 self-center space-y-2">
+                        <div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Requested asset
+                          </div>
+                          <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                            {description}
+                          </div>
+                        </div>
+                        {publicUrl && (
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Public URL
+                            </div>
+                            <div className="mt-1 break-all rounded bg-gray-50 p-2 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                              {publicUrl}
+                            </div>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400">Status</div>
+                            <div className="mt-1 font-mono text-gray-600 dark:text-gray-300">
+                              {statusLabel}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400">
+                              Source image
+                            </div>
+                            <div className="mt-1 font-mono text-gray-600 dark:text-gray-300">
+                              {String(assetRecord.image_index ?? "-")}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Bounding box
+                          </div>
+                          <div className="mt-1 break-all rounded bg-gray-50 p-2 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                            [{boxText}]
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
       {!event.toolName && !hasError && (
         <>

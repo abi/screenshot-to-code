@@ -133,6 +133,25 @@ def _edit_image_schema() -> Dict[str, Any]:
     }
 
 
+def _extract_assets_schema() -> Dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {
+            "asset_descriptions": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "description": (
+                        "Short text description of one visual asset to extract "
+                        "from the input image."
+                    ),
+                },
+            },
+        },
+        "required": ["asset_descriptions"],
+    }
+
+
 def _retrieve_option_schema() -> Dict[str, Any]:
     return {
         "type": "object",
@@ -207,6 +226,16 @@ def canonical_tool_definitions(
         )
     tools.extend(
         [
+            CanonicalToolDefinition(
+                name="extract_assets",
+                description=(
+                    "Extract one or more visual assets from the input screenshot or "
+                    "reference images using Gemini. Pass a list of text descriptions "
+                    "for the assets to extract. Returns extracted image data URLs in "
+                    "the same order."
+                ),
+                parameters=_extract_assets_schema(),
+            ),
             SAVE_ASSETS_TOOL_DEFINITION,
             CanonicalToolDefinition(
                 name="retrieve_option",

@@ -110,3 +110,108 @@ async def test_save_assets_promotes_temporary_asset_id(
     )
     assert temp_asset.asset_id not in images[0]["public_url"]
     assert len(list(asset_dir.iterdir())) == 1
+
+
+@pytest.mark.asyncio
+async def test_extract_assets_requires_gemini_api_key() -> None:
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+        input_images=[_data_url(b"source-image")],
+    )
+
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="extract_assets",
+            arguments={"asset_descriptions": ["logo"]},
+        )
+    )
+
+    assert result.ok is False
+    assert result.summary["error"] == "Missing Gemini API key"
+
+
+@pytest.mark.asyncio
+async def test_extract_assets_returns_mocked_gemini_assets(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    temp_dir = tmp_path / "tmp-assets"
+    asset_dir = tmp_path / "local-assets"
+    monkeypatch.setattr("uploaded_assets.store.TEMP_ASSET_DIR", str(temp_dir))
+    monkeypatch.setattr("uploaded_assets.store.LOCAL_ASSET_DIR", str(asset_dir))
+
+    async def fake_extract_assets_from_images(
+        image_data_urls: list[str],
+        asset_descriptions: list[str],
+        gemini_api_key: str,
+    ) -> dict[str, object]:
+        assert image_data_urls == [_data_url(b"source-image")]
+        assert asset_descriptions == ["logo", "avatar"]
+        assert gemini_api_key == "gemini-key"
+        return {
+            "assets": [
+                {
+                    "description": "logo",
+                    "data_url": _data_url(b"logo-image"),
+                    "status": "ok",
+                    "box_2d": [0, 0, 500, 500],
+                    "image_index": 1,
+                    "label": "logo",
+                },
+                {
+                    "description": "avatar",
+                    "data_url": _data_url(b"avatar-image"),
+                    "status": "ok",
+                },
+            ]
+        }
+
+    monkeypatch.setattr(
+        "agent.tools.runtime.extract_assets_from_images",
+        fake_extract_assets_from_images,
+    )
+
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+        gemini_api_key="gemini-key",
+        input_images=[_data_url(b"source-image")],
+        asset_base_url="http://127.0.0.1:7001",
+    )
+
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="extract_assets",
+            arguments={"asset_descriptions": ["logo", "avatar"]},
+        )
+    )
+
+    assert result.ok is True
+    assert result.result["assets"][0]["description"] == "logo"
+    assert result.result["assets"][0]["public_url"].startswith(
+        "http://127.0.0.1:7001/local-assets/"
+    )
+    assert result.summary["assets"][0]["public_url"].startswith(
+        "http://127.0.0.1:7001/local-assets/"
+    )
+    assert result.result["assets"][0]["image_part_index"] == 0
+    assert result.result["assets"][0]["image_display_name"] == "asset_0.png"
+    assert result.result["assets"][1]["image_part_index"] == 1
+    assert result.result["assets"][1]["image_display_name"] == "asset_1.png"
+    assert result.summary["assets"][0]["box_2d"] == [0, 0, 500, 500]
+    assert result.summary["assets"][0]["image_index"] == 1
+    assert result.multimodal_parts is not None
+    assert [part.display_name for part in result.multimodal_parts] == [
+        "asset_0.png",
+        "asset_1.png",
+    ]
+    assert result.multimodal_parts[0].mime_type == "image/png"
+    assert result.multimodal_parts[0].data == b"logo-image"
+
