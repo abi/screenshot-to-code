@@ -1,5 +1,6 @@
 import { LuMousePointerClick, LuX } from "react-icons/lu";
 import { useAppStore } from "../../store/app-store";
+import { addEvent } from "../../lib/analytics";
 
 // Select-and-edit toggle in the preview toolbar, next to the device/code
 // tabs — the "inspect element" spot users know from devtools. While select
@@ -9,7 +10,12 @@ export function SelectAndEditToolbarButton() {
   return (
     <button
       type="button"
-      onClick={toggleInSelectAndEditMode}
+      onClick={() => {
+        if (!inSelectAndEditMode) {
+          addEvent("Select and Edit: Enter", { source: "preview-toolbar" });
+        }
+        toggleInSelectAndEditMode();
+      }}
       data-testid="select-edit-toggle"
       title={
         inSelectAndEditMode

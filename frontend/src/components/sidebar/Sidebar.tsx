@@ -13,6 +13,7 @@ import WorkingPulse from "../core/WorkingPulse";
 import ImageLightbox from "../ImageLightbox";
 import { Commit } from "../commits/types";
 import { CodeGenerationModel } from "../../lib/models";
+import { addEvent } from "../../lib/analytics";
 import GenerationFeedbackButtons from "./GenerationFeedbackButtons";
 import FreeTrialBanner from "../hosted/FreeTrialBanner";
 import DesignSystemSelector, {
@@ -579,7 +580,14 @@ function Sidebar({
                     setUpdateImages={setUpdateImages}
                   />
                   <button
-                    onClick={toggleInSelectAndEditMode}
+                    onClick={() => {
+                      if (!inSelectAndEditMode) {
+                        addEvent("Select and Edit: Enter", {
+                          source: "prompt-box",
+                        });
+                      }
+                      toggleInSelectAndEditMode();
+                    }}
                     data-testid="select-edit-toggle-prompt"
                     className={`rounded-lg p-2 transition-colors ${
                       inSelectAndEditMode

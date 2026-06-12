@@ -787,6 +787,9 @@ function App() {
         updateInstruction,
         elementHtml
       );
+      addEvent("Select and Edit: Edit Submitted", {
+        tag: selectedElement.tagName.toLowerCase(),
+      });
       setSelectedElement(null);
     }
 
