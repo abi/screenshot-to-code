@@ -17,7 +17,7 @@
   },
   {
     "label": "Backend dev",
-    "command": "poetry run uvicorn main:app --reload --port 7001",
+    "command": "poetry run python start.py",
     "cwd": "$ZED_WORKTREE_ROOT/backend",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
