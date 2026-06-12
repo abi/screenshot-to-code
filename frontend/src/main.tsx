@@ -10,6 +10,7 @@ import RunEvalsPage from "./components/evals/RunEvalsPage.tsx";
 import BestOfNEvalsPage from "./components/evals/BestOfNEvalsPage.tsx";
 import AllEvalsPage from "./components/evals/AllEvalsPage.tsx";
 import OpenAIInputComparePage from "./components/evals/OpenAIInputComparePage.tsx";
+import PromptReportsPage from "./components/evals/PromptReportsPage.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -25,6 +26,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           path="/evals/openai-input-compare"
           element={<OpenAIInputComparePage />}
         />
+        <Route path="/evals/prompt-reports" element={<PromptReportsPage />} />
       </Routes>
     </Router>
     <Toaster toastOptions={{ className: "dark:bg-zinc-950 dark:text-white" }} />

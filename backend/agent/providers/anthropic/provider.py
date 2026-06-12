@@ -19,6 +19,7 @@ from agent.providers.anthropic.image import process_image
 from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
+from fs_logging.prompt_reports import PromptReportLogger
 from llm import Llm
 
 THINKING_MODELS: set[str] = set()
@@ -228,6 +229,11 @@ class AnthropicProviderSession(ProviderSession):
         self._model = model
         self._tools = tools
         self._total_usage = TokenUsage()
+        self._prompt_report_logger = PromptReportLogger(
+            provider="anthropic",
+            model=model,
+            api_model_name=_get_anthropic_api_model_name(model),
+        )
         system_prompt, claude_messages = _convert_openai_messages_to_claude(prompt_messages)
         self._system_prompt = system_prompt
         self._messages = claude_messages
@@ -257,13 +263,17 @@ class AnthropicProviderSession(ProviderSession):
         else:
             stream_kwargs["temperature"] = 0.0
 
+        self._prompt_report_logger.record_request(stream_kwargs)
+
         state = AnthropicParseState()
         async with self._client.messages.stream(**stream_kwargs) as stream:
             async for event in stream:
                 await _parse_stream_event(event, state, on_event)
             final_message = await stream.get_final_message()
 
-        self._total_usage.accumulate(_extract_anthropic_usage(final_message))
+        turn_usage = _extract_anthropic_usage(final_message)
+        self._prompt_report_logger.record_usage(turn_usage)
+        self._total_usage.accumulate(turn_usage)
 
         tool_calls = _extract_tool_calls(final_message)
         return ProviderTurn(

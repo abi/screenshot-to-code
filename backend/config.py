@@ -15,6 +15,12 @@ REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)
 # Debugging-related
 IS_DEBUG_ENABLED = bool(os.environ.get("IS_DEBUG_ENABLED", False))
 DEBUG_DIR = os.environ.get("DEBUG_DIR", "")
+
+# When enabled, every LLM request is written to run_logs/prompt_reports as a
+# JSON report viewable at /evals/prompt-reports.
+PROMPT_REPORTS_ENABLED = os.environ.get(
+    "PROMPT_REPORTS_ENABLED", ""
+).strip().lower() in {"1", "true", "yes", "on"}
 LOCAL_ASSET_DIR = os.environ.get(
     "LOCAL_ASSET_DIR", os.path.join(os.path.dirname(__file__), "local_assets")
 )

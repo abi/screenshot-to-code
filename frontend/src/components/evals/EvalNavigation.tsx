@@ -47,6 +47,13 @@ function EvalNavigation() {
         >
           Input Compare
         </Link>
+
+        <Link
+          to="/evals/prompt-reports"
+          className="hover:text-blue-300 transition-colors"
+        >
+          Prompt Reports
+        </Link>
       </div>
       
       <Link

@@ -69,6 +69,18 @@ function AllEvalsPage() {
               Find the first diverging input block between two requests
             </p>
           </Link>
+
+          <Link
+            to="/evals/prompt-reports"
+            className="block w-full p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200"
+          >
+            <h2 className="text-xl font-semibold text-gray-800">
+              Prompt Reports
+            </h2>
+            <p className="text-gray-600">
+              Browse logged LLM requests with images, usage, and cost
+            </p>
+          </Link>
         </div>
       </div>
     </div>
