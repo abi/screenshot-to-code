@@ -13,7 +13,11 @@ import PromptReportsPage from "./components/evals/PromptReportsPage.tsx";
 
 import AppContainer from "./components/hosted/AppContainer.tsx";
 import EvalsPage from "./components/evals/EvalsPage.tsx";
-import { CLERK_PUBLISHABLE_KEY, SENTRY_DSN } from "./config.ts";
+import {
+  CLERK_PUBLISHABLE_KEY,
+  IS_RUNNING_ON_CLOUD,
+  SENTRY_DSN,
+} from "./config.ts";
 import "./index.css";
 import PricingPage from "./components/hosted/PricingPage.tsx";
 import CheckoutSuccessPage from "./components/hosted/CheckoutSuccessPage.tsx";
@@ -54,16 +58,25 @@ root.render(
       <Router>
         <Routes>
           <Route path="/" element={<AppContainer />} />
-          <Route path="/evals" element={<AllEvalsPage />} />
-          <Route path="/evals/single" element={<EvalsPage />} />
-          <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
-          <Route path="/evals/best-of-n" element={<BestOfNEvalsPage />} />
-          <Route path="/evals/run" element={<RunEvalsPage />} />
-          <Route
-            path="/evals/openai-input-compare"
-            element={<OpenAIInputComparePage />}
-          />
-          <Route path="/evals/prompt-reports" element={<PromptReportsPage />} />
+
+          {/* Internal eval tooling - dev only, never in the deployed app */}
+          {!IS_RUNNING_ON_CLOUD && (
+            <>
+              <Route path="/evals" element={<AllEvalsPage />} />
+              <Route path="/evals/single" element={<EvalsPage />} />
+              <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
+              <Route path="/evals/best-of-n" element={<BestOfNEvalsPage />} />
+              <Route path="/evals/run" element={<RunEvalsPage />} />
+              <Route
+                path="/evals/openai-input-compare"
+                element={<OpenAIInputComparePage />}
+              />
+              <Route
+                path="/evals/prompt-reports"
+                element={<PromptReportsPage />}
+              />
+            </>
+          )}
 
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/faqs" element={<FaqsPage />} />
