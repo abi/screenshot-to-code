@@ -3,6 +3,13 @@ import classNames from "classnames";
 import useThrottle from "../../hooks/useThrottle";
 import { useAppStore } from "../../store/app-store";
 import { addHighlight, removeHighlight } from "../select-and-edit/utils";
+import {
+  applySelectModeCursor,
+  hideHoverOverlay,
+  removeHoverOverlay,
+  removeSelectModeCursor,
+  showHoverOverlay,
+} from "../select-and-edit/hoverOverlay";
 
 interface Props {
   code: string;
@@ -57,6 +64,35 @@ function PreviewComponent({
     }
   }, []);
 
+  // Devtools-style hover ring while selecting
+  const hoveredElementRef = useRef<HTMLElement | null>(null);
+
+  const handleIframeMouseOver = useCallback((event: MouseEvent) => {
+    if (!inSelectAndEditModeRef.current) return;
+    const target = event.target as HTMLElement;
+    if (!target || !target.getBoundingClientRect) return;
+    hoveredElementRef.current = target;
+    showHoverOverlay(target);
+  }, []);
+
+  const handleIframeMouseOut = useCallback((event: MouseEvent) => {
+    if (!inSelectAndEditModeRef.current) return;
+    // Only when the pointer leaves the iframe viewport entirely
+    if (event.relatedTarget) return;
+    hoveredElementRef.current = null;
+    hideHoverOverlay((event.target as HTMLElement)?.ownerDocument);
+  }, []);
+
+  // Keep the ring glued to the hovered element while the page scrolls or
+  // resizes under a stationary cursor.
+  const handleIframeReposition = useCallback(() => {
+    if (!inSelectAndEditModeRef.current) return;
+    const hovered = hoveredElementRef.current;
+    if (hovered && hovered.isConnected) {
+      showHoverOverlay(hovered);
+    }
+  }, []);
+
   const {
     inSelectAndEditMode,
     selectedElement,
@@ -87,12 +123,21 @@ function PreviewComponent({
     setSelectedElement(targetElement);
   }, [clickEvent, setSelectedElement]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Clean up highlight when exiting select-and-edit mode
+  // Apply/remove select-mode side effects (cursor, hover ring, highlight)
+  // when the mode toggles.
   useEffect(() => {
-    if (!inSelectAndEditMode && selectedElement) {
+    const doc = iframeRef.current?.contentWindow?.document;
+    if (inSelectAndEditMode) {
+      applySelectModeCursor(doc);
+      return;
+    }
+    if (selectedElement) {
       removeHighlight(selectedElement);
       setSelectedElement(null);
     }
+    hoveredElementRef.current = null;
+    removeHoverOverlay(doc);
+    removeSelectModeCursor(doc);
   }, [inSelectAndEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apply a fixed viewport per device and scale to fit the available pane.
@@ -157,7 +202,15 @@ function PreviewComponent({
       for (const type of suppressedEvents) {
         win.addEventListener(type, handleIframeInteraction, true);
       }
+      win.addEventListener("mouseover", handleIframeMouseOver, true);
+      win.addEventListener("mouseout", handleIframeMouseOut, true);
+      win.addEventListener("scroll", handleIframeReposition, true);
+      win.addEventListener("resize", handleIframeReposition);
       win.document.addEventListener("click", handleIframeLinkClick);
+      // A reload replaces the document, so re-apply mode side effects.
+      if (inSelectAndEditModeRef.current) {
+        applySelectModeCursor(win.document);
+      }
     };
 
     iframe.addEventListener("load", handleLoad);
@@ -176,10 +229,21 @@ function PreviewComponent({
         for (const type of suppressedEvents) {
           win.removeEventListener(type, handleIframeInteraction, true);
         }
+        win.removeEventListener("mouseover", handleIframeMouseOver, true);
+        win.removeEventListener("mouseout", handleIframeMouseOut, true);
+        win.removeEventListener("scroll", handleIframeReposition, true);
+        win.removeEventListener("resize", handleIframeReposition);
         win.document.removeEventListener("click", handleIframeLinkClick);
       }
     };
-  }, [handleIframeClick, handleIframeLinkClick, handleIframeInteraction]);
+  }, [
+    handleIframeClick,
+    handleIframeLinkClick,
+    handleIframeInteraction,
+    handleIframeMouseOver,
+    handleIframeMouseOut,
+    handleIframeReposition,
+  ]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
