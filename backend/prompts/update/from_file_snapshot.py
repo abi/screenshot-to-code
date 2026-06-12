@@ -17,7 +17,13 @@ def build_update_prompt_from_file_snapshot(
     design_system: str | None = None,
 ) -> Prompt:
     path = file_state.get("path", "index.html")
-    request_text = prompt.get("text", "").strip() or "Apply the requested update."
+    # full_text carries the complete model-facing instruction (e.g. with the
+    # selected-element reference); text is the user-typed display string.
+    request_text = (
+        prompt.get("full_text", "").strip()
+        or prompt.get("text", "").strip()
+        or "Apply the requested update."
+    )
     selected_stack = build_selected_stack_policy(stack)
     image_policy = build_user_image_policy(image_generation_enabled)
     design_system_block = build_design_system_prompt_block(design_system)

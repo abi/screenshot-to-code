@@ -57,7 +57,10 @@ export interface PromptAsset {
 }
 
 export interface PromptContent {
-  text: string;
+  text: string; // What the user typed (displayed in the UI)
+  // Full instruction for the model when it differs from `text`
+  // (e.g. includes the selected-element reference)
+  fullText?: string;
   images: string[]; // Array of data URLs
   videos?: string[]; // Array of data URLs
   selectedElementHtml?: string; // Raw HTML of selected element (for display only)

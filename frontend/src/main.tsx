@@ -9,6 +9,7 @@ import RunEvalsPage from "./components/evals/RunEvalsPage.tsx";
 import BestOfNEvalsPage from "./components/evals/BestOfNEvalsPage.tsx";
 import AllEvalsPage from "./components/evals/AllEvalsPage.tsx";
 import OpenAIInputComparePage from "./components/evals/OpenAIInputComparePage.tsx";
+import PromptReportsPage from "./components/evals/PromptReportsPage.tsx";
 
 import AppContainer from "./components/hosted/AppContainer.tsx";
 import EvalsPage from "./components/evals/EvalsPage.tsx";
@@ -62,6 +63,7 @@ root.render(
             path="/evals/openai-input-compare"
             element={<OpenAIInputComparePage />}
           />
+          <Route path="/evals/prompt-reports" element={<PromptReportsPage />} />
 
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/faqs" element={<FaqsPage />} />

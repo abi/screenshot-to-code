@@ -8,7 +8,15 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import IS_DEBUG_ENABLED
-from routes import screenshot, generate_code, home, evals, export, design_systems
+from routes import (
+    screenshot,
+    generate_code,
+    home,
+    evals,
+    export,
+    design_systems,
+    prompt_reports,
+)
 from config import IS_PROD
 from uploaded_assets import configure_uploaded_asset_routes
 
@@ -54,3 +62,4 @@ app.include_router(home.router)
 # app.include_router(evals.router)
 app.include_router(export.router)
 app.include_router(design_systems.router)
+app.include_router(prompt_reports.router)

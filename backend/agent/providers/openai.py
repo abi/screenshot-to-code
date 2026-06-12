@@ -19,8 +19,7 @@ from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.state import ensure_str
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
-from config import IS_DEBUG_ENABLED
-from fs_logging.openai_turn_inputs import OpenAITurnInputLogger
+from fs_logging.prompt_reports import PromptReportLogger
 from llm import Llm, get_openai_api_name, get_openai_reasoning_effort
 
 
@@ -423,9 +422,10 @@ class OpenAIProviderSession(ProviderSession):
         self._model = model
         self._tools = tools
         self._total_usage = TokenUsage()
-        self._turn_input_logger = OpenAITurnInputLogger(
-            model,
-            enabled=IS_DEBUG_ENABLED,
+        self._prompt_report_logger = PromptReportLogger(
+            provider="openai",
+            model=model,
+            api_model_name=get_openai_api_name(model),
         )
         image_detail = _get_image_detail_for_model(model)
         self._input_items: List[Dict[str, Any]] = [
@@ -449,10 +449,7 @@ class OpenAIProviderSession(ProviderSession):
         if reasoning_effort:
             params["reasoning"] = {"effort": reasoning_effort, "summary": "auto"}
 
-        self._turn_input_logger.record_turn_input(
-            self._input_items,
-            request_payload=params,
-        )
+        self._prompt_report_logger.record_request(params)
 
         state = OpenAIResponsesParseState()
         stream = await self._client.responses.create(**params)  # type: ignore
@@ -460,7 +457,7 @@ class OpenAIProviderSession(ProviderSession):
             await parse_event(event, state, on_event)
 
         if state.turn_usage is not None:
-            self._turn_input_logger.record_turn_usage(state.turn_usage)
+            self._prompt_report_logger.record_usage(state.turn_usage)
             self._total_usage.accumulate(state.turn_usage)
 
         return _build_provider_turn(state)
@@ -513,7 +510,4 @@ class OpenAIProviderSession(ProviderSession):
             f"cache_read={u.cache_read} cache_write={u.cache_write} "
             f"total={u.total}{cache_hit_rate_str}{cost_str}"
         )
-        report_path = self._turn_input_logger.write_html_report()
-        if report_path:
-            print(f"[OPENAI TURN INPUT] HTML report: {report_path}")
         await self._client.close()

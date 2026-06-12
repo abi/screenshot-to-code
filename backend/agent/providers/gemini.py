@@ -19,8 +19,7 @@ from agent.providers.base import (
 from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall
-from config import IS_DEBUG_ENABLED
-from fs_logging.gemini_prompt_report import write_gemini_prompt_report
+from fs_logging.prompt_reports import PromptReportLogger
 from llm import Llm
 
 
@@ -285,6 +284,11 @@ class GeminiProviderSession(ProviderSession):
         self._model = model
         self._tools = tools
         self._total_usage = TokenUsage()
+        self._prompt_report_logger = PromptReportLogger(
+            provider="gemini",
+            model=model,
+            api_model_name=_get_gemini_api_model_name(model),
+        )
 
         self._system_prompt = str(prompt_messages[0].get("content", ""))
         self._contents: List[types.Content] = [
@@ -305,15 +309,13 @@ class GeminiProviderSession(ProviderSession):
             tools=self._tools,
         )
 
-        if IS_DEBUG_ENABLED:
-            write_gemini_prompt_report(
-                model=self._model,
-                api_model_name=api_model_name,
-                thinking_level=thinking_level,
-                system_instruction=self._system_prompt,
-                contents=self._contents,
-                config=config,
-            )
+        self._prompt_report_logger.record_request(
+            {
+                "model": api_model_name,
+                "contents": self._contents,
+                "config": config,
+            }
+        )
 
         stream = await self._client.aio.models.generate_content_stream(
             model=api_model_name,
@@ -330,6 +332,7 @@ class GeminiProviderSession(ProviderSession):
                 turn_usage = chunk_usage
 
         if turn_usage is not None:
+            self._prompt_report_logger.record_usage(turn_usage)
             self._total_usage.accumulate(turn_usage)
 
         assistant_turn = (
