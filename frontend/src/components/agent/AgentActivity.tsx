@@ -105,6 +105,9 @@ function getEventIcon(type: AgentEventType, toolName?: string) {
   if (toolName === "remove_background") {
     return <BsScissors className="text-teal-500" />;
   }
+  if (toolName === "edit_image") {
+    return <BsImage className="text-violet-500" />;
+  }
   if (toolName === "retrieve_option") {
     return <BsFiles className="text-slate-500" />;
   }
@@ -147,6 +150,20 @@ function getEventTitle(event: AgentEvent): string {
         return rbCount > 1 ? `Removing ${rbCount} backgrounds` : "Removing background";
       }
       return rbCount > 1 ? `Removed ${rbCount} backgrounds` : "Background removed";
+    }
+    if (event.toolName === "edit_image") {
+      const editInput = event.input as { image_urls?: unknown[] } | null;
+      const editOutput = event.output as {
+        image?: { image_urls?: unknown[] };
+      } | null;
+      const editCount =
+        editOutput?.image?.image_urls?.length || editInput?.image_urls?.length || 0;
+      if (event.status === "running") {
+        return editCount > 1
+          ? `Editing image with ${editCount} references`
+          : "Editing image";
+      }
+      return "Edited image";
     }
     if (event.toolName === "retrieve_option") {
       return event.status === "running"
@@ -353,6 +370,106 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {event.toolName === "edit_image" && !hasError && (
+        <div>
+          {event.status === "running" && input?.image_urls && Array.isArray(input.image_urls) && (
+            <div className="space-y-3">
+              {input.prompt && (
+                <div className="text-xs text-gray-600 dark:text-gray-300">
+                  {input.prompt}
+                </div>
+              )}
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {input.image_urls.map((url: string, index: number) => (
+                  <div key={`${url}-${index}`} className="py-2">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      {index === 0 ? "Main image" : `Reference image ${index + 1}`}
+                    </div>
+                    <img
+                      src={url}
+                      alt={index === 0 ? "Main image" : `Reference image ${index + 1}`}
+                      className="w-full rounded object-contain bg-gray-50 dark:bg-gray-800"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {event.status !== "running" && output?.image && (
+            <div className="space-y-3">
+              <div className="text-xs text-gray-600 dark:text-gray-300">
+                {output.image.prompt}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    Main image
+                  </div>
+                  {Array.isArray(output.image.image_urls) && output.image.image_urls[0] ? (
+                    <img
+                      src={output.image.image_urls[0]}
+                      alt="Main image"
+                      className="w-full rounded object-contain bg-gray-50 dark:bg-gray-800"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                      Missing
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    Edited image
+                  </div>
+                  {output.image.result_url ? (
+                    <img
+                      src={output.image.result_url}
+                      alt="Edited image"
+                      className="w-full rounded object-contain bg-gray-50 dark:bg-gray-800"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                      Failed
+                    </div>
+                  )}
+                </div>
+              </div>
+              {Array.isArray(output.image.image_urls) && output.image.image_urls.length > 1 && (
+                <div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    Reference images
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {output.image.image_urls.slice(1).map((url: string, index: number) => (
+                      <img
+                        key={`${url}-${index}`}
+                        src={url}
+                        alt={`Reference image ${index + 2}`}
+                        className="aspect-square w-full rounded object-cover bg-gray-50 dark:bg-gray-800"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {output.image.result_url && (
+                <div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Result URL
+                  </div>
+                  <div className="mt-1 break-all rounded bg-gray-50 p-2 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                    {output.image.result_url}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

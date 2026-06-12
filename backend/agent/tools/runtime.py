@@ -1,17 +1,49 @@
 # pyright: reportUnknownVariableType=false
 import asyncio
+import base64
 import difflib
+import mimetypes
+import os
+from urllib.parse import unquote, urlparse
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from codegen.utils import extract_html_content
-from config import REPLICATE_API_KEY
+from config import LOCAL_ASSET_DIR, REPLICATE_API_KEY
 from image_generation.generation import process_tasks
-from image_generation.replicate import remove_background
+from image_generation.replicate import edit_image, remove_background
 from uploaded_assets.tools import run_save_assets
 
 from agent.state import AgentFileState, ensure_str
 from agent.tools.types import ToolCall, ToolExecutionResult
 from agent.tools.summaries import summarize_text
+
+
+LOCAL_ASSET_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+def _local_asset_url_to_data_url(image_url: str) -> str:
+    """Replicate can't fetch localhost URLs, so inline local assets as data URLs."""
+    parsed = urlparse(image_url)
+    if parsed.scheme not in {"http", "https"}:
+        return image_url
+    if parsed.hostname not in LOCAL_ASSET_HOSTS:
+        return image_url
+    if not parsed.path.startswith("/local-assets/"):
+        return image_url
+
+    relative_path = unquote(parsed.path.removeprefix("/local-assets/"))
+    asset_root = os.path.abspath(LOCAL_ASSET_DIR)
+    asset_path = os.path.abspath(os.path.join(asset_root, relative_path))
+    if not asset_path.startswith(asset_root + os.sep):
+        return image_url
+    if not os.path.isfile(asset_path):
+        return image_url
+
+    content_type = mimetypes.guess_type(asset_path)[0] or "image/png"
+    with open(asset_path, "rb") as file:
+        encoded = base64.b64encode(file.read()).decode("ascii")
+
+    return f"data:{content_type};base64,{encoded}"
 
 
 class AgentToolRuntime:
@@ -51,6 +83,8 @@ class AgentToolRuntime:
             return await self._generate_images(tool_call.arguments)
         if tool_call.name == "remove_background":
             return await self._remove_background(tool_call.arguments)
+        if tool_call.name == "edit_image":
+            return await self._edit_image(tool_call.arguments)
         if tool_call.name == "save_assets":
             return await run_save_assets(tool_call.arguments, user_id=self.user_id)
         if tool_call.name == "retrieve_option":
@@ -333,6 +367,102 @@ class AgentToolRuntime:
             result={"images": results},
             summary={"images": summary_items},
         )
+
+    async def _edit_image(self, args: Dict[str, Any]) -> ToolExecutionResult:
+        if not REPLICATE_API_KEY:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "Image editing requires REPLICATE_API_KEY."},
+                summary={"error": "Missing Replicate API key"},
+            )
+
+        prompt = ensure_str(args.get("prompt")).strip()
+        if not prompt:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "edit_image requires a non-empty prompt"},
+                summary={"error": "Missing prompt"},
+            )
+
+        image_urls = args.get("image_urls") or args.get("images") or []
+        if not isinstance(image_urls, list) or not image_urls:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "edit_image requires a non-empty image_urls list"},
+                summary={"error": "Missing image_urls"},
+            )
+
+        cleaned = [url.strip() for url in image_urls if isinstance(url, str)]
+        unique_urls = list(dict.fromkeys([u for u in cleaned if u]))
+        if not unique_urls:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "No valid image URLs provided"},
+                summary={"error": "No valid image_urls"},
+            )
+
+        turbo = args.get("turbo")
+        if not isinstance(turbo, bool):
+            turbo = True
+
+        aspect_ratio = ensure_str(args.get("aspect_ratio") or "match_input_image")
+        seed_value = args.get("seed")
+        seed = seed_value if isinstance(seed_value, int) else None
+
+        try:
+            result_url = await edit_image(
+                prompt=prompt,
+                image_urls=[_local_asset_url_to_data_url(url) for url in unique_urls],
+                api_token=REPLICATE_API_KEY,
+                turbo=turbo,
+                aspect_ratio=aspect_ratio,
+                seed=seed,
+            )
+        except Exception as exc:
+            print(f"Image edit failed for {unique_urls}: {exc}")
+            return ToolExecutionResult(
+                ok=True,
+                result={
+                    "image": {
+                        "prompt": prompt,
+                        "image_urls": unique_urls,
+                        "result_url": None,
+                        "status": "error",
+                    }
+                },
+                summary={
+                    "image": {
+                        "prompt": summarize_text(prompt, 240),
+                        "image_urls": [summarize_text(url, 100) for url in unique_urls],
+                        "result_url": None,
+                        "status": "error",
+                    }
+                },
+            )
+
+        result = {
+            "image": {
+                "prompt": prompt,
+                "image_urls": unique_urls,
+                "result_url": result_url,
+                "status": "ok",
+                "turbo": turbo,
+                "aspect_ratio": aspect_ratio,
+                **({"seed": seed} if seed is not None else {}),
+            }
+        }
+        summary = {
+            "image": {
+                "prompt": summarize_text(prompt, 240),
+                "image_urls": [summarize_text(url, 100) for url in unique_urls],
+                "result_url": result_url,
+                "status": "ok",
+                "turbo": turbo,
+                "aspect_ratio": aspect_ratio,
+                **({"seed": seed} if seed is not None else {}),
+            }
+        }
+        return ToolExecutionResult(ok=True, result=result, summary=summary)
 
     def _retrieve_option(self, args: Dict[str, Any]) -> ToolExecutionResult:
         raw_option_number = args.get("option_number")

@@ -7,6 +7,7 @@ REPLICATE_API_BASE_URL = "https://api.replicate.com/v1"
 ReplicateImageModel = Literal["z_image_turbo", "flux_2_klein"]
 Z_IMAGE_TURBO_MODEL_PATH = "prunaai/z-image-turbo"
 FLUX_2_KLEIN_MODEL_PATH = "black-forest-labs/flux-2-klein-4b"
+P_IMAGE_EDIT_MODEL_PATH = "prunaai/p-image-edit"
 MODEL_PATHS: dict[ReplicateImageModel, str] = {
     "z_image_turbo": Z_IMAGE_TURBO_MODEL_PATH,
     "flux_2_klein": FLUX_2_KLEIN_MODEL_PATH,
@@ -141,6 +142,28 @@ async def remove_background(image_url: str, api_token: str) -> str:
         api_token,
     )
     return _extract_output_url(result, "background remover")
+
+
+async def edit_image(
+    prompt: str,
+    image_urls: list[str],
+    api_token: str,
+    *,
+    turbo: bool = True,
+    aspect_ratio: str = "match_input_image",
+    seed: int | None = None,
+) -> str:
+    input: dict[str, Any] = {
+        "prompt": prompt,
+        "images": image_urls,
+        "turbo": turbo,
+        "aspect_ratio": aspect_ratio,
+    }
+    if seed is not None:
+        input["seed"] = seed
+
+    result = await call_replicate_model(P_IMAGE_EDIT_MODEL_PATH, input, api_token)
+    return _extract_output_url(result, "Replicate image edit model prediction")
 
 
 async def call_replicate(

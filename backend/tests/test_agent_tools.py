@@ -45,3 +45,46 @@ def test_save_assets_tool_input_summary_uses_asset_ids() -> None:
         "count": 2,
         "asset_ids": ["asset_one", "asset_two"],
     }
+
+
+def test_canonical_tool_definitions_include_edit_image() -> None:
+    tools = canonical_tool_definitions(True)
+    tool_names = [tool.name for tool in tools]
+    assert "edit_image" in tool_names
+    edit_image_tool = next(tool for tool in tools if tool.name == "edit_image")
+    assert edit_image_tool.parameters["required"] == ["prompt", "image_urls"]
+    assert edit_image_tool.parameters["properties"]["image_urls"]["type"] == "array"
+
+
+def test_canonical_tool_definitions_exclude_edit_image_when_disabled() -> None:
+    tool_names = [
+        tool.name
+        for tool in canonical_tool_definitions(True, image_editing_enabled=False)
+    ]
+    assert "edit_image" not in tool_names
+
+
+def test_edit_image_tool_input_summary_uses_prompt_and_image_urls() -> None:
+    summary = summarize_tool_input(
+        ToolCall(
+            id="call-1",
+            name="edit_image",
+            arguments={
+                "prompt": "Make image 1 monochrome",
+                "image_urls": ["https://example.com/input.png"],
+                "turbo": False,
+                "aspect_ratio": "match_input_image",
+                "seed": 123,
+            },
+        ),
+        AgentFileState(),
+    )
+
+    assert summary == {
+        "count": 1,
+        "prompt": "Make image 1 monochrome",
+        "image_urls": ["https://example.com/input.png"],
+        "turbo": False,
+        "aspect_ratio": "match_input_image",
+        "seed": 123,
+    }

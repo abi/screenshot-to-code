@@ -10,6 +10,7 @@ from agent.providers.base import ProviderSession
 from agent.providers.gemini import GeminiProviderSession, serialize_gemini_tools
 from agent.providers.openai import OpenAIProviderSession, serialize_openai_tools
 from agent.tools import canonical_tool_definitions
+from config import REPLICATE_API_KEY
 from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
 
 
@@ -23,7 +24,9 @@ def create_provider_session(
     gemini_api_key: Optional[str],
 ) -> ProviderSession:
     canonical_tools = canonical_tool_definitions(
-        image_generation_enabled=should_generate_images
+        image_generation_enabled=should_generate_images,
+        # The edit_image tool calls Replicate, so don't offer it without a key.
+        image_editing_enabled=bool(REPLICATE_API_KEY),
     )
 
     if model in OPENAI_MODELS:

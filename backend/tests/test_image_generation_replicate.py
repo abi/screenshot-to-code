@@ -107,3 +107,40 @@ async def test_remove_background_uses_version_and_normalizes_output(
     assert result == "https://example.com/no-bg.png"
     assert captured["version"] == replicate.REMOVE_BACKGROUND_VERSION
     assert captured["api_token"] == "token"
+
+
+@pytest.mark.asyncio
+async def test_edit_image_uses_pruna_model_and_normalizes_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    async def fake_call_replicate_model(
+        model_path: str, input: dict[str, object], api_token: str
+    ) -> dict[str, str]:
+        captured["model_path"] = model_path
+        captured["input"] = input
+        captured["api_token"] = api_token
+        return {"url": "https://example.com/edited.png"}
+
+    monkeypatch.setattr(replicate, "call_replicate_model", fake_call_replicate_model)
+
+    result = await replicate.edit_image(
+        prompt="Make image 1 monochrome",
+        image_urls=["data:image/png;base64,aW1hZ2U="],
+        api_token="token",
+        turbo=False,
+        aspect_ratio="match_input_image",
+        seed=123,
+    )
+
+    assert result == "https://example.com/edited.png"
+    assert captured["model_path"] == replicate.P_IMAGE_EDIT_MODEL_PATH
+    assert captured["input"] == {
+        "prompt": "Make image 1 monochrome",
+        "images": ["data:image/png;base64,aW1hZ2U="],
+        "turbo": False,
+        "aspect_ratio": "match_input_image",
+        "seed": 123,
+    }
+    assert captured["api_token"] == "token"

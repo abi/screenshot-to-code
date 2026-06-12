@@ -89,6 +89,50 @@ def _remove_background_schema() -> Dict[str, Any]:
     }
 
 
+def _edit_image_schema() -> Dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {
+            "prompt": {
+                "type": "string",
+                "description": (
+                    "Clear edit instruction. Refer to inputs as image 1, image 2, "
+                    "and so on when multiple images are provided."
+                ),
+            },
+            "image_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "description": (
+                        "URL of a source/reference image. For editing, put the main "
+                        "image first."
+                    ),
+                },
+            },
+            "turbo": {
+                "type": "boolean",
+                "description": (
+                    "Run faster with additional optimizations. Set false for more "
+                    "complicated edits."
+                ),
+            },
+            "aspect_ratio": {
+                "type": "string",
+                "description": (
+                    "Aspect ratio for the edited image. Use match_input_image to "
+                    "match the first image."
+                ),
+            },
+            "seed": {
+                "type": "integer",
+                "description": "Optional random seed for reproducible edits.",
+            },
+        },
+        "required": ["prompt", "image_urls"],
+    }
+
+
 def _retrieve_option_schema() -> Dict[str, Any]:
     return {
         "type": "object",
@@ -104,6 +148,7 @@ def _retrieve_option_schema() -> Dict[str, Any]:
 
 def canonical_tool_definitions(
     image_generation_enabled: bool = True,
+    image_editing_enabled: bool = True,
 ) -> List[CanonicalToolDefinition]:
     tools: List[CanonicalToolDefinition] = [
         CanonicalToolDefinition(
@@ -146,6 +191,22 @@ def canonical_tool_definitions(
                 ),
                 parameters=_remove_background_schema(),
             ),
+        ]
+    )
+    if image_editing_enabled:
+        tools.append(
+            CanonicalToolDefinition(
+                name="edit_image",
+                description=(
+                    "Edit one or more images using a text prompt. Provide the main "
+                    "image first, followed by optional reference images. Returns a URL "
+                    "to the edited image."
+                ),
+                parameters=_edit_image_schema(),
+            )
+        )
+    tools.extend(
+        [
             SAVE_ASSETS_TOOL_DEFINITION,
             CanonicalToolDefinition(
                 name="retrieve_option",
