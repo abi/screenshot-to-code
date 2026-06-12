@@ -208,12 +208,25 @@ async def test_openai_provider_session_uses_gpt_5_4_mini_low_reasoning_effort() 
     assert first_call["reasoning"] == {"effort": "low", "summary": "auto"}
 
 
+@pytest.mark.parametrize(
+    ("model", "effort"),
+    [
+        (Llm.GPT_5_5_NONE, "none"),
+        (Llm.GPT_5_5_LOW, "low"),
+        (Llm.GPT_5_5_MEDIUM, "medium"),
+        (Llm.GPT_5_5_HIGH, "high"),
+        (Llm.GPT_5_5_XHIGH, "xhigh"),
+    ],
+)
 @pytest.mark.asyncio
-async def test_openai_provider_session_uses_gpt_5_5_xhigh_reasoning_effort() -> None:
+async def test_openai_provider_session_uses_gpt_5_5_reasoning_effort(
+    model: Llm,
+    effort: str,
+) -> None:
     client = _FakeOpenAIClient()
     session = OpenAIProviderSession(
         client=client,  # type: ignore[arg-type]
-        model=Llm.GPT_5_5_XHIGH,
+        model=model,
         prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
         tools=_test_tools(),
     )
@@ -223,4 +236,70 @@ async def test_openai_provider_session_uses_gpt_5_5_xhigh_reasoning_effort() -> 
     first_call = client.responses.calls[0]
 
     assert first_call["model"] == "gpt-5.5"
-    assert first_call["reasoning"] == {"effort": "xhigh", "summary": "auto"}
+    assert first_call["reasoning"] == {"effort": effort, "summary": "auto"}
+
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_uses_original_image_detail_for_gpt_5_5() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_5_HIGH,
+        prompt_messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Build from this screenshot."},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": "data:image/png;base64,abc",
+                            "detail": "high",
+                        },
+                    },
+                ],
+            }
+        ],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_input = client.responses.calls[0]["input"]
+    image_part = first_input[0]["content"][1]
+
+    assert image_part["type"] == "input_image"
+    assert image_part["detail"] == "original"
+
+
+@pytest.mark.asyncio
+async def test_openai_provider_session_keeps_high_image_detail_for_non_gpt_5_5() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_4_MINI_LOW,
+        prompt_messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Build from this screenshot."},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": "data:image/png;base64,abc",
+                            "detail": "low",
+                        },
+                    },
+                ],
+            }
+        ],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_input = client.responses.calls[0]["input"]
+    image_part = first_input[0]["content"][1]
+
+    assert image_part["type"] == "input_image"
+    assert image_part["detail"] == "high"

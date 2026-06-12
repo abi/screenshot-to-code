@@ -37,7 +37,8 @@ import {
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import { useDesignSystems } from "./hooks/useDesignSystems";
-import { removeHighlight } from "./components/select-and-edit/utils";
+import { buildSelectedElementInstruction } from "./components/select-and-edit/utils";
+import { useEscapeToExitSelectMode } from "./components/select-and-edit/useEscapeToExitSelectMode";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
 import HistoryDisplay from "./components/history/HistoryDisplay";
@@ -242,12 +243,10 @@ function App() {
     openDesignSystemsManager,
     setSelectedDesignSystemId,
   ]);
-  const showSelectAndEditFeature =
-    settings.generatedCodeConfig === Stack.HTML_TAILWIND ||
-    settings.generatedCodeConfig === Stack.HTML_CSS;
-
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
+
+  useEscapeToExitSelectMode();
 
   // When the user already has the settings in local storage, newly added keys
   // do not get added to the settings so if it's falsy, we populate it with the default
@@ -331,6 +330,9 @@ function App() {
 
   // Functions
   const reset = () => {
+    // Stop any in-flight generation so late websocket events can't mutate
+    // state after the reset (e.g. flipping the app back to CODE_READY).
+    cancelCodeGeneration();
     setAppState(AppState.INITIAL);
     setUpdateInstruction("");
     setUpdateImages([]);
@@ -640,6 +642,10 @@ function App() {
         }
       },
       onCancel: (reason, errorMessage) => {
+        // The project may have been reset while this generation was still in
+        // flight — a stale cancellation must not mutate app state.
+        if (!useProjectStore.getState().commits[commit.hash]) return;
+
         // Close any running agent events when the socket ends without per-event
         // terminal messages, otherwise they remain stuck in "running" state.
         finishInFlightEvents(reason === "request_failed" ? "error" : "complete");
@@ -663,6 +669,9 @@ function App() {
         cancelCodeGenerationAndReset(commit);
       },
       onComplete: () => {
+        // Same guard as onCancel: a generation finishing after its project
+        // was reset must not pull the app back into the editor.
+        if (!useProjectStore.getState().commits[commit.hash]) return;
         finishInFlightEvents("complete");
         setAppState(AppState.CODE_READY);
         incrementGenerations();
@@ -769,14 +778,15 @@ function App() {
     let modifiedUpdateInstruction = updateInstruction;
     let selectedElementHtml: string | undefined;
 
-    // Send in a reference to the selected element if it exists
+    // Send in a reference to the selected element if it exists. Selection
+    // visuals are overlays, so the element's outerHTML is already clean.
     if (selectedElement) {
-      const elementHtml = removeHighlight(selectedElement).outerHTML;
+      const elementHtml = selectedElement.outerHTML;
       selectedElementHtml = elementHtml;
-      modifiedUpdateInstruction =
-        updateInstruction +
-        " referring to this element specifically: " +
-        elementHtml;
+      modifiedUpdateInstruction = buildSelectedElementInstruction(
+        updateInstruction,
+        elementHtml
+      );
       setSelectedElement(null);
     }
 
@@ -1038,7 +1048,6 @@ function App() {
               {(appState === AppState.CODING ||
                 appState === AppState.CODE_READY) && (
                 <Sidebar
-                  showSelectAndEditFeature={showSelectAndEditFeature}
                   doUpdate={doUpdate}
                   regenerate={regenerate}
                   submitGenerationFeedback={submitGenerationFeedback}

@@ -21,3 +21,6 @@ frontend/.env.local
 
 #Rodney
 .rodney
+
+# Walkthrough demo videos
+walkthrough/

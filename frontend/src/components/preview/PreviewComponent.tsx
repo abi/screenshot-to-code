@@ -2,7 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import useThrottle from "../../hooks/useThrottle";
 import { useAppStore } from "../../store/app-store";
-import { addHighlight, removeHighlight } from "../select-and-edit/utils";
+import {
+  applySelectModeCursor,
+  hideHoverOverlay,
+  hideSelectionOverlay,
+  removeHoverOverlay,
+  removeSelectModeCursor,
+  removeSelectionOverlay,
+  showHoverOverlay,
+  showSelectionOverlay,
+} from "../select-and-edit/overlays";
 
 interface Props {
   code: string;
@@ -29,17 +38,74 @@ function PreviewComponent({
   // Select and edit functionality
   const [clickEvent, setClickEvent] = useState<MouseEvent | null>(null);
   const activeMode = viewMode ?? "fit";
+
+  // In select-and-edit mode, intercept clicks in the capture phase so the
+  // generated app's own handlers (React/Vue listeners, Bootstrap/Ionic
+  // behaviors, link navigation, form submits) never fire while selecting.
   const handleIframeClick = useCallback((event: MouseEvent) => {
+    if (!inSelectAndEditModeRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
     setClickEvent(event);
   }, []);
 
+  // Suppress the rest of the pointer sequence (and form submits) while
+  // selecting, since app handlers can be bound to those events too.
+  const handleIframeInteraction = useCallback((event: Event) => {
+    if (!inSelectAndEditModeRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
   const handleIframeLinkClick = useCallback((event: MouseEvent) => {
-    const target = (event.target as HTMLElement).closest("a");
+    const target = (event.target as HTMLElement).closest?.("a");
     if (!target) return;
     const href = target.getAttribute("href");
     if (href && href.startsWith("#")) {
       event.preventDefault();
     }
+  }, []);
+
+  // Devtools-style hover ring while selecting
+  const hoveredElementRef = useRef<HTMLElement | null>(null);
+
+  const handleIframeMouseOver = useCallback((event: MouseEvent) => {
+    if (!inSelectAndEditModeRef.current) return;
+    const target = event.target as HTMLElement;
+    if (!target || !target.getBoundingClientRect) return;
+    hoveredElementRef.current = target;
+    showHoverOverlay(target);
+  }, []);
+
+  const handleIframeMouseOut = useCallback((event: MouseEvent) => {
+    if (!inSelectAndEditModeRef.current) return;
+    // Only when the pointer leaves the iframe viewport entirely
+    if (event.relatedTarget) return;
+    hoveredElementRef.current = null;
+    hideHoverOverlay((event.target as HTMLElement)?.ownerDocument);
+  }, []);
+
+  // Keep the rings glued to their elements while the page scrolls or
+  // resizes under a stationary cursor.
+  const handleIframeReposition = useCallback(() => {
+    if (!inSelectAndEditModeRef.current) return;
+    const hovered = hoveredElementRef.current;
+    if (hovered && hovered.isConnected) {
+      showHoverOverlay(hovered);
+    }
+    const selected = useAppStore.getState().selectedElement;
+    if (selected && selected.isConnected) {
+      showSelectionOverlay(selected);
+    }
+  }, []);
+
+  // Escape exits select mode even when focus is inside the iframe.
+  const handleIframeKeyDown = useCallback((event: KeyboardEvent) => {
+    if (!inSelectAndEditModeRef.current) return;
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    event.stopPropagation();
+    useAppStore.getState().disableInSelectAndEditMode();
   }, []);
 
   const {
@@ -59,27 +125,38 @@ function PreviewComponent({
       return;
     }
 
-    clickEvent.preventDefault();
-
     const targetElement = clickEvent.target as HTMLElement;
     if (!targetElement) return;
 
-    // Remove highlight from previous element
-    if (selectedElement) {
-      removeHighlight(selectedElement);
-    }
-
-    // Highlight and store the new selected element
-    addHighlight(targetElement);
     setSelectedElement(targetElement);
-  }, [clickEvent, setSelectedElement]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [clickEvent, setSelectedElement]);
 
-  // Clean up highlight when exiting select-and-edit mode
+  // Render the selection ring for whatever element is currently selected
+  // (clearing it when the selection is cleared from anywhere, e.g. the
+  // sidebar's X button or after submitting an edit).
   useEffect(() => {
-    if (!inSelectAndEditMode && selectedElement) {
-      removeHighlight(selectedElement);
+    if (selectedElement && selectedElement.isConnected) {
+      showSelectionOverlay(selectedElement);
+      return;
+    }
+    hideSelectionOverlay(iframeRef.current?.contentWindow?.document);
+  }, [selectedElement]);
+
+  // Apply/remove select-mode side effects (cursor, hover and selection
+  // rings) when the mode toggles.
+  useEffect(() => {
+    const doc = iframeRef.current?.contentWindow?.document;
+    if (inSelectAndEditMode) {
+      applySelectModeCursor(doc);
+      return;
+    }
+    if (selectedElement) {
       setSelectedElement(null);
     }
+    hoveredElementRef.current = null;
+    removeHoverOverlay(doc);
+    removeSelectionOverlay(doc);
+    removeSelectModeCursor(doc);
   }, [inSelectAndEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apply a fixed viewport per device and scale to fit the available pane.
@@ -131,24 +208,64 @@ function PreviewComponent({
     const iframe = iframeRef.current;
     if (!iframe) return;
 
+    const suppressedEvents = ["pointerdown", "mousedown", "mouseup", "submit"];
+
     const handleLoad = () => {
-      const body = iframe.contentWindow?.document.body;
-      if (!body) return;
-      body.addEventListener("click", handleIframeClick);
-      body.addEventListener("click", handleIframeLinkClick);
+      const win = iframe.contentWindow;
+      if (!win) return;
+      // Intercept on the window in the capture phase: the window is the
+      // first node in the propagation path, so this runs before any handler
+      // the generated app registered, including capture-phase delegated
+      // handlers on document (e.g. Bootstrap's data API).
+      win.addEventListener("click", handleIframeClick, true);
+      for (const type of suppressedEvents) {
+        win.addEventListener(type, handleIframeInteraction, true);
+      }
+      win.addEventListener("mouseover", handleIframeMouseOver, true);
+      win.addEventListener("mouseout", handleIframeMouseOut, true);
+      win.addEventListener("scroll", handleIframeReposition, true);
+      win.addEventListener("resize", handleIframeReposition);
+      win.addEventListener("keydown", handleIframeKeyDown, true);
+      win.document.addEventListener("click", handleIframeLinkClick);
+      // A reload replaces the document, so re-apply mode side effects.
+      if (inSelectAndEditModeRef.current) {
+        applySelectModeCursor(win.document);
+      }
     };
 
     iframe.addEventListener("load", handleLoad);
+    // The current document may already be loaded (e.g. the component
+    // re-rendered after the iframe's load event); attach to it directly.
+    // addEventListener dedupes identical handlers, so this is safe.
+    if (iframe.contentWindow?.document.readyState === "complete") {
+      handleLoad();
+    }
 
     return () => {
       iframe.removeEventListener("load", handleLoad);
-      const body = iframe.contentWindow?.document.body;
-      if (body) {
-        body.removeEventListener("click", handleIframeClick);
-        body.removeEventListener("click", handleIframeLinkClick);
+      const win = iframe.contentWindow;
+      if (win) {
+        win.removeEventListener("click", handleIframeClick, true);
+        for (const type of suppressedEvents) {
+          win.removeEventListener(type, handleIframeInteraction, true);
+        }
+        win.removeEventListener("mouseover", handleIframeMouseOver, true);
+        win.removeEventListener("mouseout", handleIframeMouseOut, true);
+        win.removeEventListener("scroll", handleIframeReposition, true);
+        win.removeEventListener("resize", handleIframeReposition);
+        win.removeEventListener("keydown", handleIframeKeyDown, true);
+        win.document.removeEventListener("click", handleIframeLinkClick);
       }
     };
-  }, [handleIframeClick, handleIframeLinkClick]);
+  }, [
+    handleIframeClick,
+    handleIframeLinkClick,
+    handleIframeInteraction,
+    handleIframeMouseOver,
+    handleIframeMouseOut,
+    handleIframeReposition,
+    handleIframeKeyDown,
+  ]);
 
   useEffect(() => {
     const iframe = iframeRef.current;

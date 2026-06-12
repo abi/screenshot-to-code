@@ -20,6 +20,7 @@ import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
+import { SelectAndEditToolbarButton } from "../select-and-edit/SelectAndEditControls";
 
 function openInNewTab(code: string) {
   const newWindow = window.open("", "_blank");
@@ -68,6 +69,9 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
     inputMode === "video" && appState === AppState.CODING
       ? extractHtml(currentCode)
       : currentCode;
+
+  const canSelectAndEdit =
+    appState === AppState.CODE_READY || !!isSelectedVariantComplete;
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -179,6 +183,10 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
           )}
 
           <div className="flex items-center gap-1">
+            {canSelectAndEdit &&
+              (activeTab === "desktop" || activeTab === "mobile") && (
+                <SelectAndEditToolbarButton />
+              )}
             {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
               <Button
                 onClick={() => downloadCode(previewCode)}

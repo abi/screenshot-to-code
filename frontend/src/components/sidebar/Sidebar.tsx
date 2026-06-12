@@ -12,7 +12,6 @@ import AgentActivity from "../agent/AgentActivity";
 import WorkingPulse from "../core/WorkingPulse";
 import ImageLightbox from "../ImageLightbox";
 import { Commit } from "../commits/types";
-import { removeHighlight } from "../select-and-edit/utils";
 import { CodeGenerationModel } from "../../lib/models";
 import GenerationFeedbackButtons from "./GenerationFeedbackButtons";
 import FreeTrialBanner from "../hosted/FreeTrialBanner";
@@ -21,7 +20,6 @@ import DesignSystemSelector, {
 } from "../settings/DesignSystemSelector";
 
 interface SidebarProps {
-  showSelectAndEditFeature: boolean;
   doUpdate: (instruction: string) => void;
   regenerate: () => void;
   submitGenerationFeedback: (value: "up" | "down") => Promise<boolean>;
@@ -73,7 +71,6 @@ function isSlowGeminiModel(model?: string): boolean {
 }
 
 function Sidebar({
-  showSelectAndEditFeature,
   doUpdate,
   regenerate,
   submitGenerationFeedback,
@@ -525,10 +522,7 @@ function Sidebar({
                       </span>
                     </div>
                     <button
-                      onClick={() => {
-                        removeHighlight(selectedElement);
-                        setSelectedElement(null);
-                      }}
+                      onClick={() => setSelectedElement(null)}
                       className="shrink-0 ml-3 p-0.5 text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 transition-colors"
                       title="Clear selection"
                     >
@@ -584,19 +578,18 @@ function Sidebar({
                     updateImages={updateImages}
                     setUpdateImages={setUpdateImages}
                   />
-                  {showSelectAndEditFeature && (
-                    <button
-                      onClick={toggleInSelectAndEditMode}
-                      className={`rounded-lg p-2 transition-colors ${
-                        inSelectAndEditMode
-                          ? "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
-                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                      }`}
-                      title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
-                    >
-                      <LuMousePointerClick className="w-[18px] h-[18px]" />
-                    </button>
-                  )}
+                  <button
+                    onClick={toggleInSelectAndEditMode}
+                    data-testid="select-edit-toggle-prompt"
+                    className={`rounded-lg p-2 transition-colors ${
+                      inSelectAndEditMode
+                        ? "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
+                        : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                    }`}
+                    title={inSelectAndEditMode ? "Exit selection mode" : "Select an element in the preview to target your edit"}
+                  >
+                    <LuMousePointerClick className="w-[18px] h-[18px]" />
+                  </button>
                   <DesignSystemSelector {...designSystem} compact />
                 </div>
                 <button
