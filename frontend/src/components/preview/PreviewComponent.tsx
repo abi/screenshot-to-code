@@ -2,14 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import useThrottle from "../../hooks/useThrottle";
 import { useAppStore } from "../../store/app-store";
-import { addHighlight, removeHighlight } from "../select-and-edit/utils";
 import {
   applySelectModeCursor,
   hideHoverOverlay,
+  hideSelectionOverlay,
   removeHoverOverlay,
   removeSelectModeCursor,
+  removeSelectionOverlay,
   showHoverOverlay,
-} from "../select-and-edit/hoverOverlay";
+  showSelectionOverlay,
+} from "../select-and-edit/overlays";
 
 interface Props {
   code: string;
@@ -83,7 +85,7 @@ function PreviewComponent({
     hideHoverOverlay((event.target as HTMLElement)?.ownerDocument);
   }, []);
 
-  // Keep the ring glued to the hovered element while the page scrolls or
+  // Keep the rings glued to their elements while the page scrolls or
   // resizes under a stationary cursor.
   const handleIframeReposition = useCallback(() => {
     if (!inSelectAndEditModeRef.current) return;
@@ -91,6 +93,19 @@ function PreviewComponent({
     if (hovered && hovered.isConnected) {
       showHoverOverlay(hovered);
     }
+    const selected = useAppStore.getState().selectedElement;
+    if (selected && selected.isConnected) {
+      showSelectionOverlay(selected);
+    }
+  }, []);
+
+  // Escape exits select mode even when focus is inside the iframe.
+  const handleIframeKeyDown = useCallback((event: KeyboardEvent) => {
+    if (!inSelectAndEditModeRef.current) return;
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    event.stopPropagation();
+    useAppStore.getState().disableInSelectAndEditMode();
   }, []);
 
   const {
@@ -113,18 +128,22 @@ function PreviewComponent({
     const targetElement = clickEvent.target as HTMLElement;
     if (!targetElement) return;
 
-    // Remove highlight from previous element
-    if (selectedElement) {
-      removeHighlight(selectedElement);
-    }
-
-    // Highlight and store the new selected element
-    addHighlight(targetElement);
     setSelectedElement(targetElement);
-  }, [clickEvent, setSelectedElement]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [clickEvent, setSelectedElement]);
 
-  // Apply/remove select-mode side effects (cursor, hover ring, highlight)
-  // when the mode toggles.
+  // Render the selection ring for whatever element is currently selected
+  // (clearing it when the selection is cleared from anywhere, e.g. the
+  // sidebar's X button or after submitting an edit).
+  useEffect(() => {
+    if (selectedElement && selectedElement.isConnected) {
+      showSelectionOverlay(selectedElement);
+      return;
+    }
+    hideSelectionOverlay(iframeRef.current?.contentWindow?.document);
+  }, [selectedElement]);
+
+  // Apply/remove select-mode side effects (cursor, hover and selection
+  // rings) when the mode toggles.
   useEffect(() => {
     const doc = iframeRef.current?.contentWindow?.document;
     if (inSelectAndEditMode) {
@@ -132,11 +151,11 @@ function PreviewComponent({
       return;
     }
     if (selectedElement) {
-      removeHighlight(selectedElement);
       setSelectedElement(null);
     }
     hoveredElementRef.current = null;
     removeHoverOverlay(doc);
+    removeSelectionOverlay(doc);
     removeSelectModeCursor(doc);
   }, [inSelectAndEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -206,6 +225,7 @@ function PreviewComponent({
       win.addEventListener("mouseout", handleIframeMouseOut, true);
       win.addEventListener("scroll", handleIframeReposition, true);
       win.addEventListener("resize", handleIframeReposition);
+      win.addEventListener("keydown", handleIframeKeyDown, true);
       win.document.addEventListener("click", handleIframeLinkClick);
       // A reload replaces the document, so re-apply mode side effects.
       if (inSelectAndEditModeRef.current) {
@@ -233,6 +253,7 @@ function PreviewComponent({
         win.removeEventListener("mouseout", handleIframeMouseOut, true);
         win.removeEventListener("scroll", handleIframeReposition, true);
         win.removeEventListener("resize", handleIframeReposition);
+        win.removeEventListener("keydown", handleIframeKeyDown, true);
         win.document.removeEventListener("click", handleIframeLinkClick);
       }
     };
@@ -243,6 +264,7 @@ function PreviewComponent({
     handleIframeMouseOver,
     handleIframeMouseOut,
     handleIframeReposition,
+    handleIframeKeyDown,
   ]);
 
   useEffect(() => {

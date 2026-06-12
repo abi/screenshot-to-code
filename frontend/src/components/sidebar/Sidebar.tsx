@@ -12,7 +12,6 @@ import AgentActivity from "../agent/AgentActivity";
 import WorkingPulse from "../core/WorkingPulse";
 import ImageLightbox from "../ImageLightbox";
 import { Commit } from "../commits/types";
-import { removeHighlight } from "../select-and-edit/utils";
 import { CodeGenerationModel } from "../../lib/models";
 import DesignSystemSelector, {
   DesignSystemSelectorProps,
@@ -497,10 +496,7 @@ function Sidebar({
                       </span>
                     </div>
                     <button
-                      onClick={() => {
-                        removeHighlight(selectedElement);
-                        setSelectedElement(null);
-                      }}
+                      onClick={() => setSelectedElement(null)}
                       className="shrink-0 ml-3 p-0.5 text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 transition-colors"
                       title="Clear selection"
                     >

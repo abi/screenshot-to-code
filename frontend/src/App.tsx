@@ -25,10 +25,8 @@ import {
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import { useDesignSystems } from "./hooks/useDesignSystems";
-import {
-  buildSelectedElementInstruction,
-  removeHighlight,
-} from "./components/select-and-edit/utils";
+import { buildSelectedElementInstruction } from "./components/select-and-edit/utils";
+import { useEscapeToExitSelectMode } from "./components/select-and-edit/useEscapeToExitSelectMode";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
 import HistoryDisplay from "./components/history/HistoryDisplay";
@@ -162,6 +160,8 @@ function App() {
   ]);
   // Indicate coding state using the browser tab's favicon and title
   useBrowserTabIndicator(appState === AppState.CODING);
+
+  useEscapeToExitSelectMode();
 
   // When the user already has the settings in local storage, newly added keys
   // do not get added to the settings so if it's falsy, we populate it with the default
@@ -642,9 +642,10 @@ function App() {
     let modifiedUpdateInstruction = updateInstruction;
     let selectedElementHtml: string | undefined;
 
-    // Send in a reference to the selected element if it exists
+    // Send in a reference to the selected element if it exists. Selection
+    // visuals are overlays, so the element's outerHTML is already clean.
     if (selectedElement) {
-      const elementHtml = removeHighlight(selectedElement).outerHTML;
+      const elementHtml = selectedElement.outerHTML;
       selectedElementHtml = elementHtml;
       modifiedUpdateInstruction = buildSelectedElementInstruction(
         updateInstruction,

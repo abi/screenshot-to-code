@@ -2,29 +2,6 @@
 // full current code, so the snippet only needs to identify the element.
 const MAX_ELEMENT_HTML_LENGTH = 12000;
 
-export function removeHighlight(element: HTMLElement) {
-  element.style.outline = element.dataset.s2cPrevOutline ?? "";
-  element.style.backgroundColor = element.dataset.s2cPrevBackgroundColor ?? "";
-  delete element.dataset.s2cPrevOutline;
-  delete element.dataset.s2cPrevBackgroundColor;
-  // Avoid leaving an empty style attribute behind so the captured outerHTML
-  // matches the source markup as closely as possible.
-  if (!element.getAttribute("style")) {
-    element.removeAttribute("style");
-  }
-  return element;
-}
-
-export function addHighlight(element: HTMLElement) {
-  if (element.dataset.s2cPrevOutline === undefined) {
-    element.dataset.s2cPrevOutline = element.style.outline;
-    element.dataset.s2cPrevBackgroundColor = element.style.backgroundColor;
-  }
-  element.style.outline = "2px dashed #1846db";
-  element.style.backgroundColor = "#bfcbf5";
-  return element;
-}
-
 export function buildSelectedElementInstruction(
   instruction: string,
   elementHtml: string
