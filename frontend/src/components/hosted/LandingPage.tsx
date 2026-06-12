@@ -170,8 +170,17 @@ function SafeTweet({ testimonial }: { testimonial: Testimonial }) {
   );
 }
 
+// Clerk's modal <SignUp> uses hash routing, so an OAuth provider (e.g.
+// Google) redirects back to this page at #/sso-callback. On that fresh page
+// load the dialog is closed, the component that owns the hash route isn't
+// mounted, and the callback never gets processed - users looked signed out
+// until they clicked Sign in again. Reopen the dialog on Clerk's callback /
+// verification virtual routes so the handshake completes on its own.
+const isClerkCallbackHash = () =>
+  /(sso-callback|verify)/.test(window.location.hash);
+
 function LandingPage() {
-  const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
+  const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(isClerkCallbackHash);
 
   const signIn = () => {
     setIsAuthPopupOpen(true);
