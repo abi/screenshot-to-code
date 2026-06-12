@@ -362,14 +362,28 @@ class GeminiProviderSession(ProviderSession):
 
         tool_result_parts: List[types.Part] = []
         for executed in executed_tool_calls:
+            multimodal_parts = [
+                types.FunctionResponsePart(
+                    inline_data=types.FunctionResponseBlob(
+                        mime_type=part.mime_type,
+                        display_name=part.display_name,
+                        data=part.data,
+                    )
+                )
+                for part in (executed.result.multimodal_parts or [])
+            ]
             tool_result_parts.append(
-                types.Part.from_function_response(
-                    name=executed.tool_call.name,
-                    response=executed.result.result,
+                types.Part(
+                    function_response=types.FunctionResponse(
+                        id=executed.tool_call.id,
+                        name=executed.tool_call.name,
+                        response=executed.result.result,
+                        parts=multimodal_parts,
+                    )
                 )
             )
 
-        self._contents.append(types.Content(role="tool", parts=tool_result_parts))
+        self._contents.append(types.Content(role="user", parts=tool_result_parts))
 
     async def close(self) -> None:
         u = self._total_usage
