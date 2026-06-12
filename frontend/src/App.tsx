@@ -37,7 +37,10 @@ import {
 import { useAppStore } from "./store/app-store";
 import { useProjectStore } from "./store/project-store";
 import { useDesignSystems } from "./hooks/useDesignSystems";
-import { buildSelectedElementInstruction } from "./components/select-and-edit/utils";
+import {
+  buildSelectedElementInstruction,
+  describeElementContext,
+} from "./components/select-and-edit/utils";
 import { useEscapeToExitSelectMode } from "./components/select-and-edit/useEscapeToExitSelectMode";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
@@ -785,7 +788,10 @@ function App() {
       selectedElementHtml = elementHtml;
       modifiedUpdateInstruction = buildSelectedElementInstruction(
         updateInstruction,
-        elementHtml
+        elementHtml,
+        selectedElement.isConnected
+          ? describeElementContext(selectedElement)
+          : undefined
       );
       addEvent("Select and Edit: Edit Submitted", {
         tag: selectedElement.tagName.toLowerCase(),
