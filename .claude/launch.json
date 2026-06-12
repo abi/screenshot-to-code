@@ -6,6 +6,7 @@
       "runtimeExecutable": "yarn",
       "runtimeArgs": ["dev"],
       "port": 5173,
+      "autoPort": true,
       "cwd": "frontend"
     },
     {
