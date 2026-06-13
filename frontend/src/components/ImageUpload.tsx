@@ -38,23 +38,46 @@ const rejectStyle = {
 };
 
 // TODO: Move to a separate file
+// Map file extensions to MIME types as a fallback when the browser
+// does not report the correct MIME type (e.g., Firefox for .mov files)
+function inferMimeType(file: File): string {
+  if (file.type) {
+    return file.type;
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  const extensionToMime: Record<string, string> = {
+    mov: "video/quicktime",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+  };
+  return ext && extensionToMime[ext] ? extensionToMime[ext] : "";
+}
+
 function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      // Check if the MIME type is correctly set in the data URL
-      // Some browsers return application/octet-stream for video files
-      if (result.startsWith("data:application/octet-stream") && file.type) {
-        // Replace with the correct MIME type from the file
-        const correctedResult = result.replace(
-          "data:application/octet-stream",
-          `data:${file.type}`
-        );
-        resolve(correctedResult);
-      } else {
-        resolve(result);
+      // Some browsers return application/octet-stream for video files.
+      // Infer the correct MIME type from file.type or file extension.
+      if (result.startsWith("data:application/octet-stream")) {
+        const mimeType = inferMimeType(file);
+        if (mimeType) {
+          resolve(
+            result.replace(
+              "data:application/octet-stream",
+              `data:${mimeType}`
+            )
+          );
+          return;
+        }
       }
+      resolve(result);
     };
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
