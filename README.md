@@ -65,6 +65,10 @@ echo "ANTHROPIC_API_KEY=your-key" >> .env
 echo "GEMINI_API_KEY=your-key" >> .env
 echo "REPLICATE_API_KEY=r8_your-key" >> .env
 poetry install
+# Install the Chromium browser used by the screenshot preview tool.
+# On Linux, use `poetry run playwright install --with-deps chromium` to also
+# install the required system libraries (needs sudo/apt).
+poetry run playwright install chromium
 poetry env activate
 # run the printed command, e.g. source /path/to/venv/bin/activate
 poetry run uvicorn main:app --reload --port 7001
@@ -72,7 +76,7 @@ poetry run uvicorn main:app --reload --port 7001
 
 You can also set up the keys using the settings dialog in the frontend (click the gear icon after loading the app). The Settings dialog also shows whether **screenshot preview** is available on your backend.
 
-> **Screenshot preview** lets the agent render its own generated page in a headless browser and visually check its work. It needs Chromium — run `playwright install chromium` for local setups, or use the Docker image, which installs it automatically.
+> **Screenshot preview** (optional) lets the agent render its own generated page in a headless browser and visually check its work. It's enabled automatically once Chromium is installed (the `playwright install chromium` step above, or automatically in the Docker image). If Chromium is missing, the app just skips the tool — the Settings dialog shows whether it's available.
 
 Run the frontend:
 
