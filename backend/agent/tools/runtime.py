@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from codegen.utils import extract_html_content
 from config import LOCAL_ASSET_DIR, REPLICATE_API_KEY
 from agent.tools.extract_assets import run_extract_assets
+from agent.tools.screenshot_preview import run_screenshot_preview
 from image_generation.generation import process_tasks
 from image_generation.replicate import (
     P_IMAGE_EDIT_ASPECT_RATIOS,
@@ -104,6 +105,12 @@ class AgentToolRuntime:
                 input_images=self.input_images,
                 asset_base_url=self.asset_base_url,
                 user_id=self.user_id,
+            )
+        if tool_call.name == "screenshot_preview":
+            return await run_screenshot_preview(
+                tool_call.arguments,
+                file_state=self.file_state,
+                asset_base_url=self.asset_base_url,
             )
         if tool_call.name == "save_assets":
             return await run_save_assets(tool_call.arguments, user_id=self.user_id)

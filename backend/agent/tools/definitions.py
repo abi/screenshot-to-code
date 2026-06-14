@@ -145,6 +145,13 @@ def _extract_assets_schema() -> Dict[str, Any]:
     }
 
 
+def _screenshot_preview_schema() -> Dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {},
+    }
+
+
 def _retrieve_option_schema() -> Dict[str, Any]:
     return {
         "type": "object",
@@ -162,6 +169,7 @@ def canonical_tool_definitions(
     image_generation_enabled: bool = True,
     image_editing_enabled: bool = True,
     asset_extraction_enabled: bool = True,
+    screenshot_enabled: bool = True,
 ) -> List[CanonicalToolDefinition]:
     tools: List[CanonicalToolDefinition] = [
         CanonicalToolDefinition(
@@ -229,6 +237,20 @@ def canonical_tool_definitions(
                     "the same order."
                 ),
                 parameters=_extract_assets_schema(),
+            )
+        )
+    if screenshot_enabled:
+        tools.append(
+            CanonicalToolDefinition(
+                name="screenshot_preview",
+                description=(
+                    "Render the current HTML file in a headless browser and return "
+                    "full-page desktop and mobile screenshots so you can visually "
+                    "verify your work. Use after creating or substantially editing "
+                    "the file to check layout, spacing, and fidelity to the "
+                    "requested design. Screenshots are returned as attached images."
+                ),
+                parameters=_screenshot_preview_schema(),
             )
         )
     tools.extend(

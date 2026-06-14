@@ -18,6 +18,7 @@ import {
   BsFiles,
   BsBookmarkCheck,
   BsBoundingBox,
+  BsCamera,
 } from "react-icons/bs";
 import ReactMarkdown from "react-markdown";
 import { Light as SyntaxHighlighterBase } from "react-syntax-highlighter";
@@ -154,6 +155,9 @@ function getEventIcon(type: AgentEventType, toolName?: string) {
   if (toolName === "extract_assets") {
     return <BsBoundingBox className="text-orange-500" />;
   }
+  if (toolName === "screenshot_preview") {
+    return <BsCamera className="text-cyan-500" />;
+  }
   return <BsFileEarmarkPlus className="text-gray-500" />;
 }
 
@@ -245,6 +249,11 @@ function getEventTitle(event: AgentEvent): string {
         ? `Extracted ${extractCount} assets`
         : "Extracted asset";
     }
+    if (event.toolName === "screenshot_preview") {
+      return event.status === "running"
+        ? "Screenshotting preview"
+        : "Screenshotted preview";
+    }
     return event.status === "running" ? "Running tool" : "Tool completed";
   }
   return "Activity";
@@ -287,6 +296,10 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
     hasError && successfulExtractedAssets
       ? successfulExtractedAssets
       : extractedAssets;
+  const screenshotPreviews =
+    output && Array.isArray(output.screenshots)
+      ? (output.screenshots as Array<unknown>)
+      : [];
 
   return (
     <div className="text-sm text-gray-700 dark:text-gray-200">
@@ -720,6 +733,52 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
             )}
           </div>
         )}
+
+      {event.toolName === "screenshot_preview" && !hasError && (
+        <div>
+          {event.status === "running" && (
+            <div className="text-xs text-gray-600 dark:text-gray-400 py-1.5">
+              Rendering desktop and mobile previews...
+            </div>
+          )}
+          {event.status !== "running" && (
+            <div className="grid gap-3 py-2 sm:grid-cols-2">
+              {(["desktop", "mobile"] as const).map((viewport) => {
+                const screenshot = screenshotPreviews.find((item) => {
+                  const itemRecord = getRecord(item);
+                  return itemRecord?.viewport === viewport;
+                });
+                const screenshotRecord = getRecord(screenshot);
+                const imageUrl =
+                  typeof screenshotRecord?.image_url === "string"
+                    ? screenshotRecord.image_url
+                    : null;
+                return (
+                  <div key={viewport}>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 capitalize">
+                      {viewport}
+                    </div>
+                    {imageUrl ? (
+                      <div className="max-h-96 overflow-y-auto rounded border border-gray-200 dark:border-gray-700">
+                        <img
+                          src={imageUrl}
+                          alt={`Screenshot of the generated ${viewport} preview`}
+                          className="w-full"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                        Missing
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {!event.toolName && !hasError && (
         <>

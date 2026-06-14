@@ -1,5 +1,6 @@
 import base64
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -214,3 +215,133 @@ async def test_extract_assets_returns_mocked_gemini_assets(
     ]
     assert result.multimodal_parts[0].mime_type == "image/png"
     assert result.multimodal_parts[0].data == b"logo-image"
+
+
+@pytest.mark.asyncio
+async def test_screenshot_preview_requires_file_content() -> None:
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+    )
+
+    result = await runtime.execute(
+        ToolCall(id="call-1", name="screenshot_preview", arguments={})
+    )
+
+    assert result.ok is False
+    assert "create_file" in result.result["error"]
+
+
+@pytest.mark.asyncio
+async def test_screenshot_preview_returns_image_part(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    temp_dir = tmp_path / "tmp-assets"
+    asset_dir = tmp_path / "local-assets"
+    monkeypatch.setattr("uploaded_assets.store.TEMP_ASSET_DIR", str(temp_dir))
+    monkeypatch.setattr("uploaded_assets.store.LOCAL_ASSET_DIR", str(asset_dir))
+
+    captured: list[dict[str, object]] = []
+
+    async def fake_capture(
+        html: str,
+        device: str = "desktop",
+        full_page: bool = True,
+    ) -> bytes:
+        captured.append({"html": html, "device": device, "full_page": full_page})
+        return f"{device}-png-bytes".encode("ascii")
+
+    monkeypatch.setattr(
+        "agent.tools.screenshot_preview.capture_preview_screenshot", fake_capture
+    )
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(path="index.html", content="<main>hi</main>"),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+        asset_base_url="http://127.0.0.1:7001",
+    )
+
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="screenshot_preview",
+            arguments={"ignored": "value"},
+        )
+    )
+
+    assert result.ok is True
+    assert captured == [
+        {"html": "<main>hi</main>", "device": "desktop", "full_page": True},
+        {"html": "<main>hi</main>", "device": "mobile", "full_page": True},
+    ]
+    assert result.result["details"]["screenshots"] == [
+        {
+            "viewport": "desktop",
+            "full_page": True,
+            "image_part_index": 0,
+            "image_display_name": "preview_desktop.png",
+            "image_bytes": len(b"desktop-png-bytes"),
+        },
+        {
+            "viewport": "mobile",
+            "full_page": True,
+            "image_part_index": 1,
+            "image_display_name": "preview_mobile.png",
+            "image_bytes": len(b"mobile-png-bytes"),
+        },
+    ]
+    assert result.summary["status"] == "ok"
+    screenshots = cast(list[dict[str, Any]], result.summary["screenshots"])
+    assert screenshots[0]["image_url"].startswith(
+        "http://127.0.0.1:7001/local-assets/"
+    )
+    assert screenshots[1]["image_url"].startswith(
+        "http://127.0.0.1:7001/local-assets/"
+    )
+    assert screenshots[0]["image_url"] != screenshots[1]["image_url"]
+    # UI URLs and image payloads must not leak into the model-facing result payload.
+    assert "image_url" not in result.result["details"]["screenshots"][0]
+    assert "image_data_url" not in result.result["details"]["screenshots"][0]
+    assert len(list(asset_dir.iterdir())) == 2
+    assert result.multimodal_parts is not None
+    assert [part.display_name for part in result.multimodal_parts] == [
+        "preview_desktop.png",
+        "preview_mobile.png",
+    ]
+    assert result.multimodal_parts[0].mime_type == "image/png"
+    assert result.multimodal_parts[0].data == b"desktop-png-bytes"
+    assert result.multimodal_parts[1].mime_type == "image/png"
+    assert result.multimodal_parts[1].data == b"mobile-png-bytes"
+
+
+@pytest.mark.asyncio
+async def test_screenshot_preview_reports_capture_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def failing_capture(
+        html: str,
+        device: str = "desktop",
+        full_page: bool = True,
+    ) -> bytes:
+        raise Exception("boom")
+
+    monkeypatch.setattr(
+        "agent.tools.screenshot_preview.capture_preview_screenshot", failing_capture
+    )
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(path="index.html", content="<main>hi</main>"),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+    )
+
+    result = await runtime.execute(
+        ToolCall(id="call-1", name="screenshot_preview", arguments={})
+    )
+
+    assert result.ok is False
+    assert "boom" in result.result["error"]

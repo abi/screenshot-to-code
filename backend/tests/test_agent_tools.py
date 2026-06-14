@@ -120,6 +120,24 @@ def test_extract_assets_tool_input_summary_uses_asset_descriptions() -> None:
     }
 
 
+def test_canonical_tool_definitions_include_screenshot_preview() -> None:
+    tools = canonical_tool_definitions(True)
+    tool_names = [tool.name for tool in tools]
+    assert "screenshot_preview" in tool_names
+    screenshot_tool = next(
+        tool for tool in tools if tool.name == "screenshot_preview"
+    )
+    assert screenshot_tool.parameters["properties"] == {}
+
+
+def test_canonical_tool_definitions_exclude_screenshot_preview_when_disabled() -> None:
+    tool_names = [
+        tool.name
+        for tool in canonical_tool_definitions(True, screenshot_enabled=False)
+    ]
+    assert "screenshot_preview" not in tool_names
+
+
 def test_canonical_tool_definitions_include_edit_image() -> None:
     tools = canonical_tool_definitions(True)
     tool_names = [tool.name for tool in tools]
