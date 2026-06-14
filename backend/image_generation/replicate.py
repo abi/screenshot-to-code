@@ -5,9 +5,22 @@ from typing import Any, Literal, Mapping, cast
 
 REPLICATE_API_BASE_URL = "https://api.replicate.com/v1"
 ReplicateImageModel = Literal["z_image_turbo", "flux_2_klein"]
+PImageEditAspectRatio = Literal[
+    "match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"
+]
 Z_IMAGE_TURBO_MODEL_PATH = "prunaai/z-image-turbo"
 FLUX_2_KLEIN_MODEL_PATH = "black-forest-labs/flux-2-klein-4b"
 P_IMAGE_EDIT_MODEL_PATH = "prunaai/p-image-edit"
+P_IMAGE_EDIT_ASPECT_RATIOS: tuple[PImageEditAspectRatio, ...] = (
+    "match_input_image",
+    "1:1",
+    "16:9",
+    "9:16",
+    "4:3",
+    "3:4",
+    "3:2",
+    "2:3",
+)
 MODEL_PATHS: dict[ReplicateImageModel, str] = {
     "z_image_turbo": Z_IMAGE_TURBO_MODEL_PATH,
     "flux_2_klein": FLUX_2_KLEIN_MODEL_PATH,
@@ -149,18 +162,14 @@ async def edit_image(
     image_urls: list[str],
     api_token: str,
     *,
-    turbo: bool = True,
-    aspect_ratio: str = "match_input_image",
-    seed: int | None = None,
+    aspect_ratio: PImageEditAspectRatio = "match_input_image",
 ) -> str:
     input: dict[str, Any] = {
         "prompt": prompt,
         "images": image_urls,
-        "turbo": turbo,
+        "turbo": True,
         "aspect_ratio": aspect_ratio,
     }
-    if seed is not None:
-        input["seed"] = seed
 
     result = await call_replicate_model(P_IMAGE_EDIT_MODEL_PATH, input, api_token)
     return _extract_output_url(result, "Replicate image edit model prediction")

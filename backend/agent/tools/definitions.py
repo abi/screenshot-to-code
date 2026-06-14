@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from agent.tools.types import CanonicalToolDefinition
+from image_generation.replicate import P_IMAGE_EDIT_ASPECT_RATIOS
 from uploaded_assets.tools import SAVE_ASSETS_TOOL_DEFINITION
 
 
@@ -110,23 +111,15 @@ def _edit_image_schema() -> Dict[str, Any]:
                     ),
                 },
             },
-            "turbo": {
-                "type": "boolean",
-                "description": (
-                    "Run faster with additional optimizations. Set false for more "
-                    "complicated edits."
-                ),
-            },
             "aspect_ratio": {
                 "type": "string",
+                "enum": list(P_IMAGE_EDIT_ASPECT_RATIOS),
+                "default": "match_input_image",
                 "description": (
                     "Aspect ratio for the edited image. Use match_input_image to "
-                    "match the first image."
+                    "match the first image. Allowed values: match_input_image, "
+                    "1:1, 16:9, 9:16, 4:3, 3:4, 3:2, 2:3."
                 ),
-            },
-            "seed": {
-                "type": "integer",
-                "description": "Optional random seed for reproducible edits.",
             },
         },
         "required": ["prompt", "image_urls"],

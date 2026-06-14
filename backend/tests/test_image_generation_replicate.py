@@ -129,9 +129,7 @@ async def test_edit_image_uses_pruna_model_and_normalizes_output(
         prompt="Make image 1 monochrome",
         image_urls=["data:image/png;base64,aW1hZ2U="],
         api_token="token",
-        turbo=False,
         aspect_ratio="match_input_image",
-        seed=123,
     )
 
     assert result == "https://example.com/edited.png"
@@ -139,8 +137,7 @@ async def test_edit_image_uses_pruna_model_and_normalizes_output(
     assert captured["input"] == {
         "prompt": "Make image 1 monochrome",
         "images": ["data:image/png;base64,aW1hZ2U="],
-        "turbo": False,
+        "turbo": True,
         "aspect_ratio": "match_input_image",
-        "seed": 123,
     }
     assert captured["api_token"] == "token"

@@ -71,9 +71,7 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
                 "count": len(image_urls),
                 "prompt": ensure_str(args.get("prompt")),
                 "image_urls": [ensure_str(u) for u in image_urls],
-                "turbo": args.get("turbo"),
                 "aspect_ratio": args.get("aspect_ratio"),
-                "seed": args.get("seed"),
             }
         return {"prompt": ensure_str(args.get("prompt")), "image_urls": []}
 

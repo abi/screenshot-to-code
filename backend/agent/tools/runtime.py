@@ -5,13 +5,18 @@ import difflib
 import mimetypes
 import os
 from urllib.parse import unquote, urlparse
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from asset_extraction import extract_assets_from_images
 from codegen.utils import extract_html_content
 from config import LOCAL_ASSET_DIR, REPLICATE_API_KEY
 from image_generation.generation import process_tasks
-from image_generation.replicate import edit_image, remove_background
+from image_generation.replicate import (
+    P_IMAGE_EDIT_ASPECT_RATIOS,
+    PImageEditAspectRatio,
+    edit_image,
+    remove_background,
+)
 from uploaded_assets.store import (
     persist_data_url_as_temporary_asset,
     promote_temporary_asset_id,
@@ -443,22 +448,17 @@ class AgentToolRuntime:
                 summary={"error": "No valid image_urls"},
             )
 
-        turbo = args.get("turbo")
-        if not isinstance(turbo, bool):
-            turbo = True
-
-        aspect_ratio = ensure_str(args.get("aspect_ratio") or "match_input_image")
-        seed_value = args.get("seed")
-        seed = seed_value if isinstance(seed_value, int) else None
+        aspect_ratio_value = ensure_str(args.get("aspect_ratio") or "match_input_image")
+        if aspect_ratio_value not in P_IMAGE_EDIT_ASPECT_RATIOS:
+            aspect_ratio_value = "match_input_image"
+        aspect_ratio = cast(PImageEditAspectRatio, aspect_ratio_value)
 
         try:
             result_url = await edit_image(
                 prompt=prompt,
                 image_urls=[_local_asset_url_to_data_url(url) for url in unique_urls],
                 api_token=REPLICATE_API_KEY,
-                turbo=turbo,
                 aspect_ratio=aspect_ratio,
-                seed=seed,
             )
         except Exception as exc:
             print(f"Image edit failed for {unique_urls}: {exc}")
@@ -488,9 +488,7 @@ class AgentToolRuntime:
                 "image_urls": unique_urls,
                 "result_url": result_url,
                 "status": "ok",
-                "turbo": turbo,
                 "aspect_ratio": aspect_ratio,
-                **({"seed": seed} if seed is not None else {}),
             }
         }
         summary = {
@@ -499,9 +497,7 @@ class AgentToolRuntime:
                 "image_urls": [summarize_text(url, 100) for url in unique_urls],
                 "result_url": result_url,
                 "status": "ok",
-                "turbo": turbo,
                 "aspect_ratio": aspect_ratio,
-                **({"seed": seed} if seed is not None else {}),
             }
         }
         return ToolExecutionResult(ok=True, result=result, summary=summary)

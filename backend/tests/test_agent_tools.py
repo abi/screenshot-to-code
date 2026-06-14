@@ -1,6 +1,7 @@
 from agent.state import AgentFileState
 from agent.tools import canonical_tool_definitions, summarize_tool_input
 from agent.tools.types import ToolCall
+from image_generation.replicate import P_IMAGE_EDIT_ASPECT_RATIOS
 
 
 def test_canonical_tool_definitions_include_generate_images_when_enabled() -> None:
@@ -81,7 +82,11 @@ def test_canonical_tool_definitions_include_edit_image() -> None:
     assert "edit_image" in tool_names
     edit_image_tool = next(tool for tool in tools if tool.name == "edit_image")
     assert edit_image_tool.parameters["required"] == ["prompt", "image_urls"]
-    assert edit_image_tool.parameters["properties"]["image_urls"]["type"] == "array"
+    properties = edit_image_tool.parameters["properties"]
+    assert properties["image_urls"]["type"] == "array"
+    assert "turbo" not in properties
+    assert "seed" not in properties
+    assert properties["aspect_ratio"]["enum"] == list(P_IMAGE_EDIT_ASPECT_RATIOS)
 
 
 def test_canonical_tool_definitions_exclude_edit_image_when_disabled() -> None:
@@ -100,9 +105,7 @@ def test_edit_image_tool_input_summary_uses_prompt_and_image_urls() -> None:
             arguments={
                 "prompt": "Make image 1 monochrome",
                 "image_urls": ["https://example.com/input.png"],
-                "turbo": False,
                 "aspect_ratio": "match_input_image",
-                "seed": 123,
             },
         ),
         AgentFileState(),
@@ -112,7 +115,5 @@ def test_edit_image_tool_input_summary_uses_prompt_and_image_urls() -> None:
         "count": 1,
         "prompt": "Make image 1 monochrome",
         "image_urls": ["https://example.com/input.png"],
-        "turbo": False,
         "aspect_ratio": "match_input_image",
-        "seed": 123,
     }
