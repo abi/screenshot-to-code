@@ -35,10 +35,24 @@ Choose the path that fits what you want to do:
 
 Running locally requires API keys and a backend/frontend setup. The app has a React/Vite frontend and a FastAPI backend.
 
-Keys needed:
+### API keys
 
-- An [OpenAI API key](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md), Anthropic key, or Google Gemini key
-- Multiple keys are recommended so you can compare results from different models
+You need **at least one** model provider key (OpenAI, Anthropic, or Gemini).
+**Gemini and Replicate are strongly recommended for the best quality of
+screenshot-to-code accuracy** — Gemini powers asset extraction (reusing the
+real logos/images from your screenshot) and Replicate powers image
+generation, background removal, and image editing. Adding all four keys gives
+the best results and lets you compare multiple models per generation.
+
+| Key | Required? | What it unlocks |
+|-----|-----------|-----------------|
+| `OPENAI_API_KEY` | One of these three | GPT code-gen variants (GPT-5.5, GPT-5.2 Codex) |
+| `ANTHROPIC_API_KEY` | One of these three | Claude code-gen variants (Opus 4.8, Fable 5, Sonnet 4.6) |
+| `GEMINI_API_KEY` | One of these three — **strongly recommended** | Gemini code-gen variants (3 Flash, 3.1 Pro); extracts real assets from the screenshot; required for video mode |
+| `REPLICATE_API_KEY` | **Strongly recommended** | Image generation, background removal, and image editing — without it the agent can't create or refine images |
+
+With more keys, the app automatically picks a stronger mix of models per
+variant; with a single key it uses that provider's models only.
 
 If you'd like to run the app with Ollama open-source models (not recommended due to poor-quality results), [follow this comment](https://github.com/abi/screenshot-to-code/issues/354#issuecomment-2435479853).
 
@@ -49,13 +63,16 @@ cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
 echo "ANTHROPIC_API_KEY=your-key" >> .env
 echo "GEMINI_API_KEY=your-key" >> .env
+echo "REPLICATE_API_KEY=r8_your-key" >> .env
 poetry install
 poetry env activate
 # run the printed command, e.g. source /path/to/venv/bin/activate
 poetry run uvicorn main:app --reload --port 7001
 ```
 
-You can also set up the keys using the settings dialog in the frontend (click the gear icon after loading the app).
+You can also set up the keys using the settings dialog in the frontend (click the gear icon after loading the app). The Settings dialog also shows whether **screenshot preview** is available on your backend.
+
+> **Screenshot preview** lets the agent render its own generated page in a headless browser and visually check its work. It needs Chromium — run `playwright install chromium` for local setups, or use the Docker image, which installs it automatically.
 
 Run the frontend:
 
