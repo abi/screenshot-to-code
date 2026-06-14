@@ -7,6 +7,7 @@ cover the whole ``run_logs`` directory so legacy HTML reports are included.
 
 import json
 import os
+import re
 import shutil
 from datetime import datetime, timedelta
 from typing import Any
@@ -31,6 +32,7 @@ class PromptReportSummary(BaseModel):
     session_id: str
     turn: int
     size_bytes: int
+    cost_usd: float | None = None
 
 
 class PromptReportListResponse(BaseModel):
@@ -59,6 +61,39 @@ def _directory_size_bytes(directory: str) -> int:
     return total
 
 
+_COST_USD_PATTERN = re.compile(
+    r'"cost_usd"\s*:\s*(null|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)'
+)
+
+
+def _read_report_cost_usd(filepath: str) -> float | None:
+    """Read a report's usage cost without parsing the whole (possibly multi-MB,
+    image-laden) file.
+
+    ``usage`` is the last key the writer emits, so ``cost_usd`` lives at the
+    tail; reading the final chunk and taking the last match keeps listing cheap.
+    """
+    try:
+        size = os.path.getsize(filepath)
+        with open(filepath, "rb") as f:
+            if size > 2048:
+                f.seek(-2048, os.SEEK_END)
+            tail = f.read().decode("utf-8", errors="ignore")
+    except OSError:
+        return None
+
+    matches = _COST_USD_PATTERN.findall(tail)
+    if not matches:
+        return None
+    last = matches[-1]
+    if last == "null":
+        return None
+    try:
+        return float(last)
+    except ValueError:
+        return None
+
+
 def _summarize_report_file(directory: str, filename: str) -> PromptReportSummary | None:
     match = PROMPT_REPORT_FILENAME_PATTERN.match(filename)
     if match is None:
@@ -82,6 +117,7 @@ def _summarize_report_file(directory: str, filename: str) -> PromptReportSummary
         session_id=match.group("session"),
         turn=int(match.group("turn")),
         size_bytes=size_bytes,
+        cost_usd=_read_report_cost_usd(os.path.join(directory, filename)),
     )
 
 
