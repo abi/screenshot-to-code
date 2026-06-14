@@ -25,7 +25,7 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_2_CODEX_HIGH,
+            Llm.GPT_5_5_XHIGH,
             Llm.CLAUDE_OPUS_4_6,
             Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
         ]
@@ -44,7 +44,7 @@ class TestModelSelectionAllKeys:
 
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_2_CODEX_HIGH,
+            Llm.GPT_5_5_XHIGH,
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
             Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
         ]
@@ -129,7 +129,7 @@ class TestModelSelectionOpenAIAnthropic:
 
     @pytest.mark.asyncio
     async def test_openai_anthropic(self):
-        """OpenAI + Anthropic: Claude Opus 4.6, GPT 5.2 Codex (high/medium), cycling"""
+        """OpenAI + Anthropic: Claude Opus 4.6, GPT 5.5 (xhigh/high), cycling"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -140,8 +140,8 @@ class TestModelSelectionOpenAIAnthropic:
 
         expected = [
             Llm.CLAUDE_OPUS_4_6,
-            Llm.GPT_5_2_CODEX_HIGH,
-            Llm.GPT_5_2_CODEX_MEDIUM,
+            Llm.GPT_5_5_XHIGH,
+            Llm.GPT_5_5_HIGH,
             Llm.CLAUDE_OPUS_4_6,
         ]
         assert models == expected
@@ -185,7 +185,7 @@ class TestModelSelectionOpenAIOnly:
 
     @pytest.mark.asyncio
     async def test_openai_only(self):
-        """OpenAI only: GPT 5.2 Codex (high/medium) only"""
+        """OpenAI only: GPT 5.5 (xhigh/high) only"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -195,10 +195,10 @@ class TestModelSelectionOpenAIOnly:
         )
 
         expected = [
-            Llm.GPT_5_2_CODEX_HIGH,
-            Llm.GPT_5_2_CODEX_MEDIUM,
-            Llm.GPT_5_2_CODEX_HIGH,
-            Llm.GPT_5_2_CODEX_MEDIUM,
+            Llm.GPT_5_5_XHIGH,
+            Llm.GPT_5_5_HIGH,
+            Llm.GPT_5_5_XHIGH,
+            Llm.GPT_5_5_HIGH,
         ]
         assert models == expected
 

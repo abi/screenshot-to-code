@@ -13,10 +13,6 @@ export enum CodeGenerationModel {
   GPT_5_5_MEDIUM = "gpt-5.5 (medium thinking)",
   GPT_5_5_HIGH = "gpt-5.5 (high thinking)",
   GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)",
-  GPT_5_2_CODEX_LOW = "gpt-5.2-codex (low thinking)",
-  GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
-  GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)",
-  GPT_5_2_CODEX_XHIGH = "gpt-5.2-codex (xhigh thinking)",
   GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
   GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
@@ -47,18 +43,6 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gpt-5.5 (xhigh thinking)": {
     name: "GPT 5.5 (xhigh)",
-  },
-  "gpt-5.2-codex (low thinking)": {
-    name: "GPT 5.2 Codex (low)",
-  },
-  "gpt-5.2-codex (medium thinking)": {
-    name: "GPT 5.2 Codex (medium)",
-  },
-  "gpt-5.2-codex (high thinking)": {
-    name: "GPT 5.2 Codex (high)",
-  },
-  "gpt-5.2-codex (xhigh thinking)": {
-    name: "GPT 5.2 Codex (xhigh)",
   },
   "gpt-5.4-mini (low thinking)": {
     name: "GPT 5.4 Mini (low)",
