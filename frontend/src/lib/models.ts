@@ -29,38 +29,35 @@ export enum CodeGenerationModel {
   GEMINI_3_5_FLASH_MINIMAL = "gemini-3.5-flash (minimal thinking)",
 }
 
-export type VariantLabelTone = "flash" | "max" | "pro" | "code" | "neutral";
+export type VariantLabelTone = "fast" | "max";
 
 export interface VariantLabel {
   text: string;
   tone: VariantLabelTone;
 }
 
-// Short, friendly badge shown on each variant tile, derived from the model.
-// Anchors requested by product: Gemini 3 Flash (minimal) -> "Flash",
-// Gemini 3.1 Pro (high) -> "Max".
+export interface VariantLabelContext {
+  inputMode: "image" | "video" | "text";
+  generationType: "create" | "update";
+}
+
+// Per-model badge text. Only these two models are labelled.
 const VARIANT_LABELS: Partial<Record<CodeGenerationModel, VariantLabel>> = {
-  [CodeGenerationModel.GEMINI_3_FLASH_PREVIEW_MINIMAL]: { text: "Flash", tone: "flash" },
-  [CodeGenerationModel.GEMINI_3_FLASH_PREVIEW_HIGH]: { text: "Flash+", tone: "flash" },
+  [CodeGenerationModel.GEMINI_3_FLASH_PREVIEW_MINIMAL]: { text: "Fast", tone: "fast" },
   [CodeGenerationModel.GEMINI_3_1_PRO_PREVIEW_HIGH]: { text: "Max", tone: "max" },
-  [CodeGenerationModel.GEMINI_3_1_PRO_PREVIEW_MEDIUM]: { text: "Pro", tone: "pro" },
-  [CodeGenerationModel.GEMINI_3_1_PRO_PREVIEW_LOW]: { text: "Pro", tone: "pro" },
-  [CodeGenerationModel.GPT_5_2_CODEX_HIGH]: { text: "Codex", tone: "code" },
 };
 
-export function getVariantLabel(model?: string): VariantLabel | null {
+// Badges are only shown on create flows and on any video flow. In particular
+// image/text update runs reuse Flash-minimal but should stay unlabelled.
+export function getVariantLabel(
+  model: string | undefined,
+  context: VariantLabelContext
+): VariantLabel | null {
   if (!model) return null;
-  const exact = VARIANT_LABELS[model as CodeGenerationModel];
-  if (exact) return exact;
-  // Family fallback so any model still gets a sensible badge.
-  if (model.includes("gemini-3.1-pro")) return { text: "Pro", tone: "pro" };
-  if (model.includes("flash")) return { text: "Flash", tone: "flash" };
-  if (model.includes("codex")) return { text: "Codex", tone: "code" };
-  if (model.includes("gpt")) return { text: "GPT", tone: "code" };
-  if (model.includes("opus")) return { text: "Opus", tone: "max" };
-  if (model.includes("sonnet")) return { text: "Sonnet", tone: "pro" };
-  if (model.includes("fable")) return { text: "Fable", tone: "max" };
-  return null;
+  const showLabels =
+    context.generationType === "create" || context.inputMode === "video";
+  if (!showLabels) return null;
+  return VARIANT_LABELS[model as CodeGenerationModel] ?? null;
 }
 
 // Will generate a static error if a model in the enum above is not in the descriptions

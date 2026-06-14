@@ -14,11 +14,8 @@ const IFRAME_HEIGHT = 550;
 
 // Color-coded badge shown in the corner of each variant thumbnail.
 const BADGE_TONE: Record<VariantLabelTone, string> = {
-  flash: "bg-sky-500/90 text-white",
+  fast: "bg-sky-500/90 text-white",
   max: "bg-amber-500/90 text-white",
-  pro: "bg-violet-500/90 text-white",
-  code: "bg-emerald-500/90 text-white",
-  neutral: "bg-zinc-700/90 text-white",
 };
 
 interface VariantThumbnailProps {
@@ -80,11 +77,14 @@ function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
 }
 
 function Variants() {
-  const { head, commits, updateSelectedVariantIndex } = useProjectStore();
+  const { head, commits, updateSelectedVariantIndex, inputMode } =
+    useProjectStore();
 
   const commit = head ? commits[head] : null;
   const variants = commit?.variants || [];
   const selectedVariantIndex = commit?.selectedVariantIndex || 0;
+  const generationType: "create" | "update" =
+    commit?.type === "ai_create" ? "create" : "update";
 
   const handleVariantClick = (index: number) => {
     if (index === selectedVariantIndex || !head) return;
@@ -130,7 +130,10 @@ function Variants() {
           if (variant.status === "complete") statusColor = "bg-green-500";
           else if (variant.status === "error" || variant.status === "cancelled") statusColor = "bg-red-500";
 
-          const label = getVariantLabel(variant.model);
+          const label = getVariantLabel(variant.model, {
+            inputMode,
+            generationType,
+          });
 
           return (
             <div
