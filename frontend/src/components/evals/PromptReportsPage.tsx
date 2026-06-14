@@ -86,8 +86,9 @@ function formatTimestamp(isoTimestamp: string): string {
 
 function formatCost(costUsd: number | null): string {
   if (costUsd === null) return "—";
+  // Round to cents; flag sub-cent totals so a real cost never reads as $0.00.
   if (costUsd > 0 && costUsd < 0.01) return "<$0.01";
-  return `$${costUsd.toFixed(costUsd < 1 ? 4 : 2)}`;
+  return `$${costUsd.toFixed(2)}`;
 }
 
 function groupBySession(reports: PromptReportSummary[]): SessionGroup[] {
