@@ -1,15 +1,12 @@
 # pyright: reportUnknownVariableType=false
 import asyncio
-import base64
 import difflib
-import mimetypes
-import os
-from urllib.parse import unquote, urlparse
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from codegen.utils import extract_html_content
-from config import LOCAL_ASSET_DIR, REPLICATE_API_KEY
+from config import REPLICATE_API_KEY
 from agent.tools.extract_assets import run_extract_assets
+from agent.tools.local_assets import local_asset_url_to_data_url
 from agent.tools.screenshot_preview import run_screenshot_preview
 from image_generation.generation import process_tasks
 from image_generation.replicate import (
@@ -23,34 +20,6 @@ from uploaded_assets.tools import run_save_assets
 from agent.state import AgentFileState, ensure_str
 from agent.tools.types import ToolCall, ToolExecutionResult
 from agent.tools.summaries import summarize_text
-
-
-LOCAL_ASSET_HOSTS = {"127.0.0.1", "localhost", "::1"}
-
-
-def _local_asset_url_to_data_url(image_url: str) -> str:
-    """Replicate can't fetch localhost URLs, so inline local assets as data URLs."""
-    parsed = urlparse(image_url)
-    if parsed.scheme not in {"http", "https"}:
-        return image_url
-    if parsed.hostname not in LOCAL_ASSET_HOSTS:
-        return image_url
-    if not parsed.path.startswith("/local-assets/"):
-        return image_url
-
-    relative_path = unquote(parsed.path.removeprefix("/local-assets/"))
-    asset_root = os.path.abspath(LOCAL_ASSET_DIR)
-    asset_path = os.path.abspath(os.path.join(asset_root, relative_path))
-    if not asset_path.startswith(asset_root + os.sep):
-        return image_url
-    if not os.path.isfile(asset_path):
-        return image_url
-
-    content_type = mimetypes.guess_type(asset_path)[0] or "image/png"
-    with open(asset_path, "rb") as file:
-        encoded = base64.b64encode(file.read()).decode("ascii")
-
-    return f"data:{content_type};base64,{encoded}"
 
 
 class AgentToolRuntime:
@@ -366,7 +335,11 @@ class AgentToolRuntime:
         raw_results: list[str | BaseException] = []
         for i in range(0, len(unique_urls), batch_size):
             batch = unique_urls[i : i + batch_size]
-            tasks = [remove_background(url, REPLICATE_API_KEY) for url in batch]
+            # Replicate can't fetch localhost; inline local assets as data URLs.
+            tasks = [
+                remove_background(local_asset_url_to_data_url(url), REPLICATE_API_KEY)
+                for url in batch
+            ]
             raw_results.extend(await asyncio.gather(*tasks, return_exceptions=True))
 
         results: List[Dict[str, Any]] = []
@@ -436,7 +409,7 @@ class AgentToolRuntime:
         try:
             result_url = await edit_image(
                 prompt=prompt,
-                image_urls=[_local_asset_url_to_data_url(url) for url in unique_urls],
+                image_urls=[local_asset_url_to_data_url(url) for url in unique_urls],
                 api_token=REPLICATE_API_KEY,
                 aspect_ratio=aspect_ratio,
             )

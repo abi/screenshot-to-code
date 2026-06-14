@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 import pytest
 
@@ -71,3 +72,68 @@ async def test_remove_background_batches_calls(
     assert len(result.result["images"]) == 25
     assert all(r["status"] == "ok" for r in result.result["images"])
     assert max_concurrent <= 20
+
+
+@pytest.mark.asyncio
+async def test_remove_background_accepts_data_urls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
+    captured: list[str] = []
+
+    async def tracking_remove_bg(image_url: str, api_token: str) -> str:
+        captured.append(image_url)
+        return "https://replicate.example/no-bg.png"
+
+    monkeypatch.setattr("agent.tools.runtime.remove_background", tracking_remove_bg)
+
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=True,
+        openai_api_key=None,
+        openai_base_url=None,
+    )
+    data_url = "data:image/png;base64,aW1hZ2U="
+
+    result = await runtime.execute(
+        ToolCall(id="t", name="remove_background", arguments={"image_urls": [data_url]})
+    )
+
+    assert result.ok
+    # Data URLs pass through unchanged.
+    assert captured == [data_url]
+    assert result.result["images"][0]["image_url"] == data_url
+
+
+@pytest.mark.asyncio
+async def test_remove_background_converts_localhost_asset_url_to_data_url(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
+    monkeypatch.setattr("agent.tools.local_assets.LOCAL_ASSET_DIR", str(tmp_path))
+    (tmp_path / "asset_123.png").write_bytes(b"image")
+    captured: list[str] = []
+
+    async def tracking_remove_bg(image_url: str, api_token: str) -> str:
+        captured.append(image_url)
+        return "https://replicate.example/no-bg.png"
+
+    monkeypatch.setattr("agent.tools.runtime.remove_background", tracking_remove_bg)
+
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=True,
+        openai_api_key=None,
+        openai_base_url=None,
+    )
+    local_url = "http://127.0.0.1:7001/local-assets/asset_123.png"
+
+    result = await runtime.execute(
+        ToolCall(id="t", name="remove_background", arguments={"image_urls": [local_url]})
+    )
+
+    assert result.ok
+    # Replicate receives base64; the result keeps the original URL for display.
+    assert captured == ["data:image/png;base64,aW1hZ2U="]
+    assert result.result["images"][0]["image_url"] == local_url
