@@ -12,6 +12,7 @@ from agent.providers.openai import OpenAIProviderSession, serialize_openai_tools
 from agent.tools import canonical_tool_definitions
 from config import REPLICATE_API_KEY
 from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
+from preview_screenshot import is_screenshot_preview_available
 
 
 def create_provider_session(
@@ -29,6 +30,8 @@ def create_provider_session(
         image_editing_enabled=bool(REPLICATE_API_KEY),
         # The extract_assets tool calls Gemini, so don't offer it without a key.
         asset_extraction_enabled=bool(gemini_api_key),
+        # screenshot_preview needs headless Chromium; skip it if it can't launch.
+        screenshot_enabled=is_screenshot_preview_available(),
     )
 
     if model in OPENAI_MODELS:

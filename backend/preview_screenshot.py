@@ -20,6 +20,44 @@ _playwright: Optional[Playwright] = None
 _browser: Optional[Browser] = None
 _browser_lock = asyncio.Lock()
 
+# Whether headless Chromium can actually launch on this host. None until the
+# first probe runs. Used to gate the screenshot_preview tool so it isn't
+# offered to the model when Playwright/Chromium isn't properly installed.
+_available: Optional[bool] = None
+
+
+async def probe_screenshot_preview() -> bool:
+    """Check (once, cached) whether headless Chromium can launch here.
+
+    Launches the shared browser so the result doubles as a warm-up. Catches
+    every failure mode — missing browser binary, missing Linux system
+    libraries, sandbox errors — and logs why it's disabled.
+    """
+    global _available
+    if _available is not None:
+        return _available
+    try:
+        await _get_browser()
+        _available = True
+        print("[screenshot_preview] Chromium available — tool enabled.")
+    except Exception as exc:
+        _available = False
+        print(
+            "[screenshot_preview] Chromium unavailable — tool disabled. "
+            f"Install it with `playwright install chromium`. Cause: {exc}"
+        )
+    return _available
+
+
+def is_screenshot_preview_available() -> bool:
+    """Synchronous accessor for the cached probe result.
+
+    Defaults to True when the probe hasn't run yet so we never wrongly hide the
+    tool before startup has checked; the runtime still fails safe if a call
+    errors. In practice the startup probe sets this before any request.
+    """
+    return _available if _available is not None else True
+
 
 async def _get_browser() -> Browser:
     global _playwright, _browser

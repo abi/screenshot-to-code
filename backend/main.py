@@ -27,6 +27,15 @@ async def log_debug_mode() -> None:
     debug_status = "ENABLED" if IS_DEBUG_ENABLED else "DISABLED"
     print(f"Backend startup complete. Debug mode is {debug_status}.")
 
+
+@app.on_event("startup")
+async def probe_screenshot_preview_on_startup() -> None:
+    # Detect (and warm up) headless Chromium so the screenshot_preview tool is
+    # only offered when it can actually run. Logs the outcome.
+    from preview_screenshot import probe_screenshot_preview
+
+    await probe_screenshot_preview()
+
 # Configure CORS settings
 app.add_middleware(
     CORSMiddleware,

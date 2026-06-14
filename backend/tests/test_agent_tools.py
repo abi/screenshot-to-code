@@ -1,5 +1,7 @@
 from typing import Any, cast
 
+import pytest
+
 from agent.state import AgentFileState
 from agent.providers.factory import create_provider_session
 from agent.tools import canonical_tool_definitions, summarize_tool_input
@@ -102,6 +104,48 @@ def test_provider_session_includes_extract_assets_with_gemini_key() -> None:
     tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
     tool_names = [tool["name"] for tool in tools]
     assert "extract_assets" in tool_names
+
+
+def test_provider_session_excludes_screenshot_preview_when_chromium_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "agent.providers.factory.is_screenshot_preview_available", lambda: False
+    )
+    session = create_provider_session(
+        model=Llm.GPT_5_2_CODEX_HIGH,
+        prompt_messages=[{"role": "user", "content": "Build a page."}],
+        should_generate_images=True,
+        openai_api_key="openai-key",
+        openai_base_url=None,
+        anthropic_api_key=None,
+        gemini_api_key=None,
+    )
+
+    tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
+    tool_names = [tool["name"] for tool in tools]
+    assert "screenshot_preview" not in tool_names
+
+
+def test_provider_session_includes_screenshot_preview_when_chromium_available(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "agent.providers.factory.is_screenshot_preview_available", lambda: True
+    )
+    session = create_provider_session(
+        model=Llm.GPT_5_2_CODEX_HIGH,
+        prompt_messages=[{"role": "user", "content": "Build a page."}],
+        should_generate_images=True,
+        openai_api_key="openai-key",
+        openai_base_url=None,
+        anthropic_api_key=None,
+        gemini_api_key=None,
+    )
+
+    tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
+    tool_names = [tool["name"] for tool in tools]
+    assert "screenshot_preview" in tool_names
 
 
 def test_extract_assets_tool_input_summary_uses_asset_descriptions() -> None:
