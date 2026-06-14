@@ -171,7 +171,7 @@ async def test_extract_assets_returns_mocked_gemini_assets(
         }
 
     monkeypatch.setattr(
-        "agent.tools.runtime.extract_assets_from_images",
+        "agent.tools.extract_assets.extract_assets_from_images",
         fake_extract_assets_from_images,
     )
 
@@ -214,4 +214,3 @@ async def test_extract_assets_returns_mocked_gemini_assets(
     ]
     assert result.multimodal_parts[0].mime_type == "image/png"
     assert result.multimodal_parts[0].data == b"logo-image"
-

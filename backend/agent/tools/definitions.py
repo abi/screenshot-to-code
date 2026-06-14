@@ -161,6 +161,7 @@ def _retrieve_option_schema() -> Dict[str, Any]:
 def canonical_tool_definitions(
     image_generation_enabled: bool = True,
     image_editing_enabled: bool = True,
+    asset_extraction_enabled: bool = True,
 ) -> List[CanonicalToolDefinition]:
     tools: List[CanonicalToolDefinition] = [
         CanonicalToolDefinition(
@@ -217,8 +218,8 @@ def canonical_tool_definitions(
                 parameters=_edit_image_schema(),
             )
         )
-    tools.extend(
-        [
+    if asset_extraction_enabled:
+        tools.append(
             CanonicalToolDefinition(
                 name="extract_assets",
                 description=(
@@ -228,7 +229,10 @@ def canonical_tool_definitions(
                     "the same order."
                 ),
                 parameters=_extract_assets_schema(),
-            ),
+            )
+        )
+    tools.extend(
+        [
             SAVE_ASSETS_TOOL_DEFINITION,
             CanonicalToolDefinition(
                 name="retrieve_option",

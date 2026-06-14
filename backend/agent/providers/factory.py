@@ -27,6 +27,8 @@ def create_provider_session(
         image_generation_enabled=should_generate_images,
         # The edit_image tool calls Replicate, so don't offer it without a key.
         image_editing_enabled=bool(REPLICATE_API_KEY),
+        # The extract_assets tool calls Gemini, so don't offer it without a key.
+        asset_extraction_enabled=bool(gemini_api_key),
     )
 
     if model in OPENAI_MODELS:

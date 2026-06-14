@@ -1,7 +1,11 @@
+from typing import Any, cast
+
 from agent.state import AgentFileState
+from agent.providers.factory import create_provider_session
 from agent.tools import canonical_tool_definitions, summarize_tool_input
 from agent.tools.types import ToolCall
 from image_generation.replicate import P_IMAGE_EDIT_ASPECT_RATIOS
+from llm import Llm
 
 
 def test_canonical_tool_definitions_include_generate_images_when_enabled() -> None:
@@ -49,7 +53,7 @@ def test_save_assets_tool_input_summary_uses_asset_ids() -> None:
 
 
 def test_canonical_tool_definitions_include_extract_assets() -> None:
-    tools = canonical_tool_definitions(True)
+    tools = canonical_tool_definitions(True, asset_extraction_enabled=True)
     tool_names = [tool.name for tool in tools]
     assert "extract_assets" in tool_names
     extract_assets_tool = next(tool for tool in tools if tool.name == "extract_assets")
@@ -58,6 +62,46 @@ def test_canonical_tool_definitions_include_extract_assets() -> None:
         extract_assets_tool.parameters["properties"]["asset_descriptions"]["type"]
         == "array"
     )
+
+
+def test_canonical_tool_definitions_exclude_extract_assets_when_disabled() -> None:
+    tool_names = [
+        tool.name
+        for tool in canonical_tool_definitions(True, asset_extraction_enabled=False)
+    ]
+    assert "extract_assets" not in tool_names
+
+
+def test_provider_session_excludes_extract_assets_without_gemini_key() -> None:
+    session = create_provider_session(
+        model=Llm.GPT_5_2_CODEX_HIGH,
+        prompt_messages=[{"role": "user", "content": "Build a page."}],
+        should_generate_images=True,
+        openai_api_key="openai-key",
+        openai_base_url=None,
+        anthropic_api_key=None,
+        gemini_api_key=None,
+    )
+
+    tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
+    tool_names = [tool["name"] for tool in tools]
+    assert "extract_assets" not in tool_names
+
+
+def test_provider_session_includes_extract_assets_with_gemini_key() -> None:
+    session = create_provider_session(
+        model=Llm.GPT_5_2_CODEX_HIGH,
+        prompt_messages=[{"role": "user", "content": "Build a page."}],
+        should_generate_images=True,
+        openai_api_key="openai-key",
+        openai_base_url=None,
+        anthropic_api_key=None,
+        gemini_api_key="gemini-key",
+    )
+
+    tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
+    tool_names = [tool["name"] for tool in tools]
+    assert "extract_assets" in tool_names
 
 
 def test_extract_assets_tool_input_summary_uses_asset_descriptions() -> None:
