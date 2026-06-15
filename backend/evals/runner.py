@@ -5,12 +5,35 @@ from datetime import datetime
 import time
 import inspect
 from llm import Llm
+from config import LOCAL_ASSET_BASE_URL
 from prompts.prompt_types import Stack
 from .core import generate_code_for_image
 from .utils import image_to_data_url
 from .config import EVALS_DIR
 
 MAX_EVAL_RETRIES = 2
+
+
+def normalize_local_asset_urls(html: str) -> str:
+    """Rewrite locally-served asset references to ``LOCAL_ASSET_BASE_URL``.
+
+    Generated HTML may reference extracted/saved assets as root-relative
+    ("/local-assets/...") or via a dev-server host that isn't running at
+    eval-review time. Point them all at the configured base URL so the saved
+    HTML actually renders the real crops.
+    """
+    base = LOCAL_ASSET_BASE_URL.rstrip("/")
+    replacements = [
+        ("https://localhost:5173/local-assets/", f"{base}/local-assets/"),
+        ("http://localhost:5173/local-assets/", f"{base}/local-assets/"),
+        ("http://127.0.0.1:5173/local-assets/", f"{base}/local-assets/"),
+        ('"/local-assets/', f'"{base}/local-assets/'),
+        ("'/local-assets/", f"'{base}/local-assets/"),
+        ("url(/local-assets/", f"url({base}/local-assets/"),
+    ]
+    for old, new in replacements:
+        html = html.replace(old, new)
+    return html
 
 
 def _resolve_eval_filenames(input_files: Optional[List[str]]) -> List[str]:
@@ -239,7 +262,7 @@ async def run_image_evals(
             elif generated_content is not None and time_taken is not None:
                 try:
                     with open(output_html_filepath, "w") as file:
-                        file.write(generated_content)
+                        file.write(normalize_local_asset_urls(generated_content))
                     timing_data.append(
                         f"{final_output_html_filename}: {time_taken:.2f} seconds"
                     )

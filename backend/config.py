@@ -24,6 +24,9 @@ PROMPT_REPORTS_ENABLED = os.environ.get(
 LOCAL_ASSET_DIR = os.environ.get(
     "LOCAL_ASSET_DIR", os.path.join(os.path.dirname(__file__), "local_assets")
 )
+# Base URL the backend serves /local-assets from. The live (websocket) path
+# infers this per-request; the evals path has no request, so it uses this.
+LOCAL_ASSET_BASE_URL = os.environ.get("LOCAL_ASSET_BASE_URL", "http://127.0.0.1:7001")
 
 # Set to True when running in production (on the hosted version)
 # Used as a feature flag to enable or disable certain features
