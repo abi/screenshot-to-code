@@ -76,7 +76,7 @@ def test_canonical_tool_definitions_exclude_extract_assets_when_disabled() -> No
 
 def test_provider_session_excludes_extract_assets_without_gemini_key() -> None:
     session = create_provider_session(
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_HIGH,
         prompt_messages=[{"role": "user", "content": "Build a page."}],
         should_generate_images=True,
         openai_api_key="openai-key",
@@ -92,7 +92,7 @@ def test_provider_session_excludes_extract_assets_without_gemini_key() -> None:
 
 def test_provider_session_includes_extract_assets_with_gemini_key() -> None:
     session = create_provider_session(
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_HIGH,
         prompt_messages=[{"role": "user", "content": "Build a page."}],
         should_generate_images=True,
         openai_api_key="openai-key",
@@ -113,7 +113,7 @@ def test_provider_session_excludes_screenshot_preview_when_chromium_unavailable(
         "agent.providers.factory.is_screenshot_preview_available", lambda: False
     )
     session = create_provider_session(
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_HIGH,
         prompt_messages=[{"role": "user", "content": "Build a page."}],
         should_generate_images=True,
         openai_api_key="openai-key",
@@ -134,7 +134,7 @@ def test_provider_session_includes_screenshot_preview_when_chromium_available(
         "agent.providers.factory.is_screenshot_preview_available", lambda: True
     )
     session = create_provider_session(
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_HIGH,
         prompt_messages=[{"role": "user", "content": "Build a page."}],
         should_generate_images=True,
         openai_api_key="openai-key",

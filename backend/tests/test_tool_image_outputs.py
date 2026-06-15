@@ -106,7 +106,7 @@ async def test_openai_url_for_public_dataurl_for_local_with_detail() -> None:
 
     session = OpenAIProviderSession(
         client=object(),  # type: ignore[arg-type]
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_HIGH,
         prompt_messages=[{"role": "user", "content": "hi"}],
         tools=[],
     )
