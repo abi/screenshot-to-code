@@ -244,7 +244,7 @@ class AgentEngine:
                     ExecutedToolCall(tool_call=tool_call, result=tool_result)
                 )
 
-            session.append_tool_results(turn, executed_tool_calls)
+            await session.append_tool_results(turn, executed_tool_calls)
 
         raise Exception("Agent exceeded max tool turns")
 

@@ -16,30 +16,47 @@ from config import LOCAL_ASSET_DIR
 LOCAL_ASSET_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
+def guess_image_mime(url: str) -> str:
+    """Best-effort image MIME from a URL's extension; defaults to PNG."""
+    return mimetypes.guess_type(urlparse(url).path)[0] or "image/png"
+
+
+def local_asset_url_to_bytes(image_url: str) -> tuple[bytes, str] | None:
+    """Read a localhost ``/local-assets/`` URL into ``(bytes, mime_type)``.
+
+    Returns ``None`` for anything that isn't a local asset backed by a real
+    file under ``LOCAL_ASSET_DIR`` (external URLs, data URLs, traversal, etc.).
+    """
+    parsed = urlparse(image_url)
+    if parsed.scheme not in {"http", "https"}:
+        return None
+    if parsed.hostname not in LOCAL_ASSET_HOSTS:
+        return None
+    if not parsed.path.startswith("/local-assets/"):
+        return None
+
+    relative_path = unquote(parsed.path.removeprefix("/local-assets/"))
+    asset_root = os.path.abspath(LOCAL_ASSET_DIR)
+    asset_path = os.path.abspath(os.path.join(asset_root, relative_path))
+    if not asset_path.startswith(asset_root + os.sep):
+        return None
+    if not os.path.isfile(asset_path):
+        return None
+
+    content_type = mimetypes.guess_type(asset_path)[0] or "image/png"
+    with open(asset_path, "rb") as file:
+        return file.read(), content_type
+
+
 def local_asset_url_to_data_url(image_url: str) -> str:
     """Inline a localhost ``/local-assets/`` URL as a base64 data URL.
 
     External URLs and existing data URLs are returned unchanged, as is any
     localhost URL that doesn't resolve to a real file under ``LOCAL_ASSET_DIR``.
     """
-    parsed = urlparse(image_url)
-    if parsed.scheme not in {"http", "https"}:
+    read = local_asset_url_to_bytes(image_url)
+    if read is None:
         return image_url
-    if parsed.hostname not in LOCAL_ASSET_HOSTS:
-        return image_url
-    if not parsed.path.startswith("/local-assets/"):
-        return image_url
-
-    relative_path = unquote(parsed.path.removeprefix("/local-assets/"))
-    asset_root = os.path.abspath(LOCAL_ASSET_DIR)
-    asset_path = os.path.abspath(os.path.join(asset_root, relative_path))
-    if not asset_path.startswith(asset_root + os.sep):
-        return image_url
-    if not os.path.isfile(asset_path):
-        return image_url
-
-    content_type = mimetypes.guess_type(asset_path)[0] or "image/png"
-    with open(asset_path, "rb") as file:
-        encoded = base64.b64encode(file.read()).decode("ascii")
-
+    data, content_type = read
+    encoded = base64.b64encode(data).decode("ascii")
     return f"data:{content_type};base64,{encoded}"

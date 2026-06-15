@@ -67,7 +67,7 @@ async def test_openai_provider_session_omits_prompt_cache_key_across_turns() -> 
     )
 
     first_turn = await session.stream_turn(_noop_event_sink)
-    session.append_tool_results(
+    await session.append_tool_results(
         ProviderTurn(
             assistant_text=first_turn.assistant_text,
             tool_calls=[],

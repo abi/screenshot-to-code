@@ -1,5 +1,6 @@
 from typing import Any, cast
 
+import pytest
 from google.genai import types
 
 from agent.providers.base import ExecutedToolCall, ProviderTurn
@@ -8,7 +9,8 @@ from agent.tools.types import ToolCall, ToolExecutionResult, ToolMultimodalPart
 from llm import Llm
 
 
-def test_gemini_provider_appends_multimodal_function_response_parts() -> None:
+@pytest.mark.asyncio
+async def test_gemini_provider_appends_multimodal_function_response_parts() -> None:
     session = GeminiProviderSession(
         client=object(),  # type: ignore[arg-type]
         model=Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
@@ -28,7 +30,7 @@ def test_gemini_provider_appends_multimodal_function_response_parts() -> None:
         ],
     )
 
-    session.append_tool_results(
+    await session.append_tool_results(
         ProviderTurn(
             assistant_text="",
             tool_calls=[],

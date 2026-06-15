@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from codegen.utils import extract_html_content
 from config import REPLICATE_API_KEY
 from agent.tools.extract_assets import run_extract_assets
-from agent.tools.local_assets import local_asset_url_to_data_url
+from agent.tools.local_assets import guess_image_mime, local_asset_url_to_data_url
 from agent.tools.screenshot_preview import run_screenshot_preview
 from image_generation.generation import process_tasks
 from image_generation.replicate import (
@@ -18,7 +18,7 @@ from image_generation.replicate import (
 from uploaded_assets.tools import run_save_assets
 
 from agent.state import AgentFileState, ensure_str
-from agent.tools.types import ToolCall, ToolExecutionResult
+from agent.tools.types import ToolCall, ToolExecutionResult, ToolMultimodalPart
 from agent.tools.summaries import summarize_text
 
 
@@ -302,7 +302,21 @@ class AgentToolRuntime:
         ]
         result = {"images": merged_results}
         summary = {"images": summary_items}
-        return ToolExecutionResult(ok=True, result=result, summary=summary)
+        multimodal_parts = [
+            ToolMultimodalPart(
+                display_name=f"generated_{index}.png",
+                mime_type=guess_image_mime(url),
+                image_url=url,
+            )
+            for index, url in enumerate(merged_results.values())
+            if url
+        ]
+        return ToolExecutionResult(
+            ok=True,
+            result=result,
+            summary=summary,
+            multimodal_parts=multimodal_parts,
+        )
 
     async def _remove_background(self, args: Dict[str, Any]) -> ToolExecutionResult:
         if not REPLICATE_API_KEY:
@@ -362,10 +376,20 @@ class AgentToolRuntime:
             }
             for r in results
         ]
+        multimodal_parts = [
+            ToolMultimodalPart(
+                display_name=f"no_bg_{index}.png",
+                mime_type=guess_image_mime(result["result_url"]),
+                image_url=result["result_url"],
+            )
+            for index, result in enumerate(results)
+            if result["status"] == "ok" and result["result_url"]
+        ]
         return ToolExecutionResult(
             ok=True,
             result={"images": results},
             summary={"images": summary_items},
+            multimodal_parts=multimodal_parts,
         )
 
     async def _edit_image(self, args: Dict[str, Any]) -> ToolExecutionResult:
@@ -453,7 +477,18 @@ class AgentToolRuntime:
                 "aspect_ratio": aspect_ratio,
             }
         }
-        return ToolExecutionResult(ok=True, result=result, summary=summary)
+        return ToolExecutionResult(
+            ok=True,
+            result=result,
+            summary=summary,
+            multimodal_parts=[
+                ToolMultimodalPart(
+                    display_name="edited.png",
+                    mime_type=guess_image_mime(result_url),
+                    image_url=result_url,
+                )
+            ],
+        )
 
     def _retrieve_option(self, args: Dict[str, Any]) -> ToolExecutionResult:
         raw_option_number = args.get("option_number")

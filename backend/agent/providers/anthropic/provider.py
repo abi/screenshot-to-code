@@ -1,4 +1,5 @@
 # pyright: reportUnknownVariableType=false
+import base64
 import copy
 import json
 import uuid
@@ -292,7 +293,26 @@ class AnthropicProviderSession(ProviderSession):
             assistant_turn=final_message,
         )
 
-    def append_tool_results(
+    @staticmethod
+    def _image_block(part: Any) -> Dict[str, Any] | None:
+        """A public URL goes as a url source; local bytes go as base64."""
+        if part.image_url:
+            return {
+                "type": "image",
+                "source": {"type": "url", "url": part.image_url},
+            }
+        if part.data is not None:
+            return {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": part.mime_type,
+                    "data": base64.b64encode(part.data).decode("ascii"),
+                },
+            }
+        return None
+
+    async def append_tool_results(
         self,
         turn: ProviderTurn,
         executed_tool_calls: list[ExecutedToolCall],
@@ -315,12 +335,28 @@ class AnthropicProviderSession(ProviderSession):
 
         tool_result_blocks: List[Dict[str, Any]] = []
         for executed in executed_tool_calls:
+            result_json = json.dumps(executed.result.result)
+            is_error = not executed.result.ok
+            parts = executed.result.multimodal_parts or []
+            content: str | List[Dict[str, Any]]
+            # The API rejects non-text tool_result content when is_error is
+            # true, so failed calls fall back to a plain text result.
+            if parts and not is_error:
+                content = [{"type": "text", "text": result_json}]
+                for part in parts:
+                    block = self._image_block(part)
+                    if block is None:
+                        continue
+                    content.append({"type": "text", "text": part.display_name})
+                    content.append(block)
+            else:
+                content = result_json
             tool_result_blocks.append(
                 {
                     "type": "tool_result",
                     "tool_use_id": executed.tool_call.id,
-                    "content": json.dumps(executed.result.result),
-                    "is_error": not executed.result.ok,
+                    "content": content,
+                    "is_error": is_error,
                 }
             )
 
