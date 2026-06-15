@@ -27,6 +27,29 @@ LOCAL = ToolMultimodalPart(
 )
 
 
+def test_multimodal_part_enforces_source_invariant() -> None:
+    # Valid: exactly one source.
+    ToolMultimodalPart(display_name="a", mime_type="image/png", data=b"x")
+    ToolMultimodalPart(
+        display_name="a", mime_type="image/png", image_url="https://x/y.png"
+    )
+    # Neither source.
+    with pytest.raises(ValueError):
+        ToolMultimodalPart(display_name="a", mime_type="image/png")
+    # Both sources.
+    with pytest.raises(ValueError):
+        ToolMultimodalPart(
+            display_name="a", mime_type="image/png", data=b"x", image_url="https://x/y"
+        )
+    # A localhost URL isn't model-reachable and must be rejected.
+    with pytest.raises(ValueError, match="publicly fetchable"):
+        ToolMultimodalPart(
+            display_name="a",
+            mime_type="image/png",
+            image_url="http://127.0.0.1:7011/local-assets/z.png",
+        )
+
+
 def _executed(parts: List[ToolMultimodalPart], ok: bool = True) -> ExecutedToolCall:
     return ExecutedToolCall(
         tool_call=ToolCall(id="call-1", name="extract_assets", arguments={}),

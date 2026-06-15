@@ -16,6 +16,15 @@ from config import LOCAL_ASSET_DIR
 LOCAL_ASSET_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
+def is_local_host_url(url: str) -> bool:
+    """True if the URL points at this host (a loopback address).
+
+    Such URLs are reachable from this backend but NOT from cloud model APIs
+    (Anthropic, OpenAI), so they must never be handed to a model as a URL.
+    """
+    return (urlparse(url).hostname or "").lower() in LOCAL_ASSET_HOSTS
+
+
 def guess_image_mime(url: str) -> str:
     """Best-effort image MIME from a URL's extension; defaults to PNG."""
     return mimetypes.guess_type(urlparse(url).path)[0] or "image/png"
