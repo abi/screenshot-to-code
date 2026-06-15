@@ -49,7 +49,7 @@ the best results and lets you compare multiple models per generation.
 | `OPENAI_API_KEY` | One of these three | GPT code-gen variants (GPT-5.5, GPT-5.2 Codex) |
 | `ANTHROPIC_API_KEY` | One of these three | Claude code-gen variants (Opus 4.8, Fable 5, Sonnet 4.6) |
 | `GEMINI_API_KEY` | One of these three — **strongly recommended** | Gemini code-gen variants (3 Flash, 3.1 Pro); extracts real assets from the screenshot; required for video mode |
-| `REPLICATE_API_KEY` | **Strongly recommended** | Image generation, background removal, and image editing — without it the agent can't create or refine images |
+| `REPLICATE_API_KEY` | **Strongly recommended** | Image editing, background removal, and Replicate-backed image generation — without it, `edit_image` and `remove_background` are unavailable, and image generation falls back to OpenAI if configured |
 
 With more keys, the app automatically picks a stronger mix of models per
 variant; with a single key it uses that provider's models only.
@@ -74,7 +74,7 @@ poetry env activate
 poetry run uvicorn main:app --reload --port 7001
 ```
 
-You can also set up the keys using the settings dialog in the frontend (click the gear icon after loading the app). The Settings dialog also shows whether **screenshot preview** is available on your backend.
+You can also set up OpenAI, Anthropic, and Gemini keys using the settings dialog in the frontend (click the gear icon after loading the app). Replicate must be configured in `backend/.env` as `REPLICATE_API_KEY`. The Settings dialog also shows whether **screenshot preview** is available on your backend.
 
 > **Screenshot preview** (optional) lets the agent render its own generated page in a headless browser and visually check its work. It's enabled automatically once Chromium is installed (the `playwright install chromium` step above, or automatically in the Docker image). If Chromium is missing, the app just skips the tool — the Settings dialog shows whether it's available.
 
