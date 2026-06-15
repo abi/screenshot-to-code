@@ -136,6 +136,38 @@ async def test_extract_assets_requires_gemini_api_key() -> None:
 
 
 @pytest.mark.asyncio
+async def test_extract_assets_returns_error_when_extraction_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def boom(**_kwargs: Any) -> dict[str, object]:
+        raise RuntimeError("429 quota exceeded")
+
+    monkeypatch.setattr("agent.tools.extract_assets.extract_assets_from_images", boom)
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+        gemini_api_key="gemini-key",
+        input_images=[_data_url(b"source-image")],
+    )
+
+    # A provider failure must surface as a tool error, not propagate out of the
+    # runtime and abort the whole variant.
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="extract_assets",
+            arguments={"asset_descriptions": ["logo"]},
+        )
+    )
+
+    assert result.ok is False
+    assert result.summary["error"] == "Asset extraction failed"
+    assert "429 quota exceeded" in result.result["error"]
+
+
+@pytest.mark.asyncio
 async def test_extract_assets_returns_mocked_gemini_assets(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -222,6 +254,106 @@ async def test_extract_assets_returns_mocked_gemini_assets(
     ]
     assert result.multimodal_parts[0].mime_type == "image/png"
     assert result.multimodal_parts[0].data == b"logo-image"
+
+
+@pytest.mark.asyncio
+async def test_extract_assets_partial_success_keeps_found_assets(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    temp_dir = tmp_path / "tmp-assets"
+    asset_dir = tmp_path / "local-assets"
+    monkeypatch.setattr("uploaded_assets.store.TEMP_ASSET_DIR", str(temp_dir))
+    monkeypatch.setattr("uploaded_assets.store.LOCAL_ASSET_DIR", str(asset_dir))
+
+    async def fake_extract(**_kwargs: Any) -> dict[str, object]:
+        # One asset boxed + cropped, one with no bounding box — exactly what
+        # asset_extraction returns (incl. its top-level error) when Gemini finds
+        # some but not all of the requested assets.
+        return {
+            "assets": [
+                {"description": "logo", "data_url": _data_url(b"logo-bytes"), "status": "ok"},
+                {"description": "mascot", "data_url": None, "status": "missing"},
+            ],
+            "error": "Gemini did not return usable bounding boxes for every requested asset.",
+        }
+
+    monkeypatch.setattr(
+        "agent.tools.extract_assets.extract_assets_from_images", fake_extract
+    )
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+        gemini_api_key="gemini-key",
+        input_images=[_data_url(b"source-image")],
+        asset_base_url="http://127.0.0.1:7001",
+    )
+
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="extract_assets",
+            arguments={"asset_descriptions": ["logo", "mascot"]},
+        )
+    )
+
+    # One missing asset must NOT fail the whole tool — the found crop is kept.
+    assert result.ok is True
+    assert "error" not in result.result
+    assert result.summary["error"] is None
+    found = result.result["assets"][0]
+    assert found["status"] == "ok"
+    assert found["public_url"].startswith("http://127.0.0.1:7001/local-assets/")
+    assert result.result["assets"][1]["status"] == "missing"
+    # The model is told which descriptions came back empty so it can fall back.
+    assert result.result["unresolved_assets"] == [
+        {"description": "mascot", "status": "missing"}
+    ]
+    assert result.summary["unresolved_count"] == 1
+    # Only the found crop's image is attached.
+    assert result.multimodal_parts is not None
+    assert [p.display_name for p in result.multimodal_parts] == ["asset_0.png"]
+    assert result.multimodal_parts[0].data == b"logo-bytes"
+
+
+@pytest.mark.asyncio
+async def test_extract_assets_all_missing_returns_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_extract(**_kwargs: Any) -> dict[str, object]:
+        return {
+            "assets": [
+                {"description": "logo", "data_url": None, "status": "missing"},
+            ],
+            "error": "Gemini did not return usable bounding boxes for every requested asset.",
+        }
+
+    monkeypatch.setattr(
+        "agent.tools.extract_assets.extract_assets_from_images", fake_extract
+    )
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+        gemini_api_key="gemini-key",
+        input_images=[_data_url(b"source-image")],
+    )
+
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="extract_assets",
+            arguments={"asset_descriptions": ["logo"]},
+        )
+    )
+
+    # Nothing extracted at all → the tool legitimately fails.
+    assert result.ok is False
+    assert "bounding boxes" in result.result["error"]
+    assert not result.multimodal_parts
 
 
 @pytest.mark.asyncio

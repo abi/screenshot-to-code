@@ -85,11 +85,23 @@ async def run_extract_assets(
             summary={"error": "No valid asset_descriptions"},
         )
 
-    extraction_result: Dict[str, Any] = await extract_assets_from_images(
-        image_data_urls=input_images,
-        asset_descriptions=descriptions,
-        gemini_api_key=gemini_api_key,
-    )
+    try:
+        extraction_result: Dict[str, Any] = await extract_assets_from_images(
+            image_data_urls=input_images,
+            asset_descriptions=descriptions,
+            gemini_api_key=gemini_api_key,
+        )
+    except Exception as exc:
+        # A provider failure (quota, auth, timeout, transient network) must not
+        # abort the whole variant. Like the other external image tools, report it
+        # as a tool error so the agent can continue or fall back (e.g. redraw with
+        # generate_images) instead of propagating out of the tool runtime.
+        print(f"Asset extraction failed: {exc}")
+        return ToolExecutionResult(
+            ok=False,
+            result={"error": f"Asset extraction failed: {exc}"},
+            summary={"error": "Asset extraction failed"},
+        )
     assets = extraction_result.get("assets", [])
     promoted_assets: List[Dict[str, Any]] = []
     multimodal_parts: List[ToolMultimodalPart] = []
@@ -151,14 +163,34 @@ async def run_extract_assets(
                 }
             )
 
+    # extraction_result carries a top-level "error" whenever Gemini couldn't box
+    # every requested asset. Don't let that fail the whole tool when we still got
+    # usable crops — re-derive tool status from what actually came back.
+    extraction_note = ensure_str(extraction_result.get("error")) or None
     result: Dict[str, Any] = {
         **extraction_result,
         "assets": promoted_assets,
     }
-    if any(asset.get("status") != "ok" for asset in promoted_assets):
+    result.pop("error", None)
+
+    extracted = [asset for asset in promoted_assets if asset.get("status") == "ok"]
+    unresolved = [asset for asset in promoted_assets if asset.get("status") != "ok"]
+
+    # Partial success is still success: keep the crops Gemini did find (and their
+    # images) and tell the model which descriptions came back empty, so it can
+    # fall back for just those (e.g. generate_images) instead of discarding the
+    # lot. Only fail the tool when nothing could be extracted at all.
+    if unresolved:
+        result["unresolved_assets"] = [
+            {
+                "description": asset.get("description"),
+                "status": asset.get("status"),
+            }
+            for asset in unresolved
+        ]
+    if not extracted:
         result["error"] = (
-            result.get("error")
-            or "Could not persist every extracted asset to a public URL."
+            extraction_note or "No assets could be extracted from the input images."
         )
 
     summary_assets: List[Dict[str, Any]] = []
@@ -181,10 +213,11 @@ async def run_extract_assets(
         )
 
     return ToolExecutionResult(
-        ok=not result.get("error"),
+        ok=bool(extracted),
         result=result,
         summary={
             "assets": summary_assets,
+            "unresolved_count": len(unresolved),
             "error": result.get("error"),
         },
         multimodal_parts=multimodal_parts,
