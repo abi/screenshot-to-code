@@ -61,7 +61,7 @@ async def test_openai_provider_session_omits_prompt_cache_key_across_turns() -> 
     client = _FakeOpenAIClient()
     session = OpenAIProviderSession(
         client=client,  # type: ignore[arg-type]
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_XHIGH,
         prompt_messages=[{"role": "user", "content": "Build a landing page."}],
         tools=_test_tools(),
     )
@@ -125,19 +125,19 @@ async def test_openai_provider_session_omits_prompt_cache_key_for_all_prompts() 
 
     first_session = OpenAIProviderSession(
         client=first_client,  # type: ignore[arg-type]
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_XHIGH,
         prompt_messages=[{"role": "user", "content": "Build a landing page."}],
         tools=_test_tools(),
     )
     second_session = OpenAIProviderSession(
         client=second_client,  # type: ignore[arg-type]
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_XHIGH,
         prompt_messages=[{"role": "user", "content": "Build a landing page."}],
         tools=_test_tools(),
     )
     different_prompt_session = OpenAIProviderSession(
         client=different_prompt_client,  # type: ignore[arg-type]
-        model=Llm.GPT_5_2_CODEX_HIGH,
+        model=Llm.GPT_5_5_XHIGH,
         prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
         tools=_test_tools(),
     )
