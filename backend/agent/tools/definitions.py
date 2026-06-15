@@ -233,8 +233,10 @@ def canonical_tool_definitions(
                 description=(
                     "Extract one or more visual assets from the input screenshot or "
                     "reference images using Gemini. Pass a list of text descriptions "
-                    "for the assets to extract. Returns extracted image data URLs in "
-                    "the same order."
+                    "for the assets to extract. Returns each asset (in the same order) "
+                    "with a permanent, embeddable public_url. These assets are already "
+                    "saved — do NOT call save_assets on them (save_assets is only for "
+                    "user-uploaded images)."
                 ),
                 parameters=_extract_assets_schema(),
             )

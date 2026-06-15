@@ -79,7 +79,6 @@ class AgentToolRuntime:
             return await run_screenshot_preview(
                 tool_call.arguments,
                 file_state=self.file_state,
-                asset_base_url=self.asset_base_url,
             )
         if tool_call.name == "save_assets":
             return await run_save_assets(tool_call.arguments, user_id=self.user_id)

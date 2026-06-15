@@ -2,10 +2,7 @@ import base64
 from typing import Any, Dict, List, Optional, cast
 
 from asset_extraction import extract_assets_from_images
-from uploaded_assets.store import (
-    persist_data_url_as_temporary_asset,
-    promote_temporary_asset_id,
-)
+from uploaded_assets.store import persist_data_url_as_asset
 
 from agent.state import ensure_str
 from agent.tools.summaries import summarize_text
@@ -105,7 +102,6 @@ async def run_extract_assets(
             data_url = ensure_str(asset.get("data_url"))
             public_url: str | None = None
             content_type: str | None = None
-            asset_id: str | None = None
             image_part_index: int | None = None
             image_display_name: str | None = None
             status = ensure_str(asset.get("status")) or "missing"
@@ -123,22 +119,21 @@ async def run_extract_assets(
                     image_part_index = len(multimodal_parts) - 1
                     image_display_name = display_name
 
-                temporary_asset = persist_data_url_as_temporary_asset(
+                # Extraction is the commitment — the model asked for this crop,
+                # so finalize it straight to a served asset (no temp staging).
+                saved_asset = await persist_data_url_as_asset(
                     data_url,
                     asset_base_url,
+                    user_id=user_id,
                 )
-                if temporary_asset:
-                    saved_asset = await promote_temporary_asset_id(
-                        temporary_asset.asset_id,
-                        user_id=user_id,
-                    )
-                    if saved_asset:
-                        public_url = saved_asset.public_url
-                        content_type = saved_asset.content_type
-                        asset_id = saved_asset.asset_id
-                        status = "ok"
-                    else:
-                        status = "error"
+                if saved_asset:
+                    public_url = saved_asset.public_url
+                    content_type = saved_asset.content_type
+                    # No asset_id is surfaced on purpose: extracted crops are
+                    # already finalized, and a save_assets-style id makes models
+                    # redundantly call save_assets on them (which now fails — the
+                    # crops were never temp-staged). The model embeds public_url.
+                    status = "ok"
                 else:
                     status = "error"
 
@@ -146,7 +141,6 @@ async def run_extract_assets(
                 {
                     "description": asset.get("description"),
                     "public_url": public_url,
-                    "asset_id": asset_id,
                     "content_type": content_type,
                     "status": status,
                     "image_part_index": image_part_index,
@@ -177,7 +171,6 @@ async def run_extract_assets(
                 ),
                 "status": ensure_str(asset.get("status")),
                 "public_url": public_url,
-                "asset_id": ensure_str(asset.get("asset_id")),
                 "content_type": ensure_str(asset.get("content_type")),
                 "image_part_index": asset.get("image_part_index"),
                 "image_display_name": asset.get("image_display_name"),

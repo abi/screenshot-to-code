@@ -5,10 +5,6 @@ from preview_screenshot import capture_preview_screenshot
 
 from agent.state import AgentFileState
 from agent.tools.types import ToolExecutionResult, ToolMultimodalPart
-from uploaded_assets.store import (
-    persist_data_url_as_temporary_asset,
-    promote_temporary_asset_id,
-)
 
 
 PREVIEW_VIEWPORTS = ("desktop", "mobile")
@@ -18,12 +14,13 @@ async def run_screenshot_preview(
     _args: Dict[str, Any],
     *,
     file_state: AgentFileState,
-    asset_base_url: str,
 ) -> ToolExecutionResult:
     """Render the current HTML in headless Chromium and return screenshots.
 
-    PNGs are attached as multimodal parts so the model can visually verify
-    its work; public URLs are kept in the summary for the UI.
+    These previews are for *seeing*, not keeping: the model views them as
+    attached image bytes (multimodal parts) to verify its work and never
+    embeds them in its output, so they are NOT persisted as assets. A data
+    URL is inlined into the summary purely so the UI can show the same preview.
     """
     if not file_state.content:
         return ToolExecutionResult(
@@ -45,15 +42,6 @@ async def run_screenshot_preview(
             image_part_index = len(multimodal_parts)
             encoded_image = base64.b64encode(image_bytes).decode("ascii")
             data_url = f"data:image/png;base64,{encoded_image}"
-            temporary_asset = persist_data_url_as_temporary_asset(
-                data_url,
-                asset_base_url,
-            )
-            if not temporary_asset:
-                raise Exception(f"Could not persist {viewport} screenshot")
-            saved_asset = await promote_temporary_asset_id(temporary_asset.asset_id)
-            if not saved_asset:
-                raise Exception(f"Could not publish {viewport} screenshot")
             screenshots.append(
                 {
                     "viewport": viewport,
@@ -61,7 +49,8 @@ async def run_screenshot_preview(
                     "image_part_index": image_part_index,
                     "image_display_name": display_name,
                     "image_bytes": len(image_bytes),
-                    "image_url": saved_asset.public_url,
+                    # Inlined for the UI thumbnail only — never stored as an asset.
+                    "image_url": data_url,
                     "status": "ok",
                 }
             )

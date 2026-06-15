@@ -2,7 +2,6 @@ import base64
 import hashlib
 import json
 import os
-import shutil
 import tempfile
 from dataclasses import dataclass
 from typing import Any, cast
@@ -148,10 +147,12 @@ def _temporary_asset_path(asset_id: str) -> tuple[str, str, str, str] | None:
     return None
 
 
-def persist_data_url_as_temporary_asset(
-    data_url: str,
-    asset_base_url: str,
-) -> TemporaryAsset | None:
+def _decode_image_data_url(data_url: str) -> tuple[bytes, str, str] | None:
+    """Decode a ``data:image/*`` URL into ``(bytes, content_type, extension)``.
+
+    Returns ``None`` for non-image data URLs, unsupported image types,
+    undecodable base64, or payloads over ``MAX_UPLOADED_ASSET_BYTES``.
+    """
     if not data_url.startswith("data:image/") or "," not in data_url:
         return None
 
@@ -169,6 +170,57 @@ def persist_data_url_as_temporary_asset(
     if len(image_bytes) > MAX_UPLOADED_ASSET_BYTES:
         return None
 
+    return image_bytes, content_type, extension
+
+
+def _finalize_asset_bytes(
+    image_bytes: bytes,
+    extension: str,
+    content_type: str,
+    asset_base_url: str,
+    user_id: str | None,
+) -> SavedAsset:
+    """Write asset bytes to the served ``LOCAL_ASSET_DIR`` and return a SavedAsset.
+
+    The single "finalize" step that turns bytes into a durable, served asset.
+    Content-addressed by digest, so identical bytes dedupe to one file.
+    ``user_id`` is unused locally but is the hook hosted backends key durable
+    per-user storage off of.
+    """
+    _ = user_id
+    digest = _digest_for_bytes(image_bytes)
+    asset_id = _asset_id_for_digest(digest)
+    permanent_filename = f"asset_{digest}{extension}"
+
+    os.makedirs(LOCAL_ASSET_DIR, exist_ok=True)
+    destination_path = os.path.join(LOCAL_ASSET_DIR, permanent_filename)
+    if not os.path.exists(destination_path):
+        with open(destination_path, "wb") as file:
+            file.write(image_bytes)
+
+    return SavedAsset(
+        asset_id=asset_id,
+        public_url=_asset_url(asset_base_url, "local-assets", permanent_filename),
+        content_type=content_type,
+    )
+
+
+def persist_data_url_as_temporary_asset(
+    data_url: str,
+    asset_base_url: str,
+) -> TemporaryAsset | None:
+    """Stage an uploaded data URL as a temporary asset, pending a later promote.
+
+    Used for user uploads, where only some images turn out to be assets the
+    model keeps (via ``save_assets``); the rest stay reference-only. Callers
+    that already know the image is an asset should use
+    ``persist_data_url_as_asset`` instead and skip this staging hop.
+    """
+    decoded = _decode_image_data_url(data_url)
+    if decoded is None:
+        return None
+    image_bytes, content_type, extension = decoded
+
     os.makedirs(TEMP_ASSET_DIR, exist_ok=True)
     digest = _digest_for_bytes(image_bytes)
     asset_id = _asset_id_for_digest(digest)
@@ -185,29 +237,40 @@ def persist_data_url_as_temporary_asset(
     )
 
 
+async def persist_data_url_as_asset(
+    data_url: str,
+    asset_base_url: str,
+    user_id: str | None = None,
+) -> SavedAsset | None:
+    """Persist a data URL straight to a durable, served asset.
+
+    Skips the temp-staging hop used for uploads: callers that already know the
+    image is an asset (e.g. ``extract_assets``) commit immediately. Async to
+    match ``promote_temporary_asset_id`` so hosted backends can finalize to
+    remote storage without changing callers.
+    """
+    decoded = _decode_image_data_url(data_url)
+    if decoded is None:
+        return None
+    image_bytes, content_type, extension = decoded
+    return _finalize_asset_bytes(
+        image_bytes, extension, content_type, asset_base_url, user_id
+    )
+
+
 async def promote_temporary_asset_id(
     asset_id: str,
     user_id: str | None = None,
 ) -> SavedAsset | None:
-    _ = user_id
+    """Finalize a previously-staged temporary asset into a served asset."""
     temporary_asset = _temporary_asset_path(asset_id)
     if not temporary_asset:
         return None
 
     source_path, temporary_filename, content_type, asset_base_url = temporary_asset
     _, extension = os.path.splitext(temporary_filename)
-    digest = _digest_for_asset_id(asset_id)
-    if not digest:
-        return None
-    permanent_filename = f"asset_{digest}{extension}"
-
-    os.makedirs(LOCAL_ASSET_DIR, exist_ok=True)
-    destination_path = os.path.join(LOCAL_ASSET_DIR, permanent_filename)
-    if not os.path.exists(destination_path):
-        shutil.copyfile(source_path, destination_path)
-
-    return SavedAsset(
-        asset_id=asset_id,
-        public_url=_asset_url(asset_base_url, "local-assets", permanent_filename),
-        content_type=content_type,
+    with open(source_path, "rb") as file:
+        image_bytes = file.read()
+    return _finalize_asset_bytes(
+        image_bytes, extension, content_type, asset_base_url, user_id
     )

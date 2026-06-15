@@ -202,6 +202,13 @@ async def test_extract_assets_returns_mocked_gemini_assets(
     assert result.summary["assets"][0]["public_url"].startswith(
         "http://127.0.0.1:7001/local-assets/"
     )
+    # Extracted crops finalize straight to the served store — no temp staging.
+    assert not temp_dir.exists()
+    assert len(list(asset_dir.iterdir())) == 2
+    # No save_assets-style id is surfaced (already finalized), so the model
+    # can't redundantly promote extracted crops.
+    assert "asset_id" not in result.result["assets"][0]
+    assert "asset_id" not in result.summary["assets"][0]
     assert result.result["assets"][0]["image_part_index"] == 0
     assert result.result["assets"][0]["image_display_name"] == "asset_0.png"
     assert result.result["assets"][1]["image_part_index"] == 1
@@ -296,17 +303,20 @@ async def test_screenshot_preview_returns_image_part(
     ]
     assert result.summary["status"] == "ok"
     screenshots = cast(list[dict[str, Any]], result.summary["screenshots"])
-    assert screenshots[0]["image_url"].startswith(
-        "http://127.0.0.1:7001/local-assets/"
-    )
-    assert screenshots[1]["image_url"].startswith(
-        "http://127.0.0.1:7001/local-assets/"
-    )
-    assert screenshots[0]["image_url"] != screenshots[1]["image_url"]
+    # Previews are inlined as data URLs for the UI, not persisted as assets.
+    desktop_url = cast(str, screenshots[0]["image_url"])
+    mobile_url = cast(str, screenshots[1]["image_url"])
+    assert desktop_url.startswith("data:image/png;base64,")
+    assert mobile_url.startswith("data:image/png;base64,")
+    assert desktop_url != mobile_url
+    assert base64.b64decode(desktop_url.split(",", 1)[1]) == b"desktop-png-bytes"
+    assert base64.b64decode(mobile_url.split(",", 1)[1]) == b"mobile-png-bytes"
     # UI URLs and image payloads must not leak into the model-facing result payload.
     assert "image_url" not in result.result["details"]["screenshots"][0]
     assert "image_data_url" not in result.result["details"]["screenshots"][0]
-    assert len(list(asset_dir.iterdir())) == 2
+    # Previews are not assets: nothing is written to the temp or served stores.
+    assert not asset_dir.exists()
+    assert not temp_dir.exists()
     assert result.multimodal_parts is not None
     assert [part.display_name for part in result.multimodal_parts] == [
         "preview_desktop.png",
