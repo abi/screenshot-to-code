@@ -18,7 +18,8 @@ export async function fetchHostedUser(
 }
 
 export function applyHostedUserToStore(user: UserResponse) {
-  useStore.getState().setHostedBillingState({
+  const store = useStore.getState();
+  store.setHostedBillingState({
     subscriberTier: user.subscriber_tier || "free",
     billingInterval: user.billing_interval,
     currentPriceLookupKey: user.stripe_price_lookup_key,
@@ -26,4 +27,5 @@ export function applyHostedUserToStore(user: UserResponse) {
     currentPeriodEnd: user.current_period_end,
     cancelAtPeriodEnd: user.cancel_at_period_end,
   });
+  store.setWhatsNewSeenVersion(user.whats_new_seen_version);
 }

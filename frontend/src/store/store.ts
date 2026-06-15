@@ -33,6 +33,12 @@ interface Store {
   freeTrialUsed: number;
   freeTrialLimit: number;
   setFreeTrialUsage: (used: number, limit: number) => void;
+  // What's New changelog: the latest version this account has opened (null =
+  // never), plus whether it has been loaded from the server yet (so the unseen
+  // dot doesn't flash before the user fetch resolves).
+  whatsNewSeenVersion: string | null;
+  hasLoadedWhatsNew: boolean;
+  setWhatsNewSeenVersion: (version: string | null) => void;
 }
 
 export const useStore = create<Store>((set) => ({
@@ -76,6 +82,10 @@ export const useStore = create<Store>((set) => ({
   freeTrialLimit: 0,
   setFreeTrialUsage: (used: number, limit: number) =>
     set(() => ({ freeTrialUsed: used, freeTrialLimit: limit })),
+  whatsNewSeenVersion: null,
+  hasLoadedWhatsNew: false,
+  setWhatsNewSeenVersion: (version: string | null) =>
+    set(() => ({ whatsNewSeenVersion: version, hasLoadedWhatsNew: true })),
 }));
 
 // Standalone helper (not a hook) to refresh free trial usage from the server.

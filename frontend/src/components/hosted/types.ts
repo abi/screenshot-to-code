@@ -15,6 +15,7 @@ export interface UserResponse {
   subscription_status: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
+  whats_new_seen_version: string | null;
 }
 
 export interface PortalSessionResponse {

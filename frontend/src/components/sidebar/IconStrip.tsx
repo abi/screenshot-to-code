@@ -9,6 +9,7 @@ import {
 } from "react-icons/lu";
 import { useUser } from "@clerk/clerk-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import WhatsNew from "./WhatsNew";
 
 interface IconStripProps {
   isVersionsOpen: boolean;
@@ -134,6 +135,9 @@ function IconStrip({
 
       {/* Spacer pushes settings to bottom */}
       <div className="hidden flex-1 lg:block" />
+
+      {/* What's new changelog */}
+      <WhatsNew />
 
       {onOpenFeedback && (
         <button
