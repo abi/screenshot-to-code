@@ -1,5 +1,6 @@
 from typing import Optional
 
+from babel_cdn import normalize_babel_cdn
 from preview_screenshot.base import ScreenshotBackend
 from preview_screenshot.playwright_backend import PlaywrightBackend
 
@@ -44,6 +45,7 @@ async def capture_preview_screenshot(
     """Render HTML to PNG via the active backend.
 
     The public entry point the screenshot_preview tool calls; the backend choice
-    is invisible to callers.
+    is invisible to callers. Normalizes the Babel CDN first so generated React
+    pages (old and new) actually mount before we capture.
     """
-    return await _backend.capture(html, device, full_page)
+    return await _backend.capture(normalize_babel_cdn(html), device, full_page)

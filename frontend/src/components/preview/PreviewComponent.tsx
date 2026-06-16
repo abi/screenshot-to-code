@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import useThrottle from "../../hooks/useThrottle";
 import { useAppStore } from "../../store/app-store";
+import { normalizeBabelCdn } from "../../lib/babelCdn";
 import {
   applySelectModeCursor,
   hideHoverOverlay,
@@ -270,8 +271,10 @@ function PreviewComponent({
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
-    if (iframe.srcdoc !== throttledCode) {
-      iframe.srcdoc = throttledCode;
+    // Normalize the Babel CDN so generated React pages (old and new) mount.
+    const html = normalizeBabelCdn(throttledCode);
+    if (iframe.srcdoc !== html) {
+      iframe.srcdoc = html;
     }
   }, [throttledCode]);
 

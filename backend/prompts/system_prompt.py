@@ -45,8 +45,8 @@ You are a coding agent that's an expert at building front-ends.
 - Use these script to include React so that it can run on a standalone page:
     <script src="https://cdn.jsdelivr.net/npm/react@18.0.0/umd/react.development.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/react-dom@18.0.0/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-- For babel, make sure to use https://unpkg.com/@babel/standalone/babel.min.js. DO NOT USE https://cdn.babeljs.io/babel.min.js as it is not the correct version and will cause errors.
+    <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+- For babel, make sure to use https://unpkg.com/@babel/standalone@7.25.6/babel.min.js (pin this exact version — the unversioned URL now resolves to Babel 8, whose automatic JSX runtime injects an `import` that breaks in-browser transforms). DO NOT USE https://cdn.babeljs.io/babel.min.js as it is not the correct version and will cause errors.
 - Use this script to include Tailwind: <script src="https://cdn.tailwindcss.com"></script>
 
 ## Ionic

@@ -1,4 +1,5 @@
 import { HTTP_BACKEND_URL } from "../../config";
+import { normalizeBabelCdn } from "../../lib/babelCdn";
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -40,6 +41,9 @@ export const downloadCode = async (code: string) => {
     );
   } catch (error) {
     console.warn("Falling back to downloading index.html", error);
-    downloadBlob(new Blob([code], { type: "text/html" }), "index.html");
+    downloadBlob(
+      new Blob([normalizeBabelCdn(code)], { type: "text/html" }),
+      "index.html"
+    );
   }
 };

@@ -16,6 +16,8 @@ from fastapi import APIRouter
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+from babel_cdn import normalize_babel_cdn
+
 router = APIRouter()
 
 IMAGE_ATTRIBUTE_SELECTORS = [
@@ -449,7 +451,7 @@ def create_project_zip(index_html: str, assets: Iterable[ExportedAsset]) -> byte
 
 @router.post("/api/export")
 async def export_code(request: ExportRequest) -> Response:
-    soup = BeautifulSoup(request.code, "html.parser")
+    soup = BeautifulSoup(normalize_babel_cdn(request.code), "html.parser")
     candidates = collect_asset_candidates(soup)
 
     async with httpx.AsyncClient(
