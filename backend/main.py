@@ -34,6 +34,14 @@ if IS_PROD:
         profiles_sample_rate=0.1,
     )
 
+# Hosted renders screenshot previews via ScreenshotOne (the host has no local
+# Chromium); install that backend before the startup probe runs.
+if IS_PROD:
+    from preview_screenshot import set_screenshot_backend
+    from preview_screenshot.screenshotone_backend import ScreenshotOneBackend
+
+    set_screenshot_backend(ScreenshotOneBackend())
+
 # Setup FastAPI
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 configure_uploaded_asset_routes(app)
