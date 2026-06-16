@@ -43,8 +43,8 @@ class TestModelSelectionAllKeys:
         )
 
         expected = [
-            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-            Llm.GPT_5_5_HIGH,
+            Llm.CLAUDE_OPUS_4_8_MEDIUM,
+            Llm.GPT_5_5_LOW,
             Llm.GEMINI_3_FLASH_PREVIEW_HIGH,
             Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
         ]
