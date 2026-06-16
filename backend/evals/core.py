@@ -1,6 +1,7 @@
 from config import (
     ANTHROPIC_API_KEY,
     GEMINI_API_KEY,
+    LOCAL_ASSET_BASE_URL,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
 )
@@ -46,6 +47,9 @@ async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> s
         anthropic_api_key=ANTHROPIC_API_KEY,
         gemini_api_key=GEMINI_API_KEY,
         should_generate_images=True,
+        # No websocket to infer the host from, so use the configured base URL;
+        # otherwise extracted/saved assets get hostless /local-assets/ URLs.
+        asset_base_url=LOCAL_ASSET_BASE_URL,
         initial_file_state=None,
         option_codes=None,
     )

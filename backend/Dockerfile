@@ -1,4 +1,4 @@
-FROM python:3.12.3-slim-bullseye
+FROM python:3.12.3-slim-bookworm
 
 ENV POETRY_VERSION 1.8.0
 
@@ -16,6 +16,9 @@ RUN poetry config virtualenvs.create false
 
 # Install dependencies
 RUN poetry install
+
+# Install Chromium and Linux libraries needed by Playwright screenshot previews.
+RUN playwright install --with-deps chromium
 
 # Copy the current directory contents into the container at /app
 COPY ./ /app/

@@ -7,10 +7,6 @@ from typing_extensions import NotRequired
 # Keep in sync with s2c-saas repo & DB column `llm_version`
 class Llm(Enum):
     # GPT
-    GPT_5_2_CODEX_LOW = "gpt-5.2-codex (low thinking)"
-    GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)"
-    GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)"
-    GPT_5_2_CODEX_XHIGH = "gpt-5.2-codex (xhigh thinking)"
     GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)"
     GPT_5_4_2026_03_05_NONE = "gpt-5.4-2026-03-05 (no thinking)"
     GPT_5_4_2026_03_05_LOW = "gpt-5.4-2026-03-05 (low thinking)"
@@ -30,6 +26,11 @@ class Llm(Enum):
     CLAUDE_OPUS_4_8_HIGH = "claude-opus-4-8 (high effort)"
     CLAUDE_OPUS_4_8_XHIGH = "claude-opus-4-8 (xhigh effort)"
     CLAUDE_OPUS_4_8_MAX = "claude-opus-4-8 (max effort)"
+    CLAUDE_FABLE_5_LOW = "claude-fable-5 (low effort)"
+    CLAUDE_FABLE_5_MEDIUM = "claude-fable-5 (medium effort)"
+    CLAUDE_FABLE_5_HIGH = "claude-fable-5 (high effort)"
+    CLAUDE_FABLE_5_XHIGH = "claude-fable-5 (xhigh effort)"
+    CLAUDE_FABLE_5_MAX = "claude-fable-5 (max effort)"
     # Gemini
     GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)"
     GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)"
@@ -53,10 +54,6 @@ class Completion(TypedDict):
 # models elsewhere in the codebase.
 MODEL_PROVIDER: dict[Llm, str] = {
     # OpenAI models
-    Llm.GPT_5_2_CODEX_LOW: "openai",
-    Llm.GPT_5_2_CODEX_MEDIUM: "openai",
-    Llm.GPT_5_2_CODEX_HIGH: "openai",
-    Llm.GPT_5_2_CODEX_XHIGH: "openai",
     Llm.GPT_5_4_MINI_LOW: "openai",
     Llm.GPT_5_4_2026_03_05_NONE: "openai",
     Llm.GPT_5_4_2026_03_05_LOW: "openai",
@@ -76,6 +73,11 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.CLAUDE_OPUS_4_8_HIGH: "anthropic",
     Llm.CLAUDE_OPUS_4_8_XHIGH: "anthropic",
     Llm.CLAUDE_OPUS_4_8_MAX: "anthropic",
+    Llm.CLAUDE_FABLE_5_LOW: "anthropic",
+    Llm.CLAUDE_FABLE_5_MEDIUM: "anthropic",
+    Llm.CLAUDE_FABLE_5_HIGH: "anthropic",
+    Llm.CLAUDE_FABLE_5_XHIGH: "anthropic",
+    Llm.CLAUDE_FABLE_5_MAX: "anthropic",
     # Gemini models
     Llm.GEMINI_3_FLASH_PREVIEW_HIGH: "gemini",
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL: "gemini",
@@ -94,10 +96,6 @@ ANTHROPIC_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "anthropic"}
 GEMINI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "gemini"}
 
 OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
-    Llm.GPT_5_2_CODEX_LOW: {"api_name": "gpt-5.2-codex", "reasoning_effort": "low"},
-    Llm.GPT_5_2_CODEX_MEDIUM: {"api_name": "gpt-5.2-codex", "reasoning_effort": "medium"},
-    Llm.GPT_5_2_CODEX_HIGH: {"api_name": "gpt-5.2-codex", "reasoning_effort": "high"},
-    Llm.GPT_5_2_CODEX_XHIGH: {"api_name": "gpt-5.2-codex", "reasoning_effort": "xhigh"},
     Llm.GPT_5_4_MINI_LOW: {"api_name": "gpt-5.4-mini", "reasoning_effort": "low"},
     Llm.GPT_5_4_2026_03_05_NONE: {
         "api_name": "gpt-5.4-2026-03-05",

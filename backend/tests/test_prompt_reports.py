@@ -130,6 +130,9 @@ async def test_list_prompt_reports_returns_metadata_and_total_size(
 ) -> None:
     logger = _make_logger()
     logger.record_request({"input": ["hello"]})
+    logger.record_usage(
+        TokenUsage(input=1000, output=500, cache_read=200, cache_write=0, total=1700)
+    )
 
     # Legacy artifacts in run_logs count toward total size but are not listed.
     legacy_file = logs_path / "run_logs" / "old_report.html"
@@ -143,7 +146,22 @@ async def test_list_prompt_reports_returns_metadata_and_total_size(
     assert report.model == "gpt-5.5"
     assert report.turn == 1
     assert report.size_bytes > 0
+    # Cost is read from the report tail without parsing the whole file.
+    assert report.cost_usd is not None and report.cost_usd > 0
     assert response.total_size_bytes >= report.size_bytes + legacy_file.stat().st_size
+
+
+@pytest.mark.asyncio
+async def test_list_prompt_reports_cost_is_none_without_usage(
+    logs_path: Path,
+) -> None:
+    logger = _make_logger()
+    logger.record_request({"input": ["hello"]})  # no record_usage → usage is null
+
+    response = await list_prompt_reports()
+
+    assert len(response.reports) == 1
+    assert response.reports[0].cost_usd is None
 
 
 @pytest.mark.asyncio

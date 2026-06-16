@@ -258,6 +258,7 @@ class ExtractedParams:
     edit_base_model: str | None = None
     edit_base_variant_index: int | None = None
     edit_base_generation_type: Literal["create", "update", "code_create"] | None = None
+    asset_base_url: str = ""
     design_system: str | None = None
 
 
@@ -471,6 +472,7 @@ class ParameterExtractionStage:
             edit_base_model=edit_base_model,
             edit_base_variant_index=edit_base_variant_index,
             edit_base_generation_type=edit_base_generation_type,
+            asset_base_url=self.asset_base_url,
             design_system=design_system,
         )
 
@@ -669,6 +671,7 @@ class AgenticGenerationStage:
         should_generate_images: bool,
         prompt: UserTurnInput,
         file_state: Dict[str, str] | None,
+        asset_base_url: str,
         option_codes: List[str] | None,
         user_id: str,
         payment_method: PaymentMethod,
@@ -688,6 +691,7 @@ class AgenticGenerationStage:
         self.should_generate_images = should_generate_images
         self.prompt = prompt
         self.file_state = file_state
+        self.asset_base_url = asset_base_url
         self.option_codes = option_codes or []
         self.user_id = user_id
         self.payment_method = payment_method
@@ -757,6 +761,7 @@ class AgenticGenerationStage:
                 generation_group_id=self.generation_group_id,
                 user_id=self.user_id,
                 generation_type=self.generation_type,
+                asset_base_url=self.asset_base_url,
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,
             )
@@ -1025,6 +1030,7 @@ class CodeGenerationMiddleware(Middleware):
                 should_generate_images=context.extracted_params.should_generate_images,
                 prompt=context.extracted_params.prompt,
                 file_state=context.extracted_params.file_state,
+                asset_base_url=context.extracted_params.asset_base_url,
                 option_codes=context.extracted_params.option_codes,
                 user_id=context.extracted_params.user_id,
                 payment_method=context.extracted_params.payment_method,

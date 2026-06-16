@@ -13,6 +13,7 @@ interface PromptReportSummary {
   session_id: string;
   turn: number;
   size_bytes: number;
+  cost_usd: number | null;
 }
 
 interface PromptReportListResponse {
@@ -48,6 +49,7 @@ interface SessionGroup {
   model: string;
   createdAt: string;
   sizeBytes: number;
+  costUsd: number | null;
   turns: PromptReportSummary[];
 }
 
@@ -82,6 +84,13 @@ function formatTimestamp(isoTimestamp: string): string {
   return date.toLocaleString();
 }
 
+function formatCost(costUsd: number | null): string {
+  if (costUsd === null) return "—";
+  // Round to cents; flag sub-cent totals so a real cost never reads as $0.00.
+  if (costUsd > 0 && costUsd < 0.01) return "<$0.01";
+  return `$${costUsd.toFixed(2)}`;
+}
+
 function groupBySession(reports: PromptReportSummary[]): SessionGroup[] {
   const groups = new Map<string, SessionGroup>();
   for (const report of reports) {
@@ -93,11 +102,15 @@ function groupBySession(reports: PromptReportSummary[]): SessionGroup[] {
         model: report.model,
         createdAt: report.created_at,
         sizeBytes: 0,
+        costUsd: null,
         turns: [],
       };
       groups.set(report.session_id, group);
     }
     group.sizeBytes += report.size_bytes;
+    if (typeof report.cost_usd === "number") {
+      group.costUsd = (group.costUsd ?? 0) + report.cost_usd;
+    }
     if (report.created_at > group.createdAt) {
       group.createdAt = report.created_at;
     }
@@ -584,8 +597,16 @@ function PromptReportsPage() {
                 <div className="mt-1 truncate font-mono text-sm text-zinc-100">
                   {group.model}
                 </div>
-                <div className="mt-0.5 text-[11px] text-zinc-500">
-                  {formatTimestamp(group.createdAt)}
+                <div className="mt-0.5 flex items-center justify-between gap-2 text-[11px]">
+                  <span className="text-zinc-500">
+                    {formatTimestamp(group.createdAt)}
+                  </span>
+                  <span
+                    className="font-mono font-medium text-emerald-400"
+                    title="Total cost across all turns in this request"
+                  >
+                    {formatCost(group.costUsd)}
+                  </span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {group.turns.map((turnReport) => (

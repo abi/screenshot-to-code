@@ -4,7 +4,6 @@ import { Toaster } from "react-hot-toast";
 import * as Sentry from "@sentry/react";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import PairwiseEvalsPage from "./components/evals/PairwiseEvalsPage";
 import RunEvalsPage from "./components/evals/RunEvalsPage.tsx";
 import BestOfNEvalsPage from "./components/evals/BestOfNEvalsPage.tsx";
 import AllEvalsPage from "./components/evals/AllEvalsPage.tsx";
@@ -12,7 +11,6 @@ import OpenAIInputComparePage from "./components/evals/OpenAIInputComparePage.ts
 import PromptReportsPage from "./components/evals/PromptReportsPage.tsx";
 
 import AppContainer from "./components/hosted/AppContainer.tsx";
-import EvalsPage from "./components/evals/EvalsPage.tsx";
 import {
   CLERK_PUBLISHABLE_KEY,
   IS_RUNNING_ON_CLOUD,
@@ -63,8 +61,6 @@ root.render(
           {!IS_RUNNING_ON_CLOUD && (
             <>
               <Route path="/evals" element={<AllEvalsPage />} />
-              <Route path="/evals/single" element={<EvalsPage />} />
-              <Route path="/evals/pairwise" element={<PairwiseEvalsPage />} />
               <Route path="/evals/best-of-n" element={<BestOfNEvalsPage />} />
               <Route path="/evals/run" element={<RunEvalsPage />} />
               <Route

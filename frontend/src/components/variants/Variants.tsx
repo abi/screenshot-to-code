@@ -4,11 +4,19 @@ import { useThrottle } from "../../hooks/useThrottle";
 import {
   CODE_GENERATION_MODEL_DESCRIPTIONS,
   CodeGenerationModel,
+  getVariantLabel,
+  VariantLabelTone,
 } from "../../lib/models";
 import WorkingPulse from "../core/WorkingPulse";
 
 const IFRAME_WIDTH = 1280;
 const IFRAME_HEIGHT = 550;
+
+// Color-coded badge shown in the corner of each variant thumbnail.
+const BADGE_TONE: Record<VariantLabelTone, string> = {
+  fast: "bg-sky-500/90 text-white",
+  max: "bg-amber-500/90 text-white",
+};
 
 interface VariantThumbnailProps {
   code: string;
@@ -69,12 +77,14 @@ function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
 }
 
 function Variants() {
-  const { head, commits, updateSelectedVariantIndex, showVariantModels } =
+  const { head, commits, updateSelectedVariantIndex, showVariantModels, inputMode } =
     useProjectStore();
 
   const commit = head ? commits[head] : null;
   const variants = commit?.variants || [];
   const selectedVariantIndex = commit?.selectedVariantIndex || 0;
+  const generationType: "create" | "update" =
+    commit?.type === "ai_create" ? "create" : "update";
 
   const handleVariantClick = (index: number) => {
     if (index === selectedVariantIndex || !head) return;
@@ -121,10 +131,15 @@ function Variants() {
           else if (variant.status === "error" || variant.status === "cancelled")
             statusColor = "bg-red-500";
 
+          const label = getVariantLabel(variant.model, {
+            inputMode,
+            generationType,
+          });
+
           return (
             <div
               key={index}
-              className={`w-full rounded cursor-pointer overflow-hidden ${
+              className={`relative w-full rounded cursor-pointer overflow-hidden ${
                 index === selectedVariantIndex
                   ? "ring-2 ring-blue-400 dark:ring-blue-500"
                   : "ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600"
@@ -138,6 +153,14 @@ function Variants() {
               }
               onClick={() => handleVariantClick(index)}
             >
+              {/* Color-coded model badge in the thumbnail corner */}
+              {label && (
+                <span
+                  className={`absolute top-1.5 right-1.5 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none shadow-sm ${BADGE_TONE[label.tone]}`}
+                >
+                  {label.text}
+                </span>
+              )}
               <VariantThumbnail
                 code={variant.code}
                 isSelected={index === selectedVariantIndex}

@@ -1,4 +1,5 @@
 # pyright: reportUnknownVariableType=false
+import base64
 import copy
 import json
 import uuid
@@ -462,7 +463,17 @@ class OpenAIProviderSession(ProviderSession):
 
         return _build_provider_turn(state)
 
-    def append_tool_results(
+    @staticmethod
+    def _image_ref(part: Any) -> str | None:
+        """A public URL is sent as-is; local bytes become a base64 data URL."""
+        if part.image_url:
+            return part.image_url
+        if part.data is not None:
+            encoded = base64.b64encode(part.data).decode("ascii")
+            return f"data:{part.mime_type};base64,{encoded}"
+        return None
+
+    async def append_tool_results(
         self,
         turn: ProviderTurn,
         executed_tool_calls: list[ExecutedToolCall],
@@ -471,13 +482,33 @@ class OpenAIProviderSession(ProviderSession):
         if assistant_output_items:
             self._input_items.extend(assistant_output_items)
 
+        image_detail = _get_image_detail_for_model(self._model)
         tool_output_items: List[Dict[str, Any]] = []
         for executed in executed_tool_calls:
+            result_json = json.dumps(executed.result.result)
+            parts = executed.result.multimodal_parts or []
+            output: Any = result_json
+            if parts and executed.result.ok:
+                # Responses lets function_call_output carry image content; keep
+                # the text result first so the model still gets the structured
+                # data (URLs, status) alongside the rendered images.
+                output = [{"type": "input_text", "text": result_json}]
+                for part in parts:
+                    image_url = self._image_ref(part)
+                    if image_url is None:
+                        continue
+                    output.append(
+                        {
+                            "type": "input_image",
+                            "detail": image_detail,
+                            "image_url": image_url,
+                        }
+                    )
             tool_output_items.append(
                 {
                     "type": "function_call_output",
                     "call_id": executed.tool_call.id,
-                    "output": json.dumps(executed.result.result),
+                    "output": output,
                 }
             )
         self._input_items.extend(tool_output_items)

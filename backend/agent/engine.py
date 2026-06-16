@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from typing import Any, Awaitable, Callable, Dict, List, Literal, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Literal, Optional, cast
 
 from openai.types.chat import ChatCompletionMessageParam
 
@@ -40,6 +40,7 @@ class AgentEngine:
         generation_group_id: Optional[str] = None,
         user_id: Optional[str] = None,
         generation_type: Literal["create", "update"] = "create",
+        asset_base_url: str = "",
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
     ):
@@ -68,9 +69,31 @@ class AgentEngine:
             user_id=user_id,
             variant_index=variant_index + 1,
             generation_type=generation_type,
+            gemini_api_key=gemini_api_key,
+            asset_base_url=asset_base_url,
             option_codes=option_codes,
         )
         self._tool_preview_lengths: Dict[str, int] = {}
+
+    @staticmethod
+    def _extract_input_images(
+        prompt_messages: List[ChatCompletionMessageParam],
+    ) -> List[str]:
+        images: List[str] = []
+        for message in prompt_messages:
+            content = message.get("content")
+            if not isinstance(content, list):
+                continue
+            for part in content:
+                if not isinstance(part, dict) or part.get("type") != "image_url":
+                    continue
+                image_url = part.get("image_url")
+                if not isinstance(image_url, dict):
+                    continue
+                url = cast(object, image_url.get("url"))
+                if isinstance(url, str) and url:
+                    images.append(url)
+        return images
 
     def _next_event_id(self, prefix: str) -> str:
         return f"{prefix}-{self.variant_index}-{uuid.uuid4().hex[:8]}"
@@ -236,7 +259,7 @@ class AgentEngine:
                     ExecutedToolCall(tool_call=tool_call, result=tool_result)
                 )
 
-            session.append_tool_results(turn, executed_tool_calls)
+            await session.append_tool_results(turn, executed_tool_calls)
 
         raise Exception("Agent exceeded max tool turns")
 
@@ -244,6 +267,7 @@ class AgentEngine:
         self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]
     ) -> tuple[str, TokenUsage, float]:
         self.tool_runtime.current_model = model
+        self.tool_runtime.input_images = self._extract_input_images(prompt_messages)
         seed_file_state_from_messages(self.file_state, prompt_messages)
 
         session = create_provider_session(
