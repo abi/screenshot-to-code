@@ -15,7 +15,7 @@ async def run_screenshot_preview(
     *,
     file_state: AgentFileState,
 ) -> ToolExecutionResult:
-    """Render the current HTML in headless Chromium and return screenshots.
+    """Render the current HTML and return screenshots.
 
     These previews are for *seeing*, not keeping: the model views them as
     attached image bytes (multimodal parts) to verify its work and never
