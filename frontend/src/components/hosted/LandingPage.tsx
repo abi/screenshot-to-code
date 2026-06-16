@@ -262,7 +262,7 @@ function LandingPage() {
               {/* Eyebrow - hidden on mobile to reduce first screen density */}
               <div className="hidden sm:flex items-center gap-3 mb-6">
                 <span className="stat-highlight text-sm text-[#2563EB]">
-                  71,502
+                  72,929
                 </span>
                 <span className="text-sm landing-text-muted">stars on GitHub</span>
                 <div className="h-px w-12 landing-border border-t" />
@@ -303,7 +303,7 @@ function LandingPage() {
                   <FaGithub className="text-lg" />
                   <span>GitHub</span>
                   <span className="hidden sm:inline landing-github-badge text-xs px-2 py-0.5 rounded-full font-mono">
-                    71.5k
+                    72.9k
                   </span>
                 </button>
               </div>
@@ -352,13 +352,6 @@ function LandingPage() {
 
             {/* Right side - Content */}
             <div className="order-1 lg:order-2">
-              <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-[#2563EB]/10 text-[#2563EB]">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2563EB] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2563EB]"></span>
-                </span>
-                <span className="text-sm font-medium">New Feature</span>
-              </div>
               <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
                 Video to Code
               </h2>
@@ -449,7 +442,7 @@ function LandingPage() {
             #1 tool used by developers and designers from leading companies.
             <br className="hidden sm:block" />
             {" "}Fully open source with{" "}
-            <span className="stat-highlight text-[#2563EB]">71,000+</span> stars on GitHub.
+            <span className="stat-highlight text-[#2563EB]">72,000+</span> stars on GitHub.
           </p>
           <div className="flex gap-12 sm:gap-16 items-center justify-center flex-wrap">
             {LOGOS.map((companyName) => (
@@ -499,7 +492,7 @@ function LandingPage() {
           </h2>
 
           <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">
-            Join 71,000+ developers building UIs at lightning speed
+            Join 72,000+ developers building UIs at lightning speed
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

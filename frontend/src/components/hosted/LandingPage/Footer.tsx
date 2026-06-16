@@ -13,7 +13,7 @@ const Footer = () => {
             </div>
             <p className="landing-text-muted leading-relaxed">
               AI-powered conversion from screenshots and designs to clean, production-ready
-              code. Open source with 71,000+ GitHub stars.
+              code. Open source with 72,000+ GitHub stars.
             </p>
           </div>
 
