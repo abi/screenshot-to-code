@@ -18,6 +18,7 @@ from image_generation.replicate import (
     DEFAULT_IMAGE_MODEL,
     MODEL_PATHS,
     P_IMAGE_EDIT_ASPECT_RATIOS,
+    P_IMAGE_EDIT_MODEL_PATH,
     PImageEditAspectRatio,
     REMOVE_BACKGROUND_VERSION,
     edit_image,
@@ -575,6 +576,15 @@ class AgentToolRuntime:
                     }
                 },
             )
+
+        # Persist to durable storage (S3 via SaaS) on hosted; no-op locally.
+        result_url = await self._persist_image_url(
+            source_url=result_url,
+            source_type="edited",
+            source_provider="replicate",
+            image_generation_model=P_IMAGE_EDIT_MODEL_PATH,
+            prompt=prompt,
+        )
 
         result = {
             "image": {

@@ -6,7 +6,7 @@ from config import BACKEND_SAAS_API_SECRET, BACKEND_SAAS_URL, IS_PROD
 
 
 SourceProvider = Literal["replicate", "openai"]
-SourceType = Literal["user_upload", "generated", "background_removed"]
+SourceType = Literal["user_upload", "generated", "background_removed", "edited"]
 
 
 async def persist_asset_image_url(
