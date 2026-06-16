@@ -41,7 +41,7 @@ class ProviderSession(Protocol):
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
         ...
 
-    def append_tool_results(
+    async def append_tool_results(
         self,
         turn: ProviderTurn,
         executed_tool_calls: list[ExecutedToolCall],

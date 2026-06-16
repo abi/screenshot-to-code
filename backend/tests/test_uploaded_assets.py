@@ -5,6 +5,7 @@ import pytest
 
 from uploaded_assets import (
     append_uploaded_asset_ids_to_prompt,
+    persist_data_url_as_asset,
     persist_data_url_as_temporary_asset,
     promote_temporary_asset_id,
 )
@@ -59,6 +60,43 @@ async def test_promote_temporary_asset_id_returns_permanent_url(
     )
     assert temp_asset.asset_id not in permanent_asset.public_url
     assert len(list(asset_dir.iterdir())) == 1
+
+
+@pytest.mark.asyncio
+async def test_persist_data_url_as_asset_finalizes_without_temp_staging(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    temp_dir = tmp_path / "tmp-assets"
+    asset_dir = tmp_path / "local-assets"
+    monkeypatch.setattr("uploaded_assets.store.TEMP_ASSET_DIR", str(temp_dir))
+    monkeypatch.setattr("uploaded_assets.store.LOCAL_ASSET_DIR", str(asset_dir))
+
+    saved = await persist_data_url_as_asset(
+        _data_url(b"crop-bytes"),
+        "http://127.0.0.1:7001",
+    )
+
+    assert saved is not None
+    assert saved.public_url.startswith("http://127.0.0.1:7001/local-assets/asset_")
+    assert saved.content_type == "image/png"
+    # Goes straight to the served store; the temp staging dir is never created.
+    assert not temp_dir.exists()
+    assert len(list(asset_dir.iterdir())) == 1
+
+    # Identical bytes are content-addressed: re-persisting dedupes to one file.
+    again = await persist_data_url_as_asset(
+        _data_url(b"crop-bytes"),
+        "http://127.0.0.1:7001",
+    )
+    assert again is not None
+    assert again.public_url == saved.public_url
+    assert len(list(asset_dir.iterdir())) == 1
+
+
+@pytest.mark.asyncio
+async def test_persist_data_url_as_asset_rejects_non_image() -> None:
+    assert await persist_data_url_as_asset("not-a-data-url", "http://127.0.0.1:7001") is None
 
 
 def test_append_uploaded_asset_ids_to_prompt_keeps_image_and_adds_id(

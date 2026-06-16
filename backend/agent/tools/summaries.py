@@ -64,6 +64,26 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
             }
         return {"image_urls": []}
 
+    if tool_call.name == "edit_image":
+        image_urls = args.get("image_urls") or args.get("images") or []
+        if isinstance(image_urls, list):
+            return {
+                "count": len(image_urls),
+                "prompt": ensure_str(args.get("prompt")),
+                "image_urls": [ensure_str(u) for u in image_urls],
+                "aspect_ratio": args.get("aspect_ratio"),
+            }
+        return {"prompt": ensure_str(args.get("prompt")), "image_urls": []}
+
+    if tool_call.name == "extract_assets":
+        descriptions = args.get("asset_descriptions") or args.get("descriptions") or []
+        if isinstance(descriptions, list):
+            return {
+                "count": len(descriptions),
+                "asset_descriptions": [ensure_str(item) for item in descriptions],
+            }
+        return {"asset_descriptions": []}
+
     if tool_call.name == "save_assets":
         return summarize_save_assets_input(args)
 

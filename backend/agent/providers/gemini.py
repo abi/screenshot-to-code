@@ -2,6 +2,8 @@
 import base64
 import copy
 import uuid
+
+import httpx
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, cast
 
@@ -347,7 +349,25 @@ class GeminiProviderSession(ProviderSession):
             assistant_turn=assistant_turn,
         )
 
-    def append_tool_results(
+    @staticmethod
+    async def _resolve_part_bytes(part: Any) -> tuple[bytes | None, str]:
+        """Gemini only accepts inline bytes, so download public URLs."""
+        if part.data is not None:
+            return part.data, part.mime_type
+        if part.image_url:
+            try:
+                async with httpx.AsyncClient(timeout=30) as client:
+                    response = await client.get(part.image_url)
+                    response.raise_for_status()
+                content_type = (
+                    response.headers.get("content-type", "").split(";")[0].strip()
+                )
+                return response.content, content_type or part.mime_type
+            except Exception as exc:
+                print(f"[gemini] failed to fetch tool image {part.image_url}: {exc}")
+        return None, part.mime_type
+
+    async def append_tool_results(
         self,
         turn: ProviderTurn,
         executed_tool_calls: list[ExecutedToolCall],
@@ -362,14 +382,32 @@ class GeminiProviderSession(ProviderSession):
 
         tool_result_parts: List[types.Part] = []
         for executed in executed_tool_calls:
+            multimodal_parts: List[types.FunctionResponsePart] = []
+            for part in executed.result.multimodal_parts or []:
+                data, mime_type = await self._resolve_part_bytes(part)
+                if data is None:
+                    continue
+                multimodal_parts.append(
+                    types.FunctionResponsePart(
+                        inline_data=types.FunctionResponseBlob(
+                            mime_type=mime_type,
+                            display_name=part.display_name,
+                            data=data,
+                        )
+                    )
+                )
             tool_result_parts.append(
-                types.Part.from_function_response(
-                    name=executed.tool_call.name,
-                    response=executed.result.result,
+                types.Part(
+                    function_response=types.FunctionResponse(
+                        id=executed.tool_call.id,
+                        name=executed.tool_call.name,
+                        response=executed.result.result,
+                        parts=multimodal_parts,
+                    )
                 )
             )
 
-        self._contents.append(types.Content(role="tool", parts=tool_result_parts))
+        self._contents.append(types.Content(role="user", parts=tool_result_parts))
 
     async def close(self) -> None:
         u = self._total_usage

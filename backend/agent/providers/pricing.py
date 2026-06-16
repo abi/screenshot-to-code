@@ -15,9 +15,6 @@ class ModelPricing:
 # Pricing keyed by the API model name string sent to the provider.
 MODEL_PRICING: Dict[str, ModelPricing] = {
     # --- OpenAI ---
-    "gpt-5.2-codex": ModelPricing(
-        input=1.75, output=14.00, cache_read=0.4375
-    ),
     "gpt-5.4-mini": ModelPricing(
         input=0.40, output=3.20, cache_read=0.10
     ),
@@ -36,6 +33,9 @@ MODEL_PRICING: Dict[str, ModelPricing] = {
     ),
     "claude-opus-4-8": ModelPricing(
         input=5.00, output=25.00, cache_read=0.50, cache_write=6.25
+    ),
+    "claude-fable-5": ModelPricing(
+        input=10.00, output=50.00, cache_read=1.00, cache_write=12.50
     ),
     # --- Gemini ---
     "gemini-3-flash-preview": ModelPricing(

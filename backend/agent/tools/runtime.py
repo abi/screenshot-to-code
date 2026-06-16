@@ -1,16 +1,24 @@
 # pyright: reportUnknownVariableType=false
 import asyncio
 import difflib
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from codegen.utils import extract_html_content
 from config import REPLICATE_API_KEY
+from agent.tools.extract_assets import run_extract_assets
+from agent.tools.local_assets import guess_image_mime, local_asset_url_to_data_url
+from agent.tools.screenshot_preview import run_screenshot_preview
 from image_generation.generation import process_tasks
-from image_generation.replicate import remove_background
+from image_generation.replicate import (
+    P_IMAGE_EDIT_ASPECT_RATIOS,
+    PImageEditAspectRatio,
+    edit_image,
+    remove_background,
+)
 from uploaded_assets.tools import run_save_assets
 
 from agent.state import AgentFileState, ensure_str
-from agent.tools.types import ToolCall, ToolExecutionResult
+from agent.tools.types import ToolCall, ToolExecutionResult, ToolMultimodalPart
 from agent.tools.summaries import summarize_text
 
 
@@ -21,6 +29,9 @@ class AgentToolRuntime:
         should_generate_images: bool,
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
+        gemini_api_key: Optional[str] = None,
+        input_images: Optional[List[str]] = None,
+        asset_base_url: str = "",
         user_id: Optional[str] = None,
         option_codes: Optional[List[str]] = None,
     ):
@@ -28,6 +39,9 @@ class AgentToolRuntime:
         self.should_generate_images = should_generate_images
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
+        self.gemini_api_key = gemini_api_key
+        self.input_images = input_images or []
+        self.asset_base_url = asset_base_url
         self.user_id = user_id
         self.option_codes = option_codes or []
 
@@ -51,6 +65,21 @@ class AgentToolRuntime:
             return await self._generate_images(tool_call.arguments)
         if tool_call.name == "remove_background":
             return await self._remove_background(tool_call.arguments)
+        if tool_call.name == "edit_image":
+            return await self._edit_image(tool_call.arguments)
+        if tool_call.name == "extract_assets":
+            return await run_extract_assets(
+                tool_call.arguments,
+                gemini_api_key=self.gemini_api_key,
+                input_images=self.input_images,
+                asset_base_url=self.asset_base_url,
+                user_id=self.user_id,
+            )
+        if tool_call.name == "screenshot_preview":
+            return await run_screenshot_preview(
+                tool_call.arguments,
+                file_state=self.file_state,
+            )
         if tool_call.name == "save_assets":
             return await run_save_assets(tool_call.arguments, user_id=self.user_id)
         if tool_call.name == "retrieve_option":
@@ -272,7 +301,21 @@ class AgentToolRuntime:
         ]
         result = {"images": merged_results}
         summary = {"images": summary_items}
-        return ToolExecutionResult(ok=True, result=result, summary=summary)
+        multimodal_parts = [
+            ToolMultimodalPart(
+                display_name=f"generated_{index}.png",
+                mime_type=guess_image_mime(url),
+                image_url=url,
+            )
+            for index, url in enumerate(merged_results.values())
+            if url
+        ]
+        return ToolExecutionResult(
+            ok=True,
+            result=result,
+            summary=summary,
+            multimodal_parts=multimodal_parts,
+        )
 
     async def _remove_background(self, args: Dict[str, Any]) -> ToolExecutionResult:
         if not REPLICATE_API_KEY:
@@ -305,7 +348,11 @@ class AgentToolRuntime:
         raw_results: list[str | BaseException] = []
         for i in range(0, len(unique_urls), batch_size):
             batch = unique_urls[i : i + batch_size]
-            tasks = [remove_background(url, REPLICATE_API_KEY) for url in batch]
+            # Replicate can't fetch localhost; inline local assets as data URLs.
+            tasks = [
+                remove_background(local_asset_url_to_data_url(url), REPLICATE_API_KEY)
+                for url in batch
+            ]
             raw_results.extend(await asyncio.gather(*tasks, return_exceptions=True))
 
         results: List[Dict[str, Any]] = []
@@ -328,10 +375,118 @@ class AgentToolRuntime:
             }
             for r in results
         ]
+        multimodal_parts = [
+            ToolMultimodalPart(
+                display_name=f"no_bg_{index}.png",
+                mime_type=guess_image_mime(result["result_url"]),
+                image_url=result["result_url"],
+            )
+            for index, result in enumerate(results)
+            if result["status"] == "ok" and result["result_url"]
+        ]
         return ToolExecutionResult(
             ok=True,
             result={"images": results},
             summary={"images": summary_items},
+            multimodal_parts=multimodal_parts,
+        )
+
+    async def _edit_image(self, args: Dict[str, Any]) -> ToolExecutionResult:
+        if not REPLICATE_API_KEY:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "Image editing requires REPLICATE_API_KEY."},
+                summary={"error": "Missing Replicate API key"},
+            )
+
+        prompt = ensure_str(args.get("prompt")).strip()
+        if not prompt:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "edit_image requires a non-empty prompt"},
+                summary={"error": "Missing prompt"},
+            )
+
+        image_urls = args.get("image_urls") or args.get("images") or []
+        if not isinstance(image_urls, list) or not image_urls:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "edit_image requires a non-empty image_urls list"},
+                summary={"error": "Missing image_urls"},
+            )
+
+        cleaned = [url.strip() for url in image_urls if isinstance(url, str)]
+        unique_urls = list(dict.fromkeys([u for u in cleaned if u]))
+        if not unique_urls:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "No valid image URLs provided"},
+                summary={"error": "No valid image_urls"},
+            )
+
+        aspect_ratio_value = ensure_str(args.get("aspect_ratio") or "match_input_image")
+        if aspect_ratio_value not in P_IMAGE_EDIT_ASPECT_RATIOS:
+            aspect_ratio_value = "match_input_image"
+        aspect_ratio = cast(PImageEditAspectRatio, aspect_ratio_value)
+
+        try:
+            result_url = await edit_image(
+                prompt=prompt,
+                image_urls=[local_asset_url_to_data_url(url) for url in unique_urls],
+                api_token=REPLICATE_API_KEY,
+                aspect_ratio=aspect_ratio,
+            )
+        except Exception as exc:
+            print(f"Image edit failed for {unique_urls}: {exc}")
+            return ToolExecutionResult(
+                ok=True,
+                result={
+                    "image": {
+                        "prompt": prompt,
+                        "image_urls": unique_urls,
+                        "result_url": None,
+                        "status": "error",
+                    }
+                },
+                summary={
+                    "image": {
+                        "prompt": summarize_text(prompt, 240),
+                        "image_urls": [summarize_text(url, 100) for url in unique_urls],
+                        "result_url": None,
+                        "status": "error",
+                    }
+                },
+            )
+
+        result = {
+            "image": {
+                "prompt": prompt,
+                "image_urls": unique_urls,
+                "result_url": result_url,
+                "status": "ok",
+                "aspect_ratio": aspect_ratio,
+            }
+        }
+        summary = {
+            "image": {
+                "prompt": summarize_text(prompt, 240),
+                "image_urls": [summarize_text(url, 100) for url in unique_urls],
+                "result_url": result_url,
+                "status": "ok",
+                "aspect_ratio": aspect_ratio,
+            }
+        }
+        return ToolExecutionResult(
+            ok=True,
+            result=result,
+            summary=summary,
+            multimodal_parts=[
+                ToolMultimodalPart(
+                    display_name="edited.png",
+                    mime_type=guess_image_mime(result_url),
+                    image_url=result_url,
+                )
+            ],
         )
 
     def _retrieve_option(self, args: Dict[str, Any]) -> ToolExecutionResult:

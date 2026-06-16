@@ -13,10 +13,6 @@ export enum CodeGenerationModel {
   GPT_5_5_MEDIUM = "gpt-5.5 (medium thinking)",
   GPT_5_5_HIGH = "gpt-5.5 (high thinking)",
   GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)",
-  GPT_5_2_CODEX_LOW = "gpt-5.2-codex (low thinking)",
-  GPT_5_2_CODEX_MEDIUM = "gpt-5.2-codex (medium thinking)",
-  GPT_5_2_CODEX_HIGH = "gpt-5.2-codex (high thinking)",
-  GPT_5_2_CODEX_XHIGH = "gpt-5.2-codex (xhigh thinking)",
   GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
   GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
@@ -27,6 +23,39 @@ export enum CodeGenerationModel {
   GEMINI_3_5_FLASH_MEDIUM = "gemini-3.5-flash (medium thinking)",
   GEMINI_3_5_FLASH_LOW = "gemini-3.5-flash (low thinking)",
   GEMINI_3_5_FLASH_MINIMAL = "gemini-3.5-flash (minimal thinking)",
+}
+
+export type VariantLabelTone = "fast" | "max";
+
+export interface VariantLabel {
+  text: string;
+  tone: VariantLabelTone;
+}
+
+export interface VariantLabelContext {
+  inputMode: "image" | "video" | "text";
+  generationType: "create" | "update";
+}
+
+// Per-model badge text. Only these models are labelled. GPT-5.5 high and
+// Gemini 3.1 Pro high are the heavyweight variants, so both read "Max".
+const VARIANT_LABELS: Partial<Record<CodeGenerationModel, VariantLabel>> = {
+  [CodeGenerationModel.GEMINI_3_FLASH_PREVIEW_MINIMAL]: { text: "Fast", tone: "fast" },
+  [CodeGenerationModel.GEMINI_3_1_PRO_PREVIEW_HIGH]: { text: "Max", tone: "max" },
+  [CodeGenerationModel.GPT_5_5_HIGH]: { text: "Max", tone: "max" },
+};
+
+// Badges are only shown on create flows and on any video flow. In particular
+// image/text update runs reuse Flash-minimal but should stay unlabelled.
+export function getVariantLabel(
+  model: string | undefined,
+  context: VariantLabelContext
+): VariantLabel | null {
+  if (!model) return null;
+  const showLabels =
+    context.generationType === "create" || context.inputMode === "video";
+  if (!showLabels) return null;
+  return VARIANT_LABELS[model as CodeGenerationModel] ?? null;
 }
 
 // Will generate a static error if a model in the enum above is not in the descriptions
@@ -47,18 +76,6 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gpt-5.5 (xhigh thinking)": {
     name: "GPT 5.5 (xhigh)",
-  },
-  "gpt-5.2-codex (low thinking)": {
-    name: "GPT 5.2 Codex (low)",
-  },
-  "gpt-5.2-codex (medium thinking)": {
-    name: "GPT 5.2 Codex (medium)",
-  },
-  "gpt-5.2-codex (high thinking)": {
-    name: "GPT 5.2 Codex (high)",
-  },
-  "gpt-5.2-codex (xhigh thinking)": {
-    name: "GPT 5.2 Codex (xhigh)",
   },
   "gpt-5.4-mini (low thinking)": {
     name: "GPT 5.4 Mini (low)",

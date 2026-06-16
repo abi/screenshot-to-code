@@ -27,18 +27,6 @@ function AllEvalsPage() {
           </Link>
 
           <Link
-            to="/evals/pairwise"
-            className="block w-full p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200"
-          >
-            <h2 className="text-xl font-semibold text-gray-800">
-              Pairwise Comparison
-            </h2>
-            <p className="text-gray-600">
-              Compare outputs from two different models
-            </p>
-          </Link>
-
-          <Link
             to="/evals/best-of-n"
             className="block w-full p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200"
           >
@@ -46,16 +34,6 @@ function AllEvalsPage() {
             <p className="text-gray-600">
               Compare multiple model outputs side by side
             </p>
-          </Link>
-
-          <Link
-            to="/evals/single"
-            className="block w-full p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200"
-          >
-            <h2 className="text-xl font-semibold text-gray-800">
-              Single Model Eval
-            </h2>
-            <p className="text-gray-600">Score outputs from a single model</p>
           </Link>
 
           <Link

@@ -1,7 +1,12 @@
 from typing import Any, Dict, List, cast
 
 from agent.state import ensure_str
-from agent.tools.types import CanonicalToolDefinition, ToolExecutionResult
+from agent.tools.local_assets import local_asset_url_to_bytes
+from agent.tools.types import (
+    CanonicalToolDefinition,
+    ToolExecutionResult,
+    ToolMultimodalPart,
+)
 from uploaded_assets.store import promote_temporary_asset_id
 
 
@@ -111,8 +116,27 @@ async def run_save_assets(
                 "status": result["status"],
             }
         )
+    # Saved assets are served from localhost, which cloud models can't fetch,
+    # so attach their bytes for the model to see.
+    multimodal_parts: List[ToolMultimodalPart] = []
+    for result in results:
+        if result["status"] != "ok" or not result["public_url"]:
+            continue
+        read = local_asset_url_to_bytes(ensure_str(result["public_url"]))
+        if read is None:
+            continue
+        data, mime_type = read
+        multimodal_parts.append(
+            ToolMultimodalPart(
+                display_name=ensure_str(result["asset_id"]),
+                mime_type=mime_type,
+                data=data,
+            )
+        )
+
     return ToolExecutionResult(
         ok=True,
         result={"images": results},
         summary={"images": summary_items},
+        multimodal_parts=multimodal_parts,
     )

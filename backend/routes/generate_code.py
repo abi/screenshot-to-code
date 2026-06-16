@@ -241,6 +241,7 @@ class ExtractedParams:
     history: List[PromptHistoryMessage]
     file_state: Dict[str, str] | None
     option_codes: List[str]
+    asset_base_url: str = ""
     design_system: str | None = None
 
 
@@ -356,6 +357,7 @@ class ParameterExtractionStage:
             history=history,
             file_state=file_state,
             option_codes=option_codes,
+            asset_base_url=self.asset_base_url,
             design_system=design_system,
         )
 
@@ -525,6 +527,7 @@ class AgenticGenerationStage:
         gemini_api_key: str | None,
         should_generate_images: bool,
         file_state: Dict[str, str] | None,
+        asset_base_url: str,
         option_codes: List[str] | None,
     ):
         self.send_message = send_message
@@ -534,6 +537,7 @@ class AgenticGenerationStage:
         self.gemini_api_key = gemini_api_key
         self.should_generate_images = should_generate_images
         self.file_state = file_state
+        self.asset_base_url = asset_base_url
         self.option_codes = option_codes or []
 
     async def process_variants(
@@ -590,6 +594,7 @@ class AgenticGenerationStage:
                 anthropic_api_key=self.anthropic_api_key,
                 gemini_api_key=self.gemini_api_key,
                 should_generate_images=self.should_generate_images,
+                asset_base_url=self.asset_base_url,
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,
             )
@@ -771,6 +776,7 @@ class CodeGenerationMiddleware(Middleware):
                 gemini_api_key=context.extracted_params.gemini_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
                 file_state=context.extracted_params.file_state,
+                asset_base_url=context.extracted_params.asset_base_url,
                 option_codes=context.extracted_params.option_codes,
             )
 

@@ -35,10 +35,24 @@ Choose the path that fits what you want to do:
 
 Running locally requires API keys and a backend/frontend setup. The app has a React/Vite frontend and a FastAPI backend.
 
-Keys needed:
+### API keys
 
-- An [OpenAI API key](https://github.com/abi/screenshot-to-code/blob/main/Troubleshooting.md), Anthropic key, or Google Gemini key
-- Multiple keys are recommended so you can compare results from different models
+You need **at least one** model provider key (OpenAI, Anthropic, or Gemini).
+**Gemini and Replicate are strongly recommended for the best quality of
+screenshot-to-code accuracy** — Gemini powers asset extraction (reusing the
+real logos/images from your screenshot) and Replicate powers image
+generation, background removal, and image editing. Adding all four keys gives
+the best results and lets you compare multiple models per generation.
+
+| Key | Required? | What it unlocks |
+|-----|-----------|-----------------|
+| `OPENAI_API_KEY` | One of these three | GPT code-gen variants (GPT-5.5, GPT-5.2 Codex) |
+| `ANTHROPIC_API_KEY` | One of these three | Claude code-gen variants (Opus 4.8, Fable 5, Sonnet 4.6) |
+| `GEMINI_API_KEY` | One of these three — **strongly recommended** | Gemini code-gen variants (3 Flash, 3.1 Pro); extracts real assets from the screenshot; required for video mode |
+| `REPLICATE_API_KEY` | **Strongly recommended** | Image editing, background removal, and Replicate-backed image generation — without it, `edit_image` and `remove_background` are unavailable, and image generation falls back to OpenAI if configured |
+
+With more keys, the app automatically picks a stronger mix of models per
+variant; with a single key it uses that provider's models only.
 
 If you'd like to run the app with Ollama open-source models (not recommended due to poor-quality results), [follow this comment](https://github.com/abi/screenshot-to-code/issues/354#issuecomment-2435479853).
 
@@ -49,13 +63,20 @@ cd backend
 echo "OPENAI_API_KEY=sk-your-key" > .env
 echo "ANTHROPIC_API_KEY=your-key" >> .env
 echo "GEMINI_API_KEY=your-key" >> .env
+echo "REPLICATE_API_KEY=r8_your-key" >> .env
 poetry install
+# Install the Chromium browser used by the screenshot preview tool.
+# On Linux, use `poetry run playwright install --with-deps chromium` to also
+# install the required system libraries (needs sudo/apt).
+poetry run playwright install chromium
 poetry env activate
 # run the printed command, e.g. source /path/to/venv/bin/activate
 poetry run uvicorn main:app --reload --port 7001
 ```
 
-You can also set up the keys using the settings dialog in the frontend (click the gear icon after loading the app).
+You can also set up OpenAI, Anthropic, and Gemini keys using the settings dialog in the frontend (click the gear icon after loading the app). Replicate must be configured in `backend/.env` as `REPLICATE_API_KEY`. The Settings dialog also shows whether **screenshot preview** is available on your backend.
+
+> **Screenshot preview** (optional) lets the agent render its own generated page in a headless browser and visually check its work. It's enabled automatically once Chromium is installed (the `playwright install chromium` step above, or automatically in the Docker image). If Chromium is missing, the app just skips the tool — the Settings dialog shows whether it's available.
 
 Run the frontend:
 
@@ -95,7 +116,7 @@ The app will be up and running at http://localhost:5173. Note that you can't dev
 
 | Original                                                                                                                                                        | Replica                                                                                                                                                         |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <img width="1238" alt="Screenshot 2023-11-20 at 12 54 03 PM" src="https://github.com/user-attachments/assets/6b0ae86c-1b0f-4598-a578-c7b62205b3e2"> | <img width="1414" alt="Screenshot 2023-11-20 at 12 59 56 PM" src="https://github.com/user-attachments/assets/981c490e-9be6-407e-8e46-2642f0ca613e"> |
+| <img width="1238" alt="Screenshot 2023-11-20 at 12 54 03 PM" src="https://github.com/user-attachments/assets/6b0ae86c-1b0f-4598-a578-c7b62205b3e2"> | <img width="1435" height="737" alt="Screenshot 2026-06-15 at 3 06 37 PM" src="https://github.com/user-attachments/assets/48f0ab94-5fdc-41e7-ad6e-b4ad7ef69ae1" /> |
 
 
 **Instagram**

@@ -23,8 +23,13 @@ Generate code for a web page that looks exactly like the provided screenshot(s).
 
 ## Replication instructions
 
-- Make sure the app looks exactly like the screenshot.
+- Make sure the web page looks exactly like the screenshot.
 - Use the exact text from the screenshot.
+- Since our goal is to make the web page look as close to the screenshot as possible, we need to extract the exact image assets where possible and generate images for the assets that are not extractable.
+- Extracting assets can be done with the extract_assets tool. After extracting assets, make sure to inspect the extracted image closely to ensure that it is what we want.
+- When available, use the edit_image tool to edit the assets when needed. A good example of this might be if the extracted asset is very low resolution or pixelated, or if the extracted asset has unwanted elements.
+- If an asset in the original screenshot is not extractable (for example, occluded by other objects or is the background), when available, use generate_images to create image URLs from prompts (you may pass multiple prompts).
+
 - {image_policy}
 
 ## Multiple screenshots

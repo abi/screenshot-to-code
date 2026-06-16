@@ -21,26 +21,12 @@ function EvalNavigation() {
         </Link>
         
         <Link
-          to="/evals/pairwise"
-          className="hover:text-blue-300 transition-colors"
-        >
-          Pairwise
-        </Link>
-        
-        <Link
           to="/evals/best-of-n"
           className="hover:text-blue-300 transition-colors"
         >
           Best of N
         </Link>
         
-        <Link
-          to="/evals/single"
-          className="hover:text-blue-300 transition-colors"
-        >
-          Single
-        </Link>
-
         <Link
           to="/evals/openai-input-compare"
           className="hover:text-blue-300 transition-colors"
