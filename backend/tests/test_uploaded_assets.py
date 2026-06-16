@@ -158,6 +158,66 @@ async def test_persist_data_url_as_asset_finalizes_without_temp_staging(
 
 
 @pytest.mark.asyncio
+async def test_persist_data_url_as_asset_posts_to_saas_in_prod(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    asset_dir = tmp_path / "local-assets"
+    monkeypatch.setattr("uploaded_assets.store.LOCAL_ASSET_DIR", str(asset_dir))
+    monkeypatch.setattr("uploaded_assets.store.IS_PROD", True)
+    monkeypatch.setattr("uploaded_assets.store.BACKEND_SAAS_URL", "https://saas.test")
+    monkeypatch.setattr("uploaded_assets.store.BACKEND_SAAS_API_SECRET", "secret")
+
+    captured: dict[str, object] = {}
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, str]:
+            return {
+                "asset_id": "asset-1",
+                "public_url": "https://cdn.example.com/extracted.png",
+            }
+
+    class FakeAsyncClient:
+        async def __aenter__(self) -> "FakeAsyncClient":
+            return self
+
+        async def __aexit__(self, exc_type, exc, traceback) -> None:
+            return None
+
+        async def post(self, url: str, **kwargs) -> FakeResponse:
+            captured["url"] = url
+            captured["kwargs"] = kwargs
+            return FakeResponse()
+
+    monkeypatch.setattr("uploaded_assets.store.httpx.AsyncClient", FakeAsyncClient)
+
+    saved = await persist_data_url_as_asset(
+        _data_url(b"crop-bytes"),
+        "http://127.0.0.1:7001",
+        user_id="user-1",
+    )
+
+    assert saved is not None
+    assert saved.asset_id == "asset-1"
+    assert saved.public_url == "https://cdn.example.com/extracted.png"
+    assert saved.content_type == "image/png"
+    # Hosted persistence is remote-only: nothing is written to local disk.
+    assert not asset_dir.exists()
+    assert captured["url"] == "https://saas.test/assets/store_image_data"
+    kwargs = captured["kwargs"]
+    assert isinstance(kwargs, dict)
+    assert kwargs["headers"] == {"Authorization": "Bearer secret"}
+    assert kwargs["json"] == {
+        "data_url": _data_url(b"crop-bytes"),
+        "source_type": "extracted",
+        "user_id": "user-1",
+    }
+
+
+@pytest.mark.asyncio
 async def test_persist_data_url_as_asset_rejects_non_image() -> None:
     assert await persist_data_url_as_asset("not-a-data-url", "http://127.0.0.1:7001") is None
 

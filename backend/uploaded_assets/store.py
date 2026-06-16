@@ -256,21 +256,23 @@ def _temporary_asset_data_url(filepath: str, content_type: str) -> str:
     return f"data:{content_type};base64,{encoded}"
 
 
-async def _promote_temporary_asset_with_saas(
-    source_path: str,
+async def _store_data_url_with_saas(
+    data_url: str,
+    source_type: str,
     content_type: str,
     user_id: str | None,
 ) -> SavedAsset | None:
+    """Upload a data URL to the SaaS, which stores it in S3 and returns a
+    permanent public URL. Returns ``None`` if the SaaS isn't configured."""
     if not BACKEND_SAAS_URL or not BACKEND_SAAS_API_SECRET:
         return None
 
-    data_url = _temporary_asset_data_url(source_path, content_type)
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{BACKEND_SAAS_URL}/assets/store_image_data",
             json={
                 "data_url": data_url,
-                "source_type": "user_upload",
+                "source_type": source_type,
                 "user_id": user_id,
             },
             headers={"Authorization": f"Bearer {BACKEND_SAAS_API_SECRET}"},
@@ -293,6 +295,17 @@ async def _promote_temporary_asset_with_saas(
     )
 
 
+async def _promote_temporary_asset_with_saas(
+    source_path: str,
+    content_type: str,
+    user_id: str | None,
+) -> SavedAsset | None:
+    data_url = _temporary_asset_data_url(source_path, content_type)
+    return await _store_data_url_with_saas(
+        data_url, "user_upload", content_type, user_id
+    )
+
+
 async def persist_data_url_as_asset(
     data_url: str,
     asset_base_url: str,
@@ -301,18 +314,19 @@ async def persist_data_url_as_asset(
     """Persist a data URL straight to a durable, served asset.
 
     Skips the temp-staging hop used for uploads: callers that already know the
-    image is an asset (e.g. ``extract_assets``) commit immediately. Async to
-    match ``promote_temporary_asset_id`` so hosted backends can finalize to
-    remote storage without changing callers.
-
-    TODO(hosted): add an ``if IS_PROD`` branch that POSTs ``data_url`` to the
-    SaaS (like ``_promote_temporary_asset_with_saas``) so extracted crops are
-    stored in S3 rather than local disk.
+    image is an asset (e.g. ``extract_assets``) commit immediately. On hosted
+    (``IS_PROD``) the bytes go to the SaaS, which stores them in S3 under
+    ``source_type="extracted"`` and returns a permanent public URL; otherwise
+    they finalize to the locally-served ``LOCAL_ASSET_DIR``.
     """
     decoded = _decode_image_data_url(data_url)
     if decoded is None:
         return None
     image_bytes, content_type, extension = decoded
+    if IS_PROD:
+        return await _store_data_url_with_saas(
+            data_url, "extracted", content_type, user_id
+        )
     return _finalize_asset_bytes(
         image_bytes, extension, content_type, asset_base_url, user_id
     )
