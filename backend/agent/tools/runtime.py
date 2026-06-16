@@ -500,7 +500,7 @@ class AgentToolRuntime:
                 mime_type=guess_image_mime(result["result_url"]),
                 image_url=result["result_url"],
             )
-            for index, result in enumerate(results)
+            for index, result in enumerate(final_results)
             if result["status"] == "ok" and result["result_url"]
         ]
         return ToolExecutionResult(
