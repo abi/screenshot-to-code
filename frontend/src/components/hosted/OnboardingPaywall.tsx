@@ -37,7 +37,7 @@ function OnboardingPaywall() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
             </span>
-            71,000+ GitHub stars
+            72,000+ GitHub stars
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
             Your All-in-One{" "}
