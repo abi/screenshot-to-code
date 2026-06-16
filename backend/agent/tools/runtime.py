@@ -283,7 +283,7 @@ class AgentToolRuntime:
                     result={"error": "No API key available for image generation."},
                     summary={"error": "Missing image generation API key"},
                 )
-            model = "dalle3"
+            model = "gpt_image_2"
             api_key = self.openai_api_key
             base_url = self.openai_base_url
 

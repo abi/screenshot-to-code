@@ -19,12 +19,12 @@ async def process_tasks(
     prompts: List[str],
     api_key: str,
     base_url: str | None,
-    model: Literal["dalle3", "flux"],
+    model: Literal["gpt_image_2", "flux"],
 ) -> List[Union[str, None]]:
     start_time = time.time()
     results: list[str | BaseException | None]
-    if model == "dalle3":
-        tasks = [generate_image_dalle(prompt, api_key, base_url) for prompt in prompts]
+    if model == "gpt_image_2":
+        tasks = [generate_image_openai(prompt, api_key, base_url) for prompt in prompts]
         results = await asyncio.gather(*tasks, return_exceptions=True)
     else:
         results = []
@@ -47,14 +47,14 @@ async def process_tasks(
     return processed_results
 
 
-async def generate_image_dalle(
+async def generate_image_openai(
     prompt: str, api_key: str, base_url: str | None
 ) -> Union[str, None]:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
     res = await client.images.generate(
-        model="dall-e-3",
-        quality="standard",
-        style="natural",
+        model="gpt-image-2",
+        quality="medium",
+        output_format="png",
         n=1,
         size="1024x1024",
         prompt=prompt,
@@ -62,7 +62,12 @@ async def generate_image_dalle(
     await client.close()
     if not res.data:
         return None
-    return res.data[0].url
+    image = res.data[0]
+    if image.url:
+        return image.url
+    if image.b64_json:
+        return f"data:image/png;base64,{image.b64_json}"
+    return None
 
 
 async def generate_image_replicate(prompt: str, api_key: str) -> str:
