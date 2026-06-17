@@ -15,6 +15,14 @@
       "runtimeArgs": ["run", "uvicorn", "main:app", "--port", "7001"],
       "port": 7001,
       "cwd": "backend"
+    },
+    {
+      "name": "hosted-frontend",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["dev", "--mode", "prod", "--port", "5199", "--strictPort"],
+      "port": 5199,
+      "autoPort": false,
+      "cwd": "frontend"
     }
   ]
 }
