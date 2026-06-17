@@ -31,8 +31,8 @@ const SCREENSHOT_EXAMPLES = [
   },
   {
     caption: "Example two",
-    input: "/demos/example-2-input.png",
-    output: "/demos/example-2-output.png",
+    input: "/demos/yope-invite-before.webp",
+    output: "/demos/yope-invite-after.webp",
   },
   {
     caption: "Example three",
@@ -202,15 +202,18 @@ const isClerkCallbackHash = () =>
 
 // Shows a labeled placeholder until the example image is dropped in (and
 // loads), so the section never renders a broken-image icon.
-function ExampleMedia({ src, label }: { src: string; label: string }) {
+function ExampleMedia({ src, label }: {
+  src: string;
+  label: string;
+}) {
   const [loaded, setLoaded] = useState(false);
   return (
-    <div className="relative w-full aspect-[16/9] overflow-hidden rounded-xl border landing-border bg-black/[0.03] dark:bg-white/[0.04]">
+    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl border landing-border bg-white dark:bg-black/[0.2]">
       <img
         src={src}
         alt={label}
         onLoad={() => setLoaded(true)}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+        className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
       />
