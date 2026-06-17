@@ -35,9 +35,9 @@ const SCREENSHOT_EXAMPLES = [
     output: "/demos/yope-invite-after.webp",
   },
   {
-    caption: "Example three",
-    input: "/demos/example-3-input.png",
-    output: "/demos/example-3-output.png",
+    caption: "Pricing cards",
+    input: "/demos/pricing-cards-before.webp",
+    output: "/demos/pricing-cards-after.webp",
   },
 ];
 
