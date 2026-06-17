@@ -20,13 +20,15 @@ import { useProjectStore } from "../../store/project-store";
 import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
+import { normalizeBabelCdn } from "../../lib/babelCdn";
 import { SelectAndEditToolbarButton } from "../select-and-edit/SelectAndEditControls";
 
 function openInNewTab(code: string) {
   const newWindow = window.open("", "_blank");
   if (newWindow) {
     newWindow.document.open();
-    newWindow.document.write(code);
+    // Normalize the Babel CDN so opened React pages (old and new) mount.
+    newWindow.document.write(normalizeBabelCdn(code));
     newWindow.document.close();
   }
 }

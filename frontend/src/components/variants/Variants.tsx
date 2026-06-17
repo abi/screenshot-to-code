@@ -8,6 +8,7 @@ import {
   VariantLabelTone,
 } from "../../lib/models";
 import WorkingPulse from "../core/WorkingPulse";
+import { normalizeBabelCdn } from "../../lib/babelCdn";
 
 const IFRAME_WIDTH = 1280;
 const IFRAME_HEIGHT = 550;
@@ -49,7 +50,7 @@ function VariantThumbnail({ code, isSelected }: VariantThumbnailProps) {
   useEffect(() => {
     const iframe = iframeRef.current;
     if (iframe) {
-      iframe.srcdoc = throttledCode;
+      iframe.srcdoc = normalizeBabelCdn(throttledCode);
     }
   }, [throttledCode]);
 
