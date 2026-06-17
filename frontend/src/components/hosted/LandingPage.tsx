@@ -1,4 +1,13 @@
 import { FaGithub, FaArrowRight } from "react-icons/fa";
+import {
+  SiReact,
+  SiVuedotjs,
+  SiTailwindcss,
+  SiBootstrap,
+  SiIonic,
+  SiHtml5,
+} from "react-icons/si";
+import type { IconType } from "react-icons";
 import Footer from "./LandingPage/Footer";
 import { SignUp } from "@clerk/clerk-react";
 import { Component, useState, type ErrorInfo, type ReactNode } from "react";
@@ -12,30 +21,42 @@ import type {
 
 const LOGOS = ["microsoft", "amazon", "mit", "stanford", "bytedance", "baidu"];
 
-const FEATURES = [
+// Screenshot-to-Code examples. Drop the paired images into frontend/public/demos/
+// using these exact names; until then each slot shows a labeled placeholder.
+const SCREENSHOT_EXAMPLES = [
   {
-    number: "01",
-    title: "Screenshot to Code",
-    description:
-      "Drop any screenshot, Figma design, or mockup. Our AI analyzes the visual structure and generates production-ready code.",
+    caption: "News layout",
+    input: "/demos/nyt-lifestyle-before.webp",
+    output: "/demos/nyt-lifestyle-after.webp",
   },
   {
-    number: "02",
-    title: "Framework Agnostic",
-    description:
-      "Generate code for HTML/CSS, React, Vue, HTML/Tailwind, Bootstrap, Ionic, and more. Choose your stack, get your code.",
+    caption: "Example two",
+    input: "/demos/example-2-input.png",
+    output: "/demos/example-2-output.png",
   },
   {
-    number: "03",
-    title: "Iterate & Refine",
-    description:
-      "Not perfect on the first try? Use follow-up prompts to refine colors, spacing, components, or functionality.",
+    caption: "Example three",
+    input: "/demos/example-3-input.png",
+    output: "/demos/example-3-output.png",
   },
-  {
-    number: "04",
-    title: "Text to Code",
-    description: "Describe any UI you want in plain English.",
-  },
+];
+
+const FRAMEWORKS: { name: string; Icon: IconType }[] = [
+  { name: "HTML", Icon: SiHtml5 },
+  { name: "Tailwind", Icon: SiTailwindcss },
+  { name: "React", Icon: SiReact },
+  { name: "Vue", Icon: SiVuedotjs },
+  { name: "Bootstrap", Icon: SiBootstrap },
+  { name: "Ionic", Icon: SiIonic },
+];
+
+// Example follow-up prompts shown in the Iterate & Refine section.
+const REFINE_PROMPTS = [
+  "Make the header sticky",
+  "Use a darker color palette",
+  "Add a mobile menu",
+  "Tighten the spacing",
+  "Make the CTA bigger",
 ];
 
 const TESTIMONIALS = [
@@ -178,6 +199,34 @@ function SafeTweet({ testimonial }: { testimonial: Testimonial }) {
 // verification virtual routes so the handshake completes on its own.
 const isClerkCallbackHash = () =>
   /(sso-callback|verify)/.test(window.location.hash);
+
+// Shows a labeled placeholder until the example image is dropped in (and
+// loads), so the section never renders a broken-image icon.
+function ExampleMedia({ src, label }: { src: string; label: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative w-full aspect-[16/9] overflow-hidden rounded-xl border landing-border bg-black/[0.03] dark:bg-white/[0.04]">
+      <img
+        src={src}
+        alt={label}
+        onLoad={() => setLoaded(true)}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+      />
+      {!loaded && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 px-3 text-center">
+          <span className="text-xs font-medium uppercase tracking-wider landing-text-muted">
+            {label}
+          </span>
+          <span className="break-all font-mono text-[11px] text-gray-400">
+            {src}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function LandingPage() {
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(isClerkCallbackHash);
@@ -384,52 +433,126 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* 01 - Screenshot to Code */}
       <section className="py-24 px-6 landing-bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            {/* Left side - Section intro */}
-            <div className="lg:sticky lg:top-32">
-              <div className="accent-line w-16 mb-8" />
-              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
-                Built for the way
-                <br />
-                <span className="font-editorial">you work</span>
+          <div className="max-w-2xl mb-14">
+            <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-5">
+              Screenshot to Code
+            </h2>
+            <p className="text-xl landing-text-muted max-w-md leading-relaxed">
+              Drop any screenshot, Figma design, or mockup. Our AI analyzes the
+              visual structure and generates production-ready code.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            {SCREENSHOT_EXAMPLES.map((ex) => (
+              <div key={ex.caption} className="feature-card-unique p-5">
+                <div>
+                  <span className="block text-xs font-medium uppercase tracking-wider landing-text-muted mb-2">
+                    Screenshot
+                  </span>
+                  <ExampleMedia src={ex.input} label="Screenshot" />
+                </div>
+                <div className="flex justify-center py-3">
+                  <FaArrowRight className="rotate-90 text-[#2563EB]" />
+                </div>
+                <div>
+                  <span className="block text-xs font-medium uppercase tracking-wider text-[#2563EB] mb-2">
+                    Generated code
+                  </span>
+                  <ExampleMedia src={ex.output} label="Result" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 02 - Framework Agnostic */}
+      <section className="py-24 px-6 landing-bg border-y landing-border">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-5">
+            Framework agnostic
+          </h2>
+          <p className="text-xl landing-text-muted max-w-2xl mx-auto mb-14 leading-relaxed">
+            Generate code for HTML/CSS, React, Vue, HTML/Tailwind, Bootstrap,
+            Ionic, and more. Choose your stack, get your code.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-10 sm:gap-x-16">
+            {FRAMEWORKS.map(({ name, Icon }) => (
+              <div
+                key={name}
+                className="flex flex-col items-center gap-3 opacity-60 hover:opacity-100 transition-opacity"
+              >
+                <Icon className="h-10 w-10 sm:h-12 sm:w-12" />
+                <span className="text-sm font-medium">{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 03 - Iterate & Refine */}
+      <section className="py-24 px-6 landing-bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-5">
+                Iterate &amp; refine
               </h2>
-              <p className="text-xl landing-text-muted mb-8 max-w-md">
-                No complex setup. No learning curve. Just paste, click, and ship.
+              <p className="text-xl landing-text-muted max-w-md leading-relaxed">
+                Not perfect on the first try? Use follow-up prompts to refine
+                colors, spacing, components, or functionality.
               </p>
+            </div>
+            <div className="feature-card-unique p-6 sm:p-8">
+              <span className="block text-xs font-medium uppercase tracking-wider landing-text-muted mb-4">
+                Follow-up prompts
+              </span>
+              <div className="flex flex-wrap gap-2.5">
+                {REFINE_PROMPTS.map((prompt) => (
+                  <span
+                    key={prompt}
+                    className="rounded-full border landing-border px-4 py-2 text-sm landing-text-muted"
+                  >
+                    {prompt}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 04 - Text to Code */}
+      <section className="py-24 px-6 landing-bg border-t landing-border">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="order-2 lg:order-1 feature-card-unique p-6 sm:p-8">
+              <span className="block text-xs font-medium uppercase tracking-wider landing-text-muted mb-3">
+                Your prompt
+              </span>
+              <div className="rounded-xl border landing-border bg-black/[0.03] dark:bg-white/[0.04] p-4 font-mono text-sm leading-relaxed">
+                A pricing page with three tiers, a monthly / yearly toggle, and a
+                FAQ section below.
+              </div>
               <button
                 onClick={signIn}
-                className="btn-primary px-6 py-3 text-sm font-medium inline-flex items-center gap-2 group"
+                className="btn-primary mt-4 px-5 py-2.5 text-sm font-medium inline-flex items-center gap-2 group"
               >
-                <span>Try it now</span>
+                <span>Generate</span>
                 <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
               </button>
             </div>
-
-            {/* Right side - Feature cards */}
-            <div className="space-y-6">
-              {FEATURES.map((feature, index) => (
-                <div
-                  key={index}
-                  className="feature-card-unique p-8"
-                >
-                  <div className="flex items-start gap-6">
-                    <span className="stat-highlight text-3xl opacity-20">
-                      {feature.number}
-                    </span>
-                    <div>
-                      <h3 className="text-xl font-semibold mb-2">
-                        {feature.title}
-                      </h3>
-                      <p className="landing-text-muted leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="order-1 lg:order-2">
+              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-5">
+                Text to code
+              </h2>
+              <p className="text-xl landing-text-muted max-w-md leading-relaxed">
+                Describe any UI you want in plain English — no screenshot
+                required.
+              </p>
             </div>
           </div>
         </div>
@@ -465,9 +588,7 @@ function LandingPage() {
               What people say
             </p>
             <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
-              Developers{" "}
-              <span className="font-editorial">love</span>
-              {" "}it
+              Developers love it
             </h2>
           </div>
 
