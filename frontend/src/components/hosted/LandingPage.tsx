@@ -313,7 +313,7 @@ function LandingPage() {
             <div className="relative">
               <div className="video-frame">
                 <video
-                  src="/demos/instagram.mp4"
+                  src="/demos/youtube.mp4"
                   className="w-full"
                   autoPlay
                   loop

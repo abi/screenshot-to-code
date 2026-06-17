@@ -232,24 +232,25 @@ html {
 /* Video container with unique border treatment */
 .video-frame {
   position: relative;
-  border: 2px solid var(--dark);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 12px 24px -8px rgba(0, 0, 0, 0.15),
+    0 28px 56px -20px rgba(0, 0, 0, 0.22);
+}
+
+.video-frame video,
+.video-frame img {
+  display: block;
+  width: 100%;
 }
 
 @media (prefers-color-scheme: dark) {
   .video-frame {
-    border-color: #444;
+    border-color: rgba(255, 255, 255, 0.1);
   }
-}
-
-.video-frame::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: -8px;
-  bottom: -8px;
-  border: 2px solid var(--accent-warm);
-  z-index: -1;
 }
 
 /* Feature card with corner accent */
