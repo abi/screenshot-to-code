@@ -3,6 +3,7 @@ import { formatRelative } from "date-fns";
 import * as Sentry from "@sentry/react";
 import toast from "react-hot-toast";
 import { SAAS_BACKEND_URL } from "../../../config";
+import { normalizeBabelCdn } from "../../../lib/babelCdn";
 import { useAuthenticatedFetch } from "../useAuthenticatedFetch";
 import {
   DeleteGenerationsResponse,
@@ -181,7 +182,7 @@ function PreviewIframe({ srcDoc, title }: { srcDoc: string; title: string }) {
     >
       {scale > 0 && (
         <iframe
-          srcDoc={srcDoc}
+          srcDoc={normalizeBabelCdn(srcDoc)}
           title={title}
           sandbox="allow-scripts"
           className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"

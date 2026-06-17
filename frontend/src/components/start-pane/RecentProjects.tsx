@@ -9,6 +9,7 @@ import {
   ProjectHistoryResponse,
 } from "../hosted/types";
 import { Stack } from "../../lib/stacks";
+import { normalizeBabelCdn } from "../../lib/babelCdn";
 import StackLabel from "../core/StackLabel";
 import { LuArrowRight } from "react-icons/lu";
 
@@ -86,7 +87,7 @@ function SmallPreview({ srcDoc, title }: { srcDoc: string; title: string }) {
     >
       {scale > 0 && (
         <iframe
-          srcDoc={srcDoc}
+          srcDoc={normalizeBabelCdn(srcDoc)}
           title={title}
           sandbox="allow-scripts"
           className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
