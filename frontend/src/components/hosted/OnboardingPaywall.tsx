@@ -26,7 +26,11 @@ const FEATURES = [
   },
 ];
 
-function OnboardingPaywall() {
+interface OnboardingPaywallProps {
+  experimentGroup: string | null;
+}
+
+function OnboardingPaywall({ experimentGroup }: OnboardingPaywallProps) {
   return (
     <div className="flex flex-1 flex-col items-center overflow-y-auto px-4 py-8 lg:py-12">
       <div className="w-full max-w-4xl">
@@ -39,15 +43,32 @@ function OnboardingPaywall() {
             </span>
             72,000+ GitHub stars
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-            Your All-in-One{" "}
-            <span className="text-blue-600 dark:text-blue-400">Front-End</span>{" "}
-            Tool
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-lg text-gray-500 dark:text-zinc-400">
-            Turn screenshots, videos, and text prompts into clean,
-            production-ready code. Subscribe to get started.
-          </p>
+          {experimentGroup === "delayed_paywall" ? (
+            <>
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+                Liked what you just built?{" "}
+                <span className="text-blue-600 dark:text-blue-400">
+                  Keep going.
+                </span>
+              </h1>
+              <p className="mx-auto mt-3 max-w-xl text-lg text-gray-500 dark:text-zinc-400">
+                Pick a plan to keep generating, edit with AI, and export
+                production-ready code.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+                From screenshot to{" "}
+                <span className="text-blue-600 dark:text-blue-400">shipped</span>{" "}
+                — in minutes.
+              </h1>
+              <p className="mx-auto mt-3 max-w-xl text-lg text-gray-500 dark:text-zinc-400">
+                Turn any screenshot, mockup, or URL into clean, production-ready
+                code. Pick a plan to start.
+              </p>
+            </>
+          )}
         </div>
 
         {/* Pricing — above the fold */}
@@ -56,7 +77,7 @@ function OnboardingPaywall() {
         {/* Demo video */}
         <div className="mx-auto mt-10 mb-10 max-w-2xl overflow-hidden rounded-xl border border-gray-200 shadow-lg dark:border-zinc-700">
           <video
-            src="/demos/instagram.mp4"
+            src="/demos/youtube.mp4"
             className="w-full"
             autoPlay
             loop

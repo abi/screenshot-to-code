@@ -60,6 +60,26 @@ function AppContainer() {
       const lastName = user.last_name || "";
       const fullName = `${firstName} ${lastName}`.trim();
       setExperimentGroup(group);
+
+      // Load free-trial usage from the server BEFORE applying the user (which
+      // sets subscriberTier === "free"). If we flipped the tier first, there'd
+      // be a render window where the tier is "free" but freeTrialLimit is still
+      // 0 → freeTrialRemaining is false → the onboarding paywall ("Liked what
+      // you just built?") flashes before the start screen.
+      if (!user.subscriber_tier && group === "delayed_paywall") {
+        try {
+          const usage = await authenticatedFetch(
+            SAAS_BACKEND_URL + "/credits/free_trial_usage",
+            "POST",
+          );
+          if (usage) {
+            setFreeTrialUsage(usage.used, usage.limit);
+          }
+        } catch {
+          // Non-critical; fall back to 0/0
+        }
+      }
+
       applyHostedUserToStore(user);
 
       if (shouldTrackSignupCompleted(user.email)) {
@@ -76,22 +96,7 @@ function AppContainer() {
         );
       }
 
-      if (!user.subscriber_tier) {
-        // Fetch server-side free trial usage for delayed paywall users
-        if (group === "delayed_paywall") {
-          try {
-            const usage = await authenticatedFetch(
-              SAAS_BACKEND_URL + "/credits/free_trial_usage",
-              "POST",
-            );
-            if (usage) {
-              setFreeTrialUsage(usage.used, usage.limit);
-            }
-          } catch {
-            // Non-critical; fall back to 0/0
-          }
-        }
-      } else {
+      if (user.subscriber_tier) {
         // Initialize Intercom only for paid users
         Intercom({
           app_id: "c5eiaj9m",

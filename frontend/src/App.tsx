@@ -53,6 +53,7 @@ import { Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 import ProjectHistoryView from "./components/hosted/project_history/ProjectHistoryView";
 import AccountView from "./components/hosted/AccountView";
+import PricingDialog from "./components/hosted/payments/PricingDialog";
 import { show, hide, onHide } from "@intercom/messenger-js-sdk";
 import { FeedbackModal } from "./components/feedback/FeedbackModal";
 import { useFeedbackState } from "./hooks/useFeedbackState";
@@ -71,6 +72,7 @@ function App() {
   const experimentGroup = useStore((state) => state.experimentGroup);
   const freeTrialUsed = useStore((state) => state.freeTrialUsed);
   const freeTrialLimit = useStore((state) => state.freeTrialLimit);
+  const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
 
 
   const freeTrialRemaining = freeTrialLimit > 0 && freeTrialUsed < freeTrialLimit;
@@ -407,7 +409,22 @@ function App() {
     }
   };
 
+  // A free (cloud) user with no own API key who has no free generations left
+  // must subscribe before they can generate, retry, or edit (incl. editing a
+  // past project). Every generation path funnels through doGenerateCode, so
+  // gating here covers create, retry/regenerate, and update in one place.
+  const editLocked =
+    IS_RUNNING_ON_CLOUD &&
+    !settings.openAiApiKey &&
+    subscriberTier === "free" &&
+    !freeTrialRemaining;
+
   async function doGenerateCode(params: GenerationRequest) {
+    if (editLocked) {
+      setPricingDialogOpen(true);
+      return;
+    }
+
     // Reset the execution console
     resetExecutionConsoles();
 
@@ -759,6 +776,10 @@ function App() {
 
   // Subsequent updates
   async function doUpdate(updateInstruction: string) {
+    if (editLocked) {
+      setPricingDialogOpen(true);
+      return;
+    }
     if (updateInstruction.trim() === "") {
       toast.error("Please include some instructions for AI on what to update.");
       return;
@@ -1074,16 +1095,8 @@ function App() {
                     setIsVersionsPanelOpen(true);
                     setMobilePane("chat");
                   }}
-                  freeTrialInfo={
-                    subscriberTier === "free" &&
-                    experimentGroup === "delayed_paywall" &&
-                    freeTrialLimit > 0
-                      ? {
-                          used: freeTrialUsed,
-                          limit: freeTrialLimit,
-                        }
-                      : undefined
-                  }
+                  editLocked={editLocked}
+                  onSubscribe={() => setPricingDialogOpen(true)}
                 />
               )}
             </>
@@ -1118,7 +1131,7 @@ function App() {
           !(
             experimentGroup === "delayed_paywall" && freeTrialRemaining
           ) ? (
-            <OnboardingPaywall />
+            <OnboardingPaywall experimentGroup={experimentGroup} />
           ) : (
             <StartPane
               doCreate={doCreate}
@@ -1198,6 +1211,8 @@ function App() {
         updateDesignSystem={updateDesignSystem}
         deleteDesignSystem={deleteDesignSystem}
       />
+
+      <PricingDialog />
     </div>
   );
 }

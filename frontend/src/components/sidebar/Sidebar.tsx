@@ -3,7 +3,7 @@ import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { LuMousePointerClick, LuRefreshCw, LuArrowUp, LuX } from "react-icons/lu";
+import { LuMousePointerClick, LuRefreshCw, LuArrowUp, LuX, LuLock } from "react-icons/lu";
 import { toast } from "react-hot-toast";
 
 import Variants from "../variants/Variants";
@@ -15,7 +15,6 @@ import { Commit } from "../commits/types";
 import { CodeGenerationModel } from "../../lib/models";
 import { addEvent } from "../../lib/analytics";
 import GenerationFeedbackButtons from "./GenerationFeedbackButtons";
-import FreeTrialBanner from "../hosted/FreeTrialBanner";
 import DesignSystemSelector, {
   DesignSystemSelectorProps,
 } from "../settings/DesignSystemSelector";
@@ -26,7 +25,8 @@ interface SidebarProps {
   submitGenerationFeedback: (value: "up" | "down") => Promise<boolean>;
   cancelCodeGeneration: () => void;
   onOpenVersions: () => void;
-  freeTrialInfo?: { used: number; limit: number };
+  editLocked: boolean;
+  onSubscribe: () => void;
   designSystem: DesignSystemSelectorProps;
 }
 
@@ -77,7 +77,8 @@ function Sidebar({
   submitGenerationFeedback,
   cancelCodeGeneration,
   onOpenVersions,
-  freeTrialInfo,
+  editLocked,
+  onSubscribe,
   designSystem,
 }: SidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -294,15 +295,6 @@ function Sidebar({
         <Variants />
       </div>
 
-      {freeTrialInfo && (
-        <div className="shrink-0 mx-4 mt-3">
-          <FreeTrialBanner
-            used={freeTrialInfo.used}
-            limit={freeTrialInfo.limit}
-          />
-        </div>
-      )}
-
       {/* Scrollable content */}
       <div
         ref={middlePaneRef}
@@ -439,7 +431,7 @@ function Sidebar({
                 onSubmit={submitGenerationFeedback}
               />
             )}
-            {isFirstGeneration && (
+            {isFirstGeneration && !editLocked && (
               <button
                 onClick={regenerate}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
@@ -553,6 +545,7 @@ function Sidebar({
               />
               <textarea
                 ref={textareaRef}
+                disabled={editLocked}
                 placeholder={
                   inSelectAndEditMode && selectedElement
                     ? `Describe changes for the selected <${selectedElement.tagName.toLowerCase()}> element...`
@@ -602,9 +595,9 @@ function Sidebar({
                 </div>
                 <button
                   onClick={() => doUpdate(updateInstruction)}
-                  disabled={!updateInstruction.trim()}
+                  disabled={editLocked || !updateInstruction.trim()}
                   className={`rounded-xl p-2 transition-colors update-btn ${
-                    updateInstruction.trim()
+                    !editLocked && updateInstruction.trim()
                       ? "bg-violet-600 text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400"
                       : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-zinc-700 dark:text-zinc-500"
                   }`}
@@ -617,6 +610,30 @@ function Sidebar({
               {isDragging && (
                 <div className="absolute inset-0 bg-blue-50/90 dark:bg-gray-800/90 border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-xl flex items-center justify-center pointer-events-none z-10">
                   <p className="text-blue-600 dark:text-blue-400 font-medium">Drop images here</p>
+                </div>
+              )}
+
+              {editLocked && (
+                <div className="absolute inset-0 z-20 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-violet-50 to-blue-50 px-4 dark:from-violet-950 dark:to-zinc-900">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 text-white">
+                      <LuLock className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                        Subscribe to keep editing
+                      </p>
+                      <p className="truncate text-xs text-gray-500 dark:text-zinc-400">
+                        Your free generation is used
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={onSubscribe}
+                    className="shrink-0 rounded-xl bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400"
+                  >
+                    See plans
+                  </button>
                 </div>
               )}
             </div>
