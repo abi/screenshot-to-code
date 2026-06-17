@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { HTTP_BACKEND_URL } from "../../config";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import EvalNavigation from "./EvalNavigation";
+import { normalizeBabelCdn } from "../../lib/babelCdn";
 
 interface Eval {
   input: string;
@@ -905,7 +906,7 @@ function BestOfNEvalsPage() {
                         </span>
                       </div>
                       <iframe
-                        srcDoc={selectedHtml}
+                        srcDoc={normalizeBabelCdn(selectedHtml)}
                         className="w-full h-full rounded-lg"
                       ></iframe>
                     </DialogContent>
@@ -916,7 +917,7 @@ function BestOfNEvalsPage() {
                     ref={(el) => {
                       iframeRefs.current[currentModelIndex] = el;
                     }}
-                    srcDoc={currentEval.outputs[currentModelIndex]}
+                    srcDoc={normalizeBabelCdn(currentEval.outputs[currentModelIndex])}
                     className="w-full h-[calc(100vh-200px)]"
                     style={{ colorScheme: "light" }}
                   ></iframe>
