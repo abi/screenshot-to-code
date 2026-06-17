@@ -444,8 +444,9 @@ function LandingPage() {
               Screenshot to Code
             </h2>
             <p className="text-xl landing-text-muted max-w-md leading-relaxed">
-              Drop any screenshot, Figma design, or mockup. Our AI analyzes the
-              visual structure and generates production-ready code.
+              From editorial layouts to mobile onboarding and pricing pages,
+              preserve the hierarchy, spacing, imagery, and interaction-ready
+              structure of the original design.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
