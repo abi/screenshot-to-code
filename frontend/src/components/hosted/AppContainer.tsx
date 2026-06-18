@@ -96,17 +96,16 @@ function AppContainer() {
         );
       }
 
-      if (user.subscriber_tier) {
-        // Initialize Intercom only for paid users
-        Intercom({
-          app_id: "c5eiaj9m",
-          user_id: user.email,
-          name: fullName || undefined,
-          email: user.email,
-          "Subscriber Tier": user.subscriber_tier || "free",
-          hide_default_launcher: true,
-        });
+      Intercom({
+        app_id: "c5eiaj9m",
+        user_id: user.email,
+        name: fullName || undefined,
+        email: user.email,
+        "Subscriber Tier": user.subscriber_tier || "free",
+        hide_default_launcher: true,
+      });
 
+      if (user.subscriber_tier) {
         // Initialize PostHog only for paid users
         // and unmask all inputs except for passwords
         posthog.init(POSTHOG_KEY, {
