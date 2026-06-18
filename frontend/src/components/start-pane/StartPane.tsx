@@ -51,6 +51,9 @@ const StartPane: React.FC<Props> = ({
         importFromCode={importFromCode}
         settings={settings}
         setSettings={setSettings}
+        isFreeTrialEligible={Boolean(
+          freeTrialInfo && freeTrialInfo.used < freeTrialInfo.limit
+        )}
         designSystems={designSystems}
         onAddNewDesignSystem={onAddNewDesignSystem}
         onManageDesignSystems={onManageDesignSystems}

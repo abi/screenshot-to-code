@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import httpx
 from config import PLATFORM_SCREENSHOTONE_API_KEY
-from routes.saas_utils import does_user_have_subscription_credits
+from routes.saas_utils import does_user_have_subscription_credits, get_free_trial_usage
 from urllib.parse import urlparse
 
 router = APIRouter()
@@ -47,7 +47,11 @@ def bytes_to_data_url(image_bytes: bytes, mime_type: str) -> str:
 
 
 async def capture_screenshot(
-    target_url: str, api_key: str | None, auth_token: str, device: str = "desktop"
+    target_url: str,
+    api_key: str | None,
+    auth_token: str,
+    device: str = "desktop",
+    is_free_trial: bool = False,
 ) -> bytes:
     api_base_url = "https://api.screenshotone.com/take"
 
@@ -60,10 +64,16 @@ async def capture_screenshot(
     if not api_key:
         res = await does_user_have_subscription_credits(auth_token)
         if res.status == "not_subscriber":
-            raise Exception(
-                "capture_screenshot - User is not subscriber and has no API key"
-            )
+            free_trial_usage = await get_free_trial_usage(auth_token)
+            if is_free_trial and free_trial_usage.used < free_trial_usage.limit:
+                api_key = PLATFORM_SCREENSHOTONE_API_KEY
+            else:
+                raise Exception(
+                    "capture_screenshot - User is not subscriber and has no API key"
+                )
         elif res.status == "subscriber_has_credits":
+            api_key = PLATFORM_SCREENSHOTONE_API_KEY
+        elif res.status == "subscriber_is_trialing":
             api_key = PLATFORM_SCREENSHOTONE_API_KEY
         elif res.status == "subscriber_has_no_credits":
             raise Exception("capture_screenshot - User has no credits")
@@ -102,6 +112,7 @@ class ScreenshotRequest(BaseModel):
     url: str
     apiKey: str | None
     authToken: str
+    isFreeTrial: bool = False
 
 
 class ScreenshotResponse(BaseModel):
@@ -114,6 +125,7 @@ async def app_screenshot(request: ScreenshotRequest):
     url = request.url
     api_key = request.apiKey
     auth_token = request.authToken
+    is_free_trial = request.isFreeTrial
 
     try:
         # Normalize the URL
@@ -121,7 +133,10 @@ async def app_screenshot(request: ScreenshotRequest):
 
         # Capture screenshot with normalized URL
         image_bytes = await capture_screenshot(
-            normalized_url, api_key=api_key, auth_token=auth_token
+            normalized_url,
+            api_key=api_key,
+            auth_token=auth_token,
+            is_free_trial=is_free_trial,
         )
 
         # Convert the image bytes to a data url

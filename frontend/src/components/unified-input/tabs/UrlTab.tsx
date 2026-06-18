@@ -10,6 +10,7 @@ import { Stack } from "../../../lib/stacks";
 
 interface Props {
   screenshotOneApiKey: string | null;
+  isFreeTrialEligible?: boolean;
   doCreate: (
     urls: string[],
     inputMode: "image" | "video",
@@ -27,6 +28,7 @@ function isFigmaUrl(url: string): boolean {
 function UrlTab({
   doCreate,
   screenshotOneApiKey,
+  isFreeTrialEligible = false,
   stack,
   setStack,
   designSystem,
@@ -73,9 +75,14 @@ function UrlTab({
         toast.error("Please sign in to capture a URL.");
         return;
       }
-      const payload: { url: string; apiKey: string | null } = {
+      const payload: {
+        url: string;
+        apiKey: string | null;
+        isFreeTrial?: boolean;
+      } = {
         url: trimmedReferenceUrl,
         apiKey: IS_RUNNING_ON_CLOUD ? null : screenshotOneApiKey,
+        ...(isFreeTrialEligible ? { isFreeTrial: true } : {}),
       };
 
       const response = await fetch(`${HTTP_BACKEND_URL}/api/screenshot`, {

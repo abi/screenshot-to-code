@@ -1,5 +1,6 @@
 import pytest
-from routes.screenshot import normalize_url
+from routes.saas_utils import FreeTrialUsageResponse, SubscriptionCreditsResponse
+from routes.screenshot import capture_screenshot, normalize_url
 
 
 class TestNormalizeUrl:
@@ -57,3 +58,69 @@ class TestNormalizeUrl:
         assert normalize_url("example.com/path/to/page.html#section") == "https://example.com/path/to/page.html#section"
         assert normalize_url("user:pass@example.com") == "https://user:pass@example.com"
         assert normalize_url("example.com?q=search&lang=en") == "https://example.com?q=search&lang=en"
+
+
+class _FakeScreenshotResponse:
+    status_code = 200
+    content = b"png-bytes"
+
+
+class _FakeAsyncClient:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return None
+
+    async def get(self, url, params):
+        assert params["access_key"] == "platform-screenshotone-key"
+        return _FakeScreenshotResponse()
+
+
+@pytest.mark.asyncio
+async def test_capture_screenshot_allows_free_trial_without_user_api_key(monkeypatch):
+    async def fake_credits(auth_token: str):
+        assert auth_token == "token"
+        return SubscriptionCreditsResponse(user_id="user_123", status="not_subscriber")
+
+    async def fake_free_trial_usage(auth_token: str):
+        assert auth_token == "token"
+        return FreeTrialUsageResponse(used=0, limit=1)
+
+    monkeypatch.setattr(
+        "routes.screenshot.PLATFORM_SCREENSHOTONE_API_KEY",
+        "platform-screenshotone-key",
+    )
+    monkeypatch.setattr(
+        "routes.screenshot.does_user_have_subscription_credits", fake_credits
+    )
+    monkeypatch.setattr("routes.screenshot.get_free_trial_usage", fake_free_trial_usage)
+    monkeypatch.setattr("routes.screenshot.httpx.AsyncClient", _FakeAsyncClient)
+
+    image_bytes = await capture_screenshot(
+        "https://example.com", api_key=None, auth_token="token", is_free_trial=True
+    )
+
+    assert image_bytes == b"png-bytes"
+
+
+@pytest.mark.asyncio
+async def test_capture_screenshot_rejects_exhausted_free_trial_without_user_api_key(monkeypatch):
+    async def fake_credits(auth_token: str):
+        return SubscriptionCreditsResponse(user_id="user_123", status="not_subscriber")
+
+    async def fake_free_trial_usage(auth_token: str):
+        return FreeTrialUsageResponse(used=1, limit=1)
+
+    monkeypatch.setattr(
+        "routes.screenshot.does_user_have_subscription_credits", fake_credits
+    )
+    monkeypatch.setattr("routes.screenshot.get_free_trial_usage", fake_free_trial_usage)
+
+    with pytest.raises(Exception, match="User is not subscriber and has no API key"):
+        await capture_screenshot(
+            "https://example.com", api_key=None, auth_token="token", is_free_trial=True
+        )

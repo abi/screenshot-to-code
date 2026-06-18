@@ -18,6 +18,7 @@ interface Props {
   importFromCode: (code: string, stack: Stack) => void;
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+  isFreeTrialEligible?: boolean;
   designSystems: DesignSystem[];
   onAddNewDesignSystem: () => void;
   onManageDesignSystems: () => void;
@@ -31,6 +32,7 @@ function UnifiedInputPane({
   importFromCode,
   settings,
   setSettings,
+  isFreeTrialEligible = false,
   designSystems,
   onAddNewDesignSystem,
   onManageDesignSystems,
@@ -114,6 +116,7 @@ function UnifiedInputPane({
           <UrlTab
             doCreate={doCreate}
             screenshotOneApiKey={settings.screenshotOneApiKey}
+            isFreeTrialEligible={isFreeTrialEligible}
             stack={settings.generatedCodeConfig}
             setStack={setStack}
             designSystem={designSystemSelectorProps}
