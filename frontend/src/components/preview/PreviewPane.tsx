@@ -21,14 +21,21 @@ import { extractHtml } from "./extractHtml";
 import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
 import { SelectAndEditToolbarButton } from "../select-and-edit/SelectAndEditControls";
+import { normalizeBabelCdn } from "../../lib/babelCdn";
+
+function prepareHtmlForNewTab(code: string) {
+  const html = normalizeBabelCdn(code);
+  if (/<base\s/i.test(html)) return html;
+
+  const baseTag = `<base href="${window.location.origin}/">`;
+  return html.replace(/<head(\s[^>]*)?>/i, (match) => `${match}${baseTag}`);
+}
 
 function openInNewTab(code: string) {
-  const newWindow = window.open("", "_blank");
-  if (newWindow) {
-    newWindow.document.open();
-    newWindow.document.write(code);
-    newWindow.document.close();
-  }
+  const blob = new Blob([prepareHtmlForNewTab(code)], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank");
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
 interface Props {
@@ -144,7 +151,7 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
 
           {/* Version navigation */}
           {totalVersions > 0 && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center justify-center gap-1 bg-gray-100/50 dark:bg-zinc-800/50 rounded-full p-1 border border-gray-200/50 dark:border-zinc-700/50 backdrop-blur-sm">
+            <div className="hidden md:flex shrink-0 items-center justify-center gap-1 bg-gray-100/50 dark:bg-zinc-800/50 rounded-full p-1 border border-gray-200/50 dark:border-zinc-700/50 backdrop-blur-sm">
               <Button
                 onClick={() => canGoPrev && setHead(sortedCommits[currentVersionIndex - 1].hash)}
                 variant="ghost"
