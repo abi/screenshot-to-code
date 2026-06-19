@@ -26,7 +26,7 @@ class TestModelSelectionAllKeys:
         expected = [
             Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
             Llm.GPT_5_5_HIGH,
-            Llm.CLAUDE_OPUS_4_6,
+            Llm.CLAUDE_OPUS_4_8_HIGH,
             Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
         ]
         assert models == expected
