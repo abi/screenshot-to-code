@@ -129,7 +129,7 @@ class TestModelSelectionOpenAIAnthropic:
 
     @pytest.mark.asyncio
     async def test_openai_anthropic(self):
-        """OpenAI + Anthropic: Claude Opus 4.6, GPT 5.5 high, GPT 5.5 low, cycling"""
+        """OpenAI + Anthropic: Claude Opus 4.8 medium, GPT 5.5 high, GPT 5.5 low, cycling"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -139,10 +139,10 @@ class TestModelSelectionOpenAIAnthropic:
         )
 
         expected = [
-            Llm.CLAUDE_OPUS_4_6,
+            Llm.CLAUDE_OPUS_4_8_MEDIUM,
             Llm.GPT_5_5_HIGH,
             Llm.GPT_5_5_LOW,
-            Llm.CLAUDE_OPUS_4_6,
+            Llm.CLAUDE_OPUS_4_8_MEDIUM,
         ]
         assert models == expected
 
@@ -157,7 +157,7 @@ class TestModelSelectionAnthropicOnly:
 
     @pytest.mark.asyncio
     async def test_anthropic_only(self):
-        """Anthropic only: Claude Opus 4.6 and Claude Sonnet 4.6 cycling"""
+        """Anthropic only: Claude Opus 4.8 medium and Claude Sonnet 4.6 cycling"""
         models = await self.model_selector.select_models(
             generation_type="create",
             input_mode="text",
@@ -167,9 +167,9 @@ class TestModelSelectionAnthropicOnly:
         )
 
         expected = [
-            Llm.CLAUDE_OPUS_4_6,
+            Llm.CLAUDE_OPUS_4_8_MEDIUM,
             Llm.CLAUDE_SONNET_4_6,
-            Llm.CLAUDE_OPUS_4_6,
+            Llm.CLAUDE_OPUS_4_8_MEDIUM,
             Llm.CLAUDE_SONNET_4_6,
         ]
         assert models == expected

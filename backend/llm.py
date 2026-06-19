@@ -18,7 +18,6 @@ class Llm(Enum):
     GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)"
     # Claude
     CLAUDE_SONNET_4_6 = "claude-sonnet-4-6"
-    CLAUDE_OPUS_4_6 = "claude-opus-4-6"
     CLAUDE_OPUS_4_8_LOW = "claude-opus-4-8 (low effort)"
     CLAUDE_OPUS_4_8_MEDIUM = "claude-opus-4-8 (medium effort)"
     CLAUDE_OPUS_4_8_HIGH = "claude-opus-4-8 (high effort)"
@@ -64,7 +63,6 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GPT_5_5_XHIGH: "openai",
     # Anthropic models
     Llm.CLAUDE_SONNET_4_6: "anthropic",
-    Llm.CLAUDE_OPUS_4_6: "anthropic",
     Llm.CLAUDE_OPUS_4_8_LOW: "anthropic",
     Llm.CLAUDE_OPUS_4_8_MEDIUM: "anthropic",
     Llm.CLAUDE_OPUS_4_8_HIGH: "anthropic",

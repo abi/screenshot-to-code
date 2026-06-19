@@ -35,7 +35,7 @@ const stacks = process.env.QA_STACKS
   ? process.env.QA_STACKS.split(",").map((stack) => stack.trim() as Stack)
   : defaultStacks;
 
-const defaultModels = [CodeGenerationModel.CLAUDE_OPUS_4_6];
+const defaultModels = [CodeGenerationModel.GEMINI_3_FLASH_PREVIEW_MINIMAL];
 const models = process.env.QA_MODELS
   ? process.env.QA_MODELS.split(",").map((model) => model.trim())
   : defaultModels;

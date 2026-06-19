@@ -96,7 +96,7 @@ function App() {
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
-      codeGenerationModel: CodeGenerationModel.CLAUDE_OPUS_4_6,
+      codeGenerationModel: CodeGenerationModel.GEMINI_3_FLASH_PREVIEW_MINIMAL,
       selectedDesignSystemId: null,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
