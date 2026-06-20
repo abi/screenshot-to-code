@@ -281,7 +281,6 @@ class TestAnthropicExtract:
 class TestModelPricing:
     def test_known_models_have_pricing(self) -> None:
         for name in [
-            "claude-opus-4-6",
             "claude-sonnet-4-6",
             "gemini-3-flash-preview",
             "gemini-3-pro-preview",
@@ -297,7 +296,7 @@ class TestModelPricing:
         assert MODEL_PRICING.get("nonexistent-model") is None
 
     def test_anthropic_has_cache_write_rate(self) -> None:
-        for name in ["claude-opus-4-6", "claude-sonnet-4-6"]:
+        for name in ["claude-opus-4-8", "claude-sonnet-4-6"]:
             assert MODEL_PRICING[name].cache_write > 0
 
     def test_openai_gemini_no_cache_write(self) -> None:

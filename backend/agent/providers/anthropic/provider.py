@@ -25,7 +25,6 @@ from llm import Llm
 
 THINKING_MODELS: set[str] = set()
 ADAPTIVE_THINKING_MODELS = {
-    Llm.CLAUDE_OPUS_4_6.value,
     Llm.CLAUDE_OPUS_4_8_LOW.value,
     Llm.CLAUDE_OPUS_4_8_MEDIUM.value,
     Llm.CLAUDE_OPUS_4_8_HIGH.value,
