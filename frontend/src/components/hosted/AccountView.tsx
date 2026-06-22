@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import { showNewMessage } from "@intercom/messenger-js-sdk";
 import { LuChevronDown, LuLifeBuoy, LuLogOut, LuTrash2 } from "react-icons/lu";
 import Spinner from "../core/Spinner";
+import useStripeCheckout from "./payments/useStripeCheckout";
 
 function formatCreditDate(value: string | null) {
   if (!value) return null;
@@ -56,6 +57,7 @@ export default function AccountView() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useClerk();
   const authenticatedFetch = useAuthenticatedFetch();
+  const { checkoutExtraCredits, isLoadingCheckout } = useStripeCheckout();
   const monthlyPlanCreditsUsed = Math.min(usedCredits, monthlyCreditLimit);
   const extraCreditsUsedThisMonth = Math.max(
     usedCredits - monthlyCreditLimit,
@@ -64,7 +66,6 @@ export default function AccountView() {
   const hasExtraCreditGrants = extraCreditGrants.length > 0;
 
   const openPricingDialog = () => setPricingDialogOpen(true);
-  const openSupport = () => showNewMessage("");
 
   useEffect(() => {
     if (isFreeUser || !subscriberTier) return;
@@ -249,12 +250,14 @@ export default function AccountView() {
                         {subscriberTier === "pro" ? (
                           <span>
                             <button
-                              onClick={openSupport}
-                              className="ml-1 text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+                              onClick={checkoutExtraCredits}
+                              disabled={isLoadingCheckout}
+                              className="ml-1 inline-flex items-center gap-1 text-violet-600 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-60 dark:text-violet-400 dark:hover:text-violet-300"
                             >
-                              <span>Contact support</span>
+                              <span>Buy 100 credits for $8</span>
+                              {isLoadingCheckout && <Spinner />}
                             </button>
-                            <span> to buy additional credit packs: 100 credits for $8.</span>
+                            <span>.</span>
                           </span>
                         ) : (
                           <span>

@@ -98,6 +98,70 @@ export default function useStripeCheckout() {
     }
   };
 
+  const checkoutExtraCredits = async () => {
+    const priceLookupKey = "extra_credits_100";
+    if (!stripe) {
+      const billingState = useStore.getState();
+      captureBillingException(new Error("Stripe has not finished loading"), {
+        flow: "checkout",
+        stage: "stripe_not_loaded",
+        context: {
+          price_lookup_key: priceLookupKey,
+          subscriber_tier: billingState.subscriberTier,
+          billing_interval: billingState.billingInterval,
+        },
+      });
+      addEvent("StripeNotLoaded");
+      return;
+    }
+
+    try {
+      setIsLoadingCheckout(true);
+
+      const res: CreateCheckoutSessionResponse = await authenticatedFetch(
+        `${SAAS_BACKEND_URL}/payments/create_extra_credit_checkout_session`,
+        "POST",
+      );
+
+      addEvent("Extra Credits Checkout Started", {
+        ...getAttributionEventProps(),
+        price_lookup_key: priceLookupKey,
+      });
+      addTikTokEvent("InitiateCheckout", {
+        ...getAttributionEventProps(),
+        price_lookup_key: priceLookupKey,
+      });
+      addGoogleAdsConversion(GOOGLE_ADS_CHECKOUT_STARTED_CONVERSION_SEND_TO, {
+        ...getAttributionEventProps(),
+        price_lookup_key: priceLookupKey,
+        value: 8.0,
+        currency: "USD",
+      });
+
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: res.sessionId,
+      });
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (e) {
+      const billingState = useStore.getState();
+      captureBillingException(e, {
+        flow: "checkout",
+        stage: "redirect_to_extra_credits_checkout",
+        context: {
+          price_lookup_key: priceLookupKey,
+          subscriber_tier: billingState.subscriberTier,
+          billing_interval: billingState.billingInterval,
+        },
+      });
+      toast.error("Error directing you to checkout. Please contact support.");
+      addEvent("ExtraCreditsCheckoutError");
+    } finally {
+      setIsLoadingCheckout(false);
+    }
+  };
+
   // Load Stripe when the component mounts
   useEffect(() => {
     async function load() {
@@ -120,5 +184,5 @@ export default function useStripeCheckout() {
     load();
   }, []);
 
-  return { checkout, isLoadingCheckout };
+  return { checkout, checkoutExtraCredits, isLoadingCheckout };
 }
