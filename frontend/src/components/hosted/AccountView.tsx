@@ -27,23 +27,6 @@ function formatCreditDate(value: string | null) {
   });
 }
 
-function formatGrantSource(source: string) {
-  return source
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function getGrantStatus(grant: ExtraCreditGrant) {
-  if (new Date(grant.expires_at).getTime() <= Date.now()) {
-    return "Expired";
-  }
-  if (grant.credits_remaining <= 0) {
-    return "Used";
-  }
-  return "Active";
-}
-
 export default function AccountView() {
   const [isLoadingUsage, setIsLoadingUsage] = useState(false);
   const [usedCredits, setUsedCredits] = useState(0);
@@ -332,33 +315,18 @@ export default function AccountView() {
                             <div className="divide-y divide-gray-100 border-t border-gray-100 dark:divide-zinc-700 dark:border-zinc-700">
                               {extraCreditGrants.map((grant) => (
                                 <div key={grant.id} className="px-3 py-2">
-                                  <div className="flex items-center justify-between gap-3 text-xs">
-                                    <div className="min-w-0">
-                                      <p className="font-medium text-gray-900 dark:text-white">
-                                        {grant.credits_remaining} /{" "}
-                                        {grant.credits_granted} credits
-                                      </p>
-                                      <p className="text-gray-500 dark:text-zinc-400">
-                                        {formatGrantSource(grant.source)}{" "}
-                                        &middot;{" "}
-                                        {formatCreditDate(grant.date_created)}
-                                      </p>
-                                    </div>
-                                    <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 dark:bg-zinc-700 dark:text-zinc-200">
-                                      {getGrantStatus(grant)}
-                                    </span>
-                                  </div>
+                                  <p className="text-xs font-medium text-gray-900 dark:text-white">
+                                    {grant.credits_granted -
+                                      grant.credits_remaining}{" "}
+                                    used / {grant.credits_granted} purchased
+                                  </p>
+                                  <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                                    Purchased{" "}
+                                    {formatCreditDate(grant.date_created)}
+                                  </p>
                                   <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
                                     Expires {formatCreditDate(grant.expires_at)}
-                                    {grant.stripe_price_lookup_key
-                                      ? ` · ${grant.stripe_price_lookup_key}`
-                                      : ""}
                                   </p>
-                                  {grant.notes && (
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                                      {grant.notes}
-                                    </p>
-                                  )}
                                 </div>
                               ))}
                             </div>
