@@ -264,7 +264,7 @@ export default function AccountView() {
                             >
                               <span>Upgrade to Pro</span>
                             </button>
-                            <span> to buy more credit packs. Existing extra credits remain usable.</span>
+                            <span> to get 500 credits per month.</span>
                           </span>
                         )}
                       </p>
