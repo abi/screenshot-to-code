@@ -4,13 +4,18 @@ import { useStore } from "../../store/store";
 import { capitalize, formatPlanLabel } from "./utils";
 import StripeCustomerPortalLink from "./StripeCustomerPortalLink";
 import { Progress } from "../ui/progress";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { SAAS_BACKEND_URL } from "../../config";
 import { CreditsUsage, ExtraCreditGrant } from "./types";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { showNewMessage } from "@intercom/messenger-js-sdk";
-import { LuLifeBuoy, LuLogOut, LuTrash2 } from "react-icons/lu";
+import { LuChevronDown, LuLifeBuoy, LuLogOut, LuTrash2 } from "react-icons/lu";
 import Spinner from "../core/Spinner";
 
 function formatCreditDate(value: string | null) {
@@ -50,6 +55,7 @@ export default function AccountView() {
   const [extraCreditGrants, setExtraCreditGrants] = useState<
     ExtraCreditGrant[]
   >([]);
+  const [isCreditHistoryOpen, setIsCreditHistoryOpen] = useState(false);
 
   const subscriberTier = useStore((state) => state.subscriberTier);
   const billingInterval = useStore((state) => state.billingInterval);
@@ -67,6 +73,12 @@ export default function AccountView() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useClerk();
   const authenticatedFetch = useAuthenticatedFetch();
+  const monthlyPlanCreditsUsed = Math.min(usedCredits, monthlyCreditLimit);
+  const extraCreditsUsedThisMonth = Math.max(
+    usedCredits - monthlyCreditLimit,
+    0,
+  );
+  const hasExtraCreditGrants = extraCreditGrants.length > 0;
 
   const openPricingDialog = () => setPricingDialogOpen(true);
   const openSupport = () => showNewMessage("");
@@ -222,27 +234,35 @@ export default function AccountView() {
                       }`}
                     >
                       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
-                        <span>Monthly credits</span>
+                        <span>Monthly plan credits</span>
                         <span>
-                          {usedCredits} / {monthlyCreditLimit}
+                          {monthlyPlanCreditsUsed} / {monthlyCreditLimit}
                         </span>
                       </div>
                       <Progress
                         value={
                           monthlyCreditLimit > 0
-                            ? (usedCredits / monthlyCreditLimit) * 100
+                            ? (monthlyPlanCreditsUsed / monthlyCreditLimit) * 100
                             : 0
                         }
                       />
                       <p className="text-xs text-gray-500 dark:text-zinc-400">
                         <span>
-                          {usedCredits} out of {monthlyCreditLimit} monthly
-                          credits used for{" "}
+                          {monthlyPlanCreditsUsed} out of {monthlyCreditLimit}{" "}
+                          monthly plan credits used for{" "}
                           {new Date().toLocaleString("default", {
                             month: "long",
                           })}
                           .
                         </span>
+                        {extraCreditsUsedThisMonth > 0 && (
+                          <span>
+                            {" "}
+                            {extraCreditsUsedThisMonth} generation
+                            {extraCreditsUsedThisMonth === 1 ? "" : "s"} this
+                            month used extra credits.
+                          </span>
+                        )}
                         {subscriberTier === "pro" ? (
                           <span>
                             <button
@@ -265,60 +285,85 @@ export default function AccountView() {
                           </span>
                         )}
                       </p>
-                      <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
-                          <span>Extra credits</span>
-                          <span className="font-medium text-gray-900 dark:text-white">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
+                          <div className="text-xs text-gray-500 dark:text-zinc-400">
+                            Monthly plan balance
+                          </div>
+                          <div className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                            {Math.max(monthlyCreditLimit - usedCredits, 0)} left
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
+                          <div className="text-xs text-gray-500 dark:text-zinc-400">
+                            Extra credits balance
+                          </div>
+                          <div className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
                             {extraCreditsRemaining}
-                          </span>
+                            <span className="ml-1 text-xs font-normal text-gray-500 dark:text-zinc-400">
+                              available
+                            </span>
+                          </div>
+                          {nextExtraCreditExpiration && (
+                            <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                              Next expiry:{" "}
+                              {formatCreditDate(nextExtraCreditExpiration)}
+                            </p>
+                          )}
                         </div>
-                        {nextExtraCreditExpiration && (
-                          <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                            Next expiry:{" "}
-                            {formatCreditDate(nextExtraCreditExpiration)}
-                          </p>
-                        )}
                       </div>
-                      {extraCreditGrants.length > 0 && (
-                        <div className="rounded-lg border border-gray-100 dark:border-zinc-700">
-                          <div className="border-b border-gray-100 px-3 py-2 dark:border-zinc-700">
-                            <h3 className="text-xs font-medium text-gray-900 dark:text-white">
-                              Credit grants and purchases
-                            </h3>
-                          </div>
-                          <div className="divide-y divide-gray-100 dark:divide-zinc-700">
-                            {extraCreditGrants.map((grant) => (
-                              <div key={grant.id} className="px-3 py-2">
-                                <div className="flex items-center justify-between gap-3 text-xs">
-                                  <div className="min-w-0">
-                                    <p className="font-medium text-gray-900 dark:text-white">
-                                      {grant.credits_remaining} /{" "}
-                                      {grant.credits_granted} credits
-                                    </p>
-                                    <p className="text-gray-500 dark:text-zinc-400">
-                                      {formatGrantSource(grant.source)} &middot;{" "}
-                                      {formatCreditDate(grant.date_created)}
-                                    </p>
+                      {hasExtraCreditGrants && (
+                        <Collapsible
+                          open={isCreditHistoryOpen}
+                          onOpenChange={setIsCreditHistoryOpen}
+                          className="rounded-lg border border-gray-100 dark:border-zinc-700"
+                        >
+                          <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs font-medium text-gray-900 transition-colors hover:bg-gray-50 dark:text-white dark:hover:bg-zinc-700/40">
+                            <span>
+                              View credit purchases ({extraCreditGrants.length})
+                            </span>
+                            <LuChevronDown
+                              className={`h-4 w-4 text-gray-500 transition-transform dark:text-zinc-400 ${
+                                isCreditHistoryOpen ? "rotate-180" : ""
+                              }`}
+                            />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="divide-y divide-gray-100 border-t border-gray-100 dark:divide-zinc-700 dark:border-zinc-700">
+                              {extraCreditGrants.map((grant) => (
+                                <div key={grant.id} className="px-3 py-2">
+                                  <div className="flex items-center justify-between gap-3 text-xs">
+                                    <div className="min-w-0">
+                                      <p className="font-medium text-gray-900 dark:text-white">
+                                        {grant.credits_remaining} /{" "}
+                                        {grant.credits_granted} credits
+                                      </p>
+                                      <p className="text-gray-500 dark:text-zinc-400">
+                                        {formatGrantSource(grant.source)}{" "}
+                                        &middot;{" "}
+                                        {formatCreditDate(grant.date_created)}
+                                      </p>
+                                    </div>
+                                    <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 dark:bg-zinc-700 dark:text-zinc-200">
+                                      {getGrantStatus(grant)}
+                                    </span>
                                   </div>
-                                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 dark:bg-zinc-700 dark:text-zinc-200">
-                                    {getGrantStatus(grant)}
-                                  </span>
-                                </div>
-                                <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                                  Expires {formatCreditDate(grant.expires_at)}
-                                  {grant.stripe_price_lookup_key
-                                    ? ` · ${grant.stripe_price_lookup_key}`
-                                    : ""}
-                                </p>
-                                {grant.notes && (
                                   <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                                    {grant.notes}
+                                    Expires {formatCreditDate(grant.expires_at)}
+                                    {grant.stripe_price_lookup_key
+                                      ? ` · ${grant.stripe_price_lookup_key}`
+                                      : ""}
                                   </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                                  {grant.notes && (
+                                    <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                                      {grant.notes}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
                       )}
                     </div>
                   )}
