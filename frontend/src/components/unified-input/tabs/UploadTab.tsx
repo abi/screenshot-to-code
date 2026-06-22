@@ -14,10 +14,13 @@ function fileToDataURL(file: File): Promise<string> {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      if (result.startsWith("data:application/octet-stream") && file.type) {
+      const mimeType =
+        file.type ||
+        (file.name.toLowerCase().endsWith(".mov") ? "video/quicktime" : "");
+      if (result.startsWith("data:application/octet-stream") && mimeType) {
         const correctedResult = result.replace(
           "data:application/octet-stream",
-          `data:${file.type}`
+          `data:${mimeType}`
         );
         resolve(correctedResult);
       } else {
