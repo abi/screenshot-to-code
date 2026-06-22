@@ -195,7 +195,7 @@ def canonical_tool_definitions(
             CanonicalToolDefinition(
                 name="generate_images",
                 description=(
-                    "Generate image URLs from prompts. Use to replace placeholder images. "
+                    "Generate image URLs from prompts using an image generation model. Prompt in detail, and when prompting for people, include details about their appearance such as their ethnicity, hair color, features, etc." +
                     "You can pass multiple prompts at once."
                 ),
                 parameters=_image_schema(),

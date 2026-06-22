@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { formatRelative } from "date-fns";
 import * as Sentry from "@sentry/react";
 import toast from "react-hot-toast";
@@ -98,7 +105,57 @@ function PaginationSection({
   handlePageChange,
   className = "my-3",
 }: PaginationSectionProps) {
+  const pageJumpInputId = useId();
+  const [pageInput, setPageInput] = useState(String(currentPage));
+
+  useEffect(() => {
+    setPageInput(String(currentPage));
+  }, [currentPage]);
+
   if (totalPages <= 1) return null;
+
+  const submitPageJump = (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+
+    const rawPageInput = pageInput.trim();
+    if (!rawPageInput) {
+      setPageInput(String(currentPage));
+      return;
+    }
+
+    const requestedPage = Number(rawPageInput);
+    if (!Number.isInteger(requestedPage)) {
+      setPageInput(String(currentPage));
+      return;
+    }
+
+    const nextPage = Math.min(totalPages, Math.max(1, requestedPage));
+    setPageInput(String(nextPage));
+    if (nextPage === currentPage) return;
+
+    handlePageChange(nextPage);
+  };
+
+  const pageJumpInput = (
+    <PaginationItem>
+      <form onSubmit={submitPageJump}>
+        <label htmlFor={pageJumpInputId} className="sr-only">
+          Page
+        </label>
+        <input
+          id={pageJumpInputId}
+          aria-label={`Page number, 1 through ${totalPages}`}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={pageInput}
+          onBlur={() => submitPageJump()}
+          onChange={(event) => setPageInput(event.target.value)}
+          onFocus={(event) => event.target.select()}
+          className="flex h-9 w-12 rounded-md border border-gray-200 bg-white px-2 text-center text-sm font-medium text-gray-900 shadow-sm outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+        />
+      </form>
+    </PaginationItem>
+  );
 
   return (
     <Pagination className={className}>
@@ -113,27 +170,25 @@ function PaginationSection({
             }
           />
         </PaginationItem>
-        <PaginationItem>
-          <PaginationLink
-            onClick={() => handlePageChange(1)}
-            isActive={currentPage === 1}
-            className="cursor-pointer"
-          >
-            1
-          </PaginationLink>
-        </PaginationItem>
-        {currentPage > 1 && currentPage < totalPages && (
+        {currentPage === 1 ? (
+          pageJumpInput
+        ) : (
           <PaginationItem>
-            <PaginationLink isActive className="cursor-pointer">
-              {currentPage}
+            <PaginationLink
+              onClick={() => handlePageChange(1)}
+              className="cursor-pointer"
+            >
+              1
             </PaginationLink>
           </PaginationItem>
         )}
-        {totalPages > 1 && (
+        {currentPage > 1 && currentPage < totalPages && pageJumpInput}
+        {currentPage === totalPages ? (
+          pageJumpInput
+        ) : (
           <PaginationItem>
             <PaginationLink
               onClick={() => handlePageChange(totalPages)}
-              isActive={currentPage === totalPages}
               className="cursor-pointer"
             >
               {totalPages}
