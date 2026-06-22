@@ -30,6 +30,23 @@ export interface CreatePortalSessionRequest {
 export interface CreditsUsage {
   total_monthly_credits: number;
   used_monthly_credits: number;
+  monthly_credit_limit: number;
+  extra_credits_remaining: number;
+  extra_credits_next_expiration: string | null;
+  extra_credit_grants: ExtraCreditGrant[];
+}
+
+export interface ExtraCreditGrant {
+  id: string;
+  date_created: string;
+  expires_at: string;
+  credits_granted: number;
+  credits_remaining: number;
+  source: string;
+  stripe_checkout_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  stripe_price_lookup_key: string | null;
+  notes: string | null;
 }
 
 export interface ProjectHistoryGeneration {

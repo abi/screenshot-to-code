@@ -6,17 +6,50 @@ import StripeCustomerPortalLink from "./StripeCustomerPortalLink";
 import { Progress } from "../ui/progress";
 import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
 import { SAAS_BACKEND_URL } from "../../config";
-import { CreditsUsage } from "./types";
+import { CreditsUsage, ExtraCreditGrant } from "./types";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { showNewMessage } from "@intercom/messenger-js-sdk";
 import { LuLifeBuoy, LuLogOut, LuTrash2 } from "react-icons/lu";
 import Spinner from "../core/Spinner";
 
+function formatCreditDate(value: string | null) {
+  if (!value) return null;
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatGrantSource(source: string) {
+  return source
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getGrantStatus(grant: ExtraCreditGrant) {
+  if (new Date(grant.expires_at).getTime() <= Date.now()) {
+    return "Expired";
+  }
+  if (grant.credits_remaining <= 0) {
+    return "Used";
+  }
+  return "Active";
+}
+
 export default function AccountView() {
   const [isLoadingUsage, setIsLoadingUsage] = useState(false);
   const [usedCredits, setUsedCredits] = useState(0);
-  const [totalCredits, setTotalCredits] = useState(0);
+  const [monthlyCreditLimit, setMonthlyCreditLimit] = useState(0);
+  const [extraCreditsRemaining, setExtraCreditsRemaining] = useState(0);
+  const [nextExtraCreditExpiration, setNextExtraCreditExpiration] = useState<
+    string | null
+  >(null);
+  const [extraCreditGrants, setExtraCreditGrants] = useState<
+    ExtraCreditGrant[]
+  >([]);
 
   const subscriberTier = useStore((state) => state.subscriberTier);
   const billingInterval = useStore((state) => state.billingInterval);
@@ -49,7 +82,12 @@ export default function AccountView() {
           "POST",
         );
         setUsedCredits(res.used_monthly_credits);
-        setTotalCredits(res.total_monthly_credits);
+        setMonthlyCreditLimit(
+          res.monthly_credit_limit ?? res.total_monthly_credits,
+        );
+        setExtraCreditsRemaining(res.extra_credits_remaining ?? 0);
+        setNextExtraCreditExpiration(res.extra_credits_next_expiration ?? null);
+        setExtraCreditGrants(res.extra_credit_grants ?? []);
       } catch (e) {
         toast.error(
           "Failed to fetch credit usage. Please contact support to get this issue fixed.",
@@ -186,19 +224,20 @@ export default function AccountView() {
                       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
                         <span>Monthly credits</span>
                         <span>
-                          {usedCredits} / {totalCredits}
+                          {usedCredits} / {monthlyCreditLimit}
                         </span>
                       </div>
                       <Progress
                         value={
-                          totalCredits > 0
-                            ? (usedCredits / totalCredits) * 100
+                          monthlyCreditLimit > 0
+                            ? (usedCredits / monthlyCreditLimit) * 100
                             : 0
                         }
                       />
                       <p className="text-xs text-gray-500 dark:text-zinc-400">
                         <span>
-                          {usedCredits} out of {totalCredits} credits used for{" "}
+                          {usedCredits} out of {monthlyCreditLimit} monthly
+                          credits used for{" "}
                           {new Date().toLocaleString("default", {
                             month: "long",
                           })}
@@ -222,10 +261,65 @@ export default function AccountView() {
                             >
                               <span>Upgrade to Pro</span>
                             </button>
-                            <span> to get 5x more credits.</span>
+                            <span> to buy more credit packs. Existing extra credits remain usable.</span>
                           </span>
                         )}
                       </p>
+                      <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
+                          <span>Extra credits</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {extraCreditsRemaining}
+                          </span>
+                        </div>
+                        {nextExtraCreditExpiration && (
+                          <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                            Next expiry:{" "}
+                            {formatCreditDate(nextExtraCreditExpiration)}
+                          </p>
+                        )}
+                      </div>
+                      {extraCreditGrants.length > 0 && (
+                        <div className="rounded-lg border border-gray-100 dark:border-zinc-700">
+                          <div className="border-b border-gray-100 px-3 py-2 dark:border-zinc-700">
+                            <h3 className="text-xs font-medium text-gray-900 dark:text-white">
+                              Credit grants and purchases
+                            </h3>
+                          </div>
+                          <div className="divide-y divide-gray-100 dark:divide-zinc-700">
+                            {extraCreditGrants.map((grant) => (
+                              <div key={grant.id} className="px-3 py-2">
+                                <div className="flex items-center justify-between gap-3 text-xs">
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-gray-900 dark:text-white">
+                                      {grant.credits_remaining} /{" "}
+                                      {grant.credits_granted} credits
+                                    </p>
+                                    <p className="text-gray-500 dark:text-zinc-400">
+                                      {formatGrantSource(grant.source)} &middot;{" "}
+                                      {formatCreditDate(grant.date_created)}
+                                    </p>
+                                  </div>
+                                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 dark:bg-zinc-700 dark:text-zinc-200">
+                                    {getGrantStatus(grant)}
+                                  </span>
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                                  Expires {formatCreditDate(grant.expires_at)}
+                                  {grant.stripe_price_lookup_key
+                                    ? ` · ${grant.stripe_price_lookup_key}`
+                                    : ""}
+                                </p>
+                                {grant.notes && (
+                                  <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                                    {grant.notes}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
