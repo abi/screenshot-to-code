@@ -1,5 +1,4 @@
 # pyright: reportUnknownVariableType=false
-import base64
 import copy
 import json
 import uuid
@@ -16,7 +15,7 @@ from agent.providers.base import (
     ProviderTurn,
     StreamEvent,
 )
-from agent.providers.anthropic.image import process_image
+from agent.providers.anthropic.image import process_image, process_image_bytes
 from agent.providers.pricing import MODEL_PRICING
 from agent.providers.token_usage import TokenUsage
 from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
@@ -301,12 +300,13 @@ class AnthropicProviderSession(ProviderSession):
                 "source": {"type": "url", "url": part.image_url},
             }
         if part.data is not None:
+            media_type, base64_data = process_image_bytes(part.data, part.mime_type)
             return {
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": part.mime_type,
-                    "data": base64.b64encode(part.data).decode("ascii"),
+                    "media_type": media_type,
+                    "data": base64_data,
                 },
             }
         return None

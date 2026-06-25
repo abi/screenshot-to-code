@@ -52,7 +52,13 @@ def process_image(image_data_url: str) -> tuple[str, str]:
     base64_data = image_data_url.split(",")[1]
     image_bytes = base64.b64decode(base64_data)
 
+    return process_image_bytes(image_bytes, media_type)
+
+
+def process_image_bytes(image_bytes: bytes, media_type: str) -> tuple[str, str]:
+    """Resize / compress image bytes to fit Claude's vision limits."""
     img = Image.open(io.BytesIO(image_bytes))
+    base64_data = base64.b64encode(image_bytes).decode("utf-8")
 
     is_under_dimension_limit = (
         img.width < CLAUDE_MAX_IMAGE_DIMENSION
