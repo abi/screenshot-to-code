@@ -443,7 +443,7 @@ html {
     background-color: #09090b !important;
   }
 
-  iframe {
+  iframe[srcdoc] {
     background-color: white !important; 
   }
 
