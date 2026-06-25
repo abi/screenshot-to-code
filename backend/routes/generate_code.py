@@ -8,6 +8,7 @@ from typing import Callable, Awaitable
 from fastapi import APIRouter, WebSocket
 import openai
 import sentry_sdk
+from starlette.websockets import WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from config import (
     ANTHROPIC_API_KEY,
@@ -208,7 +209,12 @@ class WebSocketCommunicator:
             if eventId is not None:
                 payload["eventId"] = eventId
             await self.websocket.send_json(payload)
-        except (ConnectionClosedOK, ConnectionClosedError):
+        except (
+            ConnectionClosedOK,
+            ConnectionClosedError,
+            RuntimeError,
+            WebSocketDisconnect,
+        ):
             print(f"WebSocket closed by client, skipping message: {type}")
             self.is_closed = True
 
@@ -219,13 +225,22 @@ class WebSocketCommunicator:
             try:
                 await self.websocket.send_json({"type": "error", "value": message})
                 await self.websocket.close(APP_ERROR_WEB_SOCKET_CODE)
-            except (ConnectionClosedOK, ConnectionClosedError):
+            except (
+                ConnectionClosedOK,
+                ConnectionClosedError,
+                RuntimeError,
+                WebSocketDisconnect,
+            ):
                 print("WebSocket already closed by client")
             self.is_closed = True
 
     async def receive_params(self) -> Dict[str, Any]:
         """Receive parameters from the client"""
-        params: Dict[str, Any] = await self.websocket.receive_json()
+        try:
+            params: Dict[str, Any] = await self.websocket.receive_json()
+        except WebSocketDisconnect:
+            self.is_closed = True
+            raise
         print("Received params")
         return params
 
@@ -234,7 +249,12 @@ class WebSocketCommunicator:
         if not self.is_closed:
             try:
                 await self.websocket.close()
-            except (ConnectionClosedOK, ConnectionClosedError):
+            except (
+                ConnectionClosedOK,
+                ConnectionClosedError,
+                RuntimeError,
+                WebSocketDisconnect,
+            ):
                 pass  # Already closed by client
             self.is_closed = True
 

@@ -22,8 +22,11 @@ PUBLIC = ToolMultimodalPart(
     mime_type="image/png",
     image_url="https://replicate.delivery/abc/out.png",
 )
+LOCAL_IMAGE_BYTES = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+)
 LOCAL = ToolMultimodalPart(
-    display_name="crop.png", mime_type="image/png", data=b"local-bytes"
+    display_name="crop.png", mime_type="image/png", data=LOCAL_IMAGE_BYTES
 )
 
 
@@ -60,7 +63,20 @@ def _executed(parts: List[ToolMultimodalPart], ok: bool = True) -> ExecutedToolC
 
 
 @pytest.mark.asyncio
-async def test_anthropic_url_for_public_base64_for_local() -> None:
+async def test_anthropic_url_for_public_processes_local_bytes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    processed_data = "processed-image"
+    captured_images: list[tuple[bytes, str]] = []
+
+    def fake_process_image_bytes(image_bytes: bytes, media_type: str) -> tuple[str, str]:
+        captured_images.append((image_bytes, media_type))
+        return ("image/jpeg", processed_data)
+
+    monkeypatch.setattr(
+        "agent.providers.anthropic.provider.process_image_bytes",
+        fake_process_image_bytes,
+    )
     session = AnthropicProviderSession(
         client=object(),  # type: ignore[arg-type]
         model=Llm.CLAUDE_OPUS_4_8_HIGH,
@@ -77,8 +93,12 @@ async def test_anthropic_url_for_public_base64_for_local() -> None:
     content = session._messages[-1]["content"][0]["content"]  # type: ignore[index]
     images = [b for b in content if b.get("type") == "image"]
     assert images[0]["source"] == {"type": "url", "url": PUBLIC.image_url}
-    assert images[1]["source"]["type"] == "base64"
-    assert images[1]["source"]["data"] == base64.b64encode(b"local-bytes").decode()
+    assert captured_images == [(LOCAL_IMAGE_BYTES, "image/png")]
+    assert images[1]["source"] == {
+        "type": "base64",
+        "media_type": "image/jpeg",
+        "data": processed_data,
+    }
 
 
 @pytest.mark.asyncio
@@ -119,7 +139,7 @@ async def test_openai_url_for_public_dataurl_for_local_with_detail() -> None:
     images = [p for p in output if p.get("type") == "input_image"]
     assert images[0]["image_url"] == PUBLIC.image_url
     assert images[1]["image_url"] == (
-        "data:image/png;base64," + base64.b64encode(b"local-bytes").decode()
+        "data:image/png;base64," + base64.b64encode(LOCAL_IMAGE_BYTES).decode()
     )
     assert all("detail" in p for p in images)
 
@@ -174,7 +194,7 @@ async def test_gemini_inlines_local_bytes_and_fetches_public_url(
     assert response_parts[0].inline_data.data == b"fetched-bytes"
     assert response_parts[0].inline_data.mime_type == "image/webp"
     # Local bytes inlined as-is.
-    assert response_parts[1].inline_data.data == b"local-bytes"
+    assert response_parts[1].inline_data.data == LOCAL_IMAGE_BYTES
 
 
 @pytest.mark.asyncio
