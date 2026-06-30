@@ -81,14 +81,13 @@ class _FakeAsyncClient:
 
 
 @pytest.mark.asyncio
-async def test_capture_screenshot_allows_free_trial_without_user_api_key(monkeypatch):
+async def test_capture_screenshot_rejects_free_trial_without_user_api_key(monkeypatch):
     async def fake_credits(auth_token: str):
         assert auth_token == "token"
         return SubscriptionCreditsResponse(user_id="user_123", status="not_subscriber")
 
     async def fake_free_trial_usage(auth_token: str):
-        assert auth_token == "token"
-        return FreeTrialUsageResponse(used=0, limit=1)
+        raise AssertionError("Free trial usage should not be checked when disabled")
 
     monkeypatch.setattr(
         "routes.screenshot.PLATFORM_SCREENSHOTONE_API_KEY",
@@ -100,11 +99,10 @@ async def test_capture_screenshot_allows_free_trial_without_user_api_key(monkeyp
     monkeypatch.setattr("routes.screenshot.get_free_trial_usage", fake_free_trial_usage)
     monkeypatch.setattr("routes.screenshot.httpx.AsyncClient", _FakeAsyncClient)
 
-    image_bytes = await capture_screenshot(
-        "https://example.com", api_key=None, auth_token="token", is_free_trial=True
-    )
-
-    assert image_bytes == b"png-bytes"
+    with pytest.raises(Exception, match="User is not subscriber and has no API key"):
+        await capture_screenshot(
+            "https://example.com", api_key=None, auth_token="token", is_free_trial=True
+        )
 
 
 @pytest.mark.asyncio

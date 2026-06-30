@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 
 router = APIRouter()
 
+FREE_TRIAL_SCREENSHOTS_ENABLED = False
+
 
 def normalize_url(url: str) -> str:
     """
@@ -64,9 +66,14 @@ async def capture_screenshot(
     if not api_key:
         res = await does_user_have_subscription_credits(auth_token)
         if res.status == "not_subscriber":
-            free_trial_usage = await get_free_trial_usage(auth_token)
-            if is_free_trial and free_trial_usage.used < free_trial_usage.limit:
-                api_key = PLATFORM_SCREENSHOTONE_API_KEY
+            if FREE_TRIAL_SCREENSHOTS_ENABLED and is_free_trial:
+                free_trial_usage = await get_free_trial_usage(auth_token)
+                if free_trial_usage.used < free_trial_usage.limit:
+                    api_key = PLATFORM_SCREENSHOTONE_API_KEY
+                else:
+                    raise Exception(
+                        "capture_screenshot - User is not subscriber and has no API key"
+                    )
             else:
                 raise Exception(
                     "capture_screenshot - User is not subscriber and has no API key"

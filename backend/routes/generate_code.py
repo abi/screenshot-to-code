@@ -46,6 +46,8 @@ from routes.saas_utils import (
 )
 from utils import print_prompt_preview
 
+FREE_TRIAL_GENERATIONS_ENABLED = False
+
 # WebSocket message types
 MessageType = Literal[
     "chunk",
@@ -360,7 +362,9 @@ class ParameterExtractionStage:
 
         if payment_method is PaymentMethod.UNKNOWN:
             # Delayed paywall A/B test: allow free trial generations
-            is_free_trial = bool(params.get("isFreeTrial", False))
+            is_free_trial = FREE_TRIAL_GENERATIONS_ENABLED and bool(
+                params.get("isFreeTrial", False)
+            )
             if is_free_trial and res.status == "not_subscriber":
                 # Validate server-side that the user has free trial generations left
                 free_trial_usage = await get_free_trial_usage(auth_token)
