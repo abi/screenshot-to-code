@@ -31,6 +31,7 @@ class AgentEngine:
         openai_base_url: Optional[str],
         anthropic_api_key: Optional[str],
         gemini_api_key: Optional[str],
+        replicate_api_key: Optional[str],
         should_generate_images: bool,
         asset_base_url: str = "",
         initial_file_state: Optional[Dict[str, str]] = None,
@@ -42,6 +43,7 @@ class AgentEngine:
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
+        self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
 
         self.file_state = AgentFileState()
@@ -55,6 +57,7 @@ class AgentEngine:
             openai_api_key=openai_api_key,
             openai_base_url=openai_base_url,
             gemini_api_key=gemini_api_key,
+            replicate_api_key=replicate_api_key,
             asset_base_url=asset_base_url,
             option_codes=option_codes,
         )
@@ -260,6 +263,7 @@ class AgentEngine:
             openai_base_url=self.openai_base_url,
             anthropic_api_key=self.anthropic_api_key,
             gemini_api_key=self.gemini_api_key,
+            replicate_api_key=self.replicate_api_key,
         )
         try:
             return await self._run_with_session(session)

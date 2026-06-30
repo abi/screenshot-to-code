@@ -255,6 +255,7 @@ class ExtractedParams:
     openai_api_key: str | None
     anthropic_api_key: str | None
     gemini_api_key: str | None
+    replicate_api_key: str | None
     openai_base_url: str | None
     generation_type: Literal["create", "update"]
     prompt: UserTurnInput
@@ -304,6 +305,9 @@ class ParameterExtractionStage:
         )
         gemini_api_key = self._get_from_settings_dialog_or_env(
             params, "geminiApiKey", GEMINI_API_KEY
+        )
+        replicate_api_key = self._get_from_settings_dialog_or_env(
+            params, "replicateApiKey", REPLICATE_API_KEY
         )
 
         # Base URL for OpenAI API
@@ -371,6 +375,7 @@ class ParameterExtractionStage:
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
             gemini_api_key=gemini_api_key,
+            replicate_api_key=replicate_api_key,
             openai_base_url=openai_base_url,
             generation_type=generation_type,
             prompt=prompt,
@@ -545,6 +550,7 @@ class AgenticGenerationStage:
         openai_base_url: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        replicate_api_key: str | None,
         should_generate_images: bool,
         file_state: Dict[str, str] | None,
         asset_base_url: str,
@@ -555,6 +561,7 @@ class AgenticGenerationStage:
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
+        self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
         self.file_state = file_state
         self.asset_base_url = asset_base_url
@@ -613,6 +620,7 @@ class AgenticGenerationStage:
                 openai_base_url=self.openai_base_url,
                 anthropic_api_key=self.anthropic_api_key,
                 gemini_api_key=self.gemini_api_key,
+                replicate_api_key=self.replicate_api_key,
                 should_generate_images=self.should_generate_images,
                 asset_base_url=self.asset_base_url,
                 initial_file_state=self.file_state,
@@ -794,6 +802,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_base_url=context.extracted_params.openai_base_url,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                replicate_api_key=context.extracted_params.replicate_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
                 file_state=context.extracted_params.file_state,
                 asset_base_url=context.extracted_params.asset_base_url,
