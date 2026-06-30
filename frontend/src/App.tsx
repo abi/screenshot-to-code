@@ -90,6 +90,7 @@ function App() {
     {
       openAiApiKey: null,
       openAiBaseURL: null,
+      replicateApiKey: null,
       anthropicApiKey: null,
       geminiApiKey: null,
       screenshotOneApiKey: null,
