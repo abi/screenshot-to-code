@@ -272,22 +272,17 @@ class AgentToolRuntime:
                 result={"error": "No valid prompts provided"},
                 summary={"error": "No valid prompts"},
             )
-        if REPLICATE_API_KEY:
-            model = "flux"
-            api_key = REPLICATE_API_KEY
-            base_url = None
-        else:
-            if not self.openai_api_key:
-                return ToolExecutionResult(
-                    ok=False,
-                    result={"error": "No API key available for image generation."},
-                    summary={"error": "Missing image generation API key"},
-                )
-            model = "gpt_image_2"
-            api_key = self.openai_api_key
-            base_url = self.openai_base_url
+        if not REPLICATE_API_KEY:
+            return ToolExecutionResult(
+                ok=False,
+                result={"error": "No API key available for image generation."},
+                summary={"error": "Missing image generation API key"},
+            )
+        model = "flux"
+        api_key = REPLICATE_API_KEY
+        base_url = None
 
-        generated = await process_tasks(unique_prompts, api_key, base_url, model)  # type: ignore
+        generated = await process_tasks(unique_prompts, api_key, base_url, model)
         merged_results = {
             prompt: url for prompt, url in zip(unique_prompts, generated)
         }
