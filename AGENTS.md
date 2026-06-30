@@ -31,6 +31,7 @@ The hosted version is on the `hosted` branch. The `hosted` branch connects to a 
 ## Cursor Cloud specific instructions
 
 Dependencies are refreshed automatically on startup (`poetry install` in `backend/`, `pnpm install` in `frontend/`); no manual install is needed.
+Cursor Cloud environment setup should run `bash /agent/repos/screenshot-to-code/scripts/cursor-cloud-install.sh`; the script changes to the repo root before installing so it works regardless of the startup working directory.
 
 Services (see `README.md` for the canonical commands):
 - Backend (FastAPI + WebSocket): from `backend/`, `poetry run uvicorn main:app --reload --port 7001`.
