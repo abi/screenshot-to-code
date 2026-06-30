@@ -1,10 +1,5 @@
 import { useState } from "react";
-import {
-  LuGift,
-  LuImagePlus,
-  LuDatabase,
-  LuMousePointerClick,
-} from "react-icons/lu";
+import { LuGift, LuImagePlus } from "react-icons/lu";
 import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
 import { addEvent } from "../../lib/analytics";
 import { useStore } from "../../store/store";
@@ -15,26 +10,14 @@ import { SAAS_BACKEND_URL } from "../../config";
 // state is per-account on the saas backend (users.whats_new_seen_version),
 // delivered with the user on bootstrap; this is just the current version we
 // compare against.
-const WHATS_NEW_VERSION = "2026-06-12";
+const WHATS_NEW_VERSION = "2026-06-30";
 
 const ENTRIES = [
   {
     icon: LuImagePlus,
-    title: "Upload your assets",
+    title: "Real assets from screenshots",
     description:
-      "Attach your own images alongside a prompt and they're used in the generated page.",
-  },
-  {
-    icon: LuDatabase,
-    title: "Images stored permanently",
-    description:
-      "Uploaded images are saved with your projects, so they keep working forever.",
-  },
-  {
-    icon: LuMousePointerClick,
-    title: "Select & edit any element",
-    description:
-      "Click an element in the preview and describe the change — now on every stack.",
+      "Screenshot to Code now extracts the actual images and assets from your screenshot. If they are not quite right, ask AI to generate replacements or upload your own.",
   },
 ];
 
