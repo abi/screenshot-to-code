@@ -40,6 +40,40 @@ async def test_extracts_gemini_api_key_from_env_when_not_in_request(monkeypatch:
 
 
 @pytest.mark.asyncio
+async def test_extracts_replicate_api_key_from_settings_dialog() -> None:
+    stage = ParameterExtractionStage(AsyncMock())
+
+    extracted = await stage.extract_and_validate(
+        {
+            "generatedCodeConfig": "html_tailwind",
+            "inputMode": "text",
+            "replicateApiKey": "replicate-from-ui",
+            "prompt": {"text": "hello"},
+        }
+    )
+
+    assert extracted.replicate_api_key == "replicate-from-ui"
+
+
+@pytest.mark.asyncio
+async def test_extracts_replicate_api_key_from_env_when_not_in_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("routes.generate_code.REPLICATE_API_KEY", "replicate-from-env")
+    stage = ParameterExtractionStage(AsyncMock())
+
+    extracted = await stage.extract_and_validate(
+        {
+            "generatedCodeConfig": "html_tailwind",
+            "inputMode": "text",
+            "prompt": {"text": "hello"},
+        }
+    )
+
+    assert extracted.replicate_api_key == "replicate-from-env"
+
+
+@pytest.mark.asyncio
 async def test_extracts_design_system_from_request() -> None:
     stage = ParameterExtractionStage(AsyncMock())
 

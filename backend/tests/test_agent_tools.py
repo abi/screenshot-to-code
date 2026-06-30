@@ -83,6 +83,7 @@ def test_provider_session_excludes_extract_assets_without_gemini_key() -> None:
         openai_base_url=None,
         anthropic_api_key=None,
         gemini_api_key=None,
+        replicate_api_key=None,
     )
 
     tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
@@ -99,6 +100,7 @@ def test_provider_session_includes_extract_assets_with_gemini_key() -> None:
         openai_base_url=None,
         anthropic_api_key=None,
         gemini_api_key="gemini-key",
+        replicate_api_key=None,
     )
 
     tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
@@ -120,6 +122,7 @@ def test_provider_session_excludes_screenshot_preview_when_chromium_unavailable(
         openai_base_url=None,
         anthropic_api_key=None,
         gemini_api_key=None,
+        replicate_api_key=None,
     )
 
     tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
@@ -141,6 +144,7 @@ def test_provider_session_includes_screenshot_preview_when_chromium_available(
         openai_base_url=None,
         anthropic_api_key=None,
         gemini_api_key=None,
+        replicate_api_key=None,
     )
 
     tools = cast(list[dict[str, Any]], getattr(session, "_tools"))

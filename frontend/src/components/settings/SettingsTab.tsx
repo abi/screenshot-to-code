@@ -223,6 +223,30 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                   }
                 />
               </div>
+
+              {!IS_RUNNING_ON_CLOUD && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                    Replicate API key
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                    Only stored in your browser. Never stored on servers. Overrides
+                    your .env config for image generation and editing.
+                  </p>
+                  <Input
+                    id="replicate-api-key"
+                    className="mt-2"
+                    placeholder="Replicate API key"
+                    value={settings.replicateApiKey || ""}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        replicateApiKey: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
 

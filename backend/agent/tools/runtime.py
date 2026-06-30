@@ -30,6 +30,7 @@ class AgentToolRuntime:
         openai_api_key: Optional[str],
         openai_base_url: Optional[str],
         gemini_api_key: Optional[str] = None,
+        replicate_api_key: Optional[str] = None,
         input_images: Optional[List[str]] = None,
         asset_base_url: str = "",
         user_id: Optional[str] = None,
@@ -40,10 +41,14 @@ class AgentToolRuntime:
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
         self.gemini_api_key = gemini_api_key
+        self.replicate_api_key = replicate_api_key
         self.input_images = input_images or []
         self.asset_base_url = asset_base_url
         self.user_id = user_id
         self.option_codes = option_codes or []
+
+    def _effective_replicate_api_key(self) -> str | None:
+        return self.replicate_api_key or REPLICATE_API_KEY
 
     async def execute(self, tool_call: ToolCall) -> ToolExecutionResult:
         if "INVALID_JSON" in tool_call.arguments:
@@ -272,14 +277,15 @@ class AgentToolRuntime:
                 result={"error": "No valid prompts provided"},
                 summary={"error": "No valid prompts"},
             )
-        if not REPLICATE_API_KEY:
+        replicate_api_key = self._effective_replicate_api_key()
+        if not replicate_api_key:
             return ToolExecutionResult(
                 ok=False,
                 result={"error": "No API key available for image generation."},
                 summary={"error": "Missing image generation API key"},
             )
         model = "flux"
-        api_key = REPLICATE_API_KEY
+        api_key = replicate_api_key
         base_url = None
 
         generated = await process_tasks(unique_prompts, api_key, base_url, model)
@@ -313,7 +319,8 @@ class AgentToolRuntime:
         )
 
     async def _remove_background(self, args: Dict[str, Any]) -> ToolExecutionResult:
-        if not REPLICATE_API_KEY:
+        replicate_api_key = self._effective_replicate_api_key()
+        if not replicate_api_key:
             return ToolExecutionResult(
                 ok=False,
                 result={"error": "Background removal requires REPLICATE_API_KEY."},
@@ -345,7 +352,7 @@ class AgentToolRuntime:
             batch = unique_urls[i : i + batch_size]
             # Replicate can't fetch localhost; inline local assets as data URLs.
             tasks = [
-                remove_background(local_asset_url_to_data_url(url), REPLICATE_API_KEY)
+                remove_background(local_asset_url_to_data_url(url), replicate_api_key)
                 for url in batch
             ]
             raw_results.extend(await asyncio.gather(*tasks, return_exceptions=True))
@@ -387,7 +394,8 @@ class AgentToolRuntime:
         )
 
     async def _edit_image(self, args: Dict[str, Any]) -> ToolExecutionResult:
-        if not REPLICATE_API_KEY:
+        replicate_api_key = self._effective_replicate_api_key()
+        if not replicate_api_key:
             return ToolExecutionResult(
                 ok=False,
                 result={"error": "Image editing requires REPLICATE_API_KEY."},
@@ -428,7 +436,7 @@ class AgentToolRuntime:
             result_url = await edit_image(
                 prompt=prompt,
                 image_urls=[local_asset_url_to_data_url(url) for url in unique_urls],
-                api_token=REPLICATE_API_KEY,
+                api_token=replicate_api_key,
                 aspect_ratio=aspect_ratio,
             )
         except Exception as exc:
