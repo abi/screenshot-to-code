@@ -270,6 +270,7 @@ class ExtractedParams:
     openai_api_key: str | None
     anthropic_api_key: str | None
     gemini_api_key: str | None
+    replicate_api_key: str | None
     openai_base_url: str | None
     payment_method: PaymentMethod
     generation_type: Literal["create", "update"]
@@ -322,6 +323,7 @@ class ParameterExtractionStage:
         openai_api_key = None
         anthropic_api_key = None
         gemini_api_key = None
+        replicate_api_key = REPLICATE_API_KEY
 
         # Track how this generation is being paid for
         payment_method: PaymentMethod = PaymentMethod.UNKNOWN
@@ -486,6 +488,7 @@ class ParameterExtractionStage:
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
             gemini_api_key=gemini_api_key,
+            replicate_api_key=replicate_api_key,
             openai_base_url=openai_base_url,
             payment_method=payment_method,
             generation_type=generation_type,
@@ -692,6 +695,7 @@ class AgenticGenerationStage:
         openai_base_url: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        replicate_api_key: str | None,
         should_generate_images: bool,
         prompt: UserTurnInput,
         file_state: Dict[str, str] | None,
@@ -712,6 +716,7 @@ class AgenticGenerationStage:
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
+        self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
         self.prompt = prompt
         self.file_state = file_state
@@ -781,6 +786,7 @@ class AgenticGenerationStage:
                 openai_base_url=self.openai_base_url,
                 anthropic_api_key=self.anthropic_api_key,
                 gemini_api_key=self.gemini_api_key,
+                replicate_api_key=self.replicate_api_key,
                 should_generate_images=self.should_generate_images,
                 generation_group_id=self.generation_group_id,
                 user_id=self.user_id,
@@ -1051,6 +1057,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_base_url=context.extracted_params.openai_base_url,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                replicate_api_key=context.extracted_params.replicate_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
                 prompt=context.extracted_params.prompt,
                 file_state=context.extracted_params.file_state,

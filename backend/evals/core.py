@@ -4,6 +4,7 @@ from config import (
     LOCAL_ASSET_BASE_URL,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
+    REPLICATE_API_KEY,
 )
 from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
 from agent.runner import Agent
@@ -46,6 +47,7 @@ async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> s
         openai_base_url=OPENAI_BASE_URL,
         anthropic_api_key=ANTHROPIC_API_KEY,
         gemini_api_key=GEMINI_API_KEY,
+        replicate_api_key=REPLICATE_API_KEY,
         should_generate_images=True,
         # No websocket to infer the host from, so use the configured base URL;
         # otherwise extracted/saved assets get hostless /local-assets/ URLs.
