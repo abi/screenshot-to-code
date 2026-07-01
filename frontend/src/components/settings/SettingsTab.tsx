@@ -290,55 +290,55 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                   />
                 </div>
               </div>
+
+              {/* Screenshot Preview (agent self-verification) */}
+              <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
+                <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">
+                  <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                    Screenshot Preview
+                  </h2>
+                </div>
+                <div className="p-4">
+                  {screenshotPreviewAvailable === false ? (
+                    <div className="flex items-start gap-2.5 rounded-md border border-amber-300 bg-amber-50 p-3 dark:border-amber-700/60 dark:bg-amber-900/20">
+                      <BsExclamationTriangleFill className="mt-0.5 shrink-0 text-amber-500" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                          Screenshot preview is unavailable
+                        </p>
+                        <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                          Headless Chromium isn't installed on the backend, so the
+                          agent can't render and visually verify its own output.
+                          Install it with{" "}
+                          <code className="rounded bg-amber-100 px-1 py-0.5 font-mono dark:bg-amber-900/40">
+                            playwright install chromium
+                          </code>{" "}
+                          and restart the backend.
+                        </p>
+                      </div>
+                    </div>
+                  ) : screenshotPreviewAvailable === true ? (
+                    <div className="flex items-start gap-2.5">
+                      <BsCheckCircleFill className="mt-0.5 shrink-0 text-emerald-500" />
+                      <div>
+                        <p className="text-sm text-gray-700 dark:text-zinc-300">
+                          Available
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                          The agent renders your generated page in a headless browser
+                          to visually check its work and fix layout issues.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 dark:text-zinc-400">
+                      Checking backend capabilities...
+                    </p>
+                  )}
+                </div>
+              </div>
             </>
           )}
-
-          {/* Screenshot Preview (agent self-verification) */}
-          <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
-            <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">
-              <h2 className="text-sm font-medium text-gray-900 dark:text-white">
-                Screenshot Preview
-              </h2>
-            </div>
-            <div className="p-4">
-              {screenshotPreviewAvailable === false ? (
-                <div className="flex items-start gap-2.5 rounded-md border border-amber-300 bg-amber-50 p-3 dark:border-amber-700/60 dark:bg-amber-900/20">
-                  <BsExclamationTriangleFill className="mt-0.5 shrink-0 text-amber-500" />
-                  <div>
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                      Screenshot preview is unavailable
-                    </p>
-                    <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-                      Headless Chromium isn't installed on the backend, so the
-                      agent can't render and visually verify its own output.
-                      Install it with{" "}
-                      <code className="rounded bg-amber-100 px-1 py-0.5 font-mono dark:bg-amber-900/40">
-                        playwright install chromium
-                      </code>{" "}
-                      and restart the backend.
-                    </p>
-                  </div>
-                </div>
-              ) : screenshotPreviewAvailable === true ? (
-                <div className="flex items-start gap-2.5">
-                  <BsCheckCircleFill className="mt-0.5 shrink-0 text-emerald-500" />
-                  <div>
-                    <p className="text-sm text-gray-700 dark:text-zinc-300">
-                      Available
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                      The agent renders your generated page in a headless browser
-                      to visually check its work and fix layout issues.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-gray-500 dark:text-zinc-400">
-                  Checking backend capabilities...
-                </p>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>

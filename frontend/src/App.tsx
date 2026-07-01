@@ -437,8 +437,10 @@ function App() {
       (designSystem) => designSystem.id === settings.selectedDesignSystemId
     );
 
-    const { replicateApiKey: _staleReplicateApiKey, ...requestSettings } =
-      settings as Settings & { replicateApiKey?: string | null };
+    const requestSettings: Settings & { replicateApiKey?: string | null } = {
+      ...settings,
+    };
+    delete requestSettings.replicateApiKey;
 
     // Merge settings with params
     const authToken = await getToken();
