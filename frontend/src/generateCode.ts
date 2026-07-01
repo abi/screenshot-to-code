@@ -13,6 +13,14 @@ const CANCEL_MESSAGE = "Code generation cancelled";
 const CONNECTION_LOST_MESSAGE =
   "Connection lost while generating. Partial output was preserved.";
 
+type WebSocketResponseData = {
+  models?: string[];
+  name?: string;
+  input?: unknown;
+  ok?: boolean;
+  output?: unknown;
+};
+
 type WebSocketResponse = {
   type:
     | "chunk"
@@ -28,7 +36,7 @@ type WebSocketResponse = {
     | "toolStart"
     | "toolResult";
   value?: string;
-  data?: any;
+  data?: WebSocketResponseData;
   eventId?: string;
   variantIndex: number;
 };
@@ -43,8 +51,16 @@ interface CodeGenerationCallbacks {
   onVariantModels: (models: string[]) => void;
   onThinking: (content: string, variantIndex: number, eventId?: string) => void;
   onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
-  onToolStart: (data: any, variantIndex: number, eventId?: string) => void;
-  onToolResult: (data: any, variantIndex: number, eventId?: string) => void;
+  onToolStart: (
+    data: WebSocketResponseData | undefined,
+    variantIndex: number,
+    eventId?: string
+  ) => void;
+  onToolResult: (
+    data: WebSocketResponseData | undefined,
+    variantIndex: number,
+    eventId?: string
+  ) => void;
   onCancel: (
     reason: "user_cancelled" | "request_failed" | "connection_error",
     errorMessage?: string
