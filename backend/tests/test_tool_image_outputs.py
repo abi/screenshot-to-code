@@ -224,6 +224,27 @@ async def test_generate_images_emits_url_parts(
 
 
 @pytest.mark.asyncio
+async def test_generate_images_does_not_fallback_to_openai_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", None)
+
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=True,
+        openai_api_key="openai-key",
+        openai_base_url=None,
+    )
+    result = await runtime.execute(
+        ToolCall(id="t", name="generate_images", arguments={"prompts": ["a logo"]})
+    )
+
+    assert result.ok is False
+    assert result.result == {"error": "No API key available for image generation."}
+    assert result.summary == {"error": "Missing image generation API key"}
+
+
+@pytest.mark.asyncio
 async def test_generate_images_uses_replicate_key_from_settings(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -246,7 +267,6 @@ async def test_generate_images_uses_replicate_key_from_settings(
         openai_base_url=None,
         replicate_api_key="replicate-from-ui",
     )
-
     result = await runtime.execute(
         ToolCall(id="t", name="generate_images", arguments={"prompts": ["a logo"]})
     )

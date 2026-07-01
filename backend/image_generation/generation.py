@@ -1,8 +1,6 @@
 import asyncio
 import time
-from typing import List, Literal, Union
-
-from openai import AsyncOpenAI
+from typing import List, Union
 
 from image_generation.replicate import (
     DEFAULT_IMAGE_MODEL,
@@ -18,20 +16,16 @@ REPLICATE_IMAGE_MODEL: ReplicateImageModel = DEFAULT_IMAGE_MODEL
 async def process_tasks(
     prompts: List[str],
     api_key: str,
-    base_url: str | None,
-    model: Literal["gpt_image_2", "flux"],
+    _base_url: str | None,
+    _model: str,
 ) -> List[Union[str, None]]:
     start_time = time.time()
     results: list[str | BaseException | None]
-    if model == "gpt_image_2":
-        tasks = [generate_image_openai(prompt, api_key, base_url) for prompt in prompts]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-    else:
-        results = []
-        for i in range(0, len(prompts), REPLICATE_BATCH_SIZE):
-            batch = prompts[i : i + REPLICATE_BATCH_SIZE]
-            tasks = [generate_image_replicate(p, api_key) for p in batch]
-            results.extend(await asyncio.gather(*tasks, return_exceptions=True))
+    results = []
+    for i in range(0, len(prompts), REPLICATE_BATCH_SIZE):
+        batch = prompts[i : i + REPLICATE_BATCH_SIZE]
+        tasks = [generate_image_replicate(p, api_key) for p in batch]
+        results.extend(await asyncio.gather(*tasks, return_exceptions=True))
     end_time = time.time()
     generation_time = end_time - start_time
     print(f"Image generation time: {generation_time:.2f} seconds")
@@ -45,29 +39,6 @@ async def process_tasks(
             processed_results.append(result)
 
     return processed_results
-
-
-async def generate_image_openai(
-    prompt: str, api_key: str, base_url: str | None
-) -> Union[str, None]:
-    client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-    res = await client.images.generate(
-        model="gpt-image-2",
-        quality="medium",
-        output_format="png",
-        n=1,
-        size="1024x1024",
-        prompt=prompt,
-    )
-    await client.close()
-    if not res.data:
-        return None
-    image = res.data[0]
-    if image.url:
-        return image.url
-    if image.b64_json:
-        return f"data:image/png;base64,{image.b64_json}"
-    return None
 
 
 async def generate_image_replicate(prompt: str, api_key: str) -> str:
