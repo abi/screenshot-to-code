@@ -437,6 +437,9 @@ function App() {
       (designSystem) => designSystem.id === settings.selectedDesignSystemId
     );
 
+    const { replicateApiKey: _staleReplicateApiKey, ...requestSettings } =
+      settings as Settings & { replicateApiKey?: string | null };
+
     // Merge settings with params
     const authToken = await getToken();
     const isFreeTrial =
@@ -445,7 +448,7 @@ function App() {
       freeTrialRemaining;
     const updatedParams = {
       ...requestParams,
-      ...settings,
+      ...requestSettings,
       authToken: authToken || undefined,
       ...(isFreeTrial ? { isFreeTrial: true } : {}),
       designSystem: selectedDesignSystem?.content ?? null,

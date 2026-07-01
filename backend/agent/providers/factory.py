@@ -23,11 +23,12 @@ def create_provider_session(
     openai_base_url: Optional[str],
     anthropic_api_key: Optional[str],
     gemini_api_key: Optional[str],
+    replicate_api_key: Optional[str],
 ) -> ProviderSession:
     canonical_tools = canonical_tool_definitions(
         image_generation_enabled=should_generate_images,
         # The edit_image tool calls Replicate, so don't offer it without a key.
-        image_editing_enabled=bool(REPLICATE_API_KEY),
+        image_editing_enabled=bool(replicate_api_key or REPLICATE_API_KEY),
         # The extract_assets tool calls Gemini, so don't offer it without a key.
         asset_extraction_enabled=bool(gemini_api_key),
         # screenshot_preview needs headless Chromium; skip it if it can't launch.

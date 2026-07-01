@@ -36,6 +36,7 @@ class AgentEngine:
         openai_base_url: Optional[str],
         anthropic_api_key: Optional[str],
         gemini_api_key: Optional[str],
+        replicate_api_key: Optional[str],
         should_generate_images: bool,
         generation_group_id: Optional[str] = None,
         user_id: Optional[str] = None,
@@ -50,6 +51,7 @@ class AgentEngine:
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
+        self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
         self.generation_group_id = generation_group_id
         self.user_id = user_id
@@ -70,6 +72,7 @@ class AgentEngine:
             variant_index=variant_index + 1,
             generation_type=generation_type,
             gemini_api_key=gemini_api_key,
+            replicate_api_key=replicate_api_key,
             asset_base_url=asset_base_url,
             option_codes=option_codes,
         )
@@ -278,6 +281,7 @@ class AgentEngine:
             openai_base_url=self.openai_base_url,
             anthropic_api_key=self.anthropic_api_key,
             gemini_api_key=self.gemini_api_key,
+            replicate_api_key=self.replicate_api_key,
         )
         try:
             completion = await self._run_with_session(session)
