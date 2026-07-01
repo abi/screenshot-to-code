@@ -10,6 +10,8 @@ const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console AND the backend logs for details. Feel free to open a Github issue.";
 
 const CANCEL_MESSAGE = "Code generation cancelled";
+const CONNECTION_LOST_MESSAGE =
+  "Connection lost while generating. Partial output was preserved.";
 
 type WebSocketResponse = {
   type:
@@ -105,8 +107,11 @@ export function generateCode(
       callbacks.onCancel("request_failed", event.reason || ERROR_MESSAGE);
     } else if (event.code !== 1000) {
       console.error("Unknown server or connection error", event);
-      toast.error(ERROR_MESSAGE);
-      callbacks.onCancel("connection_error", event.reason || ERROR_MESSAGE);
+      toast.error(CONNECTION_LOST_MESSAGE);
+      callbacks.onCancel(
+        "connection_error",
+        event.reason || CONNECTION_LOST_MESSAGE
+      );
     } else {
       callbacks.onComplete();
     }
