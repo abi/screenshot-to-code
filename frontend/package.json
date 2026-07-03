@@ -11,7 +11,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "jest",
-    "test:qa": "RUN_E2E=true TEST_ROOT_PATH=src/tests yarn test src/tests/qa.test.ts"
+    "test:qa": "RUN_E2E=true TEST_ROOT_PATH=src/tests jest src/tests/qa.test.ts"
   },
   "dependencies": {
     "@codemirror/commands": "6.10.3",
@@ -84,5 +84,6 @@
   },
   "engines": {
     "node": ">=14.18.0"
-  }
+  },
+  "packageManager": "pnpm@10.32.1"
 }
