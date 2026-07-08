@@ -31,8 +31,27 @@ function getAnalyticsScripts() {
 // https://vitejs.dev/config/
 export default ({ mode }) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
+  const CODEGEN_BACKEND = process.env.PROXY_CODEGEN_BACKEND || "http://127.0.0.1:7001";
+  const SAAS_BACKEND = process.env.PROXY_SAAS_BACKEND || "http://127.0.0.1:8001";
+
   return defineConfig({
     base: "",
+    server: {
+      // Listen on all interfaces so sandbox preview tunnels can reach the
+      // dev server (default binding is loopback-only).
+      host: true,
+      // Route backend traffic through the frontend origin so the app works
+      // via tunnels/preview URLs (no hardcoded localhost from the browser).
+      proxy: {
+        "/generate-code": { target: CODEGEN_BACKEND, ws: true },
+        "/api": { target: CODEGEN_BACKEND },
+        "/local-assets": { target: CODEGEN_BACKEND },
+        "/saas": {
+          target: SAAS_BACKEND,
+          rewrite: (p) => p.replace(/^\/saas/, ""),
+        },
+      },
+    },
     build: {
       sourcemap: true,
     },
