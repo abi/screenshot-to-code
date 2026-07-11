@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes scan-sweep {
+  0% { top: -7rem; opacity: 0.55; }
+  6% { opacity: 1; }
+  94% { opacity: 1; }
+  100% { top: calc(100% - 7rem); opacity: 0.55; }
+}
+
+.scan-sweep {
+  animation: scan-sweep 1.9s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+  will-change: top, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-sweep {
+    animation: none;
+    opacity: 0.7;
+    top: calc(50% - 3.5rem);
+  }
+}
+
 /* Image Scanning animation */
 .scanning::after {
   content: "";

@@ -22,6 +22,7 @@ import PreviewComponent from "./PreviewComponent";
 import { downloadCode } from "./download";
 import { SelectAndEditToolbarButton } from "../select-and-edit/SelectAndEditControls";
 import { normalizeBabelCdn } from "../../lib/babelCdn";
+import ImageScanningPreview from "./ImageScanningPreview";
 
 function prepareHtmlForNewTab(code: string) {
   const html = normalizeBabelCdn(code);
@@ -76,6 +77,14 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
     inputMode === "video" && appState === AppState.CODING
       ? extractHtml(currentCode)
       : currentCode;
+  const sourceImage = currentCommit ? currentCommit.inputs?.images[0] : undefined;
+  const showImageScanningPreview =
+    appState === AppState.CODING &&
+    currentCommit !== "" &&
+    currentCommit.type === "ai_create" &&
+    inputMode === "image" &&
+    !previewCode.trim() &&
+    !!sourceImage;
 
   const canSelectAndEdit =
     appState === AppState.CODE_READY || !!isSelectedVariantComplete;
@@ -227,19 +236,27 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
           </div>
         </div>
         <TabsContent value="desktop" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-          <PreviewComponent
-            code={previewCode}
-            device="desktop"
-            onScaleChange={setDesktopScale}
-            viewMode={desktopViewMode}
-          />
+          {showImageScanningPreview ? (
+            <ImageScanningPreview imageUrl={sourceImage} />
+          ) : (
+            <PreviewComponent
+              code={previewCode}
+              device="desktop"
+              onScaleChange={setDesktopScale}
+              viewMode={desktopViewMode}
+            />
+          )}
         </TabsContent>
         <TabsContent value="mobile" className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-          <PreviewComponent
-            code={previewCode}
-            device="mobile"
-            viewMode="actual"
-          />
+          {showImageScanningPreview ? (
+            <ImageScanningPreview imageUrl={sourceImage} />
+          ) : (
+            <PreviewComponent
+              code={previewCode}
+              device="mobile"
+              viewMode="actual"
+            />
+          )}
         </TabsContent>
         <TabsContent value="code" className="flex-1 min-h-0 mt-0 overflow-auto">
           <CodeTab
