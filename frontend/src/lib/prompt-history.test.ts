@@ -1,10 +1,12 @@
 import {
   buildAssistantHistoryMessage,
+  buildUpdateGenerationRequest,
   buildUserHistoryMessage,
   cloneVariantHistory,
   registerAssetIds,
   toRequestHistory,
 } from "./prompt-history";
+import { Commit } from "../components/commits/types";
 import { PromptAsset } from "../types";
 
 describe("prompt-history helpers", () => {
@@ -119,5 +121,87 @@ describe("prompt-history helpers", () => {
       imageAssetIds: [],
       videoAssetIds: [],
     });
+  });
+
+  test("buildUpdateGenerationRequest reruns an edit from the selected parent option", () => {
+    const parentCommit: Commit = {
+      hash: "parent",
+      parentHash: null,
+      dateCreated: new Date(),
+      isCommitted: true,
+      type: "ai_create",
+      inputs: { text: "Create", images: [] },
+      selectedVariantIndex: 1,
+      variants: [
+        { code: "<html>option one</html>", history: [] },
+        {
+          code: "<html>option two</html>",
+          history: [
+            buildUserHistoryMessage("Create"),
+            buildAssistantHistoryMessage("<html>option two</html>"),
+          ],
+        },
+      ],
+    };
+    const assetsById: Record<string, PromptAsset> = {
+      editImage: {
+        id: "editImage",
+        type: "image",
+        dataUrl: "data:image/edit",
+      },
+    };
+
+    const request = buildUpdateGenerationRequest({
+      inputMode: "image",
+      prompt: {
+        text: "Make it red",
+        fullText: "Make the selected button red",
+        images: ["data:image/edit"],
+        videos: [],
+        selectedElementHtml: "<button>Option two</button>",
+      },
+      parentCommit,
+      imageAssetIds: ["editImage"],
+      getAssetsById: () => assetsById,
+    });
+
+    expect(request.fileState?.content).toBe("<html>option two</html>");
+    expect(request.optionCodes).toEqual([
+      "<html>option one</html>",
+      "<html>option two</html>",
+    ]);
+    expect(request.variantHistory[request.variantHistory.length - 1]).toEqual(
+      buildUserHistoryMessage("Make the selected button red", ["editImage"])
+    );
+    expect(request.history?.[request.history.length - 1]).toEqual({
+      role: "user",
+      text: "Make the selected button red",
+      images: ["data:image/edit"],
+      videos: [],
+    });
+  });
+
+  test("buildUpdateGenerationRequest bootstraps imported code without history", () => {
+    const parentCommit: Commit = {
+      hash: "import",
+      parentHash: null,
+      dateCreated: new Date(),
+      isCommitted: true,
+      type: "code_create",
+      inputs: null,
+      selectedVariantIndex: 0,
+      variants: [{ code: "<html>imported</html>", history: [] }],
+    };
+
+    const request = buildUpdateGenerationRequest({
+      inputMode: "image",
+      prompt: { text: "Add a footer", images: [], videos: [] },
+      parentCommit,
+      imageAssetIds: [],
+      getAssetsById: () => ({}),
+    });
+
+    expect(request.history).toEqual([]);
+    expect(request.fileState?.content).toBe("<html>imported</html>");
   });
 });
