@@ -182,9 +182,9 @@ function Sidebar({
     ? Math.max(1, Math.round((nowMs - requestStartMs) / 1000))
     : undefined;
 
-  const isFirstGeneration = currentCommit?.type === "ai_create";
   const isAiCommit =
     currentCommit?.type === "ai_create" || currentCommit?.type === "ai_edit";
+  const canRegenerate = isAiCommit;
   const selectedFeedbackValue =
     isAiCommit &&
     currentCommit?.userFeedback?.optionIndex === selectedVariantIndex
@@ -416,32 +416,31 @@ function Sidebar({
           <AgentActivity />
         )}
 
-        {/* Feedback + regenerate actions.
-            Scenarios:
-            1) `appState === CODE_READY`: request fully ended and user can retry.
-            2) `isSelectedVariantComplete`: selected option completed even if app state
-               has not yet fully transitioned.
-            3) `isSelectedVariantError`: selected option failed; keep retry visible so
-               users can rerun create without losing uploaded inputs. */}
-        {isAiCommit && head === latestCommitHash && (appState === AppState.CODE_READY || isSelectedVariantComplete || isSelectedVariantError) && (
-          <div className="mb-3 flex items-center justify-end gap-2">
-            {!isSelectedVariantError && (
-              <GenerationFeedbackButtons
-                selectedValue={selectedFeedbackValue}
-                onSubmit={submitGenerationFeedback}
-              />
-            )}
-            {isFirstGeneration && !editLocked && (
-              <button
-                onClick={regenerate}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-              >
-                <LuRefreshCw className="w-3.5 h-3.5" />
-                Retry
-              </button>
-            )}
-          </div>
-        )}
+        {/* Feedback + retry actions. Older AI-generated versions can be
+            retried once no other request is running; regenerated edits branch
+            from the selected version's original parent. */}
+        {canRegenerate &&
+          (appState === AppState.CODE_READY ||
+            (head === latestCommitHash &&
+              (isSelectedVariantComplete || isSelectedVariantError))) && (
+            <div className="mb-3 flex items-center justify-end gap-2">
+              {head === latestCommitHash && !isSelectedVariantError && (
+                <GenerationFeedbackButtons
+                  selectedValue={selectedFeedbackValue}
+                  onSubmit={submitGenerationFeedback}
+                />
+              )}
+              {!editLocked && (
+                <button
+                  onClick={regenerate}
+                  className="regenerate-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <LuRefreshCw className="w-3.5 h-3.5" />
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
 
         {/* Show cancel button when coding */}
         {appState === AppState.CODING && !isSelectedVariantComplete && (
@@ -480,8 +479,8 @@ function Sidebar({
                 </div>
               )}
               <div>
-                {isFirstGeneration
-                  ? "Click Retry to run the create request again."
+                {canRegenerate
+                  ? "Click Retry to run this version's request again."
                   : "Switch to another option above to make updates."}
               </div>
             </div>
