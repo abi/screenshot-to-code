@@ -262,6 +262,7 @@ class ExtractedParams:
     history: List[PromptHistoryMessage]
     file_state: Dict[str, str] | None
     option_codes: List[str]
+    should_extract_assets: bool = True
     asset_base_url: str = ""
     design_system: str | None = None
 
@@ -320,8 +321,9 @@ class ParameterExtractionStage:
         if not openai_base_url:
             print("Using official OpenAI URL")
 
-        # Get the image generation flag from the request. Fall back to True if not provided.
+        # Feature preferences default to enabled for older clients.
         should_generate_images = bool(params.get("isImageGenerationEnabled", True))
+        should_extract_assets = bool(params.get("isAssetExtractionEnabled", True))
 
         # Extract and validate generation type
         generation_type = params.get("generationType", "create")
@@ -372,6 +374,7 @@ class ParameterExtractionStage:
             stack=validated_stack,
             input_mode=validated_input_mode,
             should_generate_images=should_generate_images,
+            should_extract_assets=should_extract_assets,
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
             gemini_api_key=gemini_api_key,
@@ -555,6 +558,7 @@ class AgenticGenerationStage:
         file_state: Dict[str, str] | None,
         asset_base_url: str,
         option_codes: List[str] | None,
+        should_extract_assets: bool = True,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -563,6 +567,7 @@ class AgenticGenerationStage:
         self.gemini_api_key = gemini_api_key
         self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
+        self.should_extract_assets = should_extract_assets
         self.file_state = file_state
         self.asset_base_url = asset_base_url
         self.option_codes = option_codes or []
@@ -622,6 +627,7 @@ class AgenticGenerationStage:
                 gemini_api_key=self.gemini_api_key,
                 replicate_api_key=self.replicate_api_key,
                 should_generate_images=self.should_generate_images,
+                should_extract_assets=self.should_extract_assets,
                 asset_base_url=self.asset_base_url,
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,
@@ -804,6 +810,7 @@ class CodeGenerationMiddleware(Middleware):
                 gemini_api_key=context.extracted_params.gemini_api_key,
                 replicate_api_key=context.extracted_params.replicate_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
+                should_extract_assets=context.extracted_params.should_extract_assets,
                 file_state=context.extracted_params.file_state,
                 asset_base_url=context.extracted_params.asset_base_url,
                 option_codes=context.extracted_params.option_codes,

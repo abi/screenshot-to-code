@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { HTTP_BACKEND_URL } from "../../../config";
 import { Button } from "../../ui/button";
+import { Checkbox } from "../../ui/checkbox";
 import { Input } from "../../ui/input";
 import { toast } from "react-hot-toast";
 import OutputSettingsSection from "../../settings/OutputSettingsSection";
@@ -13,6 +14,7 @@ interface Props {
     urls: string[],
     inputMode: "image" | "video",
     textPrompt?: string,
+    isAssetExtractionEnabled?: boolean,
   ) => void;
   stack: Stack;
   setStack: (stack: Stack) => void;
@@ -32,6 +34,7 @@ function UrlTab({
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
+  const [isAssetExtractionEnabled, setIsAssetExtractionEnabled] = useState(true);
 
   async function takeScreenshot() {
     const trimmedReferenceUrl = referenceUrl.trim();
@@ -82,7 +85,7 @@ function UrlTab({
       }
 
       const res = await response.json();
-      doCreate([res.url], "image");
+      doCreate([res.url], "image", "", isAssetExtractionEnabled);
     } catch (error) {
       console.error(error);
       toast.error("Failed to capture screenshot. Check console for details.");
@@ -142,6 +145,27 @@ function UrlTab({
               setStack={setStack}
               designSystem={designSystem}
             />
+            <label
+              htmlFor="url-asset-extraction"
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/60"
+            >
+              <Checkbox
+                id="url-asset-extraction"
+                checked={isAssetExtractionEnabled}
+                onCheckedChange={(checked) =>
+                  setIsAssetExtractionEnabled(checked === true)
+                }
+                className="mt-0.5"
+              />
+              <span>
+                <span className="block text-sm font-medium text-gray-700 dark:text-zinc-200">
+                  Extract image assets
+                </span>
+                <span className="mt-0.5 block text-xs text-gray-500 dark:text-zinc-400">
+                  Reuse visual assets from this screenshot in the generated code.
+                </span>
+              </span>
+            </label>
 
             <Button
               onClick={takeScreenshot}

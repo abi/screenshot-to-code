@@ -270,10 +270,10 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                 <Switch
                   id="image-generation"
                   checked={settings.isImageGenerationEnabled}
-                  onCheckedChange={() =>
+                  onCheckedChange={(checked) =>
                     setSettings((s) => ({
                       ...s,
-                      isImageGenerationEnabled: !s.isImageGenerationEnabled,
+                      isImageGenerationEnabled: checked,
                     }))
                   }
                 />

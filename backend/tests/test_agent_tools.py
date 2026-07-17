@@ -108,6 +108,24 @@ def test_provider_session_includes_extract_assets_with_gemini_key() -> None:
     assert "extract_assets" in tool_names
 
 
+def test_provider_session_excludes_extract_assets_when_user_disables_it() -> None:
+    session = create_provider_session(
+        model=Llm.GPT_5_5_HIGH,
+        prompt_messages=[{"role": "user", "content": "Build a page."}],
+        should_generate_images=True,
+        openai_api_key="openai-key",
+        openai_base_url=None,
+        anthropic_api_key=None,
+        gemini_api_key="gemini-key",
+        replicate_api_key=None,
+        should_extract_assets=False,
+    )
+
+    tools = cast(list[dict[str, Any]], getattr(session, "_tools"))
+    tool_names = [tool["name"] for tool in tools]
+    assert "extract_assets" not in tool_names
+
+
 def test_provider_session_excludes_screenshot_preview_when_chromium_unavailable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
