@@ -12,7 +12,8 @@ interface Props {
   doCreate: (
     images: string[],
     inputMode: "image" | "video",
-    textPrompt?: string
+    textPrompt?: string,
+    isAssetExtractionEnabled?: boolean
   ) => void;
   doCreateFromText: (text: string) => void;
   importFromCode: (code: string, stack: Stack) => void;

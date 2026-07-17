@@ -41,6 +41,7 @@ class AgentEngine:
         generation_group_id: Optional[str] = None,
         user_id: Optional[str] = None,
         generation_type: Literal["create", "update"] = "create",
+        should_extract_assets: bool = True,
         asset_base_url: str = "",
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
@@ -56,6 +57,7 @@ class AgentEngine:
         self.generation_group_id = generation_group_id
         self.user_id = user_id
         self.generation_type = generation_type
+        self.should_extract_assets = should_extract_assets
 
         self.file_state = AgentFileState()
         if initial_file_state and initial_file_state.get("content"):
@@ -282,6 +284,7 @@ class AgentEngine:
             anthropic_api_key=self.anthropic_api_key,
             gemini_api_key=self.gemini_api_key,
             replicate_api_key=self.replicate_api_key,
+            should_extract_assets=self.should_extract_assets,
         )
         try:
             completion = await self._run_with_session(session)

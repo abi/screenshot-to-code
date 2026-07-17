@@ -281,6 +281,7 @@ class ExtractedParams:
     edit_base_model: str | None = None
     edit_base_variant_index: int | None = None
     edit_base_generation_type: Literal["create", "update", "code_create"] | None = None
+    should_extract_assets: bool = True
     asset_base_url: str = ""
     design_system: str | None = None
 
@@ -417,6 +418,7 @@ class ParameterExtractionStage:
         should_generate_images = (
             bool(params.get("isImageGenerationEnabled", True)) if not IS_PROD else True
         )
+        should_extract_assets = bool(params.get("isAssetExtractionEnabled", True))
 
         # Extract and validate generation type
         generation_type = params.get("generationType", "create")
@@ -485,6 +487,7 @@ class ParameterExtractionStage:
             stack=validated_stack,
             input_mode=validated_input_mode,
             should_generate_images=should_generate_images,
+            should_extract_assets=should_extract_assets,
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
             gemini_api_key=gemini_api_key,
@@ -710,6 +713,7 @@ class AgenticGenerationStage:
         edit_base_model: str | None,
         edit_base_variant_index: int | None,
         edit_base_generation_type: Literal["create", "update", "code_create"] | None,
+        should_extract_assets: bool = True,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -719,6 +723,7 @@ class AgenticGenerationStage:
         self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
         self.prompt = prompt
+        self.should_extract_assets = should_extract_assets
         self.file_state = file_state
         self.asset_base_url = asset_base_url
         self.option_codes = option_codes or []
@@ -791,6 +796,7 @@ class AgenticGenerationStage:
                 generation_group_id=self.generation_group_id,
                 user_id=self.user_id,
                 generation_type=self.generation_type,
+                should_extract_assets=self.should_extract_assets,
                 asset_base_url=self.asset_base_url,
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,
@@ -1060,6 +1066,7 @@ class CodeGenerationMiddleware(Middleware):
                 replicate_api_key=context.extracted_params.replicate_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
                 prompt=context.extracted_params.prompt,
+                should_extract_assets=context.extracted_params.should_extract_assets,
                 file_state=context.extracted_params.file_state,
                 asset_base_url=context.extracted_params.asset_base_url,
                 option_codes=context.extracted_params.option_codes,

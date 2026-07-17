@@ -57,7 +57,7 @@ export default ({ mode }) => {
     },
     plugins: [
       react(),
-      checker({ 
+      checker({
         typescript: true
       }),
       createHtmlPlugin({

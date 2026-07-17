@@ -274,6 +274,7 @@ function App() {
     }
   }, [settings, setSettings]);
 
+
   useEffect(() => {
     if (
       settings.selectedDesignSystemId &&
@@ -728,6 +729,7 @@ function App() {
     referenceImages: string[],
     inputMode: "image" | "video",
     textPrompt: string = "",
+    isAssetExtractionEnabled = true
   ) {
     // Reset any existing state
     reset();
@@ -771,6 +773,7 @@ function App() {
           images: inputMode === "image" ? media : [],
           videos: inputMode === "video" ? media : [],
         },
+        isAssetExtractionEnabled,
         variantHistory,
       });
     }
