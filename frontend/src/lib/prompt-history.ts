@@ -1,8 +1,12 @@
-import { VariantHistoryMessage } from "../components/commits/types";
+import {
+  Commit,
+  VariantHistoryMessage,
+} from "../components/commits/types";
 import {
   CodeGenerationParams,
   PromptAsset,
   PromptAssetType,
+  PromptContent,
   PromptHistoryMessage,
 } from "../types";
 
@@ -105,5 +109,54 @@ export function buildAssistantHistoryMessage(
     text: code,
     imageAssetIds: [],
     videoAssetIds: [],
+  };
+}
+
+export function buildUpdateGenerationRequest({
+  inputMode,
+  prompt,
+  parentCommit,
+  imageAssetIds,
+  getAssetsById,
+}: {
+  inputMode: GenerationRequest["inputMode"];
+  prompt: PromptContent;
+  parentCommit: Commit;
+  imageAssetIds: string[];
+  getAssetsById: GetAssetsById;
+}): GenerationRequest {
+  const parentVariant =
+    parentCommit.variants[parentCommit.selectedVariantIndex];
+  if (!parentVariant) {
+    throw new Error("The selected option from the previous version was not found");
+  }
+
+  const fullInstruction = prompt.fullText ?? prompt.text;
+  const variantHistory = [
+    ...cloneVariantHistory(parentVariant.history),
+    buildUserHistoryMessage(fullInstruction, imageAssetIds),
+  ];
+  const shouldBootstrapFromFileState =
+    parentVariant.history.length === 0 && parentVariant.code.trim().length > 0;
+
+  return {
+    generationType: "update",
+    inputMode,
+    prompt: {
+      ...prompt,
+      images: [...prompt.images],
+      videos: [...(prompt.videos ?? [])],
+    },
+    history: shouldBootstrapFromFileState
+      ? []
+      : toRequestHistory(variantHistory, getAssetsById),
+    optionCodes: parentCommit.variants.map((variant) => variant.code || ""),
+    variantHistory,
+    fileState: parentVariant.code
+      ? {
+          path: "index.html",
+          content: parentVariant.code,
+        }
+      : undefined,
   };
 }
