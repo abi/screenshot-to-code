@@ -33,6 +33,7 @@ class AgentEngine:
         gemini_api_key: Optional[str],
         replicate_api_key: Optional[str],
         should_generate_images: bool,
+        should_extract_assets: bool = True,
         asset_base_url: str = "",
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
@@ -45,6 +46,7 @@ class AgentEngine:
         self.gemini_api_key = gemini_api_key
         self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
+        self.should_extract_assets = should_extract_assets
 
         self.file_state = AgentFileState()
         if initial_file_state and initial_file_state.get("content"):
@@ -264,6 +266,7 @@ class AgentEngine:
             anthropic_api_key=self.anthropic_api_key,
             gemini_api_key=self.gemini_api_key,
             replicate_api_key=self.replicate_api_key,
+            should_extract_assets=self.should_extract_assets,
         )
         try:
             return await self._run_with_session(session)

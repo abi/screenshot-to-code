@@ -15,11 +15,11 @@ import useBrowserTabIndicator from "./hooks/useBrowserTabIndicator";
 import { LuChevronLeft } from "react-icons/lu";
 import {
   buildAssistantHistoryMessage,
+  buildUpdateGenerationRequest,
   buildUserHistoryMessage,
   cloneVariantHistory,
   GenerationRequest,
   registerAssetIds,
-  toRequestHistory,
 } from "./lib/prompt-history";
 // import TipLink from "./components/messages/TipLink";
 import { useAppStore } from "./store/app-store";
@@ -37,7 +37,7 @@ import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
 import SettingsTab from "./components/settings/SettingsTab";
 import DesignSystemsModal from "./components/settings/DesignSystemsModal";
-import { Commit } from "./components/commits/types";
+import { AiEditCommit, Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 
 function App() {
@@ -188,6 +188,7 @@ function App() {
     }
   }, [settings, setSettings]);
 
+
   useEffect(() => {
     if (
       settings.selectedDesignSystemId &&
@@ -262,18 +263,26 @@ function App() {
       throw new Error("Regenerate called with no head");
     }
 
-    // Retrieve the previous command
     const currentCommit = commits[head];
-    if (currentCommit.type !== "ai_create") {
-      toast.error("Only the first version can be regenerated.");
+    if (!currentCommit) {
+      toast.error("The selected version could not be found.");
       return;
     }
 
-    // Re-run the create
+    if (currentCommit.type === "ai_edit") {
+      regenerateUpdate(currentCommit);
+      return;
+    }
+
+    if (currentCommit.type === "code_create") {
+      toast.error("Imported code cannot be regenerated.");
+      return;
+    }
+
+    // Re-run the initial create request.
     if (inputMode === "image" || inputMode === "video") {
       doCreate(referenceImages, inputMode);
     } else {
-      // TODO: Fix this
       doCreateFromText(initialPrompt);
     }
   };
@@ -304,7 +313,10 @@ function App() {
     }
   };
 
-  function doGenerateCode(params: GenerationRequest) {
+  function doGenerateCode(
+    params: GenerationRequest,
+    generationParentHash: string | null = head
+  ) {
     // Reset the execution console
     resetExecutionConsoles();
 
@@ -319,8 +331,8 @@ function App() {
 
     // Merge settings with params
     const updatedParams = {
-      ...requestParams,
       ...settings,
+      ...requestParams,
       designSystem: selectedDesignSystem?.content ?? null,
     };
 
@@ -348,7 +360,7 @@ function App() {
         : {
             ...baseCommitObject,
             type: "ai_edit" as const,
-            parentHash: head,
+            parentHash: generationParentHash,
             inputs: requestParams.prompt,
           };
 
@@ -559,7 +571,8 @@ function App() {
   function doCreate(
     referenceImages: string[],
     inputMode: "image" | "video",
-    textPrompt: string = ""
+    textPrompt: string = "",
+    isAssetExtractionEnabled = true
   ) {
     // Reset any existing state
     reset();
@@ -603,6 +616,7 @@ function App() {
           images: inputMode === "image" ? media : [],
           videos: inputMode === "video" ? media : [],
         },
+        isAssetExtractionEnabled,
         variantHistory,
       });
     }
@@ -622,6 +636,41 @@ function App() {
     });
   }
 
+  function regenerateUpdate(commit: AiEditCommit) {
+    const parentHash = commit.parentHash;
+    const parentCommit = parentHash ? commits[parentHash] : null;
+    if (!parentHash || !parentCommit) {
+      toast.error("The previous version needed to retry this edit was not found.");
+      return;
+    }
+
+    const parentVariant =
+      parentCommit.variants[parentCommit.selectedVariantIndex];
+    if (!parentVariant) {
+      toast.error("The selected option from the previous version was not found.");
+      return;
+    }
+
+    const imageAssetIds = registerAssetIds(
+      "image",
+      commit.inputs.images,
+      getAssetsById,
+      upsertPromptAssets,
+      nanoid
+    );
+
+    doGenerateCode(
+      buildUpdateGenerationRequest({
+        inputMode,
+        prompt: commit.inputs,
+        parentCommit,
+        imageAssetIds,
+        getAssetsById,
+      }),
+      parentHash
+    );
+  }
+
   // Subsequent updates
   async function doUpdate(updateInstruction: string) {
     if (updateInstruction.trim() === "") {
@@ -637,11 +686,10 @@ function App() {
     }
 
     const currentCommit = commits[head];
-    const currentCode =
-      currentCommit?.variants[currentCommit.selectedVariantIndex]?.code || "";
-    const optionCodes = currentCommit?.variants.map(
-      (variant) => variant.code || ""
-    );
+    if (!currentCommit) {
+      toast.error("The selected version could not be found.");
+      return;
+    }
 
     let modifiedUpdateInstruction = updateInstruction;
     let selectedElementHtml: string | undefined;
@@ -661,8 +709,6 @@ function App() {
       setSelectedElement(null);
     }
 
-    const selectedVariant = currentCommit.variants[currentCommit.selectedVariantIndex];
-    const baseVariantHistory = selectedVariant.history;
     const updateImageAssetIds = registerAssetIds(
       "image",
       updateImages,
@@ -670,36 +716,22 @@ function App() {
       upsertPromptAssets,
       nanoid
     );
-    const updatedVariantHistory = [
-      ...cloneVariantHistory(baseVariantHistory),
-      buildUserHistoryMessage(modifiedUpdateInstruction, updateImageAssetIds),
-    ];
-    const shouldBootstrapFromFileState =
-      baseVariantHistory.length === 0 && currentCode.trim().length > 0;
-    const updatedHistory = shouldBootstrapFromFileState
-      ? []
-      : toRequestHistory(updatedVariantHistory, getAssetsById);
 
-    doGenerateCode({
-      generationType: "update",
-      inputMode,
-      prompt: {
-        text: updateInstruction,
-        fullText: modifiedUpdateInstruction,
-        images: updateImages,
-        videos: [],
-        selectedElementHtml,
-      },
-      history: updatedHistory,
-      optionCodes,
-      variantHistory: updatedVariantHistory,
-      fileState: currentCode
-        ? {
-            path: "index.html",
-            content: currentCode,
-          }
-        : undefined,
-    });
+    doGenerateCode(
+      buildUpdateGenerationRequest({
+        inputMode,
+        prompt: {
+          text: updateInstruction,
+          fullText: modifiedUpdateInstruction,
+          images: updateImages,
+          videos: [],
+          selectedElementHtml,
+        },
+        parentCommit: currentCommit,
+        imageAssetIds: updateImageAssetIds,
+        getAssetsById,
+      })
+    );
   }
 
   const handleTermDialogOpenChange = (open: boolean) => {

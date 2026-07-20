@@ -3,6 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
 import { Button } from "../../ui/button";
+import { Checkbox } from "../../ui/checkbox";
 import { ScreenRecorderState } from "../../../types";
 import ScreenRecorder from "../../recording/ScreenRecorder";
 import OutputSettingsSection from "../../settings/OutputSettingsSection";
@@ -48,7 +49,8 @@ interface Props {
   doCreate: (
     referenceImages: string[],
     inputMode: "image" | "video",
-    textPrompt?: string
+    textPrompt?: string,
+    isAssetExtractionEnabled?: boolean
   ) => void;
   stack: Stack;
   setStack: (stack: Stack) => void;
@@ -63,6 +65,7 @@ function UploadTab({ doCreate, stack, setStack, designSystem }: Props) {
   >("image");
   const [textPrompt, setTextPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(false);
+  const [isAssetExtractionEnabled, setIsAssetExtractionEnabled] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const filesRef = useRef<FileWithPreview[]>([]);
@@ -75,9 +78,20 @@ function UploadTab({ doCreate, stack, setStack, designSystem }: Props) {
 
   const handleGenerate = useCallback(() => {
     if (uploadedDataUrls.length > 0) {
-      doCreate(uploadedDataUrls, uploadedInputMode, textPrompt);
+      doCreate(
+        uploadedDataUrls,
+        uploadedInputMode,
+        textPrompt,
+        isAssetExtractionEnabled
+      );
     }
-  }, [uploadedDataUrls, uploadedInputMode, textPrompt, doCreate]);
+  }, [
+    uploadedDataUrls,
+    uploadedInputMode,
+    textPrompt,
+    isAssetExtractionEnabled,
+    doCreate,
+  ]);
 
   useEffect(() => {
     if (!hasUploadedFile) return;
@@ -467,12 +481,35 @@ function UploadTab({ doCreate, stack, setStack, designSystem }: Props) {
             </div>
           )}
 
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md space-y-4">
             <OutputSettingsSection
               stack={stack}
               setStack={setStack}
               designSystem={designSystem}
             />
+            {uploadedInputMode === "image" && (
+              <label
+                htmlFor="asset-extraction"
+                className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/60"
+              >
+                <Checkbox
+                  id="asset-extraction"
+                  checked={isAssetExtractionEnabled}
+                  onCheckedChange={(checked) =>
+                    setIsAssetExtractionEnabled(checked === true)
+                  }
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-gray-700 dark:text-zinc-200">
+                    Extract image assets
+                  </span>
+                  <span className="mt-0.5 block text-xs text-gray-500 dark:text-zinc-400">
+                    Reuse visual assets from this screenshot in the generated code.
+                  </span>
+                </span>
+              </label>
+            )}
           </div>
 
           <div className="flex flex-col items-center gap-1 w-full max-w-md">

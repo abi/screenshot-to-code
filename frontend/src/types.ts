@@ -84,6 +84,7 @@ export interface CodeGenerationParams {
     content: string;
   };
   optionCodes?: string[];
+  isAssetExtractionEnabled?: boolean;
 }
 
 export type FullGenerationSettings = CodeGenerationParams &

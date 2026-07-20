@@ -174,7 +174,8 @@ function Sidebar({
     ? Math.max(1, Math.round((nowMs - requestStartMs) / 1000))
     : undefined;
 
-  const isFirstGeneration = currentCommit?.type === "ai_create";
+  const canRegenerate =
+    currentCommit?.type === "ai_create" || currentCommit?.type === "ai_edit";
   const isViewingOlderVersion = head !== null && head !== latestCommitHash;
 
   // Compute version number for the current head
@@ -401,22 +402,17 @@ function Sidebar({
           <AgentActivity />
         )}
 
-        {/* Regenerate button for first generation.
-            Scenarios:
-            1) `appState === CODE_READY`: request fully ended and user can retry.
-            2) `isSelectedVariantComplete`: selected option completed even if app state
-               has not yet fully transitioned.
-            3) `isSelectedVariantError`: selected option failed; keep retry visible so
-               users can rerun create without losing uploaded inputs. */}
-        {isFirstGeneration &&
-          head === latestCommitHash &&
+        {/* Retry any AI-generated version. A completed older version can be
+            retried once no other request is running; the regenerated edit
+            branches from that version's original parent. */}
+        {canRegenerate &&
           (appState === AppState.CODE_READY ||
-            isSelectedVariantComplete ||
-            isSelectedVariantError) && (
+            (head === latestCommitHash &&
+              (isSelectedVariantComplete || isSelectedVariantError))) && (
           <div className="flex justify-end mb-3">
             <button
               onClick={regenerate}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+              className="regenerate-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <LuRefreshCw className="w-3.5 h-3.5" />
               Retry
@@ -461,8 +457,8 @@ function Sidebar({
                 </div>
               )}
               <div>
-                {isFirstGeneration
-                  ? "Click Retry to run the create request again."
+                {canRegenerate
+                  ? "Click Retry to run this version's request again."
                   : "Switch to another option above to make updates."}
               </div>
             </div>
