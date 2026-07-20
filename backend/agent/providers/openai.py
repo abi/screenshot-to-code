@@ -55,7 +55,7 @@ def _convert_message_to_responses_input(
 
 
 def _get_image_detail_for_model(model: Llm) -> str:
-    if get_openai_api_name(model) == "gpt-5.5":
+    if get_openai_api_name(model) in {"gpt-5.5", "gpt-5.6-sol"}:
         return "original"
     return "high"
 

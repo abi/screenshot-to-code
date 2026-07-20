@@ -11,6 +11,12 @@ export enum CodeGenerationModel {
   GPT_5_5_LOW = "gpt-5.5 (low thinking)",
   GPT_5_5_MEDIUM = "gpt-5.5 (medium thinking)",
   GPT_5_5_HIGH = "gpt-5.5 (high thinking)",
+  GPT_5_6_SOL_NONE = "gpt-5.6-sol (no thinking)",
+  GPT_5_6_SOL_LOW = "gpt-5.6-sol (low thinking)",
+  GPT_5_6_SOL_MEDIUM = "gpt-5.6-sol (medium thinking)",
+  GPT_5_6_SOL_HIGH = "gpt-5.6-sol (high thinking)",
+  GPT_5_6_SOL_XHIGH = "gpt-5.6-sol (xhigh thinking)",
+  GPT_5_6_SOL_MAX = "gpt-5.6-sol (max thinking)",
   GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)",
   GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
@@ -61,6 +67,24 @@ export function getVariantLabel(
 export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   [key in CodeGenerationModel]: { name: string };
 } = {
+  "gpt-5.6-sol (no thinking)": {
+    name: "GPT 5.6 Sol (none)",
+  },
+  "gpt-5.6-sol (low thinking)": {
+    name: "GPT 5.6 Sol (low)",
+  },
+  "gpt-5.6-sol (medium thinking)": {
+    name: "GPT 5.6 Sol (medium)",
+  },
+  "gpt-5.6-sol (high thinking)": {
+    name: "GPT 5.6 Sol (high)",
+  },
+  "gpt-5.6-sol (xhigh thinking)": {
+    name: "GPT 5.6 Sol (xhigh)",
+  },
+  "gpt-5.6-sol (max thinking)": {
+    name: "GPT 5.6 Sol (max)",
+  },
   "gpt-5.5 (no thinking)": {
     name: "GPT 5.5 (none)",
   },
