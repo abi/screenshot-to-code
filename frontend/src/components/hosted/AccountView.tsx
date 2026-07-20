@@ -353,9 +353,9 @@ export default function AccountView() {
               </div>
               <div className="divide-y divide-gray-100 dark:divide-zinc-700">
                 <StripeCustomerPortalLink
-                  label="Manage billing"
+                  label="Invoices and billing"
                   action="manage"
-                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-700/50 cursor-pointer"
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-500 dark:text-zinc-300 dark:hover:bg-zinc-700/50"
                 />
                 <StripeCustomerPortalLink
                   label="Cancel subscription"
