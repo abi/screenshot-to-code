@@ -17,7 +17,7 @@ import { usePersistedState } from "./hooks/usePersistedState";
 import TermsOfServiceDialog from "./components/TermsOfServiceDialog";
 import { USER_CLOSE_WEB_SOCKET_CODE } from "./constants";
 import { addEvent } from "./lib/analytics";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/react";
 import { useStore, refreshFreeTrialUsage } from "./store/store";
 import toast from "react-hot-toast";
 import { nanoid } from "nanoid";

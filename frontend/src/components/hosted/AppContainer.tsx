@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/react";
 import posthog from "posthog-js";
 import * as Sentry from "@sentry/react";
 import App from "../../App";

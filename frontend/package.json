@@ -14,7 +14,7 @@
     "test:qa": "RUN_E2E=true TEST_ROOT_PATH=src/tests jest src/tests/qa.test.ts"
   },
   "dependencies": {
-    "@clerk/clerk-react": "5.4.2",
+    "@clerk/react": "6.12.5",
     "@intercom/messenger-js-sdk": "^0.0.11",
     "@codemirror/commands": "6.10.3",
     "@codemirror/lang-html": "^6.4.6",

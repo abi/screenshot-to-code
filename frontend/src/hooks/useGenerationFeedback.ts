@@ -1,4 +1,4 @@
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/react";
 import toast from "react-hot-toast";
 import { SAAS_BACKEND_URL, IS_RUNNING_ON_CLOUD } from "../config";
 import { useProjectStore } from "../store/project-store";

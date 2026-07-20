@@ -9,7 +9,7 @@ import {
 } from "react-icons/si";
 import type { IconType } from "react-icons";
 import Footer from "./LandingPage/Footer";
-import { SignUp } from "@clerk/clerk-react";
+import { SignUp } from "@clerk/react";
 import { Component, useState, type ErrorInfo, type ReactNode } from "react";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { EmbeddedTweet, TweetSkeleton, useTweet } from "react-tweet";
@@ -271,7 +271,7 @@ function LandingPage() {
                   marginBottom: "5px",
                 },
               },
-              layout: { privacyPageUrl: "/legal/terms-of-service.html" },
+              options: { privacyPageUrl: "/legal/terms-of-service.html" },
             }}
           />
         </DialogContent>

@@ -1,4 +1,4 @@
-import { useClerk, useUser } from "@clerk/clerk-react";
+import { useClerk, useUser } from "@clerk/react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { useStore } from "../../store/store";
 import { capitalize, formatPlanLabel } from "./utils";

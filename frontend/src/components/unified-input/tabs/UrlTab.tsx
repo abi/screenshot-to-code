@@ -4,7 +4,7 @@ import { Button } from "../../ui/button";
 import { Checkbox } from "../../ui/checkbox";
 import { Input } from "../../ui/input";
 import { toast } from "react-hot-toast";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/react";
 import OutputSettingsSection from "../../settings/OutputSettingsSection";
 import { DesignSystemSelectorProps } from "../../settings/DesignSystemSelector";
 import { Stack } from "../../../lib/stacks";

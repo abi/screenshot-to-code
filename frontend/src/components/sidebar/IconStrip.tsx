@@ -7,7 +7,7 @@ import {
   LuGift,
   LuMessageCircle,
 } from "react-icons/lu";
-import { useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import WhatsNew from "./WhatsNew";
 
