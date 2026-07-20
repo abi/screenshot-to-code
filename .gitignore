@@ -24,3 +24,4 @@ frontend/.env.local
 
 # Walkthrough demo videos
 walkthrough/
+.foglamp/
