@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { LuGlobe2 } from "react-icons/lu";
 import { HTTP_BACKEND_URL } from "../../../config";
-import { Button } from "../../ui/button";
-import { Checkbox } from "../../ui/checkbox";
 import { Input } from "../../ui/input";
 import { toast } from "react-hot-toast";
-import OutputSettingsSection from "../../settings/OutputSettingsSection";
 import { DesignSystemSelectorProps } from "../../settings/DesignSystemSelector";
 import { Stack } from "../../../lib/stacks";
+import ScreenshotToCodeControls from "../ScreenshotToCodeControls";
 
 interface Props {
   screenshotOneApiKey: string | null;
@@ -34,7 +33,9 @@ function UrlTab({
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceUrl, setReferenceUrl] = useState("");
+  const [textPrompt, setTextPrompt] = useState("");
   const [isAssetExtractionEnabled, setIsAssetExtractionEnabled] = useState(true);
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
 
   async function takeScreenshot() {
     const trimmedReferenceUrl = referenceUrl.trim();
@@ -85,7 +86,12 @@ function UrlTab({
       }
 
       const res = await response.json();
-      doCreate([res.url], "image", "", isAssetExtractionEnabled);
+      doCreate(
+        [res.url],
+        "image",
+        textPrompt,
+        isAssetExtractionEnabled,
+      );
     } catch (error) {
       console.error(error);
       toast.error("Failed to capture screenshot. Check console for details.");
@@ -94,121 +100,86 @@ function UrlTab({
     }
   }
 
+  const handleTextKeyDown = (
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    if (event.key === "Enter" && !event.shiftKey && !isLoading) {
+      event.preventDefault();
+      takeScreenshot();
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="w-full max-w-lg">
-        <div className="flex flex-col items-center gap-6 p-8 border border-gray-200 dark:border-zinc-700 rounded-xl bg-gray-50/50 dark:bg-zinc-900/50">
-          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-gray-400 dark:text-zinc-500"
-            >
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-            </svg>
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-full max-w-2xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="flex items-start gap-3 border-b border-gray-100 px-4 py-4 dark:border-zinc-800 sm:px-5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">
+            <LuGlobe2 className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+              Screenshot from URL
+            </h3>
+            <p className="mt-0.5 text-xs leading-5 text-gray-500 dark:text-zinc-400">
+              Enter a public webpage and we’ll capture it before generating code.
+            </p>
           </div>
+        </div>
 
-          <div className="text-center">
-            <h3 className="text-gray-700 dark:text-zinc-200 font-medium">Screenshot from URL</h3>
-          </div>
-
-          <div className="w-full space-y-3">
-            <Input
-              placeholder="https://"
-              onChange={(e) => setReferenceUrl(e.target.value)}
-              value={referenceUrl}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isLoading) {
-                  takeScreenshot();
-                }
-              }}
-              className="w-full"
-              data-testid="url-input"
-            />
-            {isFigmaUrl(referenceUrl) && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                Direct Figma import is not supported. Take a screenshot of your
-                design or export the artboards as images, then use the Upload
-                tab.
-              </p>
-            )}
-            <OutputSettingsSection
-              stack={stack}
-              setStack={setStack}
-              designSystem={designSystem}
-            />
-            <label
-              htmlFor="url-asset-extraction"
-              className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/60"
-            >
-              <Checkbox
-                id="url-asset-extraction"
-                checked={isAssetExtractionEnabled}
-                onCheckedChange={(checked) =>
-                  setIsAssetExtractionEnabled(checked === true)
-                }
-                className="mt-0.5"
-              />
-              <span>
-                <span className="block text-sm font-medium text-gray-700 dark:text-zinc-200">
-                  Extract image assets
-                </span>
-                <span className="mt-0.5 block text-xs text-gray-500 dark:text-zinc-400">
-                  Reuse visual assets from this screenshot in the generated code.
-                </span>
-              </span>
-            </label>
-
-            <Button
-              onClick={takeScreenshot}
-              disabled={isLoading}
-              className="w-full"
-              size="lg"
-              data-testid="url-capture"
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Capturing...
-                </span>
-              ) : (
-                "Capture & Generate"
-              )}
-            </Button>
-          </div>
-
-          <p className="text-xs text-gray-400 dark:text-zinc-500 text-center">
-            Requires ScreenshotOne API key.
-          </p>
+        <div className="space-y-2 px-4 py-4 sm:px-5">
+          <label
+            htmlFor="reference-url"
+            className="block text-xs font-medium text-gray-600 dark:text-zinc-300"
+          >
+            Website URL
+          </label>
+          <Input
+            id="reference-url"
+            type="url"
+            inputMode="url"
+            autoComplete="url"
+            placeholder="https://example.com"
+            onChange={(event) => setReferenceUrl(event.target.value)}
+            value={referenceUrl}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !isLoading) {
+                event.preventDefault();
+                takeScreenshot();
+              }
+            }}
+            className="h-11 w-full"
+            data-testid="url-input"
+          />
+          {isFigmaUrl(referenceUrl) ? (
+            <p className="text-xs leading-5 text-amber-600 dark:text-amber-400">
+              Direct Figma import isn’t supported. Export your artboards as
+              images and use the Upload tab instead.
+            </p>
+          ) : (
+            <p className="text-[11px] text-gray-400 dark:text-zinc-500">
+              Requires a ScreenshotOne API key in Settings.
+            </p>
+          )}
         </div>
       </div>
+
+      <ScreenshotToCodeControls
+        textPrompt={textPrompt}
+        onTextPromptChange={setTextPrompt}
+        textInputRef={textInputRef}
+        onTextInputKeyDown={handleTextKeyDown}
+        stack={stack}
+        setStack={setStack}
+        designSystem={designSystem}
+        showAssetExtraction
+        isAssetExtractionEnabled={isAssetExtractionEnabled}
+        onAssetExtractionChange={setIsAssetExtractionEnabled}
+        onGenerate={takeScreenshot}
+        actionLabel="Capture & Generate"
+        loadingActionLabel="Capturing…"
+        isActionLoading={isLoading}
+        actionTestId="url-capture"
+      />
     </div>
   );
 }

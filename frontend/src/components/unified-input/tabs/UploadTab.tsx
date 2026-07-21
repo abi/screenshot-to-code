@@ -2,13 +2,11 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import { Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
-import { Button } from "../../ui/button";
-import { Checkbox } from "../../ui/checkbox";
 import { ScreenRecorderState } from "../../../types";
 import ScreenRecorder from "../../recording/ScreenRecorder";
-import OutputSettingsSection from "../../settings/OutputSettingsSection";
 import { DesignSystemSelectorProps } from "../../settings/DesignSystemSelector";
 import { Stack } from "../../../lib/stacks";
+import ScreenshotToCodeControls from "../ScreenshotToCodeControls";
 
 function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -64,7 +62,6 @@ function UploadTab({ doCreate, stack, setStack, designSystem }: Props) {
     "image" | "video"
   >("image");
   const [textPrompt, setTextPrompt] = useState("");
-  const [showTextPrompt, setShowTextPrompt] = useState(false);
   const [isAssetExtractionEnabled, setIsAssetExtractionEnabled] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
@@ -113,7 +110,6 @@ function UploadTab({ doCreate, stack, setStack, designSystem }: Props) {
     setUploadedDataUrls([]);
     setFiles([]);
     setTextPrompt("");
-    setShowTextPrompt(false);
     setUploadedInputMode("image");
     setSelectedIndex(0);
   };
@@ -457,72 +453,19 @@ function UploadTab({ doCreate, stack, setStack, designSystem }: Props) {
             )}
           </div>
 
-          {!showTextPrompt ? (
-            <button
-              onClick={() => {
-                setShowTextPrompt(true);
-                setTimeout(() => textInputRef.current?.focus(), 50);
-              }}
-              className="text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 underline"
-            >
-              Add instructions (optional)
-            </button>
-          ) : (
-            <div className="w-full max-w-lg">
-              <textarea
-                ref={textInputRef}
-                value={textPrompt}
-                onChange={(e) => setTextPrompt(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Describe any specific requirements..."
-                className="w-full p-3 text-sm border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-zinc-600 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-zinc-500"
-                rows={2}
-              />
-            </div>
-          )}
-
-          <div className="w-full max-w-md space-y-4">
-            <OutputSettingsSection
-              stack={stack}
-              setStack={setStack}
-              designSystem={designSystem}
-            />
-            {uploadedInputMode === "image" && (
-              <label
-                htmlFor="asset-extraction"
-                className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/60"
-              >
-                <Checkbox
-                  id="asset-extraction"
-                  checked={isAssetExtractionEnabled}
-                  onCheckedChange={(checked) =>
-                    setIsAssetExtractionEnabled(checked === true)
-                  }
-                  className="mt-0.5"
-                />
-                <span>
-                  <span className="block text-sm font-medium text-gray-700 dark:text-zinc-200">
-                    Extract image assets
-                  </span>
-                  <span className="mt-0.5 block text-xs text-gray-500 dark:text-zinc-400">
-                    Reuse visual assets from this screenshot in the generated code.
-                  </span>
-                </span>
-              </label>
-            )}
-          </div>
-
-          <div className="flex flex-col items-center gap-1 w-full max-w-md">
-            <Button
-              onClick={handleGenerate}
-              className="w-full"
-              size="lg"
-              data-testid="upload-generate"
-            >
-              Generate Code
-            </Button>
-            <p className="text-xs text-gray-400 dark:text-zinc-500">Press Enter to generate</p>
-          </div>
+          <ScreenshotToCodeControls
+            textPrompt={textPrompt}
+            onTextPromptChange={setTextPrompt}
+            textInputRef={textInputRef}
+            onTextInputKeyDown={handleKeyDown}
+            stack={stack}
+            setStack={setStack}
+            designSystem={designSystem}
+            showAssetExtraction={uploadedInputMode === "image"}
+            isAssetExtractionEnabled={isAssetExtractionEnabled}
+            onAssetExtractionChange={setIsAssetExtractionEnabled}
+            onGenerate={handleGenerate}
+          />
         </div>
       )}
 

@@ -81,7 +81,15 @@ class AgentEngine:
                 if not isinstance(image_url, dict):
                     continue
                 url = cast(object, image_url.get("url"))
-                if isinstance(url, str) and url:
+                # Video parts use the OpenAI-compatible `image_url` shape too,
+                # but extract_assets can only crop still-image data URLs. Keep
+                # non-image media out of the tool runtime so video-only prompts
+                # do not expose a tool that is guaranteed to fail.
+                if (
+                    isinstance(url, str)
+                    and url.startswith("data:image/")
+                    and "," in url
+                ):
                     images.append(url)
         return images
 
@@ -266,7 +274,13 @@ class AgentEngine:
             anthropic_api_key=self.anthropic_api_key,
             gemini_api_key=self.gemini_api_key,
             replicate_api_key=self.replicate_api_key,
-            should_extract_assets=self.should_extract_assets,
+            # Only advertise extraction when the request actually contains a
+            # still image the runtime can crop. In particular, Gemini videos
+            # share the image_url message shape but are not valid extractor
+            # inputs.
+            should_extract_assets=(
+                self.should_extract_assets and bool(self.tool_runtime.input_images)
+            ),
         )
         try:
             return await self._run_with_session(session)

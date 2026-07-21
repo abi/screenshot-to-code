@@ -616,7 +616,11 @@ function App() {
           images: inputMode === "image" ? media : [],
           videos: inputMode === "video" ? media : [],
         },
-        isAssetExtractionEnabled,
+        // Asset extraction operates on still screenshots. Video data uses the
+        // same transport shape for Gemini, so explicitly disable extraction
+        // instead of letting the agent try to crop a video payload.
+        isAssetExtractionEnabled:
+          inputMode === "image" && isAssetExtractionEnabled,
         variantHistory,
       });
     }
