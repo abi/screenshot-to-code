@@ -3,16 +3,26 @@
   "configurations": [
     {
       "name": "frontend",
-      "runtimeExecutable": "yarn",
-      "runtimeArgs": ["dev"],
-      "port": 5173,
-      "autoPort": true,
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "port": 5199,
       "cwd": "frontend"
     },
     {
       "name": "backend",
       "runtimeExecutable": "poetry",
-      "runtimeArgs": ["run", "uvicorn", "main:app", "--port", "7001"],
+      "runtimeArgs": [
+        "run",
+        "uvicorn",
+        "main:app",
+        "--port",
+        "7001"
+      ],
       "port": 7001,
       "cwd": "backend"
     }
