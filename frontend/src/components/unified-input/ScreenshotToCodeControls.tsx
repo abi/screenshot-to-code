@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { LuChevronDown, LuMessageSquarePlus } from "react-icons/lu";
+import {
+  LuChevronDown,
+  LuImage,
+  LuLayers,
+  LuMessageSquarePlus,
+} from "react-icons/lu";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
 import OutputSettingsSection from "../settings/OutputSettingsSection";
@@ -34,14 +39,21 @@ function AssetToggle({
   return (
     <label
       htmlFor="asset-extraction-original"
-      className="flex cursor-pointer items-center gap-2.5 text-[13px] font-medium text-gray-600 dark:text-zinc-300"
+      className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50/80 dark:hover:bg-zinc-800/50 sm:px-5"
     >
-      <Checkbox
-        id="asset-extraction-original"
-        checked={enabled}
-        onCheckedChange={(checked) => onChange(checked === true)}
-      />
-      <span>Extract image assets from original</span>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500">
+        <LuImage className="h-3.5 w-3.5" />
+      </span>
+      <span className="text-sm font-medium text-gray-600 dark:text-zinc-300">
+        Extract image assets from original
+      </span>
+      <span className="ml-auto flex items-center">
+        <Checkbox
+          id="asset-extraction-original"
+          checked={enabled}
+          onCheckedChange={(checked) => onChange(checked === true)}
+        />
+      </span>
     </label>
   );
 }
@@ -77,21 +89,19 @@ export default function ScreenshotToCodeControls({
   return (
     <div className="w-full max-w-2xl">
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <div className="p-4 sm:p-5">
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-              Output settings
-            </h3>
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-              Choose the framework for your generated code.
-            </p>
-          </div>
-          <div className="rounded-lg border border-gray-100 bg-gray-50/80 p-3.5 dark:border-zinc-800 dark:bg-zinc-800/50">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-5">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500">
+            <LuLayers className="h-3.5 w-3.5" />
+          </span>
+          <span className="text-sm font-medium text-gray-600 dark:text-zinc-300">
+            Stack
+          </span>
+          <div className="ml-auto">
             <OutputSettingsSection
               stack={stack}
               setStack={setStack}
               designSystem={designSystem}
-              label="Stack"
+              inline
             />
           </div>
         </div>
@@ -147,7 +157,16 @@ export default function ScreenshotToCodeControls({
           )}
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-gray-200 bg-gray-50/70 px-4 py-3.5 dark:border-zinc-700 dark:bg-zinc-800/50 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        {showAssetExtraction && (
+          <div className="border-t border-gray-100 dark:border-zinc-800">
+            <AssetToggle
+              enabled={isAssetExtractionEnabled}
+              onChange={onAssetExtractionChange}
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end border-t border-gray-100 bg-gray-50/70 px-4 py-3.5 dark:border-zinc-800 dark:bg-zinc-800/50 sm:px-5">
           <div className="w-full sm:w-56">
             <Button
               onClick={onGenerate}
@@ -185,14 +204,6 @@ export default function ScreenshotToCodeControls({
               )}
             </Button>
           </div>
-          {showAssetExtraction && (
-            <div className="self-end sm:self-auto">
-              <AssetToggle
-                enabled={isAssetExtractionEnabled}
-                onChange={onAssetExtractionChange}
-              />
-            </div>
-          )}
         </div>
       </div>
     </div>
