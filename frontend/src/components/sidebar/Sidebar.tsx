@@ -290,29 +290,26 @@ function Sidebar({
 
       {/* Prominent banner when viewing an older version */}
       {isViewingOlderVersion && currentVersionNumber !== null && (
-        <div className="shrink-0 border-b border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-4 py-2.5">
+        <div className="shrink-0 border-b border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-900/30 px-4 py-2.5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
-              <LuHistory className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <LuHistory className="w-4 h-4 shrink-0 text-violet-600 dark:text-violet-400" />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 truncate">
+                <p className="text-sm font-semibold text-violet-900 dark:text-violet-200 truncate">
                   Viewing v{currentVersionNumber} of {totalVersions}
-                </p>
-                <p className="text-[11px] text-amber-700 dark:text-amber-300/80">
-                  This is an older version, not your latest work
                 </p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <button
                 onClick={onOpenVersions}
-                className="rounded-lg border border-amber-400 dark:border-amber-600 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                className="rounded-lg border border-violet-400 dark:border-violet-600 px-3 py-1.5 text-xs font-semibold text-violet-800 dark:text-violet-200 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors"
               >
                 All versions
               </button>
               <button
                 onClick={() => latestCommitHash && setHead(latestCommitHash)}
-                className="rounded-lg bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-400 px-3 py-1.5 text-xs font-semibold text-white dark:text-amber-950 transition-colors"
+                className="rounded-lg bg-violet-600 hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400 px-3 py-1.5 text-xs font-semibold text-white dark:text-violet-950 transition-colors"
               >
                 Back to latest
               </button>
@@ -497,9 +494,9 @@ function Sidebar({
           >
             {/* Branching notice when editing an older version */}
             {isViewingOlderVersion && currentVersionNumber !== null && (
-              <div className="mb-2 flex items-center gap-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-3 py-2">
-                <LuHistory className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span className="text-xs text-amber-800 dark:text-amber-200">
+              <div className="mb-2 flex items-center gap-2 rounded-xl border border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-900/20 px-3 py-2">
+                <LuHistory className="w-3.5 h-3.5 shrink-0 text-violet-600 dark:text-violet-400" />
+                <span className="text-xs text-violet-800 dark:text-violet-200">
                   You're editing <span className="font-semibold">v{currentVersionNumber}</span> — updates will create a new version branching from it.
                 </span>
               </div>
