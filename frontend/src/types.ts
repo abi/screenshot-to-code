@@ -15,6 +15,7 @@ export enum AppTheme {
 export interface Settings {
   openAiApiKey: string | null;
   openAiBaseURL: string | null;
+  openRouterApiKey: string | null;
   replicateApiKey: string | null;
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;

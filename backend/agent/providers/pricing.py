@@ -24,6 +24,10 @@ MODEL_PRICING: Dict[str, ModelPricing] = {
     "gpt-5.5": ModelPricing(
         input=2.50, output=15.00, cache_read=0.25
     ),
+    # --- OpenRouter ---
+    "moonshotai/kimi-k3": ModelPricing(
+        input=3.00, output=15.00, cache_read=0.30
+    ),
     # --- Anthropic ---
     "claude-sonnet-4-6": ModelPricing(
         input=3.00, output=15.00, cache_read=0.30, cache_write=3.75

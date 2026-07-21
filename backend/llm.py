@@ -28,6 +28,8 @@ class Llm(Enum):
     CLAUDE_FABLE_5_HIGH = "claude-fable-5 (high effort)"
     CLAUDE_FABLE_5_XHIGH = "claude-fable-5 (xhigh effort)"
     CLAUDE_FABLE_5_MAX = "claude-fable-5 (max effort)"
+    # OpenRouter
+    KIMI_K3_LOW = "kimi-k3 (low thinking)"
     # Gemini
     GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)"
     GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)"
@@ -73,6 +75,8 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.CLAUDE_FABLE_5_HIGH: "anthropic",
     Llm.CLAUDE_FABLE_5_XHIGH: "anthropic",
     Llm.CLAUDE_FABLE_5_MAX: "anthropic",
+    # OpenRouter models
+    Llm.KIMI_K3_LOW: "openrouter",
     # Gemini models
     Llm.GEMINI_3_FLASH_PREVIEW_HIGH: "gemini",
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL: "gemini",
@@ -89,6 +93,23 @@ MODEL_PROVIDER: dict[Llm, str] = {
 OPENAI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "openai"}
 ANTHROPIC_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "anthropic"}
 GEMINI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "gemini"}
+OPENROUTER_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "openrouter"}
+
+OPENROUTER_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
+    Llm.KIMI_K3_LOW: {
+        "api_name": "moonshotai/kimi-k3",
+        "reasoning_effort": "low",
+    },
+}
+
+
+def get_openrouter_api_name(model: Llm) -> str:
+    return OPENROUTER_MODEL_CONFIG[model]["api_name"]
+
+
+def get_openrouter_reasoning_effort(model: Llm) -> str | None:
+    return OPENROUTER_MODEL_CONFIG.get(model, {}).get("reasoning_effort")
+
 
 OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
     Llm.GPT_5_4_MINI_LOW: {"api_name": "gpt-5.4-mini", "reasoning_effort": "low"},

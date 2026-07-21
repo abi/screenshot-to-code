@@ -33,6 +33,7 @@ class AgentEngine:
         gemini_api_key: Optional[str],
         replicate_api_key: Optional[str],
         should_generate_images: bool,
+        openrouter_api_key: Optional[str] = None,
         should_extract_assets: bool = True,
         asset_base_url: str = "",
         initial_file_state: Optional[Dict[str, str]] = None,
@@ -44,6 +45,7 @@ class AgentEngine:
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
+        self.openrouter_api_key = openrouter_api_key
         self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
         self.should_extract_assets = should_extract_assets
@@ -265,6 +267,7 @@ class AgentEngine:
             openai_base_url=self.openai_base_url,
             anthropic_api_key=self.anthropic_api_key,
             gemini_api_key=self.gemini_api_key,
+            openrouter_api_key=self.openrouter_api_key,
             replicate_api_key=self.replicate_api_key,
             should_extract_assets=self.should_extract_assets,
         )

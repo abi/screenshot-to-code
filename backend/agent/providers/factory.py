@@ -10,8 +10,16 @@ from agent.providers.base import ProviderSession
 from agent.providers.gemini import GeminiProviderSession, serialize_gemini_tools
 from agent.providers.openai import OpenAIProviderSession, serialize_openai_tools
 from agent.tools import canonical_tool_definitions
-from config import REPLICATE_API_KEY
-from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
+from config import OPENROUTER_BASE_URL, REPLICATE_API_KEY
+from llm import (
+    ANTHROPIC_MODELS,
+    GEMINI_MODELS,
+    OPENAI_MODELS,
+    OPENROUTER_MODELS,
+    Llm,
+    get_openrouter_api_name,
+    get_openrouter_reasoning_effort,
+)
 from preview_screenshot import is_screenshot_preview_available
 
 
@@ -24,6 +32,7 @@ def create_provider_session(
     anthropic_api_key: Optional[str],
     gemini_api_key: Optional[str],
     replicate_api_key: Optional[str],
+    openrouter_api_key: Optional[str] = None,
     should_extract_assets: bool = True,
 ) -> ProviderSession:
     canonical_tools = canonical_tool_definitions(
@@ -46,6 +55,27 @@ def create_provider_session(
             model=model,
             prompt_messages=prompt_messages,
             tools=serialize_openai_tools(canonical_tools),
+        )
+
+    if model in OPENROUTER_MODELS:
+        if not openrouter_api_key:
+            raise Exception("OpenRouter API key is missing.")
+
+        client = AsyncOpenAI(
+            api_key=openrouter_api_key,
+            base_url=OPENROUTER_BASE_URL,
+        )
+        return OpenAIProviderSession(
+            client=client,
+            model=model,
+            prompt_messages=prompt_messages,
+            tools=serialize_openai_tools(canonical_tools),
+            provider_name="openrouter",
+            api_model_name=get_openrouter_api_name(model),
+            reasoning_effort=get_openrouter_reasoning_effort(model),
+            # OpenRouter pre-authorizes against this ceiling. Keep Kimi below
+            # the common prepaid-credit limit while retaining ample HTML room.
+            max_output_tokens=20000,
         )
 
     if model in ANTHROPIC_MODELS:

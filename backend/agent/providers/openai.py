@@ -54,8 +54,8 @@ def _convert_message_to_responses_input(
     return {"role": role, "content": parts}
 
 
-def _get_image_detail_for_model(model: Llm) -> str:
-    if get_openai_api_name(model) == "gpt-5.5":
+def _get_image_detail_for_api_model(api_model_name: str) -> str:
+    if api_model_name == "gpt-5.5":
         return "original"
     return "high"
 
@@ -418,37 +418,51 @@ class OpenAIProviderSession(ProviderSession):
         model: Llm,
         prompt_messages: List[ChatCompletionMessageParam],
         tools: List[Dict[str, Any]],
+        provider_name: str = "openai",
+        api_model_name: str | None = None,
+        reasoning_effort: str | None = None,
+        max_output_tokens: int = 50000,
     ):
         self._client = client
         self._model = model
         self._tools = tools
+        self._provider_name = provider_name
+        self._api_model_name = api_model_name or get_openai_api_name(model)
+        self._reasoning_effort = (
+            reasoning_effort
+            if reasoning_effort is not None
+            else get_openai_reasoning_effort(model)
+        )
+        self._max_output_tokens = max_output_tokens
         self._total_usage = TokenUsage()
         self._prompt_report_logger = PromptReportLogger(
-            provider="openai",
+            provider=provider_name,
             model=model,
-            api_model_name=get_openai_api_name(model),
+            api_model_name=self._api_model_name,
         )
-        image_detail = _get_image_detail_for_model(model)
+        image_detail = _get_image_detail_for_api_model(self._api_model_name)
         self._input_items: List[Dict[str, Any]] = [
             _convert_message_to_responses_input(message, image_detail=image_detail)
             for message in prompt_messages
         ]
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
-        model_name = get_openai_api_name(self._model)
+        model_name = self._api_model_name
         params: Dict[str, Any] = {
             "model": model_name,
             "input": self._input_items,
             "tools": self._tools,
             "tool_choice": "auto",
             "stream": True,
-            "max_output_tokens": 50000,
+            "max_output_tokens": self._max_output_tokens,
         }
         if model_name == "gpt-5.4-2026-03-05":
             params["prompt_cache_retention"] = "24h"
-        reasoning_effort = get_openai_reasoning_effort(self._model)
-        if reasoning_effort:
-            params["reasoning"] = {"effort": reasoning_effort, "summary": "auto"}
+        if self._reasoning_effort:
+            params["reasoning"] = {
+                "effort": self._reasoning_effort,
+                "summary": "auto",
+            }
 
         self._prompt_report_logger.record_request(params)
 
@@ -482,7 +496,7 @@ class OpenAIProviderSession(ProviderSession):
         if assistant_output_items:
             self._input_items.extend(assistant_output_items)
 
-        image_detail = _get_image_detail_for_model(self._model)
+        image_detail = _get_image_detail_for_api_model(self._api_model_name)
         tool_output_items: List[Dict[str, Any]] = []
         for executed in executed_tool_calls:
             result_json = json.dumps(executed.result.result)
@@ -515,12 +529,12 @@ class OpenAIProviderSession(ProviderSession):
 
     async def close(self) -> None:
         u = self._total_usage
-        model_name = get_openai_api_name(self._model)
+        model_name = self._api_model_name
         pricing = MODEL_PRICING.get(model_name)
         cost_str = f" cost=${u.cost(pricing):.4f}" if pricing else ""
         cache_hit_rate_str = f" cache_hit_rate={u.cache_hit_rate_percent():.2f}%"
         print(
-            f"[TOKEN USAGE] provider=openai model={model_name} | "
+            f"[TOKEN USAGE] provider={self._provider_name} model={model_name} | "
             f"input={u.input} output={u.output} "
             f"cache_read={u.cache_read} cache_write={u.cache_write} "
             f"total={u.total}{cache_hit_rate_str}{cost_str}"

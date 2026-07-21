@@ -57,6 +57,29 @@ def _test_tools() -> list[dict[str, Any]]:
 
 
 @pytest.mark.asyncio
+async def test_responses_provider_supports_openrouter_model_configuration() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.KIMI_K3_LOW,
+        prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
+        tools=_test_tools(),
+        provider_name="openrouter",
+        api_model_name="moonshotai/kimi-k3",
+        reasoning_effort="low",
+        max_output_tokens=20000,
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_call = client.responses.calls[0]
+    assert first_call["model"] == "moonshotai/kimi-k3"
+    assert first_call["reasoning"] == {"effort": "low", "summary": "auto"}
+    assert first_call["max_output_tokens"] == 20000
+    assert "prompt_cache_retention" not in first_call
+
+
+@pytest.mark.asyncio
 async def test_openai_provider_session_omits_prompt_cache_key_across_turns() -> None:
     client = _FakeOpenAIClient()
     session = OpenAIProviderSession(

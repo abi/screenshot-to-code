@@ -62,6 +62,22 @@ async def test_extracts_gemini_api_key_from_env_when_not_in_request(monkeypatch:
 
 
 @pytest.mark.asyncio
+async def test_extracts_openrouter_api_key_from_settings_dialog() -> None:
+    stage = ParameterExtractionStage(AsyncMock())
+
+    extracted = await stage.extract_and_validate(
+        {
+            "generatedCodeConfig": "html_tailwind",
+            "inputMode": "image",
+            "openRouterApiKey": "openrouter-from-ui",
+            "prompt": {"images": ["data:image/png;base64,abc"]},
+        }
+    )
+
+    assert extracted.openrouter_api_key == "openrouter-from-ui"
+
+
+@pytest.mark.asyncio
 async def test_extracts_replicate_api_key_from_settings_dialog() -> None:
     stage = ParameterExtractionStage(AsyncMock())
 

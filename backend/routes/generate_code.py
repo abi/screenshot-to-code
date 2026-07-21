@@ -16,6 +16,7 @@ from config import (
     NUM_VARIANTS_VIDEO,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
+    OPENROUTER_API_KEY,
     REPLICATE_API_KEY,
 )
 from custom_types import InputMode
@@ -64,12 +65,16 @@ from routes.model_choice_sets import (
     ALL_KEYS_MODELS_DEFAULT,
     ALL_KEYS_MODELS_TEXT_CREATE,
     ALL_KEYS_MODELS_UPDATE,
+    ALL_KEYS_WITH_OPENROUTER_MODELS_DEFAULT,
+    ALL_KEYS_WITH_OPENROUTER_MODELS_TEXT_CREATE,
+    ALL_KEYS_WITH_OPENROUTER_MODELS_UPDATE,
     ANTHROPIC_ONLY_MODELS,
     GEMINI_ANTHROPIC_MODELS,
     GEMINI_OPENAI_MODELS,
     GEMINI_ONLY_MODELS,
     OPENAI_ANTHROPIC_MODELS,
     OPENAI_ONLY_MODELS,
+    OPENROUTER_ONLY_MODELS,
     VIDEO_VARIANT_MODELS,
 )
 
@@ -265,6 +270,7 @@ class ExtractedParams:
     should_extract_assets: bool = True
     asset_base_url: str = ""
     design_system: str | None = None
+    openrouter_api_key: str | None = None
 
 
 class ParameterExtractionStage:
@@ -306,6 +312,9 @@ class ParameterExtractionStage:
         )
         gemini_api_key = self._get_from_settings_dialog_or_env(
             params, "geminiApiKey", GEMINI_API_KEY
+        )
+        openrouter_api_key = self._get_from_settings_dialog_or_env(
+            params, "openRouterApiKey", OPENROUTER_API_KEY
         )
         replicate_api_key = self._get_from_settings_dialog_or_env(
             params, "replicateApiKey", REPLICATE_API_KEY
@@ -378,6 +387,7 @@ class ParameterExtractionStage:
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
             gemini_api_key=gemini_api_key,
+            openrouter_api_key=openrouter_api_key,
             replicate_api_key=replicate_api_key,
             openai_base_url=openai_base_url,
             generation_type=generation_type,
@@ -418,6 +428,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
+        openrouter_api_key: str | None = None,
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
@@ -429,6 +440,7 @@ class ModelSelectionStage:
                 openai_api_key,
                 anthropic_api_key,
                 gemini_api_key,
+                openrouter_api_key,
             )
 
             # Print the variant models (one per line)
@@ -439,8 +451,8 @@ class ModelSelectionStage:
             return variant_models
         except Exception:
             await self.throw_error(
-                "No OpenAI, Anthropic, or Gemini API key found. Please add the environment variable "
-                "OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY to backend/.env or in the settings dialog. "
+                "No OpenAI, Anthropic, Gemini, or OpenRouter API key found. Please add the environment variable "
+                "OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, or OPENROUTER_API_KEY to backend/.env or in the settings dialog. "
                 "If you add it to .env, make sure to restart the backend server."
             )
             raise Exception("No API key")
@@ -453,6 +465,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        openrouter_api_key: str | None,
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
@@ -465,8 +478,20 @@ class ModelSelectionStage:
                 )
             return list(VIDEO_VARIANT_MODELS)
 
-        # Define models based on available API keys
-        if gemini_api_key and anthropic_api_key and openai_api_key:
+        # With all four providers, use an explicit one-per-provider comparison
+        # set. With a subset of direct-provider keys, add Kimi to the front of
+        # the existing fallback set and cycle as usual.
+        has_all_direct_keys = bool(
+            gemini_api_key and anthropic_api_key and openai_api_key
+        )
+        if openrouter_api_key and has_all_direct_keys:
+            if input_mode == "text" and generation_type == "create":
+                models = list(ALL_KEYS_WITH_OPENROUTER_MODELS_TEXT_CREATE)
+            elif generation_type == "update":
+                models = list(ALL_KEYS_WITH_OPENROUTER_MODELS_UPDATE)
+            else:
+                models = list(ALL_KEYS_WITH_OPENROUTER_MODELS_DEFAULT)
+        elif has_all_direct_keys:
             if input_mode == "text" and generation_type == "create":
                 models = list(ALL_KEYS_MODELS_TEXT_CREATE)
             elif generation_type == "update":
@@ -485,8 +510,13 @@ class ModelSelectionStage:
             models = list(ANTHROPIC_ONLY_MODELS)
         elif openai_api_key:
             models = list(OPENAI_ONLY_MODELS)
+        elif openrouter_api_key:
+            models = list(OPENROUTER_ONLY_MODELS)
         else:
-            raise Exception("No OpenAI or Anthropic key")
+            raise Exception("No model provider key")
+
+        if openrouter_api_key and not has_all_direct_keys:
+            models = list(dict.fromkeys([Llm.KIMI_K3_LOW, *models]))
 
         # Cycle through models: [A, B] with num=5 becomes [A, B, A, B, A]
         selected_models: List[Llm] = []
@@ -553,6 +583,7 @@ class AgenticGenerationStage:
         openai_base_url: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        openrouter_api_key: str | None,
         replicate_api_key: str | None,
         should_generate_images: bool,
         file_state: Dict[str, str] | None,
@@ -565,6 +596,7 @@ class AgenticGenerationStage:
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
+        self.openrouter_api_key = openrouter_api_key
         self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
         self.should_extract_assets = should_extract_assets
@@ -625,6 +657,7 @@ class AgenticGenerationStage:
                 openai_base_url=self.openai_base_url,
                 anthropic_api_key=self.anthropic_api_key,
                 gemini_api_key=self.gemini_api_key,
+                openrouter_api_key=self.openrouter_api_key,
                 replicate_api_key=self.replicate_api_key,
                 should_generate_images=self.should_generate_images,
                 should_extract_assets=self.should_extract_assets,
@@ -792,6 +825,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                openrouter_api_key=context.extracted_params.openrouter_api_key,
             )
             if IS_DEBUG_ENABLED:
                 await context.send_message(
@@ -808,6 +842,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_base_url=context.extracted_params.openai_base_url,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                openrouter_api_key=context.extracted_params.openrouter_api_key,
                 replicate_api_key=context.extracted_params.replicate_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
                 should_extract_assets=context.extracted_params.should_extract_assets,

@@ -22,6 +22,16 @@ export default ({ mode }) => {
         "/generate-code": { target: CODEGEN_BACKEND, ws: true },
         "/api": { target: CODEGEN_BACKEND },
         "/local-assets": { target: CODEGEN_BACKEND },
+        // Eval pages also use same-origin requests so they work through local
+        // dev servers and remote preview tunnels.
+        "/eval_input_files": { target: CODEGEN_BACKEND },
+        "/models": { target: CODEGEN_BACKEND },
+        "/run_evals": { target: CODEGEN_BACKEND },
+        "/run_evals_stream": { target: CODEGEN_BACKEND },
+        "/best-of-n-evals": { target: CODEGEN_BACKEND },
+        "/output_folders": { target: CODEGEN_BACKEND },
+        "/openai-input-compare": { target: CODEGEN_BACKEND },
+        "/prompt-reports": { target: CODEGEN_BACKEND },
       },
     },
     plugins: [

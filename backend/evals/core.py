@@ -4,9 +4,16 @@ from config import (
     LOCAL_ASSET_BASE_URL,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
+    OPENROUTER_API_KEY,
     REPLICATE_API_KEY,
 )
-from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
+from llm import (
+    ANTHROPIC_MODELS,
+    GEMINI_MODELS,
+    OPENAI_MODELS,
+    OPENROUTER_MODELS,
+    Llm,
+)
 from agent.runner import Agent
 from prompts.create.image import build_image_prompt_messages
 from prompts.prompt_types import Stack
@@ -37,6 +44,8 @@ async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> s
         raise Exception("Gemini API key not found")
     if model in OPENAI_MODELS and not OPENAI_API_KEY:
         raise Exception("OpenAI API key not found")
+    if model in OPENROUTER_MODELS and not OPENROUTER_API_KEY:
+        raise Exception("OpenRouter API key not found")
 
     print(f"[EVALS] Using agent runner for model: {model.value}")
 
@@ -47,6 +56,7 @@ async def generate_code_for_image(image_url: str, stack: Stack, model: Llm) -> s
         openai_base_url=OPENAI_BASE_URL,
         anthropic_api_key=ANTHROPIC_API_KEY,
         gemini_api_key=GEMINI_API_KEY,
+        openrouter_api_key=OPENROUTER_API_KEY,
         replicate_api_key=REPLICATE_API_KEY,
         should_generate_images=True,
         # No websocket to infer the host from, so use the configured base URL;

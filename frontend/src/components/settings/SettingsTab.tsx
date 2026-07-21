@@ -182,6 +182,29 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
 
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                  OpenRouter API key
+                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                  Enables Kimi K3 comparisons. Only stored in your browser and
+                  overrides your .env config.
+                </p>
+                <Input
+                  id="openrouter-api-key"
+                  className="mt-2"
+                  type="password"
+                  placeholder="OpenRouter API key"
+                  value={settings.openRouterApiKey || ""}
+                  onChange={(e) =>
+                    setSettings((s) => ({
+                      ...s,
+                      openRouterApiKey: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
                   Anthropic API key
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">

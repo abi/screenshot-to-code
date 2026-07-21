@@ -13,6 +13,7 @@ export enum CodeGenerationModel {
   GPT_5_5_HIGH = "gpt-5.5 (high thinking)",
   GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)",
   GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)",
+  KIMI_K3_LOW = "kimi-k3 (low thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
   GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)",
   GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)",
@@ -78,6 +79,9 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gpt-5.4-mini (low thinking)": {
     name: "GPT 5.4 Mini (low)",
+  },
+  "kimi-k3 (low thinking)": {
+    name: "Kimi K3 via OpenRouter (low)",
   },
   "claude-opus-4-8 (low effort)": {
     name: "Claude Opus 4.8 (low)",

@@ -8,6 +8,25 @@ VIDEO_VARIANT_MODELS = (
 
 # All API keys available.
 
+# OpenRouter plus the three direct-provider keys. Kimi takes one slot so image
+# runs compare one model from each provider in the same four-variant request.
+ALL_KEYS_WITH_OPENROUTER_MODELS_DEFAULT = (
+    Llm.KIMI_K3_LOW,
+    Llm.CLAUDE_OPUS_4_8_MEDIUM,
+    Llm.GPT_5_5_LOW,
+    Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
+)
+ALL_KEYS_WITH_OPENROUTER_MODELS_TEXT_CREATE = (
+    Llm.KIMI_K3_LOW,
+    Llm.GPT_5_5_HIGH,
+    Llm.CLAUDE_OPUS_4_8_HIGH,
+    Llm.GEMINI_3_1_PRO_PREVIEW_LOW,
+)
+ALL_KEYS_WITH_OPENROUTER_MODELS_UPDATE = (
+    Llm.KIMI_K3_LOW,
+    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+)
+
 # Image (Create)
 
 ALL_KEYS_MODELS_DEFAULT = (
@@ -66,3 +85,4 @@ OPENAI_ONLY_MODELS = (
     Llm.GPT_5_5_HIGH,
     Llm.GPT_5_5_LOW,
 )
+OPENROUTER_ONLY_MODELS = (Llm.KIMI_K3_LOW,)

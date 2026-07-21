@@ -32,6 +32,37 @@ class TestModelSelectionAllKeys:
         assert models == expected
 
     @pytest.mark.asyncio
+    async def test_image_create_with_openrouter_compares_one_model_per_provider(self):
+        models = await self.model_selector.select_models(
+            generation_type="create",
+            input_mode="image",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+            openrouter_api_key="key",
+        )
+
+        assert models == [
+            Llm.KIMI_K3_LOW,
+            Llm.CLAUDE_OPUS_4_8_MEDIUM,
+            Llm.GPT_5_5_LOW,
+            Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
+        ]
+
+    @pytest.mark.asyncio
+    async def test_openrouter_only_cycles_kimi(self):
+        models = await self.model_selector.select_models(
+            generation_type="create",
+            input_mode="image",
+            openai_api_key=None,
+            anthropic_api_key=None,
+            gemini_api_key=None,
+            openrouter_api_key="key",
+        )
+
+        assert models == [Llm.KIMI_K3_LOW] * 4
+
+    @pytest.mark.asyncio
     async def test_gemini_anthropic_create_image(self):
         """All keys image create: fixed order for four variants."""
         models = await self.model_selector.select_models(
