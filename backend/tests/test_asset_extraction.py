@@ -74,7 +74,7 @@ async def test_extract_assets_from_images_uses_gemini_boxes_and_crops_original(
     )
 
     assert len(calls) == 2
-    assert calls[0]["model"] == "gemini-3-flash-preview"
+    assert calls[0]["model"] == "gemini-3.6-flash"
     assets = result["assets"]
     assert assets[0]["description"] == "logo"
     assert assets[0]["status"] == "ok"
