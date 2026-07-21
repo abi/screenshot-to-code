@@ -3,7 +3,13 @@ import { useProjectStore } from "../../store/project-store";
 import { AppState } from "../../types";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { LuMousePointerClick, LuRefreshCw, LuArrowUp, LuX } from "react-icons/lu";
+import {
+  LuMousePointerClick,
+  LuRefreshCw,
+  LuArrowUp,
+  LuX,
+  LuHistory,
+} from "react-icons/lu";
 import { toast } from "react-hot-toast";
 
 import Variants from "../variants/Variants";
@@ -179,6 +185,7 @@ function Sidebar({
   const isViewingOlderVersion = head !== null && head !== latestCommitHash;
 
   // Compute version number for the current head
+  const totalVersions = Object.keys(commits).length;
   const currentVersionNumber = (() => {
     if (!head) return null;
     const sorted = Object.values(commits).sort(
@@ -281,6 +288,39 @@ function Sidebar({
         <Variants />
       </div>
 
+      {/* Prominent banner when viewing an older version */}
+      {isViewingOlderVersion && currentVersionNumber !== null && (
+        <div className="shrink-0 border-b border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-4 py-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <LuHistory className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 truncate">
+                  Viewing v{currentVersionNumber} of {totalVersions}
+                </p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-300/80">
+                  This is an older version, not your latest work
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button
+                onClick={onOpenVersions}
+                className="rounded-lg border border-amber-400 dark:border-amber-600 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+              >
+                All versions
+              </button>
+              <button
+                onClick={() => latestCommitHash && setHead(latestCommitHash)}
+                className="rounded-lg bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-400 px-3 py-1.5 text-xs font-semibold text-white dark:text-amber-950 transition-colors"
+              >
+                Back to latest
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Scrollable content */}
       <div
         ref={middlePaneRef}
@@ -375,32 +415,7 @@ function Sidebar({
           </div>
         )}
 
-        {isViewingOlderVersion && currentVersionNumber !== null ? (
-          <div className="mb-4 flex flex-col items-center py-6">
-            <p className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">
-              Version {currentVersionNumber}
-            </p>
-            <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
-              You are viewing an older version
-            </p>
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={onOpenVersions}
-                className="rounded-lg border border-gray-300 dark:border-zinc-600 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
-              >
-                All versions
-              </button>
-              <button
-                onClick={() => latestCommitHash && setHead(latestCommitHash)}
-                className="rounded-lg bg-gray-900 dark:bg-white px-4 py-2 text-sm font-medium text-white dark:text-black hover:bg-black dark:hover:bg-gray-200 transition-colors"
-              >
-                View latest
-              </button>
-            </div>
-          </div>
-        ) : (
-          <AgentActivity />
-        )}
+        {!isViewingOlderVersion && <AgentActivity />}
 
         {/* Retry any AI-generated version. A completed older version can be
             retried once no other request is running; the regenerated edit
@@ -480,6 +495,16 @@ function Sidebar({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
+            {/* Branching notice when editing an older version */}
+            {isViewingOlderVersion && currentVersionNumber !== null && (
+              <div className="mb-2 flex items-center gap-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-3 py-2">
+                <LuHistory className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs text-amber-800 dark:text-amber-200">
+                  You're editing <span className="font-semibold">v{currentVersionNumber}</span> — updates will create a new version branching from it.
+                </span>
+              </div>
+            )}
+
             {/* Select and edit indicator */}
             {inSelectAndEditMode && (
               <div className="mb-2">
