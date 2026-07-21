@@ -26,7 +26,7 @@ pydantic = "^2.10"
 google-genai = "^1.16.1"
 nanoid = "^2.0.0"
 langfuse = "^3.0.2"
-playwright = "^1.60.0"
+playwright = "^1.61.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

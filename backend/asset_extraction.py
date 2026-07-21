@@ -10,7 +10,7 @@ from google.genai import types
 from PIL import Image
 
 
-ASSET_EXTRACTION_GEMINI_MODEL = "gemini-3-flash-preview"
+ASSET_EXTRACTION_GEMINI_MODEL = "gemini-3.6-flash"
 
 
 @dataclass(frozen=True)
