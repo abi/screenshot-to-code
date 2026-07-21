@@ -17,6 +17,7 @@ export enum CodeGenerationModel {
   GPT_5_6_SOL_HIGH = "gpt-5.6-sol (high thinking)",
   GPT_5_6_SOL_XHIGH = "gpt-5.6-sol (xhigh thinking)",
   GPT_5_6_SOL_MAX = "gpt-5.6-sol (max thinking)",
+  GPT_5_6_TERRA_LOW = "gpt-5.6-terra (low thinking)",
   GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)",
   GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
@@ -84,6 +85,9 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gpt-5.6-sol (max thinking)": {
     name: "GPT 5.6 Sol (max)",
+  },
+  "gpt-5.6-terra (low thinking)": {
+    name: "GPT 5.6 Terra (low)",
   },
   "gpt-5.5 (no thinking)": {
     name: "GPT 5.5 (none)",

@@ -252,6 +252,23 @@ async def test_openai_provider_session_uses_gpt_5_6_sol_reasoning_effort(
 
 
 @pytest.mark.asyncio
+async def test_openai_provider_session_uses_gpt_5_6_terra_low_reasoning_effort() -> None:
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_5_6_TERRA_LOW,
+        prompt_messages=[{"role": "user", "content": "Build a dashboard."}],
+        tools=_test_tools(),
+    )
+
+    await session.stream_turn(_noop_event_sink)
+
+    first_call = client.responses.calls[0]
+    assert first_call["model"] == "gpt-5.6-terra"
+    assert first_call["reasoning"] == {"effort": "low", "summary": "auto"}
+
+
+@pytest.mark.asyncio
 async def test_openai_provider_session_uses_original_image_detail_for_gpt_5_5() -> None:
     client = _FakeOpenAIClient()
     session = OpenAIProviderSession(
