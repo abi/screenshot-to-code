@@ -135,8 +135,13 @@ def _extract_assets_schema() -> Dict[str, Any]:
                 "items": {
                     "type": "string",
                     "description": (
-                        "Short text description of one visual asset to extract "
-                        "from the input image."
+                        "Identify exactly one visual-asset occurrence. Include its "
+                        "distinctive appearance (colors, shape, content, or visible "
+                        "wordmark), precise location, nearby UI/context, and the "
+                        "1-based screenshot number when multiple screenshots are "
+                        "available. For repeated lookalikes, use a separate item for "
+                        "each wanted instance and distinguish it (for example, "
+                        "leftmost vs. rightmost); do not give only a generic category."
                     ),
                 },
             },
@@ -231,11 +236,15 @@ def canonical_tool_definitions(
             CanonicalToolDefinition(
                 name="extract_assets",
                 description=(
-                    "Extract one or more visual assets from the input screenshot or "
-                    "reference images using Gemini. Pass a list of text descriptions "
-                    "for the assets to extract. Returns each asset (in the same order) "
-                    "with a permanent, embeddable public_url. These assets are already "
-                    "saved — do NOT call save_assets on them (save_assets is only for "
+                    "Extract one or more tightly cropped visual assets from the input "
+                    "screenshots or reference images using Gemini. Describe exactly "
+                    "one occurrence per list item with distinctive appearance, precise "
+                    "location, nearby context, and the 1-based screenshot number; "
+                    "distinguish repeated lookalikes instead of naming a generic asset. "
+                    "Returns each asset in request order with a permanent, embeddable "
+                    "public_url and an attached crop preview; genuinely absent or "
+                    "unisolatable items are unresolved. These assets are already saved "
+                    "— do NOT call save_assets on them (save_assets is only for "
                     "user-uploaded images)."
                 ),
                 parameters=_extract_assets_schema(),

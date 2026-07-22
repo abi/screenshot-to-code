@@ -60,10 +60,30 @@ def test_canonical_tool_definitions_include_extract_assets() -> None:
     assert "extract_assets" in tool_names
     extract_assets_tool = next(tool for tool in tools if tool.name == "extract_assets")
     assert extract_assets_tool.parameters["required"] == ["asset_descriptions"]
-    assert (
-        extract_assets_tool.parameters["properties"]["asset_descriptions"]["type"]
-        == "array"
-    )
+    asset_descriptions = extract_assets_tool.parameters["properties"][
+        "asset_descriptions"
+    ]
+    assert asset_descriptions["type"] == "array"
+
+    # Good caller-side descriptors are essential for separating lookalikes and
+    # mapping assets across multiple screenshots instead of making Gemini guess.
+    item_description = asset_descriptions["items"]["description"].lower()
+    for required_detail in (
+        "distinctive appearance",
+        "precise location",
+        "nearby ui/context",
+        "1-based screenshot number",
+        "repeated lookalikes",
+        "leftmost vs. rightmost",
+    ):
+        assert required_detail in item_description
+
+    tool_description = extract_assets_tool.description.lower()
+    assert "request order" in tool_description
+    assert "permanent, embeddable public_url" in tool_description
+    assert "attached crop preview" in tool_description
+    assert "absent or unisolatable" in tool_description
+    assert "do not call save_assets" in tool_description
 
 
 def test_canonical_tool_definitions_exclude_extract_assets_when_disabled() -> None:

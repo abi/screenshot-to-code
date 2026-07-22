@@ -25,6 +25,7 @@ pydantic = "^2.10"
 google-genai = "^1.16.1"
 langfuse = "^3.0.2"
 playwright = "^1.61.0"
+pillow-heif = "^0.18.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
