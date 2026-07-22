@@ -293,15 +293,51 @@ async def test_edit_image_emits_url_part(monkeypatch: pytest.MonkeyPatch) -> Non
         openai_api_key=None,
         openai_base_url=None,
     )
+    prompt = " ".join(["Preserve every detail in the source image."] * 10)
+    assert len(prompt) > 240
+
     result = await runtime.execute(
         ToolCall(
             id="t",
             name="edit_image",
-            arguments={"prompt": "bw", "image_urls": ["https://x/in.png"]},
+            arguments={"prompt": prompt, "image_urls": ["https://x/in.png"]},
         )
     )
+
     assert result.multimodal_parts is not None
     assert result.multimodal_parts[0].image_url == "https://replicate.delivery/edited.png"
+    assert result.summary["image"]["prompt"] == prompt
+
+
+@pytest.mark.asyncio
+async def test_edit_image_error_summary_preserves_full_prompt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
+
+    async def fake_edit_image(**kwargs: Any) -> str:
+        raise RuntimeError("image edit failed")
+
+    monkeypatch.setattr("agent.tools.runtime.edit_image", fake_edit_image)
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=True,
+        openai_api_key=None,
+        openai_base_url=None,
+    )
+    prompt = " ".join(["Keep the image-editing instruction intact."] * 10)
+    assert len(prompt) > 240
+
+    result = await runtime.execute(
+        ToolCall(
+            id="t",
+            name="edit_image",
+            arguments={"prompt": prompt, "image_urls": ["https://x/in.png"]},
+        )
+    )
+
+    assert result.ok is True
+    assert result.summary["image"]["prompt"] == prompt
 
 
 @pytest.mark.asyncio
