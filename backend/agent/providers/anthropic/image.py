@@ -9,14 +9,12 @@ Comparison with official Anthropic docs
 
   Aligned:
     - 5 MB per-image size limit matches the documented API maximum.
+    - Requests with more than 20 images use the stricter 2000x2000 px limit.
     - Output uses the correct base64 source format (type, media_type, data).
 
   Divergences:
-    - Max dimension is set to 7990 px as a safety margin; the API rejects at
-      8000 px.  This is intentionally conservative.
-    - The docs note that when >20 images are sent in a single request the
-      per-image limit drops to 2000x2000 px.  We do not enforce that stricter
-      limit here (the app typically sends far fewer images).
+    - The normal max dimension is set to 7990 px as a safety margin; the API
+      rejects at 8000 px.  This is intentionally conservative.
     - JPEG conversion drops alpha channels, which is acceptable for website
       screenshots but would degrade transparent PNGs.
 
@@ -42,8 +40,17 @@ CLAUDE_IMAGE_MAX_SIZE = 5 * 1024 * 1024
 # docstring).
 CLAUDE_MAX_IMAGE_DIMENSION = 7990
 
+# Once a request contains more than 20 images, Anthropic lowers the per-image
+# dimension limit to 2000x2000 px.
+CLAUDE_MANY_IMAGE_THRESHOLD = 20
+CLAUDE_MANY_IMAGE_MAX_DIMENSION = 2000
 
-def process_image(image_data_url: str) -> tuple[str, str]:
+
+def process_image(
+    image_data_url: str,
+    *,
+    max_dimension: int = CLAUDE_MAX_IMAGE_DIMENSION,
+) -> tuple[str, str]:
     """Resize / compress a data-URL image to fit Claude's vision limits.
 
     Returns (media_type, base64_data) suitable for an ``image`` content block.
@@ -52,17 +59,27 @@ def process_image(image_data_url: str) -> tuple[str, str]:
     base64_data = image_data_url.split(",")[1]
     image_bytes = base64.b64decode(base64_data)
 
-    return process_image_bytes(image_bytes, media_type)
+    return process_image_bytes(
+        image_bytes,
+        media_type,
+        max_dimension=max_dimension,
+    )
 
 
-def process_image_bytes(image_bytes: bytes, media_type: str) -> tuple[str, str]:
+def process_image_bytes(
+    image_bytes: bytes,
+    media_type: str,
+    *,
+    max_dimension: int = CLAUDE_MAX_IMAGE_DIMENSION,
+) -> tuple[str, str]:
     """Resize / compress image bytes to fit Claude's vision limits."""
+    if max_dimension <= 0:
+        raise ValueError("max_dimension must be positive")
     img = Image.open(io.BytesIO(image_bytes))
     base64_data = base64.b64encode(image_bytes).decode("utf-8")
 
     is_under_dimension_limit = (
-        img.width < CLAUDE_MAX_IMAGE_DIMENSION
-        and img.height < CLAUDE_MAX_IMAGE_DIMENSION
+        img.width <= max_dimension and img.height <= max_dimension
     )
     is_under_size_limit = len(base64_data) <= CLAUDE_IMAGE_MAX_SIZE
 
@@ -73,11 +90,11 @@ def process_image_bytes(image_bytes: bytes, media_type: str) -> tuple[str, str]:
 
     if not is_under_dimension_limit:
         if img.width > img.height:
-            new_width = CLAUDE_MAX_IMAGE_DIMENSION
-            new_height = int((CLAUDE_MAX_IMAGE_DIMENSION / img.width) * img.height)
+            new_width = max_dimension
+            new_height = max(1, int((max_dimension / img.width) * img.height))
         else:
-            new_height = CLAUDE_MAX_IMAGE_DIMENSION
-            new_width = int((CLAUDE_MAX_IMAGE_DIMENSION / img.height) * img.width)
+            new_height = max_dimension
+            new_width = max(1, int((max_dimension / img.height) * img.width))
 
         img = img.resize((new_width, new_height), Image.DEFAULT_STRATEGY)
 
