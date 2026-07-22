@@ -26,6 +26,7 @@ import html from "react-syntax-highlighter/dist/esm/languages/hljs/xml";
 import { vs2015 } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import WorkingPulse from "../core/WorkingPulse";
 import { groupCompletedAgentEvents } from "./activity-order";
+import { getEditImageSourceUrls } from "./image-preview";
 
 SyntaxHighlighterBase.registerLanguage("html", html);
 const SyntaxHighlighter = SyntaxHighlighterBase as any;
@@ -237,12 +238,7 @@ function getEventTitle(event: AgentEvent): string {
       return rbCount > 1 ? `Removed ${rbCount} backgrounds` : "Background removed";
     }
     if (event.toolName === "edit_image") {
-      const editInput = event.input as { image_urls?: unknown[] } | null;
-      const editOutput = event.output as {
-        image?: { image_urls?: unknown[] };
-      } | null;
-      const editCount =
-        editOutput?.image?.image_urls?.length || editInput?.image_urls?.length || 0;
+      const editCount = getEditImageSourceUrls(event.input, event.output).length;
       if (event.status === "running") {
         return editCount > 1
           ? `Editing image with ${editCount} references`
@@ -330,6 +326,7 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
       : typeof output?.image?.prompt === "string"
         ? output.image.prompt
         : null;
+  const editImageSourceUrls = getEditImageSourceUrls(event.input, event.output);
   const hasError = Boolean(output?.error);
   const images =
     output && Array.isArray(output.images) ? (output.images as Array<any>) : null;
@@ -511,11 +508,11 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
 
       {event.toolName === "edit_image" && !hasError && (
         <div>
-          {event.status === "running" && input?.image_urls && Array.isArray(input.image_urls) && (
+          {event.status === "running" && editImageSourceUrls.length > 0 && (
             <div className="space-y-3">
               {editImagePrompt && <ExpandablePrompt prompt={editImagePrompt} />}
               <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                {input.image_urls.map((url: string, index: number) => (
+                {editImageSourceUrls.map((url, index) => (
                   <div key={`${url}-${index}`} className="py-2">
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                       {index === 0 ? "Main image" : `Reference image ${index + 1}`}
@@ -539,9 +536,9 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                     Main image
                   </div>
-                  {Array.isArray(output.image.image_urls) && output.image.image_urls[0] ? (
+                  {editImageSourceUrls[0] ? (
                     <img
-                      src={output.image.image_urls[0]}
+                      src={editImageSourceUrls[0]}
                       alt="Main image"
                       className="w-full rounded object-contain bg-gray-50 dark:bg-gray-800"
                       loading="lazy"
@@ -570,13 +567,13 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
                   )}
                 </div>
               </div>
-              {Array.isArray(output.image.image_urls) && output.image.image_urls.length > 1 && (
+              {editImageSourceUrls.length > 1 && (
                 <div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                     Reference images
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    {output.image.image_urls.slice(1).map((url: string, index: number) => (
+                    {editImageSourceUrls.slice(1).map((url, index) => (
                       <img
                         key={`${url}-${index}`}
                         src={url}
