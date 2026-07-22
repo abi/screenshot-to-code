@@ -26,6 +26,10 @@ import html from "react-syntax-highlighter/dist/esm/languages/hljs/xml";
 import { vs2015 } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import WorkingPulse from "../core/WorkingPulse";
 import { groupCompletedAgentEvents } from "./activity-order";
+import {
+  formatDurationBetween,
+  isTerminalVariantStatus,
+} from "./generation-time";
 
 SyntaxHighlighterBase.registerLanguage("html", html);
 const SyntaxHighlighter = SyntaxHighlighterBase as any;
@@ -104,29 +108,12 @@ function CodePreviewBlock({ code, isGenerating }: { code: string; isGenerating: 
   );
 }
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-function formatDurationMs(milliseconds: number): string {
-  const seconds = Math.max(1, Math.round(milliseconds / 1000));
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return `${hours}h ${remainingMinutes}m`;
-}
-
 function formatDuration(startedAt?: number, endedAt?: number): string {
-  if (!isFiniteNumber(startedAt) || !isFiniteNumber(endedAt)) return "";
-  return formatDurationMs(endedAt - startedAt);
+  return formatDurationBetween(startedAt, endedAt);
 }
 
 function formatElapsedSince(timestampMs: number | undefined, nowMs: number): string {
-  if (!isFiniteNumber(timestampMs)) return "";
-  return formatDurationMs(Math.max(0, nowMs - timestampMs));
+  return formatDurationBetween(timestampMs, nowMs);
 }
 
 function getArrayField(value: unknown, field: string): unknown[] | null {
@@ -965,15 +952,12 @@ function AgentActivity() {
       ? new Date(currentCommit.dateCreated).getTime()
       : undefined);
 
+  const isDone = isTerminalVariantStatus(selectedVariantStatus);
   const isLatestCommit = head === latestCommitHash;
   if (!isLatestCommit || events.length === 0) {
     return null;
   }
 
-  const isDone =
-    selectedVariantStatus === "complete" ||
-    selectedVariantStatus === "error" ||
-    selectedVariantStatus === "cancelled";
   const runningDuration = formatElapsedSince(requestStartMs, nowMs);
   const completedEventGroups = groupCompletedAgentEvents(events);
 

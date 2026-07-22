@@ -15,6 +15,7 @@ import { toast } from "react-hot-toast";
 import Variants from "../variants/Variants";
 import UpdateImageUpload, { UpdateImagePreview } from "../UpdateImageUpload";
 import AgentActivity from "../agent/AgentActivity";
+import { formatCompletedGenerationDuration } from "../agent/generation-time";
 import WorkingPulse from "../core/WorkingPulse";
 import ImageLightbox from "../ImageLightbox";
 import { Commit } from "../commits/types";
@@ -179,6 +180,11 @@ function Sidebar({
   const elapsedSeconds = requestStartMs
     ? Math.max(1, Math.round((nowMs - requestStartMs) / 1000))
     : undefined;
+  const totalGenerationTime = formatCompletedGenerationDuration(
+    selectedVariant?.status,
+    requestStartMs,
+    selectedVariant?.completedAt
+  );
 
   const canRegenerate =
     currentCommit?.type === "ai_create" || currentCommit?.type === "ai_edit";
@@ -421,7 +427,15 @@ function Sidebar({
           (appState === AppState.CODE_READY ||
             (head === latestCommitHash &&
               (isSelectedVariantComplete || isSelectedVariantError))) && (
-          <div className="flex justify-end mb-3">
+          <div className="mb-3 flex items-center justify-end gap-2">
+            {totalGenerationTime && (
+              <span
+                className="text-[11px] font-medium tabular-nums text-gray-400 dark:text-gray-500"
+                data-testid="total-generation-time"
+              >
+                Total time {totalGenerationTime}
+              </span>
+            )}
             <button
               onClick={regenerate}
               className="regenerate-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
