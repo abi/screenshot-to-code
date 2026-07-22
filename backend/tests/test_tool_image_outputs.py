@@ -280,7 +280,9 @@ async def test_generate_images_uses_replicate_key_from_settings(
 
 
 @pytest.mark.asyncio
-async def test_edit_image_emits_url_part(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_edit_image_summary_preserves_full_prompt_and_source_urls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
 
     async def fake_edit_image(**kwargs: Any) -> str:
@@ -294,23 +296,26 @@ async def test_edit_image_emits_url_part(monkeypatch: pytest.MonkeyPatch) -> Non
         openai_base_url=None,
     )
     prompt = " ".join(["Preserve every detail in the source image."] * 10)
+    source_url = f"https://images.example.com/{'source-path/' * 12}image.png"
     assert len(prompt) > 240
+    assert len(source_url) > 100
 
     result = await runtime.execute(
         ToolCall(
             id="t",
             name="edit_image",
-            arguments={"prompt": prompt, "image_urls": ["https://x/in.png"]},
+            arguments={"prompt": prompt, "image_urls": [source_url]},
         )
     )
 
     assert result.multimodal_parts is not None
     assert result.multimodal_parts[0].image_url == "https://replicate.delivery/edited.png"
     assert result.summary["image"]["prompt"] == prompt
+    assert result.summary["image"]["image_urls"] == [source_url]
 
 
 @pytest.mark.asyncio
-async def test_edit_image_error_summary_preserves_full_prompt(
+async def test_edit_image_error_summary_preserves_full_prompt_and_source_urls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
@@ -326,18 +331,21 @@ async def test_edit_image_error_summary_preserves_full_prompt(
         openai_base_url=None,
     )
     prompt = " ".join(["Keep the image-editing instruction intact."] * 10)
+    source_url = f"https://images.example.com/{'source-path/' * 12}image.png"
     assert len(prompt) > 240
+    assert len(source_url) > 100
 
     result = await runtime.execute(
         ToolCall(
             id="t",
             name="edit_image",
-            arguments={"prompt": prompt, "image_urls": ["https://x/in.png"]},
+            arguments={"prompt": prompt, "image_urls": [source_url]},
         )
     )
 
     assert result.ok is True
     assert result.summary["image"]["prompt"] == prompt
+    assert result.summary["image"]["image_urls"] == [source_url]
 
 
 @pytest.mark.asyncio
