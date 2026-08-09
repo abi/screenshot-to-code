@@ -8,6 +8,10 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", None)
+# Custom base URLs, e.g. to route through a LiteLLM proxy using a Virtual Key
+# as the provider API key.
+ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", None)
+GEMINI_BASE_URL = os.environ.get("GEMINI_BASE_URL", None)
 
 # Image generation (optional)
 REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)

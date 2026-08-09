@@ -3,7 +3,9 @@ from datetime import datetime
 
 from config import (
     ANTHROPIC_API_KEY,
+    ANTHROPIC_BASE_URL,
     GEMINI_API_KEY,
+    GEMINI_BASE_URL,
     LOCAL_ASSET_BASE_URL,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
@@ -66,7 +68,9 @@ async def _run_eval_agent(
         openai_api_key=OPENAI_API_KEY,
         openai_base_url=OPENAI_BASE_URL,
         anthropic_api_key=ANTHROPIC_API_KEY,
+        anthropic_base_url=ANTHROPIC_BASE_URL,
         gemini_api_key=GEMINI_API_KEY,
+        gemini_base_url=GEMINI_BASE_URL,
         replicate_api_key=REPLICATE_API_KEY,
         should_generate_images=True,
         # No websocket to infer the host from, so use the configured base URL;

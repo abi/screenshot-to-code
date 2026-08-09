@@ -25,7 +25,9 @@ export interface Settings {
   // Only relevant for hosted version
   isTermOfServiceAccepted: boolean;
   anthropicApiKey: string | null;
+  anthropicBaseURL: string | null;
   geminiApiKey: string | null;
+  geminiBaseURL: string | null;
 }
 
 export interface DesignSystem {

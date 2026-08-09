@@ -62,6 +62,8 @@ class AgentEngine:
         gemini_api_key: Optional[str],
         replicate_api_key: Optional[str],
         should_generate_images: bool,
+        anthropic_base_url: Optional[str] = None,
+        gemini_base_url: Optional[str] = None,
         should_extract_assets: bool = True,
         asset_base_url: str = "",
         initial_file_state: Optional[Dict[str, str]] = None,
@@ -74,7 +76,9 @@ class AgentEngine:
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
+        self.anthropic_base_url = anthropic_base_url
         self.gemini_api_key = gemini_api_key
+        self.gemini_base_url = gemini_base_url
         self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
         self.should_extract_assets = should_extract_assets
@@ -340,7 +344,9 @@ class AgentEngine:
             openai_api_key=self.openai_api_key,
             openai_base_url=self.openai_base_url,
             anthropic_api_key=self.anthropic_api_key,
+            anthropic_base_url=self.anthropic_base_url,
             gemini_api_key=self.gemini_api_key,
+            gemini_base_url=self.gemini_base_url,
             replicate_api_key=self.replicate_api_key,
             # Only advertise extraction when the request actually contains a
             # still image the runtime can crop. In particular, Gemini videos

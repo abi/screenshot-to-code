@@ -2,6 +2,7 @@ from typing import Optional
 
 from anthropic import AsyncAnthropic
 from google import genai
+from google.genai import types as genai_types
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
@@ -25,6 +26,8 @@ def create_provider_session(
     anthropic_api_key: Optional[str],
     gemini_api_key: Optional[str],
     replicate_api_key: Optional[str],
+    anthropic_base_url: Optional[str] = None,
+    gemini_base_url: Optional[str] = None,
     should_extract_assets: bool = True,
     recorder: Optional[AgentRunRecorder] = None,
 ) -> ProviderSession:
@@ -55,7 +58,7 @@ def create_provider_session(
         if not anthropic_api_key:
             raise Exception("Anthropic API key is missing.")
 
-        client = AsyncAnthropic(api_key=anthropic_api_key)
+        client = AsyncAnthropic(api_key=anthropic_api_key, base_url=anthropic_base_url)
         return AnthropicProviderSession(
             client=client,
             model=model,
@@ -68,7 +71,14 @@ def create_provider_session(
         if not gemini_api_key:
             raise Exception("Gemini API key is missing.")
 
-        client = genai.Client(api_key=gemini_api_key)
+        client = genai.Client(
+            api_key=gemini_api_key,
+            http_options=(
+                genai_types.HttpOptions(base_url=gemini_base_url)
+                if gemini_base_url
+                else None
+            ),
+        )
         return GeminiProviderSession(
             client=client,
             model=model,

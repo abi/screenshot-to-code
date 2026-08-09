@@ -11,7 +11,9 @@ from starlette.websockets import WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from config import (
     ANTHROPIC_API_KEY,
+    ANTHROPIC_BASE_URL,
     GEMINI_API_KEY,
+    GEMINI_BASE_URL,
     IS_DEBUG_ENABLED,
     IS_PROD,
     NUM_VARIANTS,
@@ -268,6 +270,8 @@ class ExtractedParams:
     should_extract_assets: bool = True
     asset_base_url: str = ""
     design_system: str | None = None
+    anthropic_base_url: str | None = None
+    gemini_base_url: str | None = None
 
 
 class ParameterExtractionStage:
@@ -314,12 +318,21 @@ class ParameterExtractionStage:
             params, "replicateApiKey", REPLICATE_API_KEY
         )
 
-        # Base URL for OpenAI API
+        # Custom base URLs (e.g. to route through a LiteLLM proxy using a
+        # Virtual Key as the provider API key).
         openai_base_url: str | None = None
-        # Disable user-specified OpenAI Base URL in prod
+        anthropic_base_url: str | None = None
+        gemini_base_url: str | None = None
+        # Disable user-specified base URLs in prod
         if not IS_PROD:
             openai_base_url = self._get_from_settings_dialog_or_env(
                 params, "openAiBaseURL", OPENAI_BASE_URL
+            )
+            anthropic_base_url = self._get_from_settings_dialog_or_env(
+                params, "anthropicBaseURL", ANTHROPIC_BASE_URL
+            )
+            gemini_base_url = self._get_from_settings_dialog_or_env(
+                params, "geminiBaseURL", GEMINI_BASE_URL
             )
         if not openai_base_url:
             print("Using official OpenAI URL")
@@ -383,6 +396,8 @@ class ParameterExtractionStage:
             gemini_api_key=gemini_api_key,
             replicate_api_key=replicate_api_key,
             openai_base_url=openai_base_url,
+            anthropic_base_url=anthropic_base_url,
+            gemini_base_url=gemini_base_url,
             generation_type=generation_type,
             prompt=prompt,
             history=history,
@@ -561,6 +576,8 @@ class AgenticGenerationStage:
         file_state: Dict[str, str] | None,
         asset_base_url: str,
         option_codes: List[str] | None,
+        anthropic_base_url: str | None = None,
+        gemini_base_url: str | None = None,
         should_extract_assets: bool = True,
         generation_id: str | None = None,
         stack: str | None = None,
@@ -571,7 +588,9 @@ class AgenticGenerationStage:
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
         self.anthropic_api_key = anthropic_api_key
+        self.anthropic_base_url = anthropic_base_url
         self.gemini_api_key = gemini_api_key
+        self.gemini_base_url = gemini_base_url
         self.replicate_api_key = replicate_api_key
         self.should_generate_images = should_generate_images
         self.should_extract_assets = should_extract_assets
@@ -646,7 +665,9 @@ class AgenticGenerationStage:
                 openai_api_key=self.openai_api_key,
                 openai_base_url=self.openai_base_url,
                 anthropic_api_key=self.anthropic_api_key,
+                anthropic_base_url=self.anthropic_base_url,
                 gemini_api_key=self.gemini_api_key,
+                gemini_base_url=self.gemini_base_url,
                 replicate_api_key=self.replicate_api_key,
                 should_generate_images=self.should_generate_images,
                 should_extract_assets=self.should_extract_assets,
@@ -830,7 +851,9 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 openai_base_url=context.extracted_params.openai_base_url,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
+                anthropic_base_url=context.extracted_params.anthropic_base_url,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                gemini_base_url=context.extracted_params.gemini_base_url,
                 replicate_api_key=context.extracted_params.replicate_api_key,
                 should_generate_images=context.extracted_params.should_generate_images,
                 should_extract_assets=context.extracted_params.should_extract_assets,

@@ -202,6 +202,30 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                 />
               </div>
 
+              {!IS_RUNNING_ON_CLOUD && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                    Anthropic Base URL (optional)
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                    Replace with a proxy URL (e.g. a LiteLLM Virtual Key
+                    endpoint) if you don't want to use the default.
+                  </p>
+                  <Input
+                    id="anthropic-base-url"
+                    className="mt-2"
+                    placeholder="Anthropic Base URL"
+                    value={settings.anthropicBaseURL || ""}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        anthropicBaseURL: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              )}
+
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
                   Gemini API key
@@ -223,6 +247,30 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                   }
                 />
               </div>
+
+              {!IS_RUNNING_ON_CLOUD && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                    Gemini Base URL (optional)
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                    Replace with a proxy URL (e.g. a LiteLLM Virtual Key
+                    endpoint) if you don't want to use the default.
+                  </p>
+                  <Input
+                    id="gemini-base-url"
+                    className="mt-2"
+                    placeholder="Gemini Base URL"
+                    value={settings.geminiBaseURL || ""}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        geminiBaseURL: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              )}
 
               {!IS_RUNNING_ON_CLOUD && (
                 <div>
