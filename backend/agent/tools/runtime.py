@@ -38,6 +38,8 @@ class AgentToolRuntime:
         asset_base_url: str = "",
         user_id: Optional[str] = None,
         option_codes: Optional[List[str]] = None,
+        orcarouter_api_key: Optional[str] = None,
+        orcarouter_base_url: Optional[str] = None,
     ):
         self.file_state = file_state
         self.should_generate_images = should_generate_images
@@ -45,6 +47,8 @@ class AgentToolRuntime:
         self.openai_base_url = openai_base_url
         self.gemini_api_key = gemini_api_key
         self.replicate_api_key = replicate_api_key
+        self.orcarouter_api_key = orcarouter_api_key
+        self.orcarouter_base_url = orcarouter_base_url
         self.input_images = input_images or []
         self.asset_base_url = asset_base_url
         self.user_id = user_id

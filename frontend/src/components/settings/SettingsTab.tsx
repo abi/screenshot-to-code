@@ -224,6 +224,43 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                 />
               </div>
 
+              <div>
+                <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                  OrcaRouter API key
+                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                  Use <a href="https://www.orcarouter.ai" target="_blank" rel="noreferrer" className="underline">OrcaRouter</a> for automatic
+                  model routing. Only stored in your browser. Overrides your
+                  .env config.
+                </p>
+                <Input
+                  id="orcarouter-api-key"
+                  className="mt-2"
+                  placeholder="sk-orca-..."
+                  value={settings.orcarouterApiKey || ""}
+                  onChange={(e) =>
+                    setSettings((s) => ({
+                      ...s,
+                      orcarouterApiKey: e.target.value,
+                    }))
+                  }
+                />
+                {!IS_RUNNING_ON_CLOUD && (
+                  <Input
+                    id="orcarouter-base-url"
+                    className="mt-2"
+                    placeholder="OrcaRouter Base URL"
+                    value={settings.orcarouterBaseURL || ""}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        orcarouterBaseURL: e.target.value,
+                      }))
+                    }
+                  />
+                )}
+              </div>
+
               {!IS_RUNNING_ON_CLOUD && (
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">

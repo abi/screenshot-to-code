@@ -67,6 +67,8 @@ class AgentEngine:
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
         recorder: Optional[AgentRunRecorder] = None,
+        orcarouter_api_key: Optional[str] = None,
+        orcarouter_base_url: Optional[str] = None,
     ):
         self.send_message = send_message
         self.variant_index = variant_index
@@ -76,6 +78,8 @@ class AgentEngine:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.replicate_api_key = replicate_api_key
+        self.orcarouter_api_key = orcarouter_api_key
+        self.orcarouter_base_url = orcarouter_base_url
         self.should_generate_images = should_generate_images
         self.should_extract_assets = should_extract_assets
 
@@ -93,6 +97,8 @@ class AgentEngine:
             replicate_api_key=replicate_api_key,
             asset_base_url=asset_base_url,
             option_codes=option_codes,
+            orcarouter_api_key=self.orcarouter_api_key,
+            orcarouter_base_url=self.orcarouter_base_url,
         )
         self._tool_preview_lengths: Dict[str, int] = {}
 
@@ -350,6 +356,8 @@ class AgentEngine:
                 self.should_extract_assets and bool(self.tool_runtime.input_images)
             ),
             recorder=self.recorder,
+            orcarouter_api_key=self.orcarouter_api_key,
+            orcarouter_base_url=self.orcarouter_base_url,
         )
         try:
             result = await self._run_with_session(session)

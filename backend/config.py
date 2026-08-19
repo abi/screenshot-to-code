@@ -9,6 +9,12 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", None)
 
+# OrcaRouter gateway (OpenAI-compatible). https://www.orcarouter.ai
+ORCAROUTER_API_KEY = os.environ.get("ORCAROUTER_API_KEY", None)
+ORCAROUTER_BASE_URL = os.environ.get(
+    "ORCAROUTER_BASE_URL", "https://api.orcarouter.ai/v1"
+)
+
 # Image generation (optional)
 REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)
 
