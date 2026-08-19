@@ -12,7 +12,13 @@ from agent.providers.openai import OpenAIProviderSession, serialize_openai_tools
 from agent.tools import canonical_tool_definitions
 from config import REPLICATE_API_KEY
 from fs_logging.agent_runs import AgentRunRecorder
-from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
+from llm import (
+    ANTHROPIC_MODELS,
+    GEMINI_MODELS,
+    OPENAI_MODELS,
+    ORCAROUTER_MODELS,
+    Llm,
+)
 from preview_screenshot import is_screenshot_preview_available
 
 
@@ -27,6 +33,8 @@ def create_provider_session(
     replicate_api_key: Optional[str],
     should_extract_assets: bool = True,
     recorder: Optional[AgentRunRecorder] = None,
+    orcarouter_api_key: Optional[str] = None,
+    orcarouter_base_url: Optional[str] = None,
 ) -> ProviderSession:
     canonical_tools = canonical_tool_definitions(
         image_generation_enabled=should_generate_images,
@@ -74,6 +82,22 @@ def create_provider_session(
             model=model,
             prompt_messages=prompt_messages,
             tools=serialize_gemini_tools(canonical_tools),
+            recorder=recorder,
+        )
+
+    if model in ORCAROUTER_MODELS:
+        if not orcarouter_api_key:
+            raise Exception("OrcaRouter API key is missing.")
+
+        client = AsyncOpenAI(
+            api_key=orcarouter_api_key,
+            base_url=orcarouter_base_url or "https://api.orcarouter.ai/v1",
+        )
+        return OpenAIProviderSession(
+            client=client,
+            model=model,
+            prompt_messages=prompt_messages,
+            tools=serialize_openai_tools(canonical_tools),
             recorder=recorder,
         )
 

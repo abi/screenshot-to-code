@@ -7,9 +7,11 @@ from config import (
     LOCAL_ASSET_BASE_URL,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
+    ORCAROUTER_API_KEY,
+    ORCAROUTER_BASE_URL,
     REPLICATE_API_KEY,
 )
-from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
+from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS, ORCAROUTER_MODELS
 from agent.runner import Agent
 from fs_logging.agent_runs import AgentRunRecorder
 from prompts.create.image import build_image_prompt_messages
@@ -44,6 +46,8 @@ async def _run_eval_agent(
         raise Exception("Gemini API key not found")
     if model in OPENAI_MODELS and not OPENAI_API_KEY:
         raise Exception("OpenAI API key not found")
+    if model in ORCAROUTER_MODELS and not ORCAROUTER_API_KEY:
+        raise Exception("OrcaRouter API key not found")
 
     print(f"[EVALS] Using agent runner for model: {model.value}")
 
@@ -75,6 +79,8 @@ async def _run_eval_agent(
         initial_file_state=None,
         option_codes=None,
         recorder=recorder,
+        orcarouter_api_key=ORCAROUTER_API_KEY,
+        orcarouter_base_url=ORCAROUTER_BASE_URL,
     )
     return await runner.run(model, prompt_messages)
 

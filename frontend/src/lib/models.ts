@@ -39,6 +39,7 @@ export enum CodeGenerationModel {
   GEMINI_3_6_FLASH_MEDIUM = "gemini-3.6-flash (medium thinking)",
   GEMINI_3_6_FLASH_LOW = "gemini-3.6-flash (low thinking)",
   GEMINI_3_6_FLASH_MINIMAL = "gemini-3.6-flash (minimal thinking)",
+  ORCAROUTER_AUTO = "orcarouter/auto",
 }
 
 export type VariantLabelTone = "fast" | "max";
@@ -191,5 +192,8 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gemini-3.1-pro-preview (low thinking)": {
     name: "Gemini 3.1 Pro (low)",
+  },
+  "orcarouter/auto": {
+    name: "OrcaRouter (auto)",
   },
 };

@@ -18,6 +18,8 @@ from config import (
     NUM_VARIANTS_VIDEO,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
+    ORCAROUTER_API_KEY,
+    ORCAROUTER_BASE_URL,
     REPLICATE_API_KEY,
 )
 from custom_types import InputMode
@@ -73,6 +75,7 @@ from routes.model_choice_sets import (
     GEMINI_ONLY_MODELS,
     OPENAI_ANTHROPIC_MODELS,
     OPENAI_ONLY_MODELS,
+    ORCAROUTER_VARIANT_MODELS,
     VIDEO_VARIANT_MODELS,
 )
 
@@ -268,6 +271,8 @@ class ExtractedParams:
     should_extract_assets: bool = True
     asset_base_url: str = ""
     design_system: str | None = None
+    orcarouter_api_key: str | None = None
+    orcarouter_base_url: str | None = None
 
 
 class ParameterExtractionStage:
@@ -323,6 +328,15 @@ class ParameterExtractionStage:
             )
         if not openai_base_url:
             print("Using official OpenAI URL")
+
+        # OrcaRouter gateway (OpenAI-compatible). Key/base URL come from the
+        # settings dialog (orcarouterApiKey) or backend/.env (ORCAROUTER_API_KEY).
+        orcarouter_api_key = self._get_from_settings_dialog_or_env(
+            params, "orcarouterApiKey", ORCAROUTER_API_KEY
+        )
+        orcarouter_base_url = self._get_from_settings_dialog_or_env(
+            params, "orcarouterBaseURL", ORCAROUTER_BASE_URL
+        )
 
         # Feature preferences default to enabled for older clients.
         should_generate_images = bool(params.get("isImageGenerationEnabled", True))
@@ -383,6 +397,8 @@ class ParameterExtractionStage:
             gemini_api_key=gemini_api_key,
             replicate_api_key=replicate_api_key,
             openai_base_url=openai_base_url,
+            orcarouter_api_key=orcarouter_api_key,
+            orcarouter_base_url=orcarouter_base_url,
             generation_type=generation_type,
             prompt=prompt,
             history=history,
@@ -421,6 +437,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
+        orcarouter_api_key: str | None = None,
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
@@ -432,6 +449,7 @@ class ModelSelectionStage:
                 openai_api_key,
                 anthropic_api_key,
                 gemini_api_key,
+                orcarouter_api_key,
             )
 
             # Print the variant models (one per line)
@@ -442,8 +460,8 @@ class ModelSelectionStage:
             return variant_models
         except Exception:
             await self.throw_error(
-                "No OpenAI, Anthropic, or Gemini API key found. Please add the environment variable "
-                "OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY to backend/.env or in the settings dialog. "
+                "No OpenAI, Anthropic, Gemini, or OrcaRouter API key found. Please add the environment variable "
+                "OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, or ORCAROUTER_API_KEY to backend/.env or in the settings dialog. "
                 "If you add it to .env, make sure to restart the backend server."
             )
             raise Exception("No API key")
@@ -456,6 +474,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        orcarouter_api_key: str | None = None,
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
@@ -468,8 +487,11 @@ class ModelSelectionStage:
                 )
             return list(VIDEO_VARIANT_MODELS)
 
-        # Define models based on available API keys
-        if gemini_api_key and anthropic_api_key and openai_api_key:
+        # OrcaRouter is a first-class provider: when its key is configured the
+        # OrcaRouter gateway model is used for every variant.
+        if orcarouter_api_key:
+            models = list(ORCAROUTER_VARIANT_MODELS)
+        elif gemini_api_key and anthropic_api_key and openai_api_key:
             if input_mode == "text" and generation_type == "create":
                 models = list(ALL_KEYS_MODELS_TEXT_CREATE)
             elif generation_type == "update":
@@ -489,7 +511,7 @@ class ModelSelectionStage:
         elif openai_api_key:
             models = list(OPENAI_ONLY_MODELS)
         else:
-            raise Exception("No OpenAI or Anthropic key")
+            raise Exception("No OpenAI, Anthropic, or OrcaRouter key")
 
         # Cycle through models: [A, B] with num=5 becomes [A, B, A, B, A]
         selected_models: List[Llm] = []
@@ -566,6 +588,8 @@ class AgenticGenerationStage:
         stack: str | None = None,
         input_mode: str | None = None,
         generation_type: str | None = None,
+        orcarouter_api_key: str | None = None,
+        orcarouter_base_url: str | None = None,
     ):
         self.send_message = send_message
         self.openai_api_key = openai_api_key
@@ -573,6 +597,8 @@ class AgenticGenerationStage:
         self.anthropic_api_key = anthropic_api_key
         self.gemini_api_key = gemini_api_key
         self.replicate_api_key = replicate_api_key
+        self.orcarouter_api_key = orcarouter_api_key
+        self.orcarouter_base_url = orcarouter_base_url
         self.should_generate_images = should_generate_images
         self.should_extract_assets = should_extract_assets
         self.file_state = file_state
@@ -654,6 +680,8 @@ class AgenticGenerationStage:
                 initial_file_state=self.file_state,
                 option_codes=self.option_codes,
                 recorder=recorder,
+                orcarouter_api_key=self.orcarouter_api_key,
+                orcarouter_base_url=self.orcarouter_base_url,
             )
             completion = await runner.run(model, prompt_messages)
             if completion:
@@ -815,6 +843,7 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                orcarouter_api_key=context.extracted_params.orcarouter_api_key,
             )
             if IS_DEBUG_ENABLED:
                 await context.send_message(
@@ -840,6 +869,8 @@ class CodeGenerationMiddleware(Middleware):
                 stack=str(context.extracted_params.stack),
                 input_mode=str(context.extracted_params.input_mode),
                 generation_type=context.extracted_params.generation_type,
+                orcarouter_api_key=context.extracted_params.orcarouter_api_key,
+                orcarouter_base_url=context.extracted_params.orcarouter_base_url,
             )
 
             context.variant_completions = await generation_stage.process_variants(

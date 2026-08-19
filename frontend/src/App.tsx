@@ -93,6 +93,8 @@ function App() {
       replicateApiKey: null,
       anthropicApiKey: null,
       geminiApiKey: null,
+      orcarouterApiKey: null,
+      orcarouterBaseURL: "https://api.orcarouter.ai/v1",
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,

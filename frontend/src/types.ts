@@ -26,6 +26,8 @@ export interface Settings {
   isTermOfServiceAccepted: boolean;
   anthropicApiKey: string | null;
   geminiApiKey: string | null;
+  orcarouterApiKey: string | null;
+  orcarouterBaseURL: string | null;
 }
 
 export interface DesignSystem {

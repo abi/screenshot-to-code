@@ -6,6 +6,12 @@ VIDEO_VARIANT_MODELS = (
     Llm.GEMINI_3_1_PRO_PREVIEW_HIGH,
 )
 
+# OrcaRouter gateway variants. `orcarouter/auto` routes each request to the
+# best available model automatically.
+ORCAROUTER_VARIANT_MODELS = (
+    Llm.ORCAROUTER_AUTO,
+)
+
 # All API keys available.
 
 # Image (Create)

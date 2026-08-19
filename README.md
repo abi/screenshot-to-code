@@ -39,7 +39,7 @@ Running locally requires API keys and a backend/frontend setup. The app has a Re
 
 ### API keys
 
-You need **at least one** model provider key (OpenAI, Anthropic, or Gemini).
+You need **at least one** model provider key (OpenAI, Anthropic, Gemini, or OrcaRouter).
 **Gemini and Replicate are strongly recommended for the best quality of
 screenshot-to-code accuracy** — Gemini powers asset extraction (reusing the
 real logos/images from your screenshot) and Replicate powers image
@@ -48,9 +48,10 @@ the best results and lets you compare multiple models per generation.
 
 | Key | Required? | What it unlocks |
 |-----|-----------|-----------------|
-| `OPENAI_API_KEY` | One of these three | GPT code-gen variants (GPT-5.5, GPT-5.4 Mini) |
-| `ANTHROPIC_API_KEY` | One of these three | Claude code-gen variants (Opus 5, Opus 4.8, Fable 5, Sonnet 4.6) |
-| `GEMINI_API_KEY` | One of these three — **strongly recommended** | Gemini code-gen variants (3 Flash, 3.1 Pro); extracts real assets from the screenshot; required for video mode |
+| `OPENAI_API_KEY` | One of these four | GPT code-gen variants (GPT-5.5, GPT-5.4 Mini) |
+| `ANTHROPIC_API_KEY` | One of these four | Claude code-gen variants (Opus 5, Opus 4.8, Fable 5, Sonnet 4.6) |
+| `GEMINI_API_KEY` | One of these four — **strongly recommended** | Gemini code-gen variants (3 Flash, 3.1 Pro); extracts real assets from the screenshot; required for video mode |
+| `ORCAROUTER_API_KEY` | One of these four | [OrcaRouter](https://www.orcarouter.ai) gateway (auto-routed `orcarouter/auto` code-gen variant) |
 | `REPLICATE_API_KEY` | **Strongly recommended** | Image editing, background removal, and Replicate-backed image generation — without it, `edit_images` and `remove_backgrounds` are unavailable |
 
 With more keys, the app automatically picks a stronger mix of models per
@@ -66,6 +67,7 @@ echo "OPENAI_API_KEY=sk-your-key" > .env
 echo "ANTHROPIC_API_KEY=your-key" >> .env
 echo "GEMINI_API_KEY=your-key" >> .env
 echo "REPLICATE_API_KEY=r8_your-key" >> .env
+echo "ORCAROUTER_API_KEY=sk-orca-your-key" >> .env
 poetry install
 # Install the Chromium browser used by the screenshot preview tool.
 # On Linux, use `poetry run playwright install --with-deps chromium` to also
@@ -76,7 +78,7 @@ poetry env activate
 poetry run uvicorn main:app --reload --port 7001
 ```
 
-You can also set up OpenAI, Anthropic, and Gemini keys using the settings dialog in the frontend (click the gear icon after loading the app). Replicate must be configured in `backend/.env` as `REPLICATE_API_KEY`. The Settings dialog also shows whether **screenshot preview** is available on your backend.
+You can also set up OpenAI, Anthropic, Gemini, and OrcaRouter keys using the settings dialog in the frontend (click the gear icon after loading the app). Replicate must be configured in `backend/.env` as `REPLICATE_API_KEY`. The Settings dialog also shows whether **screenshot preview** is available on your backend.
 
 > **Screenshot preview** (optional) lets the agent render its own generated page in a headless browser and visually check its work. It's enabled automatically once Chromium is installed (the `playwright install chromium` step above, or automatically in the Docker image). If Chromium is missing, the app just skips the tool — the Settings dialog shows whether it's available.
 
