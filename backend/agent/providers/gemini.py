@@ -328,7 +328,9 @@ class GeminiProviderSession(ProviderSession):
                 thinking_level=cast(Any, thinking_level),
                 include_thoughts=True,
             ),
-            tools=self._tools,
+            # google-genai widens this to include MCP tools when the optional
+            # MCP SDK is installed. The runtime value remains Gemini Tool objects.
+            tools=cast(Any, self._tools),
         )
 
         request_payload = {
