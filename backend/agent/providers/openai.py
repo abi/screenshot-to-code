@@ -424,12 +424,14 @@ class OpenAIProviderSession(ProviderSession):
         prompt_messages: List[ChatCompletionMessageParam],
         tools: List[Dict[str, Any]],
         recorder: Optional[AgentRunRecorder] = None,
+        tool_choice: str | None = None,
     ):
         self._client = client
         self._model = model
         self._tools = tools
         self._total_usage = TokenUsage()
         self._recorder = recorder
+        self._tool_choice = tool_choice or "auto"
         self._prompt_report_logger = PromptReportLogger(
             provider="openai",
             model=model,
@@ -447,7 +449,7 @@ class OpenAIProviderSession(ProviderSession):
             "model": model_name,
             "input": self._input_items,
             "tools": self._tools,
-            "tool_choice": "auto",
+            "tool_choice": self._tool_choice,
             "stream": True,
             "max_output_tokens": 50000,
         }
