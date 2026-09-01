@@ -13,6 +13,7 @@ from agent.tools import canonical_tool_definitions
 from config import REPLICATE_API_KEY
 from fs_logging.agent_runs import AgentRunRecorder
 from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
+from openai_compat import normalize_openai_base_url, openai_client_headers
 from preview_screenshot import is_screenshot_preview_available
 
 
@@ -42,7 +43,12 @@ def create_provider_session(
         if not openai_api_key:
             raise Exception("OpenAI API key is missing.")
 
-        client = AsyncOpenAI(api_key=openai_api_key, base_url=openai_base_url)
+        normalized_base_url = normalize_openai_base_url(openai_base_url)
+        client = AsyncOpenAI(
+            api_key=openai_api_key,
+            base_url=normalized_base_url,
+            default_headers=openai_client_headers(normalized_base_url),
+        )
         return OpenAIProviderSession(
             client=client,
             model=model,

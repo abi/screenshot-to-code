@@ -11,6 +11,10 @@ import {
 import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
 import { HTTP_BACKEND_URL, IS_RUNNING_ON_CLOUD } from "../../config";
+import {
+  OPENROUTER_API_BASE_URL,
+  isOpenRouterBaseUrl,
+} from "../../lib/openai-base-url";
 
 interface Props {
   settings: Settings;
@@ -162,13 +166,26 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                     OpenAI Base URL (optional)
                   </p>
                   <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                    Replace with a proxy URL if you don't want to use the
-                    default.
+                    Use a proxy, or{" "}
+                    <button
+                      type="button"
+                      className="text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+                      onClick={() =>
+                        setSettings((s) => ({
+                          ...s,
+                          openAiBaseURL: OPENROUTER_API_BASE_URL,
+                        }))
+                      }
+                    >
+                      OpenRouter
+                    </button>
+                    . Paste your OpenRouter key in the OpenAI API key field
+                    above.
                   </p>
                   <Input
                     id="openai-base-url"
                     className="mt-2"
-                    placeholder="OpenAI Base URL"
+                    placeholder={OPENROUTER_API_BASE_URL}
                     value={settings.openAiBaseURL || ""}
                     onChange={(e) =>
                       setSettings((s) => ({
@@ -177,6 +194,13 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                       }))
                     }
                   />
+                  {isOpenRouterBaseUrl(settings.openAiBaseURL) && (
+                    <p className="mt-2 text-xs text-gray-500 dark:text-zinc-400">
+                      OpenAI-compatible requests will go through OpenRouter.
+                      Anthropic and Gemini keys still use those providers
+                      directly.
+                    </p>
+                  )}
                 </div>
               )}
 
