@@ -52,6 +52,8 @@ MessageType = Literal[
     "assistant",
     "toolStart",
     "toolResult",
+    "budgetExceeded",
+    "variantCost",
 ]
 from prompts.pipeline import build_prompt_messages
 from prompts.request_parsing import parse_prompt_content, parse_prompt_history
@@ -62,6 +64,7 @@ from uploaded_assets import (
     infer_local_asset_base_url,
 )
 from agent.runner import Agent
+from agent.engine import BudgetExceededError, PerStepBudgetExceededError
 from fs_logging.agent_runs import AgentRunRecorder
 from routes.model_choice_sets import (
     ALL_KEYS_MODELS_DEFAULT,
@@ -656,6 +659,18 @@ class AgenticGenerationStage:
                 recorder=recorder,
             )
             completion = await runner.run(model, prompt_messages)
+            # Emit per-variant cost attribution once the session is finalised.
+            # Only sent when the backend can compute a dollar figure (i.e. when
+            # the provider session had token-usage data and a pricing entry).
+            final_cost = runner.last_cost_usd
+            if final_cost is not None:
+                await self.send_message(
+                    "variantCost",
+                    None,
+                    index,
+                    {"costUsd": final_cost},
+                    None,
+                )
             if completion:
                 await self.send_message("setCode", completion, index, None, None)
             await self.send_message(
@@ -705,6 +720,23 @@ class AgenticGenerationStage:
                 )
             )
             await self.send_message("variantError", error_message, index, None, None)
+            return ""
+        except (BudgetExceededError, PerStepBudgetExceededError) as exc:
+            # ``BudgetExceededError`` carries a typed human-readable message
+            # delivered as a distinct ``budgetExceeded`` message so the frontend
+            # can render a distinct UI banner.  The WebSocket session stays alive
+            # (unlike ``variantError``) so the user can try again immediately.
+            print(
+                f"[VARIANT {index + 1}] Budget exceeded "
+                f"(per_step={exc.is_per_step}): {exc.typed_message}"
+            )
+            await self.send_message(
+                "budgetExceeded",
+                exc.typed_message,
+                index,
+                {"is_per_step": exc.is_per_step},
+                None,
+            )
             return ""
         except Exception as e:
             print(f"Error in variant {index + 1}: {e}")

@@ -1,13 +1,14 @@
 import asyncio
 import traceback
 import uuid
-from typing import Any, Awaitable, Callable, Dict, List, Optional, cast
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union, cast
 
 from openai.types.chat import ChatCompletionMessageParam
 
 from codegen.utils import extract_html_content
 from llm import Llm
 
+from agent.modes import StructuredOutputMode
 from agent.providers.base import ExecutedToolCall, ProviderSession, StreamEvent
 from agent.providers.factory import create_provider_session
 from agent.state import AgentFileState, seed_file_state_from_messages
@@ -18,7 +19,12 @@ from agent.tools import (
     summarize_text,
     summarize_tool_input,
 )
-from config import GENERATION_MAX_COST_USD
+from config import (
+    AGENT_STEP_SPEND_BUDGET_USD,
+    AGENT_STRUCTURED_OUTPUT,
+    AGENT_TOOL_CALL_POLICY,
+    GENERATION_MAX_COST_USD,
+)
 from fs_logging.agent_runs import AgentRunRecorder
 
 
@@ -31,21 +37,38 @@ class EmptyOutputError(Exception):
     the output file is empty. Raising makes it a normal, retryable failure.
     """
 
-    def __init__(self) -> None:
-        super().__init__("Generation finished without producing any output.")
+    pass  # message is only for logging; callers ignore it
 
 
 class BudgetExceededError(Exception):
     """Raised when a single generation exceeds the spend ceiling.
 
-    The message is shown verbatim to end users (variantError), so it must
-    not contain cost figures; the exact spend is in the run record.
+    The ``typed_message`` class attribute is sent verbatim to the frontend
+    as the ``reason`` field of the ``budgetExceeded`` WebSocket message.  It
+    must not contain raw cost figures — those are reserved for the run record.
+
+    Subclasses may set ``is_per_step`` to indicate whether the budget was a
+    per-step ceiling (True) or the global ``GENERATION_MAX_COST_USD`` (False).
     """
 
+    is_per_step: bool = False
+    typed_message: str = "Generation stopped: this variant exceeded its resource limit."
+
     def __init__(self) -> None:
-        super().__init__(
-            "Generation stopped: this variant exceeded its resource limit."
-        )
+        super().__init__(self.typed_message)
+
+
+class PerStepBudgetExceededError(BudgetExceededError):
+    """Specialisation of ``BudgetExceededError`` for per-step budget hits.
+
+    Raised by ``StepCostTracker`` when a step would push cumulative spend past
+    ``AGENT_STEP_SPEND_BUDGET_USD`` before the step's tool executions begin.
+    """
+
+    is_per_step = True
+    typed_message = (
+        "Generation stopped: this variant exceeded its per-step spend budget."
+    )
 
 
 class AgentEngine:
@@ -95,6 +118,29 @@ class AgentEngine:
             option_codes=option_codes,
         )
         self._tool_preview_lengths: Dict[str, int] = {}
+
+        # --- Structured-output / tool-call policy derived from config ----------
+        self._structured_output_mode: str = (
+            "force_tool" if AGENT_STRUCTURED_OUTPUT else "free"
+        )
+
+        self._tool_call_policy: str = (
+            AGENT_TOOL_CALL_POLICY if AGENT_STRUCTURED_OUTPUT else "free"
+        )
+
+        self._step_spend_budget_usd: float | None = (
+            AGENT_STEP_SPEND_BUDGET_USD if AGENT_STRUCTURED_OUTPUT else None
+        )
+
+        # --- Per-run cost tracking -------------------------------------------
+        self._step_count: int = 0
+        self._step_costs: List[float] = []
+        self._last_cost_usd: float | None = None
+
+    @property
+    def last_cost_usd(self) -> float | None:
+        """Final USD cost for the most recent run(), available after run() returns."""
+        return self._last_cost_usd
 
     @staticmethod
     def _extract_input_images(
@@ -219,6 +265,29 @@ class AgentEngine:
         max_steps = 30
 
         for _ in range(max_steps):
+            self._step_count += 1
+            step_num = self._step_count
+
+            # --- Capture spend *before* the step for budget checks + tracking -
+            # Always call total_cost_usd() here so pre_step_spend is in scope
+            # for the cost-recording block at the end of the loop.
+            pre_step_spend: float | None = session.total_cost_usd()
+
+            # --- Per-step budget gate (before any tool side-effects) ----------
+            # Unpriced models (None) bypass this check.
+            if (
+                self._step_spend_budget_usd is not None
+                and pre_step_spend is not None
+                and pre_step_spend >= self._step_spend_budget_usd
+            ):
+                print(
+                    f"[BUDGET] Aborting variant {self.variant_index} "
+                    f"before step {step_num}: "
+                    f"${pre_step_spend:.2f} >= ${self._step_spend_budget_usd:.2f} "
+                    f"(per-step ceiling)"
+                )
+                raise PerStepBudgetExceededError()
+
             assistant_event_id = self._next_event_id("assistant")
             thinking_event_id = self._next_event_id("thinking")
             started_tool_ids: set[str] = set()
@@ -264,14 +333,15 @@ class AgentEngine:
             if not turn.tool_calls:
                 return await self._finalize_response(turn.assistant_text)
 
+            # --- Main / global budget gate ----------------------------------
             # Abort only when the run would otherwise continue: a run that
             # just produced its final answer is already paid for. Unpriced
             # models return None and are not bounded.
             spent = session.total_cost_usd()
             if spent is not None and spent > GENERATION_MAX_COST_USD:
                 print(
-                    f"[BUDGET] Aborting variant {self.variant_index}: "
-                    f"${spent:.2f} > ${GENERATION_MAX_COST_USD:.2f}"
+                    f"[BUDGET] Aborting variant {self.variant_index} at step {step_num}: "
+                    f"${spent:.2f} > ${GENERATION_MAX_COST_USD:.2f} (global ceiling)"
                 )
                 raise BudgetExceededError()
 
@@ -324,6 +394,18 @@ class AgentEngine:
 
             await session.append_tool_results(turn, executed_tool_calls)
 
+            # --- Record step cost for observability --------------------------
+            post_step_spend = session.total_cost_usd()
+            if post_step_spend is not None:
+                step_cost = post_step_spend - (pre_step_spend or 0.0)
+                self._step_costs.append(step_cost)
+                if self.recorder is not None:
+                    self.recorder.record_step_cost(step_num, step_cost, post_step_spend)
+                print(
+                    f"[STEP] variant={self.variant_index} step={step_num} "
+                    f"step_cost=${step_cost:.4f} cum_cost=${post_step_spend:.4f}"
+                )
+
         raise Exception("Agent exceeded max tool turns")
 
     async def run(self, model: Llm, prompt_messages: List[ChatCompletionMessageParam]) -> str:
@@ -333,6 +415,11 @@ class AgentEngine:
         if self.recorder is not None:
             self.recorder.record_run_start(model, prompt_messages)
 
+        structured_output_mode: StructuredOutputMode | None = (
+            StructuredOutputMode(self._structured_output_mode)
+            if self._structured_output_mode != "free"
+            else None
+        )
         session = create_provider_session(
             model=model,
             prompt_messages=prompt_messages,
@@ -350,6 +437,7 @@ class AgentEngine:
                 self.should_extract_assets and bool(self.tool_runtime.input_images)
             ),
             recorder=self.recorder,
+            structured_output_mode=structured_output_mode,
         )
         try:
             result = await self._run_with_session(session)
@@ -370,6 +458,8 @@ class AgentEngine:
                 )
             raise
         finally:
+            # Capture cost before closing so callers can read last_cost_usd.
+            self._last_cost_usd = session.total_cost_usd()
             await session.close()
 
     async def _finalize_response(self, assistant_text: str) -> str:

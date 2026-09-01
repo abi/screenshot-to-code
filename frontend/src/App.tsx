@@ -64,6 +64,7 @@ function App() {
     updateVariantStatus,
     resizeVariants,
     setVariantModels,
+    setVariantCost,
     appendVariantHistoryMessage,
     startAgentEvent,
     appendAgentEventContent,
@@ -476,6 +477,9 @@ function App() {
       },
       onVariantModels: (models) => {
         setVariantModels(commit.hash, models);
+      },
+      onVariantCost: (variantIndex, costUsd, inputTokens, outputTokens) => {
+        setVariantCost(commit.hash, variantIndex, costUsd, inputTokens, outputTokens);
       },
       onThinking: (content, variantIndex, eventId) => {
         if (!eventId) return;
