@@ -26,6 +26,10 @@ export interface Settings {
   isTermOfServiceAccepted: boolean;
   anthropicApiKey: string | null;
   geminiApiKey: string | null;
+  /** Show the live cost tracker bar below the preview pane toolbar. */
+  showCostTracker: boolean;
+  /** Babel 7 version pinned for the preview iframe transform (e.g. "7.25.9"). */
+  babelVersion: string;
 }
 
 export interface DesignSystem {
