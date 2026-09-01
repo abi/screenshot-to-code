@@ -77,5 +77,29 @@ AGENT_STEP_SPEND_BUDGET_USD: float | None = (
 )
 
 # -------------------------------------------------------------------------- #
+# Screenshot-preview cache
+# -------------------------------------------------------------------------- #
+
+# When True, screenshot_preview tool results are cached by HTML content hash.
+# Cache hits skip the Playwright render entirely, saving ~1-2 s per cache hit.
+# Backward-compatible: defaults to True so existing deployments get the speed-up.
+SCREENSHOT_CACHE_ENABLED = (
+    os.environ.get("SCREENSHOT_CACHE_ENABLED", "1").strip().lower() in {"1", "true", "yes", "on"}
+)
+
+# Directory where cached screenshots are stored.
+# Default: ~/.cache/screenshot_preview (resolved relative to this file's parent).
+_SCREENSHOT_CACHE_DIR_DEFAULT = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", ".screenshot_cache"
+)
+SCREENSHOT_CACHE_DIR = os.path.abspath(
+    os.environ.get("SCREENSHOT_CACHE_DIR", _SCREENSHOT_CACHE_DIR_DEFAULT)
+)
+
+# -------------------------------------------------------------------------- #
+# End screenshot-preview cache
+# -------------------------------------------------------------------------- #
+
+# -------------------------------------------------------------------------- #
 # End agent settings
 # -------------------------------------------------------------------------- #

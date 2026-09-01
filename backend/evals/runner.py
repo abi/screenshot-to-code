@@ -123,6 +123,7 @@ async def generate_code_and_time(
     eval_set: Optional[str] = None,
     eval_session_id: Optional[str] = None,
     brief_text: Optional[str] = None,
+    offline: bool = False,
 ) -> Tuple[str, int, Optional[str], Optional[float], Optional[Exception], int]:
     """
     Generates code for an image, measures the time taken, and returns identifiers
@@ -143,6 +144,7 @@ async def generate_code_and_time(
                     eval_set=eval_set,
                     eval_session_id=eval_session_id,
                     input_file=original_input_filename,
+                    skip_screenshot_preview=offline,
                 )
             else:
                 content = await generate_code_for_image(
@@ -152,6 +154,7 @@ async def generate_code_and_time(
                     eval_set=eval_set,
                     eval_session_id=eval_session_id,
                     input_file=original_input_filename,
+                    skip_screenshot_preview=offline,
                 )
             end_time = time.perf_counter()
             duration = end_time - start_time
@@ -209,6 +212,7 @@ async def run_image_evals(
     eval_set: Optional[str] = None,
     eval_session_id: Optional[str] = None,
     skip_input_files: Optional[set[str]] = None,
+    offline: bool = False,
 ) -> List[str]:
     evals, briefs_by_id = _resolve_eval_items(input_files, eval_set)
     is_text_set = bool(briefs_by_id)
@@ -281,6 +285,7 @@ async def run_image_evals(
                 eval_set=eval_set,
                 eval_session_id=eval_session_id,
                 brief_text=briefs_by_id.get(original_filename),
+                offline=offline,
             )
             task_coroutines.append(coro)
 

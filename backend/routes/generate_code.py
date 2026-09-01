@@ -161,16 +161,55 @@ class Pipeline:
 
 
 class WebSocketCommunicator:
-    """Handles WebSocket communication with consistent error handling"""
+    """Handles WebSocket communication with consistent error handling and heartbeat."""
+
+    # Heartbeat interval in seconds. Corporate proxies often timeout at 30 s, so
+    # a 25 s ping interval gives 5 s of headroom before the connection is killed.
+    PING_INTERVAL_SECONDS = 25.0
 
     def __init__(self, websocket: WebSocket):
         self.websocket = websocket
         self.is_closed = False
+        self._heartbeat_task: asyncio.Task[None] | None = None
 
     async def accept(self) -> None:
-        """Accept the WebSocket connection"""
+        """Accept the WebSocket connection and start the heartbeat."""
         await self.websocket.accept()
         print("Incoming websocket connection...")
+        self._heartbeat_task = asyncio.create_task(self._run_heartbeat())
+
+    async def _run_heartbeat(self) -> None:
+        """Background task: send a ping frame every PING_INTERVAL_SECONDS.
+
+        If the connection is dead, the next ping will raise a
+        WebSocketDisconnect / ConnectionClosedError and we clean up.
+        """
+        try:
+            while not self.is_closed:
+                await asyncio.sleep(self.PING_INTERVAL_SECONDS)
+                if self.is_closed:
+                    break
+                try:
+                    await self.websocket.send_text("")  # Starlette does not expose ping();
+                    # sending an empty TEXT frame is a no-op keepalive that exercises
+                    # the TCP connection.  A real ping/pong API was added in Starlette
+                    # 0.40; once upgraded, replace with:  await self.websocket.ping(b"heartbeat")
+                except (ConnectionClosedOK, ConnectionClosedError, WebSocketDisconnect):
+                    break
+        except asyncio.CancelledError:  # clean shutdown
+            pass
+        finally:
+            await self._cleanup()
+
+    async def _cleanup(self) -> None:
+        """Stop the heartbeat and mark the connection closed."""
+        if self._heartbeat_task is not None and not self._heartbeat_task.done():
+            self._heartbeat_task.cancel()
+            try:
+                await self._heartbeat_task
+            except asyncio.CancelledError:
+                pass
+        self.is_closed = True
 
     async def send_message(
         self,
@@ -227,6 +266,7 @@ class WebSocketCommunicator:
             ):
                 print("WebSocket already closed by client")
             self.is_closed = True
+            await self._cleanup()
 
     async def receive_params(self) -> Dict[str, Any]:
         """Receive parameters from the client"""
@@ -239,7 +279,7 @@ class WebSocketCommunicator:
         return params
 
     async def close(self) -> None:
-        """Close the WebSocket connection"""
+        """Close the WebSocket connection and stop the heartbeat task."""
         if not self.is_closed:
             try:
                 await self.websocket.close()
@@ -250,7 +290,7 @@ class WebSocketCommunicator:
                 WebSocketDisconnect,
             ):
                 pass  # Already closed by client
-            self.is_closed = True
+        await self._cleanup()
 
 
 @dataclass

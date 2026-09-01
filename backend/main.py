@@ -59,3 +59,29 @@ app.include_router(design_systems.router)
 app.include_router(prompt_reports.router)
 app.include_router(agent_runs.router)
 app.include_router(eval_sets.router)
+
+# -------------------------------------------------------------------------- #
+# Admin / debug endpoints
+# -------------------------------------------------------------------------- #
+
+from fastapi import HTTPException
+from pydantic import BaseModel
+
+from agent.tools.screenshot_preview import clear_screenshot_cache
+from config import SCREENSHOT_CACHE_DIR
+
+
+class CacheClearResponse(BaseModel):
+    files_removed: int
+    cache_dir: str
+
+
+@app.delete("/admin/cache/screenshots", response_model=CacheClearResponse)
+async def delete_screenshot_cache() -> CacheClearResponse:
+    """Delete all cached screenshot files.
+
+    Returns the number of files removed. Call after updating Playwright or when
+    the cache grows too large.
+    """
+    count = clear_screenshot_cache()
+    return CacheClearResponse(files_removed=count, cache_dir=SCREENSHOT_CACHE_DIR)

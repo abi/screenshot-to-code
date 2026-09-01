@@ -90,6 +90,7 @@ class AgentEngine:
         initial_file_state: Optional[Dict[str, str]] = None,
         option_codes: Optional[List[str]] = None,
         recorder: Optional[AgentRunRecorder] = None,
+        skip_screenshot_preview: bool = False,
     ):
         self.send_message = send_message
         self.variant_index = variant_index
@@ -116,6 +117,7 @@ class AgentEngine:
             replicate_api_key=replicate_api_key,
             asset_base_url=asset_base_url,
             option_codes=option_codes,
+            skip_screenshot_preview=skip_screenshot_preview,
         )
         self._tool_preview_lengths: Dict[str, int] = {}
 
