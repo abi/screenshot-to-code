@@ -300,6 +300,7 @@ class AgentRunRecorder:
         self._tool_asset_urls: set[str] = set()
         self._tool_asset_tasks: list["asyncio.Task[None]"] = []
         self._tool_asset_manifest: list[dict[str, Any]] = []
+        self._step_cost_log: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------ paths
 
@@ -721,6 +722,28 @@ class AgentRunRecorder:
         except Exception as exc:
             print(f"[AGENT RUN] Failed to record set_code: {exc}")
 
+    def record_step_cost(
+        self, step: int, step_cost_usd: float, cumulative_cost_usd: float
+    ) -> None:
+        """Record the cost incurred by a single tool-call step.
+
+        Called from ``AgentEngine._run_with_session`` after ``append_tool_results``
+        so the full cost (LLM turn + all tool executions) is included.
+        Written to JSONL live and aggregated into run.json at finalisation.
+        """
+        if not self.enabled:
+            return
+        try:
+            entry = {
+                "step": step,
+                "step_cost_usd": step_cost_usd,
+                "cumulative_cost_usd": cumulative_cost_usd,
+            }
+            self._step_cost_log.append(entry)
+            self._append_event("step_cost", entry)
+        except Exception as exc:
+            print(f"[AGENT RUN] Failed to record step cost: {exc}")
+
     # --------------------------------------------------------------- finalize
 
     async def record_run_end(
@@ -790,6 +813,7 @@ class AgentRunRecorder:
                 "has_unpriced_calls": self._has_unpriced_calls,
                 "llm_calls": self._llm_call_summaries,
                 "tool_calls": self._tool_call_summaries,
+                "step_costs": self._step_cost_log,
                 "tool_assets": self._tool_asset_manifest,
                 "final_html": final_html,
             }
