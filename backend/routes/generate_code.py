@@ -20,6 +20,7 @@ from config import (
     OPENAI_BASE_URL,
     REPLICATE_API_KEY,
 )
+from openai_compat import normalize_openai_base_url
 from custom_types import InputMode
 from llm import (
     Llm,
@@ -318,8 +319,10 @@ class ParameterExtractionStage:
         openai_base_url: str | None = None
         # Disable user-specified OpenAI Base URL in prod
         if not IS_PROD:
-            openai_base_url = self._get_from_settings_dialog_or_env(
-                params, "openAiBaseURL", OPENAI_BASE_URL
+            openai_base_url = normalize_openai_base_url(
+                self._get_from_settings_dialog_or_env(
+                    params, "openAiBaseURL", OPENAI_BASE_URL
+                )
             )
         if not openai_base_url:
             print("Using official OpenAI URL")
