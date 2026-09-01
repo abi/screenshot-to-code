@@ -23,6 +23,7 @@ import { downloadCode } from "./download";
 import { SelectAndEditToolbarButton } from "../select-and-edit/SelectAndEditControls";
 import { normalizeBabelCdn } from "../../lib/babelCdn";
 import ImageScanningPreview from "./ImageScanningPreview";
+import { CostTracker } from "../cost/CostTracker";
 
 function prepareHtmlForNewTab(code: string) {
   const html = normalizeBabelCdn(code);
@@ -266,6 +267,9 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Live cost tracker — shown only when enabled in Settings. */}
+      {settings.showCostTracker && <CostTracker />}
     </div>
   );
 }

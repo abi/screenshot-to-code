@@ -326,12 +326,14 @@ class AnthropicProviderSession(ProviderSession):
         prompt_messages: List[ChatCompletionMessageParam],
         tools: List[Dict[str, Any]],
         recorder: Optional[AgentRunRecorder] = None,
+        tool_nudge: str | None = None,
     ):
         self._client = client
         self._model = model
         self._tools = tools
         self._total_usage = TokenUsage()
         self._recorder = recorder
+        self._tool_nudge = tool_nudge
         self._prompt_report_logger = PromptReportLogger(
             provider="anthropic",
             model=model,
@@ -356,10 +358,16 @@ class AnthropicProviderSession(ProviderSession):
         # Tool screenshots accumulate across turns. Re-check before every API
         # call so crossing 20 images cannot leave earlier images above 2000 px.
         self._ensure_many_image_dimension_limit()
+        system_for_api: str | List[Dict[str, Any]] = self._system_prompt
+        if self._tool_nudge:
+            # Prepend the nudge to the system prompt so it is visible to the
+            # model on every turn.  Using a single blank line as separator
+            # preserves any existing prompt structure.
+            system_for_api = f"{self._tool_nudge}\n\n{self._system_prompt}"
         stream_kwargs: Dict[str, Any] = {
             "model": _get_anthropic_api_model_name(self._model),
             "max_tokens": 50000,
-            "system": self._system_prompt,
+            "system": system_for_api,
             "messages": self._messages,
             "tools": self._tools,
             "cache_control": {"type": "ephemeral"},
