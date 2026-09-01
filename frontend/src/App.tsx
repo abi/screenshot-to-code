@@ -102,6 +102,8 @@ function App() {
       selectedDesignSystemId: null,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
+      showCostTracker: false,
+      babelVersion: import.meta.env.VITE_BABEL_VERSION ?? "7.25.9",
     },
     "setting"
   );
