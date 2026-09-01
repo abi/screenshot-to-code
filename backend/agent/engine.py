@@ -135,6 +135,12 @@ class AgentEngine:
         # --- Per-run cost tracking -------------------------------------------
         self._step_count: int = 0
         self._step_costs: List[float] = []
+        self._last_cost_usd: float | None = None
+
+    @property
+    def last_cost_usd(self) -> float | None:
+        """Final USD cost for the most recent run(), available after run() returns."""
+        return self._last_cost_usd
 
     @staticmethod
     def _extract_input_images(
@@ -452,6 +458,8 @@ class AgentEngine:
                 )
             raise
         finally:
+            # Capture cost before closing so callers can read last_cost_usd.
+            self._last_cost_usd = session.total_cost_usd()
             await session.close()
 
     async def _finalize_response(self, assistant_text: str) -> str:

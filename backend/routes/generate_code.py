@@ -53,6 +53,7 @@ MessageType = Literal[
     "toolStart",
     "toolResult",
     "budgetExceeded",
+    "variantCost",
 ]
 from prompts.pipeline import build_prompt_messages
 from prompts.request_parsing import parse_prompt_content, parse_prompt_history
@@ -658,6 +659,18 @@ class AgenticGenerationStage:
                 recorder=recorder,
             )
             completion = await runner.run(model, prompt_messages)
+            # Emit per-variant cost attribution once the session is finalised.
+            # Only sent when the backend can compute a dollar figure (i.e. when
+            # the provider session had token-usage data and a pricing entry).
+            final_cost = runner.last_cost_usd
+            if final_cost is not None:
+                await self.send_message(
+                    "variantCost",
+                    None,
+                    index,
+                    {"costUsd": final_cost},
+                    None,
+                )
             if completion:
                 await self.send_message("setCode", completion, index, None, None)
             await self.send_message(
