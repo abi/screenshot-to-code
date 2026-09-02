@@ -93,6 +93,7 @@ function App() {
       replicateApiKey: null,
       anthropicApiKey: null,
       geminiApiKey: null,
+      nvidiaApiKey: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
       editorTheme: EditorTheme.COBALT,

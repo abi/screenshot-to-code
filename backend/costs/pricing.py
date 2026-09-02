@@ -66,4 +66,9 @@ MODEL_PRICING: Dict[str, ModelPricing] = {
     "gemini-3.6-flash": ModelPricing(
         input=1.50, output=7.50, cache_read=0.15
     ),
+    # --- NVIDIA ---
+    # Estimated pricing for Nemotron 3.5 Flash models (2026-08-31).
+    "nvidia/nemotron-3.5-lightning-30b-a3b": ModelPricing(
+        input=2.00, output=12.00, cache_read=0.20
+    ),
 }
