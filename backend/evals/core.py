@@ -5,11 +5,12 @@ from config import (
     ANTHROPIC_API_KEY,
     GEMINI_API_KEY,
     LOCAL_ASSET_BASE_URL,
+    NVIDIA_API_KEY,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
     REPLICATE_API_KEY,
 )
-from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS
+from llm import Llm, OPENAI_MODELS, ANTHROPIC_MODELS, GEMINI_MODELS, NVIDIA_MODELS
 from agent.runner import Agent
 from fs_logging.agent_runs import AgentRunRecorder
 from prompts.create.image import build_image_prompt_messages
@@ -44,6 +45,8 @@ async def _run_eval_agent(
         raise Exception("Gemini API key not found")
     if model in OPENAI_MODELS and not OPENAI_API_KEY:
         raise Exception("OpenAI API key not found")
+    if model in NVIDIA_MODELS and not NVIDIA_API_KEY:
+        raise Exception("NVIDIA API key not found")
 
     print(f"[EVALS] Using agent runner for model: {model.value}")
 
@@ -69,6 +72,7 @@ async def _run_eval_agent(
         gemini_api_key=GEMINI_API_KEY,
         replicate_api_key=REPLICATE_API_KEY,
         should_generate_images=True,
+        nvidia_api_key=NVIDIA_API_KEY,
         # No websocket to infer the host from, so use the configured base URL;
         # otherwise extracted/saved assets get hostless /local-assets/ URLs.
         asset_base_url=LOCAL_ASSET_BASE_URL,

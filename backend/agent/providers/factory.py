@@ -8,11 +8,12 @@ from openai.types.chat import ChatCompletionMessageParam
 from agent.providers.anthropic import AnthropicProviderSession, serialize_anthropic_tools
 from agent.providers.base import ProviderSession
 from agent.providers.gemini import GeminiProviderSession, serialize_gemini_tools
+from agent.providers.nvidia import NvidiaProviderSession, serialize_nvidia_tools
 from agent.providers.openai import OpenAIProviderSession, serialize_openai_tools
 from agent.tools import canonical_tool_definitions
 from config import REPLICATE_API_KEY
 from fs_logging.agent_runs import AgentRunRecorder
-from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
+from llm import ANTHROPIC_MODELS, GEMINI_MODELS, NVIDIA_MODELS, OPENAI_MODELS, Llm
 from preview_screenshot import is_screenshot_preview_available
 
 
@@ -25,6 +26,7 @@ def create_provider_session(
     anthropic_api_key: Optional[str],
     gemini_api_key: Optional[str],
     replicate_api_key: Optional[str],
+    nvidia_api_key: Optional[str] = None,
     should_extract_assets: bool = True,
     recorder: Optional[AgentRunRecorder] = None,
 ) -> ProviderSession:
@@ -74,6 +76,21 @@ def create_provider_session(
             model=model,
             prompt_messages=prompt_messages,
             tools=serialize_gemini_tools(canonical_tools),
+            recorder=recorder,
+        )
+
+    if model in NVIDIA_MODELS:
+        if not nvidia_api_key:
+            raise Exception("NVIDIA API key is missing.")
+
+        from agent.providers.nvidia import NVIDIA_BASE_URL
+
+        client = AsyncOpenAI(api_key=nvidia_api_key, base_url=NVIDIA_BASE_URL)
+        return NvidiaProviderSession(
+            client=client,
+            model=model,
+            prompt_messages=prompt_messages,
+            tools=serialize_nvidia_tools(canonical_tools),
             recorder=recorder,
         )
 

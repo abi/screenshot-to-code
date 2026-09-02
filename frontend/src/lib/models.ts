@@ -39,6 +39,10 @@ export enum CodeGenerationModel {
   GEMINI_3_6_FLASH_MEDIUM = "gemini-3.6-flash (medium thinking)",
   GEMINI_3_6_FLASH_LOW = "gemini-3.6-flash (low thinking)",
   GEMINI_3_6_FLASH_MINIMAL = "gemini-3.6-flash (minimal thinking)",
+  NVIDIA_NEMOTRON_3_5_FLASH = "nvidia/nemotron-3.5-lightning-30b-a3b",
+  NVIDIA_NEMOTRON_3_5_FLASH_LOW = "nvidia/nemotron-3.5-lightning-30b-a3b (low)",
+  NVIDIA_NEMOTRON_3_5_FLASH_MEDIUM = "nvidia/nemotron-3.5-lightning-30b-a3b (medium)",
+  NVIDIA_NEMOTRON_3_5_FLASH_HIGH = "nvidia/nemotron-3.5-lightning-30b-a3b (high)",
 }
 
 export type VariantLabelTone = "fast" | "max";
@@ -191,5 +195,17 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gemini-3.1-pro-preview (low thinking)": {
     name: "Gemini 3.1 Pro (low)",
+  },
+  "nvidia/nemotron-3.5-lightning-30b-a3b": {
+    name: "NVIDIA Nemotron 3.5 Flash",
+  },
+  "nvidia/nemotron-3.5-lightning-30b-a3b (low)": {
+    name: "NVIDIA Nemotron 3.5 Flash (low)",
+  },
+  "nvidia/nemotron-3.5-lightning-30b-a3b (medium)": {
+    name: "NVIDIA Nemotron 3.5 Flash (medium)",
+  },
+  "nvidia/nemotron-3.5-lightning-30b-a3b (high)": {
+    name: "NVIDIA Nemotron 3.5 Flash (high)",
   },
 };
