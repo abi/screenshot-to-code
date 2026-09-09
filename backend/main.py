@@ -3,9 +3,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from config import IS_DEBUG_ENABLED
 from routes import (
     capabilities,
@@ -24,22 +26,17 @@ from uploaded_assets import configure_uploaded_asset_routes
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 configure_uploaded_asset_routes(app)
 
-
 @app.on_event("startup")
 async def log_debug_mode() -> None:
     debug_status = "ENABLED" if IS_DEBUG_ENABLED else "DISABLED"
     print(f"Backend startup complete. Debug mode is {debug_status}.")
 
-
 @app.on_event("startup")
 async def probe_screenshot_preview_on_startup() -> None:
-    # Detect (and warm up) headless Chromium so the screenshot_preview tool is
-    # only offered when it can actually run. Logs the outcome.
     from preview_screenshot import probe_screenshot_preview
+    available = await probe_screenshot_preview()
+    print(f"Screenshot preview available: {available}")
 
-    await probe_screenshot_preview()
-
-# Configure CORS settings
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -48,7 +45,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add routes
 app.include_router(generate_code.router)
 app.include_router(screenshot.router)
 app.include_router(home.router)
@@ -59,3 +55,17 @@ app.include_router(design_systems.router)
 app.include_router(prompt_reports.router)
 app.include_router(agent_runs.router)
 app.include_router(eval_sets.router)
+
+# In the combined Render image, the React build lives beside the backend.
+FRONTEND_DIST = Path(__file__).resolve().parents[1] / "frontend" / "dist"
+if FRONTEND_DIST.exists():
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend-assets")
+
+    @app.get("/app/{path:path}", include_in_schema=False)
+    async def frontend_app(path: str):
+        candidate = FRONTEND_DIST / path
+        if candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(FRONTEND_DIST / "index.html")
