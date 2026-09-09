@@ -3,19 +3,14 @@ import os
 NUM_VARIANTS = int(os.environ.get("NUM_VARIANTS", "2"))
 NUM_VARIANTS_VIDEO = 2
 
-# LLM-related
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", None)
-
-# OpenAI-compatible endpoint. For 9Router use https://9router.com/v1.
 ROUTER_MODEL = os.environ.get("ROUTER_MODEL", None)
 ROUTER_ONLY = os.environ.get("ROUTER_ONLY", "false").strip().lower() in {"1", "true", "yes", "on"}
 
-# Image generation (optional)
 REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)
-
 IS_DEBUG_ENABLED = os.environ.get("IS_DEBUG_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"}
 DEBUG_DIR = os.environ.get("DEBUG_DIR", "")
 GENERATION_MAX_COST_USD = float(os.environ.get("GENERATION_MAX_COST_USD", "3.0"))
