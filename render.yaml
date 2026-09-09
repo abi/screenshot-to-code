@@ -11,7 +11,7 @@ services:
         sync: false
       - key: OPENAI_BASE_URL
         value: https://9router.com/v1
-      - key: ROUTER_MODEL
+      - key: ROUTER_COMBO
         sync: false
       - key: ROUTER_ONLY
         value: "true"
