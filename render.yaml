@@ -9,8 +9,10 @@ services:
     envVars:
       - key: OPENAI_API_KEY
         sync: false
+      # Your self-hosted 9Router instance. It exposes the OpenAI-compatible
+      # API under /v1 and resolves combo names such as Hermes-Fallback.
       - key: OPENAI_BASE_URL
-        value: https://9router.com/v1
+        value: https://ninerouter-g21u.onrender.com/v1
       - key: ROUTER_COMBO
         sync: false
       - key: ROUTER_ONLY
