@@ -17,5 +17,12 @@ GENERATION_MAX_COST_USD = float(os.environ.get("GENERATION_MAX_COST_USD", "3.0")
 PROMPT_REPORTS_ENABLED = os.environ.get("PROMPT_REPORTS_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"}
 LOCAL_ASSET_DIR = os.environ.get("LOCAL_ASSET_DIR", os.path.join(os.path.dirname(__file__), "local_assets"))
 LOCAL_ASSET_BASE_URL = os.environ.get("LOCAL_ASSET_BASE_URL", "http://127.0.0.1:7001")
-IS_PROD = os.environ.get("IS_PROD", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+# The upstream app intentionally blocks user-selected OpenAI base URLs in its
+# hosted mode. Router deployments are server-controlled, so allow the server's
+# configured OpenAI-compatible base URL while still hiding the setting in the UI.
+IS_PROD = (
+    os.environ.get("IS_PROD", "false").strip().lower() in {"1", "true", "yes", "on"}
+    and not ROUTER_MODEL
+)
 DISABLE_SCREENSHOT_PREVIEW = os.environ.get("DISABLE_SCREENSHOT_PREVIEW", "false").strip().lower() in {"1", "true", "yes", "on"}
