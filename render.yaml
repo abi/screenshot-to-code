@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: screenshot-to-code-9router
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/capabilities
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        value: https://9router.com/v1
+      - key: ROUTER_MODEL
+        sync: false
+      - key: ROUTER_ONLY
+        value: "true"
+      - key: IS_PROD
+        value: "true"
+      - key: VITE_IS_DEPLOYED
+        value: "true"
+      - key: NUM_VARIANTS
+        value: "2"
+      - key: DISABLE_SCREENSHOT_PREVIEW
+        value: "true"
+      - key: PROMPT_REPORTS_ENABLED
+        value: "false"
+      - key: IS_DEBUG_ENABLED
+        value: "false"
