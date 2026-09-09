@@ -12,19 +12,18 @@ RUN pnpm build-hosted
 FROM python:3.12-slim-bookworm AS runtime
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    POETRY_VERSION=2.1.3 \
+    POETRY_VERSION=2.4.1 \
     POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /app
-
 RUN pip install --no-cache-dir "poetry==$POETRY_VERSION"
 
 COPY backend/pyproject.toml backend/poetry.lock /app/backend/
 WORKDIR /app/backend
 RUN poetry install --only main --no-interaction --no-ansi
 
-# The Render free instance has only 512 MB RAM. Chromium is intentionally not
-# installed here; the screenshot-preview tool is disabled by render.yaml.
+# Render free is only 512 MB RAM. Chromium is intentionally not installed;
+# render.yaml disables the optional screenshot-preview tool.
 COPY backend/ /app/backend/
 COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
 
