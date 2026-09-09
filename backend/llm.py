@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import TypedDict
 
+from config import ROUTER_COMBO
+
 
 # Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
@@ -61,89 +63,29 @@ class Completion(TypedDict):
     code: str
 
 
-# Explicitly map each model to the provider backing it.  This keeps provider
-# groupings authoritative and avoids relying on name conventions when checking
-# models elsewhere in the codebase.
-MODEL_PROVIDER: dict[Llm, str] = {
-    # OpenAI models
-    Llm.GPT_5_4_MINI_LOW: "openai",
-    Llm.GPT_5_4_2026_03_05_NONE: "openai",
-    Llm.GPT_5_4_2026_03_05_LOW: "openai",
-    Llm.GPT_5_4_2026_03_05_MEDIUM: "openai",
-    Llm.GPT_5_4_2026_03_05_HIGH: "openai",
-    Llm.GPT_5_4_2026_03_05_XHIGH: "openai",
-    Llm.GPT_5_5_NONE: "openai",
-    Llm.GPT_5_5_LOW: "openai",
-    Llm.GPT_5_5_MEDIUM: "openai",
-    Llm.GPT_5_5_HIGH: "openai",
-    Llm.GPT_5_5_XHIGH: "openai",
-    Llm.GPT_5_6_SOL_NONE: "openai",
-    Llm.GPT_5_6_SOL_LOW: "openai",
-    Llm.GPT_5_6_SOL_MEDIUM: "openai",
-    Llm.GPT_5_6_SOL_HIGH: "openai",
-    Llm.GPT_5_6_SOL_XHIGH: "openai",
-    Llm.GPT_5_6_SOL_MAX: "openai",
-    Llm.GPT_5_6_TERRA_LOW: "openai",
-    # Anthropic models
-    Llm.CLAUDE_SONNET_4_6: "anthropic",
-    Llm.CLAUDE_OPUS_5_LOW: "anthropic",
-    Llm.CLAUDE_OPUS_5_MEDIUM: "anthropic",
-    Llm.CLAUDE_OPUS_5_HIGH: "anthropic",
-    Llm.CLAUDE_OPUS_5_XHIGH: "anthropic",
-    Llm.CLAUDE_OPUS_5_MAX: "anthropic",
-    Llm.CLAUDE_OPUS_4_8_LOW: "anthropic",
-    Llm.CLAUDE_OPUS_4_8_MEDIUM: "anthropic",
-    Llm.CLAUDE_OPUS_4_8_HIGH: "anthropic",
-    Llm.CLAUDE_OPUS_4_8_XHIGH: "anthropic",
-    Llm.CLAUDE_OPUS_4_8_MAX: "anthropic",
-    Llm.CLAUDE_FABLE_5_LOW: "anthropic",
-    Llm.CLAUDE_FABLE_5_MEDIUM: "anthropic",
-    Llm.CLAUDE_FABLE_5_HIGH: "anthropic",
-    Llm.CLAUDE_FABLE_5_XHIGH: "anthropic",
-    Llm.CLAUDE_FABLE_5_MAX: "anthropic",
-    # Gemini models
-    Llm.GEMINI_3_FLASH_PREVIEW_HIGH: "gemini",
-    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL: "gemini",
-    Llm.GEMINI_3_1_PRO_PREVIEW_HIGH: "gemini",
-    Llm.GEMINI_3_1_PRO_PREVIEW_MEDIUM: "gemini",
-    Llm.GEMINI_3_1_PRO_PREVIEW_LOW: "gemini",
-    Llm.GEMINI_3_5_FLASH_HIGH: "gemini",
-    Llm.GEMINI_3_5_FLASH_MEDIUM: "gemini",
-    Llm.GEMINI_3_5_FLASH_LOW: "gemini",
-    Llm.GEMINI_3_5_FLASH_MINIMAL: "gemini",
-    Llm.GEMINI_3_6_FLASH_HIGH: "gemini",
-    Llm.GEMINI_3_6_FLASH_MEDIUM: "gemini",
-    Llm.GEMINI_3_6_FLASH_LOW: "gemini",
-    Llm.GEMINI_3_6_FLASH_MINIMAL: "gemini",
-}
+# Keep the upstream provider groupings intact. When a 9Router combo is
+# configured, the provider factory intercepts the request before these sets are
+# used and sends the combo name to 9Router as the OpenAI-compatible model ID.
+MODEL_PROVIDER: dict[Llm, str] = {}
+for _model in Llm:
+    if _model.value.startswith("gpt-"):
+        MODEL_PROVIDER[_model] = "openai"
+    elif _model.value.startswith("claude-"):
+        MODEL_PROVIDER[_model] = "anthropic"
+    else:
+        MODEL_PROVIDER[_model] = "gemini"
 
-# Convenience sets for membership checks
-OPENAI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "openai"}
-ANTHROPIC_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "anthropic"}
-GEMINI_MODELS = {m for m, p in MODEL_PROVIDER.items() if p == "gemini"}
+OPENAI_MODELS = {m for m, provider in MODEL_PROVIDER.items() if provider == "openai"}
+ANTHROPIC_MODELS = {m for m, provider in MODEL_PROVIDER.items() if provider == "anthropic"}
+GEMINI_MODELS = {m for m, provider in MODEL_PROVIDER.items() if provider == "gemini"}
 
 OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
     Llm.GPT_5_4_MINI_LOW: {"api_name": "gpt-5.4-mini", "reasoning_effort": "low"},
-    Llm.GPT_5_4_2026_03_05_NONE: {
-        "api_name": "gpt-5.4-2026-03-05",
-        "reasoning_effort": "none",
-    },
-    Llm.GPT_5_4_2026_03_05_LOW: {
-        "api_name": "gpt-5.4-2026-03-05",
-        "reasoning_effort": "low",
-    },
-    Llm.GPT_5_4_2026_03_05_MEDIUM: {
-        "api_name": "gpt-5.4-2026-03-05",
-        "reasoning_effort": "medium",
-    },
-    Llm.GPT_5_4_2026_03_05_HIGH: {
-        "api_name": "gpt-5.4-2026-03-05",
-        "reasoning_effort": "high",
-    },
-    Llm.GPT_5_4_2026_03_05_XHIGH: {
-        "api_name": "gpt-5.4-2026-03-05",
-        "reasoning_effort": "xhigh",
-    },
+    Llm.GPT_5_4_2026_03_05_NONE: {"api_name": "gpt-5.4-2026-03-05", "reasoning_effort": "none"},
+    Llm.GPT_5_4_2026_03_05_LOW: {"api_name": "gpt-5.4-2026-03-05", "reasoning_effort": "low"},
+    Llm.GPT_5_4_2026_03_05_MEDIUM: {"api_name": "gpt-5.4-2026-03-05", "reasoning_effort": "medium"},
+    Llm.GPT_5_4_2026_03_05_HIGH: {"api_name": "gpt-5.4-2026-03-05", "reasoning_effort": "high"},
+    Llm.GPT_5_4_2026_03_05_XHIGH: {"api_name": "gpt-5.4-2026-03-05", "reasoning_effort": "xhigh"},
     Llm.GPT_5_5_NONE: {"api_name": "gpt-5.5", "reasoning_effort": "none"},
     Llm.GPT_5_5_LOW: {"api_name": "gpt-5.5", "reasoning_effort": "low"},
     Llm.GPT_5_5_MEDIUM: {"api_name": "gpt-5.5", "reasoning_effort": "medium"},
@@ -160,8 +102,14 @@ OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
 
 
 def get_openai_api_name(model: Llm) -> str:
-    return OPENAI_MODEL_CONFIG[model]["api_name"]
+    # A combo is a virtual model name. 9Router owns all downstream model
+    # selection, so screenshot-to-code must never substitute an individual
+    # provider model here.
+    return ROUTER_COMBO or OPENAI_MODEL_CONFIG[model]["api_name"]
 
 
 def get_openai_reasoning_effort(model: Llm) -> str | None:
+    # Reasoning is controlled by the selected upstream model inside the combo.
+    if ROUTER_COMBO:
+        return None
     return OPENAI_MODEL_CONFIG.get(model, {}).get("reasoning_effort")

@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: screenshot-to-code-9router
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/capabilities
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      # Your self-hosted 9Router instance. It exposes the OpenAI-compatible
+      # API under /v1 and resolves combo names such as Hermes-Fallback.
+      - key: OPENAI_BASE_URL
+        value: https://ninerouter-g21u.onrender.com/v1
+      - key: ROUTER_COMBO
+        sync: false
+      - key: ROUTER_ONLY
+        value: "true"
+      - key: IS_PROD
+        value: "true"
+      - key: VITE_IS_DEPLOYED
+        value: "true"
+      - key: NUM_VARIANTS
+        value: "2"
+      - key: DISABLE_SCREENSHOT_PREVIEW
+        value: "true"
+      - key: PROMPT_REPORTS_ENABLED
+        value: "false"
+      - key: IS_DEBUG_ENABLED
+        value: "false"

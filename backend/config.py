@@ -1,37 +1,35 @@
 import os
 
-NUM_VARIANTS = 4
+NUM_VARIANTS = int(os.environ.get("NUM_VARIANTS", "2"))
 NUM_VARIANTS_VIDEO = 2
 
-# LLM-related
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", None)
 
-# Image generation (optional)
+# 9Router exposes combos as virtual OpenAI-compatible model IDs. The app sends
+# this single combo name for every request; 9Router itself performs the
+# configured fallback / round-robin / capability routing between its models.
+# ROUTER_MODEL is kept as a backwards-compatible alias for existing Render
+# deployments, but new deployments should use ROUTER_COMBO.
+ROUTER_COMBO = os.environ.get("ROUTER_COMBO") or os.environ.get("ROUTER_MODEL")
+ROUTER_MODEL = ROUTER_COMBO
+ROUTER_ONLY = os.environ.get("ROUTER_ONLY", "false").strip().lower() in {"1", "true", "yes", "on"}
+
 REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)
-
-# Debugging-related
-IS_DEBUG_ENABLED = bool(os.environ.get("IS_DEBUG_ENABLED", False))
+IS_DEBUG_ENABLED = os.environ.get("IS_DEBUG_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"}
 DEBUG_DIR = os.environ.get("DEBUG_DIR", "")
-
-# When enabled, every LLM request is written to run_logs/prompt_reports as a
-# JSON report viewable at /evals/prompt-reports.
-# Hard per-generation spend ceiling; a run that would continue past this is
-# aborted. Applies per variant/eval run. Unpriced models are not bounded.
-GENERATION_MAX_COST_USD = 3.0
-
-PROMPT_REPORTS_ENABLED = os.environ.get(
-    "PROMPT_REPORTS_ENABLED", ""
-).strip().lower() in {"1", "true", "yes", "on"}
-LOCAL_ASSET_DIR = os.environ.get(
-    "LOCAL_ASSET_DIR", os.path.join(os.path.dirname(__file__), "local_assets")
-)
-# Base URL the backend serves /local-assets from. The live (websocket) path
-# infers this per-request; the evals path has no request, so it uses this.
+GENERATION_MAX_COST_USD = float(os.environ.get("GENERATION_MAX_COST_USD", "3.0"))
+PROMPT_REPORTS_ENABLED = os.environ.get("PROMPT_REPORTS_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"}
+LOCAL_ASSET_DIR = os.environ.get("LOCAL_ASSET_DIR", os.path.join(os.path.dirname(__file__), "local_assets"))
 LOCAL_ASSET_BASE_URL = os.environ.get("LOCAL_ASSET_BASE_URL", "http://127.0.0.1:7001")
 
-# Set to True when running in production (on the hosted version)
-# Used as a feature flag to enable or disable certain features
-IS_PROD = os.environ.get("IS_PROD", False)
+# The upstream app intentionally blocks user-selected OpenAI base URLs in its
+# hosted mode. Router deployments are server-controlled, so allow the server's
+# configured OpenAI-compatible base URL while still hiding the setting in the UI.
+IS_PROD = (
+    os.environ.get("IS_PROD", "false").strip().lower() in {"1", "true", "yes", "on"}
+    and not ROUTER_COMBO
+)
+DISABLE_SCREENSHOT_PREVIEW = os.environ.get("DISABLE_SCREENSHOT_PREVIEW", "false").strip().lower() in {"1", "true", "yes", "on"}
