@@ -1,10 +1,12 @@
 from enum import Enum
 from typing import TypedDict
 
-from config import ROUTER_MODEL
+from config import ROUTER_COMBO
 
 
+# Actual model versions that are passed to the LLMs and stored in our logs
 class Llm(Enum):
+    # GPT
     GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)"
     GPT_5_4_2026_03_05_NONE = "gpt-5.4-2026-03-05 (no thinking)"
     GPT_5_4_2026_03_05_LOW = "gpt-5.4-2026-03-05 (low thinking)"
@@ -23,6 +25,7 @@ class Llm(Enum):
     GPT_5_6_SOL_XHIGH = "gpt-5.6-sol (xhigh thinking)"
     GPT_5_6_SOL_MAX = "gpt-5.6-sol (max thinking)"
     GPT_5_6_TERRA_LOW = "gpt-5.6-terra (low thinking)"
+    # Claude
     CLAUDE_SONNET_4_6 = "claude-sonnet-4-6"
     CLAUDE_OPUS_5_LOW = "claude-opus-5 (low effort)"
     CLAUDE_OPUS_5_MEDIUM = "claude-opus-5 (medium effort)"
@@ -39,6 +42,7 @@ class Llm(Enum):
     CLAUDE_FABLE_5_HIGH = "claude-fable-5 (high effort)"
     CLAUDE_FABLE_5_XHIGH = "claude-fable-5 (xhigh effort)"
     CLAUDE_FABLE_5_MAX = "claude-fable-5 (max effort)"
+    # Gemini
     GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)"
     GEMINI_3_FLASH_PREVIEW_MINIMAL = "gemini-3-flash-preview (minimal thinking)"
     GEMINI_3_1_PRO_PREVIEW_HIGH = "gemini-3.1-pro-preview (high thinking)"
@@ -59,6 +63,9 @@ class Completion(TypedDict):
     code: str
 
 
+# Keep the upstream provider groupings intact. When a 9Router combo is
+# configured, the provider factory intercepts the request before these sets are
+# used and sends the combo name to 9Router as the OpenAI-compatible model ID.
 MODEL_PROVIDER: dict[Llm, str] = {}
 for _model in Llm:
     if _model.value.startswith("gpt-"):
@@ -95,10 +102,14 @@ OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
 
 
 def get_openai_api_name(model: Llm) -> str:
-    return ROUTER_MODEL or OPENAI_MODEL_CONFIG[model]["api_name"]
+    # A combo is a virtual model name. 9Router owns all downstream model
+    # selection, so screenshot-to-code must never substitute an individual
+    # provider model here.
+    return ROUTER_COMBO or OPENAI_MODEL_CONFIG[model]["api_name"]
 
 
 def get_openai_reasoning_effort(model: Llm) -> str | None:
-    if ROUTER_MODEL:
+    # Reasoning is controlled by the selected upstream model inside the combo.
+    if ROUTER_COMBO:
         return None
     return OPENAI_MODEL_CONFIG.get(model, {}).get("reasoning_effort")
