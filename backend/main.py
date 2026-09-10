@@ -40,10 +40,15 @@ async def probe_screenshot_preview_on_startup() -> None:
     await probe_screenshot_preview()
 
 # Configure CORS settings
+# allow_credentials=False: this backend has no cookie/session auth, so there
+# is nothing worth stealing via credentialed cross-origin requests. Wildcard
+# origins + allow_credentials=True is a known-bad combination (browsers
+# reject it, but scanners flag it, and it invites mistakes if cookie auth is
+# ever added later) — keep it False rather than pairing it with "*".
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

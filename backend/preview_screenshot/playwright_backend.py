@@ -1,9 +1,13 @@
 import asyncio
+import ipaddress
+import socket
 from typing import Optional
+from urllib.parse import urlparse
 
 from playwright.async_api import (
     Browser,
     Playwright,
+    Route,
     TimeoutError as PlaywrightTimeoutError,
     async_playwright,
 )
@@ -12,6 +16,74 @@ from preview_screenshot.base import VIEWPORT_SIZES
 
 PAGE_LOAD_TIMEOUT_MS = 15000
 RENDER_SETTLE_MS = 250
+
+# Only these hostnames are trusted to reach loopback: the /local-assets/
+# route this same backend serves. Everything else that resolves to a
+# loopback, private, or link-local address (including cloud metadata
+# endpoints like 169.254.169.254) is blocked so that LLM-generated HTML
+# can't turn this browser into an SSRF proxy into the local network.
+ALLOWED_LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+# Schemes that never touch the network and are always safe to allow.
+_NETWORKLESS_SCHEMES = {"data", "blob", "about", "javascript"}
+
+
+def _is_blocked_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    return (
+        ip.is_loopback
+        or ip.is_private
+        or ip.is_link_local
+        or ip.is_reserved
+        or ip.is_multicast
+        or ip.is_unspecified
+    )
+
+
+def _resolve_is_blocked(hostname: str) -> bool:
+    """Resolve `hostname` and report whether any address is internal/local.
+
+    Unresolvable hostnames are blocked too, rather than let them through.
+    """
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        return True
+
+    for info in infos:
+        raw_ip = info[4][0]
+        try:
+            ip = ipaddress.ip_address(raw_ip)
+        except ValueError:
+            continue
+        if _is_blocked_ip(ip):
+            return True
+    return False
+
+
+async def _guard_request(route: Route) -> None:
+    request = route.request
+    parsed = urlparse(request.url)
+
+    if parsed.scheme in _NETWORKLESS_SCHEMES:
+        await route.continue_()
+        return
+
+    if parsed.scheme not in ("http", "https"):
+        await route.abort()
+        return
+
+    hostname = (parsed.hostname or "").lower()
+    if hostname in ALLOWED_LOOPBACK_HOSTS:
+        await route.continue_()
+        return
+
+    loop = asyncio.get_event_loop()
+    blocked = await loop.run_in_executor(None, _resolve_is_blocked, hostname)
+    if blocked:
+        await route.abort()
+        return
+
+    await route.continue_()
 
 
 class PlaywrightBackend:
@@ -69,6 +141,7 @@ class PlaywrightBackend:
             viewport={"width": width, "height": height},
             device_scale_factor=1,
         )
+        await page.route("**/*", _guard_request)
         try:
             try:
                 await page.set_content(
