@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .font-display {
+    font-family: 'Orbitron', sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .bg-grid {
+    background-image: 
+      linear-gradient(rgba(255,0,110,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,243,255,0.05) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  
+  .bg-mesh {
+    background-image: 
+      radial-gradient(at 40% 20%, rgba(255,0,110,0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, rgba(0,243,255,0.15) 0px, transparent 50%),
+      radial-gradient(at 20% 80%, rgba(188,19,254,0.15) 0px, transparent 50%);
+  }
+  
+  .glass {
+    background: rgba(14, 14, 24, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 0, 110, 0.1);
+  }
+  
+  .glass-strong {
+    background: rgba(10, 10, 18, 0.9);
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 0, 110, 0.2);
+  }
+  
+  .neon-border {
+    border: 1px solid transparent;
+    background: linear-gradient(var(--color-bg-elevated), var(--color-bg-elevated)) padding-box,
+                linear-gradient(135deg, #ff006e, #00f3ff, #bc13fe) border-box;
+  }
+  
+  .text-gradient {
+    background: linear-gradient(135deg, #ff006e 0%, #00f3ff 50%, #bc13fe 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .glow-pink {
+    box-shadow: 
+      0 0 20px rgba(255, 0, 110, 0.4),
+      0 0 40px rgba(255, 0, 110, 0.2),
+      inset 0 0 20px rgba(255, 0, 110, 0.1);
+  }
+  
+  .glow-blue {
+    box-shadow: 
+      0 0 20px rgba(0, 243, 255, 0.4),
+      0 0 40px rgba(0, 243, 255, 0.2),
+      inset 0 0 20px rgba(0, 243, 255, 0.1);
+  }
+  
+  .glow-purple {
+    box-shadow: 
+      0 0 20px rgba(188, 19, 254, 0.4),
+      0 0 40px rgba(188, 19, 254, 0.2),
+      inset 0 0 20px rgba(188, 19, 254, 0.1);
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float,
+    .animate-glow,
+    .animate-scanline,
+    .animate-flicker,
+    .animate-rotate-slow {
+      animation: none !important;
+    }
+  }
+}

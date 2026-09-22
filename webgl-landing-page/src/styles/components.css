@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-neon {
+    @apply relative px-8 py-3 font-display font-semibold text-sm uppercase tracking-wider overflow-hidden transition-all duration-300;
+    background: linear-gradient(135deg, #ff006e, #bc13fe);
+    color: #fff;
+    border: none;
+    clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+  }
+  
+  .btn-neon::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, #00f3ff, #39ff14);
+  }
+  
+  .btn-neon:hover::before {
+    @apply opacity-100;
+  }
+  
+  .btn-neon:focus-visible {
+    @apply outline-none ring-2 ring-[var(--color-neon-blue)] ring-offset-2 ring-offset-[var(--color-bg)];
+  }
+  
+  .hud-panel {
+    @apply glass-strong p-6 neon-border rounded-xl;
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  }
+  
+  .scanline-overlay::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none opacity-[0.03];
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.1) 2px,
+      rgba(0, 0, 0, 0.1) 4px
+    );
+    animation: scanline 8s linear infinite;
+  }
+  
+  .hud-corner {
+    @apply absolute w-4 h-4 border-[var(--color-neon-pink)];
+  }
+  
+  .hud-corner-tl {
+    @apply top-0 left-0 border-t-2 border-l-2;
+  }
+  
+  .hud-corner-tr {
+    @apply top-0 right-0 border-t-2 border-r-2;
+  }
+  
+  .hud-corner-bl {
+    @apply bottom-0 left-0 border-b-2 border-l-2;
+  }
+  
+  .hud-corner-br {
+    @apply bottom-0 right-0 border-b-2 border-r-2;
+  }
+  
+  .terminal-text {
+    @apply font-mono text-[var(--color-neon-green)] text-sm;
+  }
+  
+  .terminal-line {
+    @apply relative pl-4;
+  }
+  
+  .terminal-line::before {
+    content: '>';
+    @apply absolute left-0 text-[var(--color-neon-pink)];
+    animation: flicker 0.5s infinite;
+  }
+  
+  .stat-value {
+    @apply font-display text-4xl font-bold tabular-nums;
+  }
+  
+  .stat-label {
+    @apply font-mono text-xs uppercase tracking-widest text-[var(--color-neon-pink)];
+  }
+}
