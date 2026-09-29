@@ -72,6 +72,16 @@ const Footer = () => {
                     Terms of Service
                   </a>
                 </li>
+                <li>
+                  <a
+                    href="/legal/privacy-policy.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm landing-text-muted hover-line"
+                  >
+                    Privacy Policy
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

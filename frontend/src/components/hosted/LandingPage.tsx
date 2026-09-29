@@ -271,7 +271,7 @@ function LandingPage() {
                   marginBottom: "5px",
                 },
               },
-              options: { privacyPageUrl: "/legal/terms-of-service.html" },
+              options: { privacyPageUrl: "/legal/privacy-policy.html" },
             }}
           />
         </DialogContent>

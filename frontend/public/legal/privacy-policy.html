@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Privacy Policy · Screenshot to Code</title>
+<link rel="icon" type="image/png" href="/favicon/main.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    color-scheme: light;
+    --cream: #FFFCF2;
+    --ink: #0D0D0D;
+    --muted: #525252;
+    --line: #e5e5e5;
+    --accent: #2563EB;
+    --nav-bg: rgba(255, 252, 242, 0.85);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --cream: #0D0D0D;
+      --ink: #FFFCF2;
+      --muted: #a3a3a3;
+      --line: #2a2a2a;
+      --accent: #6ea8ff;
+      --nav-bg: rgba(13, 13, 13, 0.85);
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background-color: var(--cream);
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--cream);
+    color: var(--ink);
+    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Landing-style top nav */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+    background-color: var(--nav-bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav-inner {
+    width: min(820px, calc(100% - 40px));
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+  }
+
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .wordmark img {
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .wordmark img { filter: invert(1); }
+  }
+
+  .back-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    position: relative;
+  }
+
+  .back-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 0;
+    height: 1px;
+    background: currentColor;
+    transition: width 0.2s ease;
+  }
+
+  .back-link:hover { color: var(--ink); }
+  .back-link:hover::after { width: 100%; }
+
+  /* Page */
+  .page {
+    width: min(820px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 64px 0 96px;
+  }
+
+  header {
+    margin-bottom: 48px;
+  }
+
+  .brand {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    margin: 0;
+    font-size: clamp(40px, 7vw, 68px);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+  }
+
+  .subtitle {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-size: clamp(20px, 3vw, 26px);
+    letter-spacing: 0;
+    color: var(--muted);
+    margin: 18px 0 0;
+  }
+
+  .updated {
+    margin: 24px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 23px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin: 56px 0 18px;
+    padding-top: 40px;
+  }
+
+  p {
+    margin: 0 0 18px;
+    color: var(--ink);
+  }
+
+  ul {
+    margin: 0 0 18px;
+    padding-left: 26px;
+  }
+
+  ol {
+    margin: 0 0 18px;
+    padding-left: 26px;
+  }
+
+  li {
+    margin: 0 0 8px;
+    padding-left: 4px;
+  }
+
+  strong { font-weight: 600; }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    transition: border-color 0.2s ease;
+  }
+
+  a:hover { border-bottom-color: var(--accent); }
+
+  .contact {
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  @media (max-width: 640px) {
+    .page { padding: 44px 0 72px; }
+    h2 { margin-top: 44px; padding-top: 32px; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="wordmark" href="/">
+      <img src="/favicon/main.png" alt="Screenshot to Code"/>
+      Screenshot to Code
+    </a>
+    <a class="back-link" href="/">Back to app →</a>
+  </div>
+</nav>
+
+<div class="page">
+<header>
+  <div class="brand">WhimsyWorks, Inc.</div>
+  <h1>Privacy Policy</h1>
+  <p class="updated"><strong>Last Updated:</strong> September 29, 2026</p>
+</header>
+
+<main>
+<p>This Privacy Policy explains how <strong>WhimsyWorks, Inc.</strong> (“we” or “us”) handles your information when you use Screenshot to Code.</p>
+
+<h2>1. What We Collect</h2>
+<ol>
+  <li><strong>Account info:</strong> your name, email address, and profile picture, including from Google if you sign in with Google.</li>
+  <li><strong>Your content:</strong> the screenshots, prompts, and other files you upload, and the code we generate.</li>
+  <li><strong>Payments:</strong> purchase and subscription details. Card payments are handled by Stripe; we never see your full card number.</li>
+  <li><strong>Usage data:</strong> how you use the app, device and browser info, and error logs.</li>
+</ol>
+
+<h2>2. How We Use It</h2>
+<p>We use your information to run the service, generate code from your uploads, manage your account and payments, provide support, and keep the service secure and working well.</p>
+
+<h2>3. Who We Share It With</h2>
+<p>We do not sell your information. We share it only with the service providers that help us run Screenshot to Code, such as AI model providers (OpenAI, Anthropic, and Google) that generate code from your uploads, and providers for sign-in, payments, hosting, analytics, and support. We may also share information when required by law.</p>
+
+<h2>4. Google Sign-In</h2>
+<p>If you sign in with Google, we receive only your name, email address, and profile picture. We use them only to create your account and sign you in. We do not sell this data, use it for advertising, or use it to train AI models. Our use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
+<h2>5. Your Choices</h2>
+<p>You can ask us to access, correct, or delete your information, or delete your account, by emailing <a href="mailto:support@getwhimsyworks.com">support@getwhimsyworks.com</a>. The service is not intended for anyone under 18.</p>
+
+<h2>6. Changes and Contact</h2>
+<p>We may update this policy and will post changes on this page. Questions? Contact us at:</p>
+<p class="contact">WhimsyWorks, Inc.<br/>
+228 Park Ave S, PMB 44611<br/>
+New York, New York 10003-1502, United States</p>
+<p><a href="mailto:support@getwhimsyworks.com">support@getwhimsyworks.com</a></p>
+</main>
+
+<footer>
+  © WhimsyWorks, Inc. · Screenshot to Code
+</footer>
+</div>
+</body>
+</html>
