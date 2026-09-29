@@ -15,7 +15,14 @@ import { CreditsUsage, ExtraCreditGrant } from "./types";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { showNewMessage } from "@intercom/messenger-js-sdk";
-import { LuChevronDown, LuLifeBuoy, LuLogOut, LuTrash2 } from "react-icons/lu";
+import {
+  LuChevronDown,
+  LuChevronRight,
+  LuLifeBuoy,
+  LuLock,
+  LuLogOut,
+  LuTrash2,
+} from "react-icons/lu";
 import Spinner from "../core/Spinner";
 import useStripeCheckout from "./payments/useStripeCheckout";
 
@@ -55,7 +62,7 @@ export default function AccountView() {
     useState(false);
 
   const { user, isLoaded, isSignedIn } = useUser();
-  const { signOut } = useClerk();
+  const { openUserProfile, signOut } = useClerk();
   const authenticatedFetch = useAuthenticatedFetch();
   const { checkoutExtraCredits, isLoadingCheckout } = useStripeCheckout();
   const monthlyPlanCreditsUsed = Math.min(usedCredits, monthlyCreditLimit);
@@ -141,6 +148,32 @@ export default function AccountView() {
                 {user?.primaryEmailAddress?.emailAddress}
               </p>
             </div>
+          </div>
+
+          {/* Login and security section */}
+          <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">
+              <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                Login & security
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => openUserProfile()}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-500 dark:hover:bg-zinc-700/50"
+            >
+              <LuLock className="h-4 w-4 shrink-0 text-gray-400 dark:text-zinc-500" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm text-gray-700 dark:text-zinc-300">
+                  Password and sign-in methods
+                </span>
+                <span className="mt-0.5 block text-xs text-gray-500 dark:text-zinc-400">
+                  Manage your password and connected sign-in accounts with
+                  Clerk.
+                </span>
+              </span>
+              <LuChevronRight className="h-4 w-4 shrink-0 text-gray-400 dark:text-zinc-500" />
+            </button>
           </div>
 
           {/* Subscription section */}

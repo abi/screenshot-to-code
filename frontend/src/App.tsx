@@ -74,7 +74,9 @@ function App() {
   const freeTrialLimit = useStore((state) => state.freeTrialLimit);
   const setPricingDialogOpen = useStore((state) => state.setPricingDialogOpen);
 
-
+  const isSubscriber = Boolean(
+    subscriberTier && subscriberTier !== "free",
+  );
   const freeTrialRemaining = freeTrialLimit > 0 && freeTrialUsed < freeTrialLimit;
 
   const {
@@ -1050,14 +1052,12 @@ function App() {
             setMobilePane("preview");
           }}
           onOpenFeedback={
-            SHOULD_SHOW_FEEDBACK_CALL_UI &&
-            subscriberTier &&
-            subscriberTier !== "free"
+            SHOULD_SHOW_FEEDBACK_CALL_UI && isSubscriber
               ? () => setIsFeedbackOpen(true)
               : undefined
           }
           onContactSupport={
-            IS_RUNNING_ON_CLOUD
+            IS_RUNNING_ON_CLOUD && isSubscriber
               ? () => {
                   if (isIntercomOpenRef.current) {
                     hide();
