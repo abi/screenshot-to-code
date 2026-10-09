@@ -31,6 +31,11 @@ from llm import Llm
 
 THINKING_MODELS: set[str] = set()
 ADAPTIVE_THINKING_MODELS = {
+    Llm.CLAUDE_OPUS_5_5_LOW.value,
+    Llm.CLAUDE_OPUS_5_5_MEDIUM.value,
+    Llm.CLAUDE_OPUS_5_5_HIGH.value,
+    Llm.CLAUDE_OPUS_5_5_XHIGH.value,
+    Llm.CLAUDE_OPUS_5_5_MAX.value,
     Llm.CLAUDE_OPUS_5_LOW.value,
     Llm.CLAUDE_OPUS_5_MEDIUM.value,
     Llm.CLAUDE_OPUS_5_HIGH.value,
@@ -50,6 +55,11 @@ ADAPTIVE_THINKING_MODELS = {
 }
 
 ANTHROPIC_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
+    Llm.CLAUDE_OPUS_5_5_LOW: {"api_name": "claude-opus-5-5", "effort": "low"},
+    Llm.CLAUDE_OPUS_5_5_MEDIUM: {"api_name": "claude-opus-5-5", "effort": "medium"},
+    Llm.CLAUDE_OPUS_5_5_HIGH: {"api_name": "claude-opus-5-5", "effort": "high"},
+    Llm.CLAUDE_OPUS_5_5_XHIGH: {"api_name": "claude-opus-5-5", "effort": "xhigh"},
+    Llm.CLAUDE_OPUS_5_5_MAX: {"api_name": "claude-opus-5-5", "effort": "max"},
     Llm.CLAUDE_OPUS_5_LOW: {"api_name": "claude-opus-5", "effort": "low"},
     Llm.CLAUDE_OPUS_5_MEDIUM: {"api_name": "claude-opus-5", "effort": "medium"},
     Llm.CLAUDE_OPUS_5_HIGH: {"api_name": "claude-opus-5", "effort": "high"},

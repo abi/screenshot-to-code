@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   BsBoxArrowUpRight,
+  BsChevronDown,
   BsChevronLeft,
   BsChevronRight,
+  BsChevronUp,
+  BsPinAngleFill,
 } from "react-icons/bs";
 
 import { HTTP_BACKEND_URL } from "../../config";
@@ -52,6 +55,8 @@ interface SessionMatrix {
   model_notes: Record<string, string>;
   cells: MatrixCell[];
   unmatched_run_count: number;
+  // The current production default set for this session's input kind.
+  default_models: string[];
 }
 
 // Stable chip colors so a model keeps its hue as you toggle selections.
@@ -73,8 +78,17 @@ function shortModelName(model: string): string {
     .replace(" effort)", ")");
 }
 
+const CONTROLS_COLLAPSED_KEY = "evalCompare.controlsCollapsed";
+
+function readControlsCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(CONTROLS_COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function EvalComparePage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [sessions, setSessions] = useState<EvalSession[]>([]);
   const [matrix, setMatrix] = useState<SessionMatrix | null>(null);
@@ -83,6 +97,22 @@ function EvalComparePage() {
   // 0 = source screenshot, 1..N = selected models in order.
   const [paneIndex, setPaneIndex] = useState(1);
   const [connectionFailed, setConnectionFailed] = useState(false);
+  // Collapsing hides the eval nav and model chips so the output fills the screen.
+  const [controlsCollapsed, setControlsCollapsed] = useState(
+    readControlsCollapsed
+  );
+
+  const toggleControls = useCallback(() => {
+    setControlsCollapsed((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(CONTROLS_COLLAPSED_KEY, next ? "1" : "0");
+      } catch {
+        // Storage unavailable; the toggle still works for this page view.
+      }
+      return next;
+    });
+  }, []);
   const [retryTick, setRetryTick] = useState(0);
 
   const sessionId = searchParams.get("session");
@@ -153,12 +183,17 @@ function EvalComparePage() {
         if (!response.ok) throw new Error("Request failed");
         const data: SessionMatrix = await response.json();
         setMatrix(data);
-        // Default: first two models that actually have runs.
-        setSelectedModels((current) =>
-          current.length > 0
-            ? current.filter((m) => data.models.includes(m))
-            : data.models.slice(0, 2)
+        // Start from the production defaults; after that the selection is
+        // the user's. With no defaults in the session, fall back to the first
+        // two models that actually have runs.
+        const defaults = data.default_models.filter((m) =>
+          data.models.includes(m)
         );
+        setSelectedModels((current) => {
+          const kept = current.filter((m) => data.models.includes(m));
+          if (kept.length > 0) return kept;
+          return defaults.length > 0 ? defaults : data.models.slice(0, 2);
+        });
         setImageIndex(0);
         setPaneIndex(1);
       } catch (error) {
@@ -208,6 +243,11 @@ function EvalComparePage() {
     loadMatrix(id);
   };
 
+  const isDefaultModel = useCallback(
+    (model: string) => matrix?.default_models.includes(model) ?? false,
+    [matrix]
+  );
+
   const toggleModel = (model: string) => {
     setSelectedModels((current) =>
       current.includes(model)
@@ -240,7 +280,8 @@ function EvalComparePage() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (
         e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLSelectElement
+        e.target instanceof HTMLSelectElement ||
+        e.target instanceof HTMLTextAreaElement
       ) {
         return;
       }
@@ -249,6 +290,7 @@ function EvalComparePage() {
       else if (e.key === "ArrowDown" || e.key === "]") stepImage(1);
       else if (e.key === "ArrowUp" || e.key === "[") stepImage(-1);
       else if (e.key === "s" || e.key === "0") setPaneIndex(0);
+      else if (e.key === "c") toggleControls();
       else if (/^[1-9]$/.test(e.key)) {
         const target = parseInt(e.key, 10);
         if (target < panes.length) setPaneIndex(target);
@@ -256,15 +298,17 @@ function EvalComparePage() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [stepPane, stepImage, panes.length]);
+  }, [stepPane, stepImage, panes.length, toggleControls]);
 
   const activePane = panes[Math.min(paneIndex, panes.length - 1)] ?? null;
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-zinc-950 text-white">
-      <div className="shrink-0">
-        <EvalNavigation />
-      </div>
+      {!controlsCollapsed && (
+        <div className="shrink-0">
+          <EvalNavigation />
+        </div>
+      )}
       <div className="flex min-h-0 flex-1 flex-col gap-2 px-4 py-2">
         <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs">
           <h1 className="text-sm font-semibold tracking-tight">Compare</h1>
@@ -280,23 +324,46 @@ function EvalComparePage() {
             ))}
           </select>
           <div className="mx-1 h-4 w-px bg-zinc-800" />
-          {matrix?.models.map((model, index) => (
+          {controlsCollapsed && (
+            <span className="text-[11px] text-zinc-500">
+              {selectedModels.length} models selected
+            </span>
+          )}
+          {!controlsCollapsed && matrix?.models.map((model, index) => (
             <button
               key={model}
               onClick={() => toggleModel(model)}
-              title={matrix.model_notes[model] || model}
-              className={`rounded-full border px-2 py-0.5 font-mono text-[11px] transition-colors ${
+              title={
+                isDefaultModel(model)
+                  ? `Current default — selected by default. ${matrix.model_notes[model] || model}`
+                  : matrix.model_notes[model] || model
+              }
+              className={`flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px] transition-colors ${
                 selectedModels.includes(model)
                   ? MODEL_COLORS[index % MODEL_COLORS.length]
                   : "border-zinc-700 text-zinc-500 hover:text-zinc-300"
               }`}
             >
+              {isDefaultModel(model) && (
+                <BsPinAngleFill className="text-[9px] opacity-80" />
+              )}
               {shortModelName(model)}
             </button>
           ))}
-          <span className="ml-auto hidden text-[11px] text-zinc-600 lg:inline">
-            ←/→ switch output · ↑/↓ image · S source
-          </span>
+          <div className="ml-auto" />
+          {!controlsCollapsed && (
+            <span className="hidden text-[11px] text-zinc-600 lg:inline">
+              ←/→ output · ↑/↓ image · S source · C collapse
+            </span>
+          )}
+          <button
+            onClick={toggleControls}
+            title={controlsCollapsed ? "Show models and nav (C)" : "Collapse (C)"}
+            className="flex items-center gap-1 rounded-md border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800"
+          >
+            {controlsCollapsed ? <BsChevronDown /> : <BsChevronUp />}
+            {controlsCollapsed ? "Expand" : "Collapse"}
+          </button>
         </div>
 
         {currentImage && (
@@ -362,18 +429,16 @@ function EvalComparePage() {
 
             {activePane?.run && (
               <span className="ml-auto flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    navigate(
-                      `/evals/agent-runs?run=${encodeURIComponent(
-                        activePane.run!.run_id
-                      )}`
-                    )
-                  }
+                <a
+                  href={`/evals/agent-runs?run=${encodeURIComponent(
+                    activePane.run.run_id
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
                   className="rounded-md border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800"
                 >
                   Run details
-                </button>
+                </a>
                 <a
                   href={`${HTTP_BACKEND_URL}/agent-runs/${encodeURIComponent(
                     activePane.run.run_id

@@ -131,7 +131,7 @@ class TestCreatePrompt:
         assert "Reuse .mockup-frame" in text
 
     @pytest.mark.asyncio
-    async def test_image_mode_create_requires_edit_image_for_upscaling(self) -> None:
+    async def test_image_mode_create_requires_edit_images_for_upscaling(self) -> None:
         messages = await build_prompt_messages(
             stack=self.TEST_STACK,
             input_mode="image",
@@ -154,7 +154,7 @@ class TestCreatePrompt:
 
         upscale_instruction = (
             "If an extracted or supplied asset is visibly low-resolution or pixelated "
-            "and must render larger, upscale it with edit_image—not CSS stretching or "
+            "and must render larger, upscale it with edit_images—not CSS stretching or "
             "generate_images."
         )
         removed_instruction = 'Pass its source first, set aspect_ratio: "match_input_image"'

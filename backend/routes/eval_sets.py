@@ -10,6 +10,10 @@ from pydantic import BaseModel
 from evals import sessions as eval_sessions
 from evals import sets as eval_sets
 from fs_logging.agent_runs import open_index_db
+from routes.model_choice_sets import (
+    ALL_KEYS_MODELS_DEFAULT,
+    ALL_KEYS_MODELS_TEXT_CREATE,
+)
 
 router = APIRouter()
 
@@ -95,6 +99,8 @@ class SessionMatrixResponse(BaseModel):
     model_notes: Dict[str, str]
     cells: List[MatrixCellModel]
     unmatched_run_count: int
+    # Current production create defaults for the set's input kind.
+    default_models: List[str] = []
 
 
 class ModelOrderRequest(BaseModel):
@@ -115,6 +121,14 @@ def _set_info_to_model(info: eval_sets.EvalSetInfo) -> EvalSetSummaryModel:
         image_count=info.image_count,
         kind=info.kind,
     )
+
+
+def _default_models_for_set(set_info: Optional[eval_sets.EvalSetInfo]) -> List[str]:
+    if set_info is None:
+        return []
+    if set_info.kind == "text":
+        return [model.value for model in ALL_KEYS_MODELS_TEXT_CREATE]
+    return [model.value for model in ALL_KEYS_MODELS_DEFAULT]
 
 
 def _session_to_model(session: eval_sessions.EvalSession) -> EvalSessionModel:
@@ -365,6 +379,7 @@ async def get_session_matrix(session_id: str) -> SessionMatrixResponse:
         model_notes=model_notes,
         cells=cells,
         unmatched_run_count=unmatched_run_count,
+        default_models=_default_models_for_set(set_info),
     )
 
 

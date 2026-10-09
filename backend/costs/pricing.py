@@ -15,7 +15,9 @@ class ModelPricing:
 # Pricing keyed by the API model name string sent to the provider.
 MODEL_PRICING: Dict[str, ModelPricing] = {
     # --- OpenAI ---
-    # Verified against developers.openai.com/api/docs/pricing on 2026-07-24.
+    # Verified against developers.openai.com/api/docs/pricing on 2026-10-09.
+    # GPT-5.6/6.x also bill cache writes at 1.25x input, but the Responses API
+    # usage we read doesn't split them out, so cache_write stays 0 here.
     "gpt-5.4-mini": ModelPricing(
         input=0.75, output=4.50, cache_read=0.075
     ),
@@ -28,17 +30,24 @@ MODEL_PRICING: Dict[str, ModelPricing] = {
     "gpt-5.5": ModelPricing(
         input=5.00, output=30.00, cache_read=0.50
     ),
+    # Promotional price, "at least through November 21, 2026".
     "gpt-5.6-sol": ModelPricing(
-        input=5.00, output=30.00, cache_read=0.50
+        input=4.00, output=20.00, cache_read=0.40
     ),
     "gpt-5.6-terra": ModelPricing(
-        input=2.50, output=15.00, cache_read=0.25
+        input=2.00, output=12.00, cache_read=0.20
+    ),
+    "gpt-6.1-sol": ModelPricing(
+        input=2.00, output=10.00, cache_read=0.10
     ),
     # --- Anthropic ---
     # Verified against platform.claude.com/docs/en/about-claude/pricing on
-    # 2026-07-24. cache_write is the 5-minute cache-write rate (1.25x input).
+    # 2026-10-09. cache_write is the 5-minute cache-write rate (1.25x input).
     "claude-sonnet-4-6": ModelPricing(
         input=3.00, output=15.00, cache_read=0.30, cache_write=3.75
+    ),
+    "claude-opus-5-5": ModelPricing(
+        input=4.00, output=20.00, cache_read=0.20, cache_write=5.00
     ),
     "claude-opus-5": ModelPricing(
         input=5.00, output=25.00, cache_read=0.50, cache_write=6.25

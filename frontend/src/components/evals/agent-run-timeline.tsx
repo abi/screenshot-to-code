@@ -72,9 +72,9 @@ function toolIcon(toolName: string) {
       return <BsPencilSquare className="text-purple-400" />;
     case "generate_images":
       return <BsImage className="text-pink-400" />;
-    case "remove_background":
+    case "remove_backgrounds":
       return <BsScissors className="text-teal-400" />;
-    case "edit_image":
+    case "edit_images":
       return <BsImage className="text-violet-400" />;
     case "retrieve_option":
       return <BsFiles className="text-slate-400" />;

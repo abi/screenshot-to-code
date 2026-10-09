@@ -76,7 +76,9 @@ function isSlowModel(model?: string): boolean {
   return (
     model === CodeGenerationModel.GEMINI_3_1_PRO_PREVIEW_HIGH ||
     model === CodeGenerationModel.GEMINI_3_1_PRO_PREVIEW_MEDIUM ||
-    model === CodeGenerationModel.GPT_5_6_SOL_MAX
+    model === CodeGenerationModel.GPT_5_6_SOL_MAX ||
+    model === CodeGenerationModel.CLAUDE_OPUS_5_5_XHIGH ||
+    model === CodeGenerationModel.GPT_6_1_SOL_HIGH
   );
 }
 

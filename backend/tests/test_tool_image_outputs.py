@@ -280,15 +280,15 @@ async def test_generate_images_uses_replicate_key_from_settings(
 
 
 @pytest.mark.asyncio
-async def test_edit_image_summary_preserves_full_prompt_and_source_urls(
+async def test_edit_images_summary_preserves_full_prompt_and_source_urls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
 
-    async def fake_edit_image(**kwargs: Any) -> str:
+    async def fake_edit_images(**kwargs: Any) -> str:
         return "https://replicate.delivery/edited.png"
 
-    monkeypatch.setattr("agent.tools.runtime.edit_image", fake_edit_image)
+    monkeypatch.setattr("agent.tools.runtime.edit_image_once", fake_edit_images)
     runtime = AgentToolRuntime(
         file_state=AgentFileState(),
         should_generate_images=True,
@@ -303,27 +303,29 @@ async def test_edit_image_summary_preserves_full_prompt_and_source_urls(
     result = await runtime.execute(
         ToolCall(
             id="t",
-            name="edit_image",
-            arguments={"prompt": prompt, "image_urls": [source_url]},
+            name="edit_images",
+            arguments={
+                "edits": [{"prompt": prompt, "image_urls": [source_url]}]
+            },
         )
     )
 
     assert result.multimodal_parts is not None
     assert result.multimodal_parts[0].image_url == "https://replicate.delivery/edited.png"
-    assert result.summary["image"]["prompt"] == prompt
-    assert result.summary["image"]["image_urls"] == [source_url]
+    assert result.summary["images"][0]["prompt"] == prompt
+    assert result.summary["images"][0]["image_urls"] == [source_url]
 
 
 @pytest.mark.asyncio
-async def test_edit_image_error_summary_preserves_full_prompt_and_source_urls(
+async def test_edit_images_error_summary_preserves_full_prompt_and_source_urls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
 
-    async def fake_edit_image(**kwargs: Any) -> str:
+    async def fake_edit_images(**kwargs: Any) -> str:
         raise RuntimeError("image edit failed")
 
-    monkeypatch.setattr("agent.tools.runtime.edit_image", fake_edit_image)
+    monkeypatch.setattr("agent.tools.runtime.edit_image_once", fake_edit_images)
     runtime = AgentToolRuntime(
         file_state=AgentFileState(),
         should_generate_images=True,
@@ -338,28 +340,31 @@ async def test_edit_image_error_summary_preserves_full_prompt_and_source_urls(
     result = await runtime.execute(
         ToolCall(
             id="t",
-            name="edit_image",
-            arguments={"prompt": prompt, "image_urls": [source_url]},
+            name="edit_images",
+            arguments={
+                "edits": [{"prompt": prompt, "image_urls": [source_url]}]
+            },
         )
     )
 
     assert result.ok is True
-    assert result.summary["image"]["prompt"] == prompt
-    assert result.summary["image"]["image_urls"] == [source_url]
+    assert result.summary["images"][0]["prompt"] == prompt
+    assert result.summary["images"][0]["image_urls"] == [source_url]
+    assert result.summary["images"][0]["status"] == "error"
 
 
 @pytest.mark.asyncio
-async def test_edit_image_uses_replicate_key_from_settings(
+async def test_edit_images_uses_replicate_key_from_settings(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", None)
     captured: dict[str, Any] = {}
 
-    async def fake_edit_image(**kwargs: Any) -> str:
+    async def fake_edit_images(**kwargs: Any) -> str:
         captured.update(kwargs)
         return "https://replicate.delivery/edited.png"
 
-    monkeypatch.setattr("agent.tools.runtime.edit_image", fake_edit_image)
+    monkeypatch.setattr("agent.tools.runtime.edit_image_once", fake_edit_images)
     runtime = AgentToolRuntime(
         file_state=AgentFileState(),
         should_generate_images=True,
@@ -371,8 +376,12 @@ async def test_edit_image_uses_replicate_key_from_settings(
     result = await runtime.execute(
         ToolCall(
             id="t",
-            name="edit_image",
-            arguments={"prompt": "bw", "image_urls": ["https://x/in.png"]},
+            name="edit_images",
+            arguments={
+                "edits": [
+                    {"prompt": "bw", "image_urls": ["https://x/in.png"]}
+                ]
+            },
         )
     )
 

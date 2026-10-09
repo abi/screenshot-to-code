@@ -74,7 +74,7 @@ def _image_schema() -> Dict[str, Any]:
     }
 
 
-def _remove_background_schema() -> Dict[str, Any]:
+def _remove_backgrounds_schema() -> Dict[str, Any]:
     return {
         "type": "object",
         "properties": {
@@ -90,39 +90,54 @@ def _remove_background_schema() -> Dict[str, Any]:
     }
 
 
-def _edit_image_schema() -> Dict[str, Any]:
+def _edit_images_schema() -> Dict[str, Any]:
+    edit_properties: Dict[str, Any] = {
+        "prompt": {
+            "type": "string",
+            "description": (
+                "Clear instruction for this independent edit. Refer to inputs as "
+                "image 1, image 2, and so on when multiple images are provided."
+            ),
+        },
+        "image_urls": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "description": "URL of a source or reference image.",
+            },
+            "description": (
+                "Ordered image URLs for this edit: put the main image first, "
+                "followed by any reference images."
+            ),
+        },
+        "aspect_ratio": {
+            "type": "string",
+            "enum": list(P_IMAGE_EDIT_ASPECT_RATIOS),
+            "default": "match_input_image",
+            "description": (
+                "Optional aspect ratio for this edited image. Use match_input_image "
+                "to match its main image."
+            ),
+        },
+    }
     return {
         "type": "object",
         "properties": {
-            "prompt": {
-                "type": "string",
-                "description": (
-                    "Clear edit instruction. Refer to inputs as image 1, image 2, "
-                    "and so on when multiple images are provided."
-                ),
-            },
-            "image_urls": {
+            "edits": {
                 "type": "array",
+                "minItems": 1,
                 "items": {
-                    "type": "string",
-                    "description": (
-                        "URL of a source/reference image. For editing, put the main "
-                        "image first."
-                    ),
+                    "type": "object",
+                    "properties": edit_properties,
+                    "required": ["prompt", "image_urls"],
                 },
-            },
-            "aspect_ratio": {
-                "type": "string",
-                "enum": list(P_IMAGE_EDIT_ASPECT_RATIOS),
-                "default": "match_input_image",
                 "description": (
-                    "Aspect ratio for the edited image. Use match_input_image to "
-                    "match the first image. Allowed values: match_input_image, "
-                    "1:1, 16:9, 9:16, 4:3, 3:4, 3:2, 2:3."
+                    "Independent image edits to run in parallel. Results are returned "
+                    "in this same order."
                 ),
             },
         },
-        "required": ["prompt", "image_urls"],
+        "required": ["edits"],
     }
 
 
@@ -209,26 +224,27 @@ def canonical_tool_definitions(
     tools.extend(
         [
             CanonicalToolDefinition(
-                name="remove_background",
+                name="remove_backgrounds",
                 description=(
-                    "Remove the background from one or more images. You can pass multiple "
-                    "image URLs at once. Returns URLs to the processed images with "
-                    "transparent backgrounds."
+                    "Remove the backgrounds from one or more images in one batch. Returns "
+                    "URLs to the processed images with transparent backgrounds in input "
+                    "order."
                 ),
-                parameters=_remove_background_schema(),
+                parameters=_remove_backgrounds_schema(),
             ),
         ]
     )
     if image_editing_enabled:
         tools.append(
             CanonicalToolDefinition(
-                name="edit_image",
+                name="edit_images",
                 description=(
-                    "Edit or upscale one or more images using a text prompt. Provide the "
-                    "main image first, followed by optional reference images. Returns a "
-                    "URL to the edited image."
+                    "Edit or upscale one or more images by running independent edits in "
+                    "one batch. Each edit has its own prompt, ordered main/reference "
+                    "image URLs, and optional aspect ratio. Results are returned in edit "
+                    "order."
                 ),
-                parameters=_edit_image_schema(),
+                parameters=_edit_images_schema(),
             )
         )
     if asset_extraction_enabled:

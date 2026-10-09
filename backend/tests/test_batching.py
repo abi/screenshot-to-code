@@ -37,7 +37,7 @@ async def test_process_tasks_batches_replicate_calls(
 
 
 @pytest.mark.asyncio
-async def test_remove_background_batches_calls(
+async def test_remove_backgrounds_batches_calls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
@@ -53,7 +53,7 @@ async def test_remove_background_batches_calls(
         concurrent -= 1
         return f"nobg-{image_url}"
 
-    monkeypatch.setattr("agent.tools.runtime.remove_background", tracking_remove_bg)
+    monkeypatch.setattr("agent.tools.runtime.remove_background_once", tracking_remove_bg)
 
     runtime = AgentToolRuntime(
         file_state=AgentFileState(),
@@ -65,7 +65,7 @@ async def test_remove_background_batches_calls(
     urls = [f"https://example.com/img-{i}.png" for i in range(25)]
 
     result = await runtime.execute(
-        ToolCall(id="test", name="remove_background", arguments={"image_urls": urls})
+        ToolCall(id="test", name="remove_backgrounds", arguments={"image_urls": urls})
     )
 
     assert result.ok
@@ -75,7 +75,7 @@ async def test_remove_background_batches_calls(
 
 
 @pytest.mark.asyncio
-async def test_remove_background_accepts_data_urls(
+async def test_remove_backgrounds_accepts_data_urls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
@@ -85,7 +85,7 @@ async def test_remove_background_accepts_data_urls(
         captured.append(image_url)
         return "https://replicate.example/no-bg.png"
 
-    monkeypatch.setattr("agent.tools.runtime.remove_background", tracking_remove_bg)
+    monkeypatch.setattr("agent.tools.runtime.remove_background_once", tracking_remove_bg)
 
     runtime = AgentToolRuntime(
         file_state=AgentFileState(),
@@ -96,7 +96,7 @@ async def test_remove_background_accepts_data_urls(
     data_url = "data:image/png;base64,aW1hZ2U="
 
     result = await runtime.execute(
-        ToolCall(id="t", name="remove_background", arguments={"image_urls": [data_url]})
+        ToolCall(id="t", name="remove_backgrounds", arguments={"image_urls": [data_url]})
     )
 
     assert result.ok
@@ -106,7 +106,7 @@ async def test_remove_background_accepts_data_urls(
 
 
 @pytest.mark.asyncio
-async def test_remove_background_converts_localhost_asset_url_to_data_url(
+async def test_remove_backgrounds_converts_localhost_asset_url_to_data_url(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -119,7 +119,7 @@ async def test_remove_background_converts_localhost_asset_url_to_data_url(
         captured.append(image_url)
         return "https://replicate.example/no-bg.png"
 
-    monkeypatch.setattr("agent.tools.runtime.remove_background", tracking_remove_bg)
+    monkeypatch.setattr("agent.tools.runtime.remove_background_once", tracking_remove_bg)
 
     runtime = AgentToolRuntime(
         file_state=AgentFileState(),
@@ -130,10 +130,102 @@ async def test_remove_background_converts_localhost_asset_url_to_data_url(
     local_url = "http://127.0.0.1:7001/local-assets/asset_123.png"
 
     result = await runtime.execute(
-        ToolCall(id="t", name="remove_background", arguments={"image_urls": [local_url]})
+        ToolCall(id="t", name="remove_backgrounds", arguments={"image_urls": [local_url]})
     )
 
     assert result.ok
     # Replicate receives base64; the result keeps the original URL for display.
     assert captured == ["data:image/png;base64,aW1hZ2U="]
     assert result.result["images"][0]["image_url"] == local_url
+
+
+@pytest.mark.asyncio
+async def test_edit_images_batches_independent_edits_and_preserves_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("agent.tools.runtime.REPLICATE_API_KEY", "fake-key")
+    monkeypatch.setattr("agent.tools.runtime.IMAGE_TOOL_BATCH_SIZE", 2)
+
+    concurrent = 0
+    max_concurrent = 0
+    captured: list[tuple[str, list[str], str]] = []
+
+    async def tracking_edit(
+        prompt: str,
+        image_urls: list[str],
+        api_token: str,
+        *,
+        aspect_ratio: str,
+    ) -> str:
+        nonlocal concurrent, max_concurrent
+        captured.append((prompt, image_urls, aspect_ratio))
+        concurrent += 1
+        max_concurrent = max(max_concurrent, concurrent)
+        await asyncio.sleep(0.01)
+        concurrent -= 1
+        if prompt == "fail independently":
+            raise RuntimeError("intentional edit failure")
+        return f"https://example.com/edited-{prompt}.png"
+
+    monkeypatch.setattr("agent.tools.runtime.edit_image_once", tracking_edit)
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=True,
+        openai_api_key=None,
+        openai_base_url=None,
+    )
+    edits: list[dict[str, object]] = [
+        {
+            "prompt": "first",
+            "image_urls": [
+                "https://example.com/main.png",
+                "https://example.com/reference.png",
+            ],
+            "aspect_ratio": "16:9",
+        },
+        {
+            "prompt": "second",
+            "image_urls": ["https://example.com/second.png"],
+        },
+        {
+            "prompt": "fail independently",
+            "image_urls": ["https://example.com/failure.png"],
+            "aspect_ratio": "1:1",
+        },
+        {
+            "prompt": "fourth",
+            "image_urls": ["https://example.com/fourth.png"],
+        },
+        {
+            "prompt": "fifth",
+            "image_urls": ["https://example.com/fifth.png"],
+        },
+    ]
+
+    result = await runtime.execute(
+        ToolCall(id="test", name="edit_images", arguments={"edits": edits})
+    )
+
+    assert result.ok
+    assert max_concurrent <= 2
+    assert [item["prompt"] for item in result.result["images"]] == [
+        edit["prompt"] for edit in edits
+    ]
+    assert captured[0] == (
+        "first",
+        [
+            "https://example.com/main.png",
+            "https://example.com/reference.png",
+        ],
+        "16:9",
+    )
+    assert captured[1][2] == "match_input_image"
+    assert [item["status"] for item in result.result["images"]] == [
+        "ok",
+        "ok",
+        "error",
+        "ok",
+        "ok",
+    ]
+    assert result.result["images"][2]["result_url"] is None
+    assert len(result.multimodal_parts or []) == 4

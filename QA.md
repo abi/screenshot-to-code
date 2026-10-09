@@ -5,7 +5,7 @@
 - Extracted crops are pixel-accurate and actually used in the generated page
 - Uploaded an exact logo → used verbatim in the output, not redrawn
 - `screenshot_preview` — agent renders its own HTML and inspects it
-- `edit_image` / `remove_background` accept local asset URLs
+- `edit_images` / `remove_backgrounds` accept local asset URLs and batch independent work
 
 ## Existing functionality
 - Text → code

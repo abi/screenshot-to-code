@@ -2,8 +2,8 @@
 
 Replicate (and other hosted model APIs) can't fetch ``localhost`` URLs, so any
 asset served by this backend must be inlined as a base64 ``data:`` URL before
-being sent. Tools that pass image inputs to Replicate (``remove_background``,
-``edit_image``) route their URLs through here.
+being sent. Tools that pass image inputs to Replicate (``remove_backgrounds``,
+``edit_images``) route their URLs through here.
 """
 
 import base64

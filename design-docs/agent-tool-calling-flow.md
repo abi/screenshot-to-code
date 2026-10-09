@@ -60,7 +60,11 @@ Supported tools:
 - `create_file`
 - `edit_file`
 - `generate_images`
-- `remove_background`
+- `remove_backgrounds`
+- `edit_images`
+- `extract_assets`
+- `screenshot_preview`
+- `save_assets`
 - `retrieve_option`
 
 Execution lifecycle per tool call:

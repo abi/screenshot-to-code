@@ -70,7 +70,7 @@ function Img({ src, alt }: { src: string; alt: string }) {
 
 /**
  * Human-readable tool previews mirroring the in-app AgentActivity views
- * (edit_image shows main/edited images, screenshot_preview shows the captured
+ * (edit_images shows main/edited images, screenshot_preview shows the captured
  * screenshots, etc.), restyled for the dark eval theme. `args` is the full
  * recorded tool input; `summary` is the compact result the app itself renders.
  */
@@ -201,7 +201,7 @@ function ToolPreview({
     }
   }
 
-  if (name === "remove_background") {
+  if (name === "remove_backgrounds") {
     const images = getArray(summary, "images");
     if (images) {
       return (
@@ -235,60 +235,95 @@ function ToolPreview({
     }
   }
 
-  if (name === "edit_image") {
-    const image = getRecord(getRecord(summary)?.image);
-    const prompt = getString(args, "prompt") ?? getString(image, "prompt");
-    const imageUrls = getArray(image, "image_urls") ?? getArray(args, "image_urls");
-    const mainUrl =
-      imageUrls && typeof imageUrls[0] === "string" ? imageUrls[0] : null;
-    const resultUrl = getString(image, "result_url");
-    const referenceUrls = (imageUrls ?? [])
-      .slice(1)
-      .filter((url): url is string => typeof url === "string");
+  if (name === "edit_images") {
+    const resultImages = getArray(summary, "images") ?? [];
+    const requestedEdits = getArray(args, "edits") ?? [];
+    const edits = resultImages.length > 0 ? resultImages : requestedEdits;
     return (
-      <div className="space-y-3">
-        {prompt && (
-          <div>
-            <FieldLabel>Prompt</FieldLabel>
-            <p className="whitespace-pre-wrap break-words text-xs text-zinc-300">
-              {prompt}
-            </p>
-          </div>
-        )}
-        <div className="flex flex-wrap gap-4">
-          <div>
-            <FieldLabel>Main image</FieldLabel>
-            {mainUrl ? <Img src={mainUrl} alt="Main image" /> : <MissingBox />}
-          </div>
-          <div>
-            <FieldLabel>Edited image</FieldLabel>
-            {resultUrl ? (
-              <Img src={resultUrl} alt="Edited image" />
-            ) : (
-              <MissingBox label="Failed" />
-            )}
-          </div>
-          {referenceUrls.length > 0 && (
-            <div>
-              <FieldLabel>Reference images</FieldLabel>
-              <div className="flex flex-wrap gap-2">
-                {referenceUrls.map((url, index) => (
-                  <Img
-                    key={`${url}-${index}`}
-                    src={url}
-                    alt={`Reference ${index + 2}`}
-                  />
-                ))}
+      <div className="divide-y divide-zinc-800">
+        {edits.map((item, index) => {
+          const requestedEdit = requestedEdits[index];
+          const prompt =
+            getString(item, "prompt") ?? getString(requestedEdit, "prompt");
+          const imageUrls =
+            getArray(item, "image_urls") ??
+            getArray(requestedEdit, "image_urls") ??
+            [];
+          const mainUrl =
+            typeof imageUrls[0] === "string" ? imageUrls[0] : null;
+          const resultUrl = getString(item, "result_url");
+          const aspectRatio =
+            getString(item, "aspect_ratio") ??
+            getString(requestedEdit, "aspect_ratio") ??
+            "match_input_image";
+          const itemError = getString(item, "error");
+          const referenceUrls = imageUrls
+            .slice(1)
+            .filter((url): url is string => typeof url === "string");
+          return (
+            <div key={`${prompt}-${index}`} className="space-y-3 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs font-semibold text-zinc-300">
+                  Edit {index + 1}
+                </div>
+                <div className="rounded-full bg-zinc-800 px-2 py-0.5 font-mono text-[10px] text-zinc-400">
+                  {aspectRatio}
+                </div>
               </div>
+              {prompt && (
+                <div>
+                  <FieldLabel>Prompt</FieldLabel>
+                  <p className="whitespace-pre-wrap break-words text-xs text-zinc-300">
+                    {prompt}
+                  </p>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-4">
+                <div>
+                  <FieldLabel>Main image</FieldLabel>
+                  {mainUrl ? (
+                    <Img src={mainUrl} alt={`Main image ${index + 1}`} />
+                  ) : (
+                    <MissingBox />
+                  )}
+                </div>
+                <div>
+                  <FieldLabel>Edited image</FieldLabel>
+                  {resultUrl ? (
+                    <Img src={resultUrl} alt={`Edited image ${index + 1}`} />
+                  ) : (
+                    <MissingBox label="Failed" />
+                  )}
+                </div>
+                {referenceUrls.length > 0 && (
+                  <div>
+                    <FieldLabel>Reference images</FieldLabel>
+                    <div className="flex flex-wrap gap-2">
+                      {referenceUrls.map((url, referenceIndex) => (
+                        <Img
+                          key={`${url}-${referenceIndex}`}
+                          src={url}
+                          alt={`Reference ${referenceIndex + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {itemError && (
+                <div className="rounded bg-red-950/40 p-2 text-xs text-red-200">
+                  {itemError}
+                </div>
+              )}
+              {resultUrl && (
+                <div>
+                  <FieldLabel>Result URL</FieldLabel>
+                  <UrlChip url={resultUrl} />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        {resultUrl && (
-          <div>
-            <FieldLabel>Result URL</FieldLabel>
-            <UrlChip url={resultUrl} />
-          </div>
-        )}
+          );
+        })}
       </div>
     );
   }

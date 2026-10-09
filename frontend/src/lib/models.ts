@@ -1,6 +1,11 @@
 // Keep in sync with backend (llm.py)
 // Order here matches dropdown order
 export enum CodeGenerationModel {
+  CLAUDE_OPUS_5_5_LOW = "claude-opus-5-5 (low effort)",
+  CLAUDE_OPUS_5_5_MEDIUM = "claude-opus-5-5 (medium effort)",
+  CLAUDE_OPUS_5_5_HIGH = "claude-opus-5-5 (high effort)",
+  CLAUDE_OPUS_5_5_XHIGH = "claude-opus-5-5 (xhigh effort)",
+  CLAUDE_OPUS_5_5_MAX = "claude-opus-5-5 (max effort)",
   CLAUDE_OPUS_5_LOW = "claude-opus-5 (low effort)",
   CLAUDE_OPUS_5_MEDIUM = "claude-opus-5 (medium effort)",
   CLAUDE_OPUS_5_HIGH = "claude-opus-5 (high effort)",
@@ -24,6 +29,10 @@ export enum CodeGenerationModel {
   GPT_5_6_SOL_XHIGH = "gpt-5.6-sol (xhigh thinking)",
   GPT_5_6_SOL_MAX = "gpt-5.6-sol (max thinking)",
   GPT_5_6_TERRA_LOW = "gpt-5.6-terra (low thinking)",
+  GPT_6_1_SOL_LOW = "gpt-6.1-sol (low thinking)",
+  GPT_6_1_SOL_HIGH = "gpt-6.1-sol (high thinking)",
+  GPT_6_1_SOL_XHIGH = "gpt-6.1-sol (xhigh thinking)",
+  GPT_6_1_SOL_MAX = "gpt-6.1-sol (max thinking)",
   GPT_5_5_XHIGH = "gpt-5.5 (xhigh thinking)",
   GPT_5_4_MINI_LOW = "gpt-5.4-mini (low thinking)",
   GEMINI_3_FLASH_PREVIEW_HIGH = "gemini-3-flash-preview (high thinking)",
@@ -80,6 +89,18 @@ export function getVariantLabel(
 export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   [key in CodeGenerationModel]: { name: string };
 } = {
+  "gpt-6.1-sol (low thinking)": {
+    name: "GPT 6.1 Sol (low)",
+  },
+  "gpt-6.1-sol (high thinking)": {
+    name: "GPT 6.1 Sol (high)",
+  },
+  "gpt-6.1-sol (xhigh thinking)": {
+    name: "GPT 6.1 Sol (xhigh)",
+  },
+  "gpt-6.1-sol (max thinking)": {
+    name: "GPT 6.1 Sol (max)",
+  },
   "gpt-5.6-sol (no thinking)": {
     name: "GPT 5.6 Sol (none)",
   },
@@ -118,6 +139,21 @@ export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   },
   "gpt-5.4-mini (low thinking)": {
     name: "GPT 5.4 Mini (low)",
+  },
+  "claude-opus-5-5 (low effort)": {
+    name: "Claude Opus 5.5 (low)",
+  },
+  "claude-opus-5-5 (medium effort)": {
+    name: "Claude Opus 5.5 (medium)",
+  },
+  "claude-opus-5-5 (high effort)": {
+    name: "Claude Opus 5.5 (high)",
+  },
+  "claude-opus-5-5 (xhigh effort)": {
+    name: "Claude Opus 5.5 (xhigh)",
+  },
+  "claude-opus-5-5 (max effort)": {
+    name: "Claude Opus 5.5 (max)",
   },
   "claude-opus-5 (low effort)": {
     name: "Claude Opus 5 (low)",

@@ -55,7 +55,7 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
                 "prompts": [ensure_str(p) for p in prompts],
             }
 
-    if tool_call.name == "remove_background":
+    if tool_call.name == "remove_backgrounds":
         image_urls = args.get("image_urls") or []
         if isinstance(image_urls, list):
             return {
@@ -64,16 +64,29 @@ def summarize_tool_input(tool_call: ToolCall, file_state: AgentFileState) -> Dic
             }
         return {"image_urls": []}
 
-    if tool_call.name == "edit_image":
-        image_urls = args.get("image_urls") or args.get("images") or []
-        if isinstance(image_urls, list):
-            return {
-                "count": len(image_urls),
-                "prompt": ensure_str(args.get("prompt")),
-                "image_urls": [ensure_str(u) for u in image_urls],
-                "aspect_ratio": args.get("aspect_ratio"),
-            }
-        return {"prompt": ensure_str(args.get("prompt")), "image_urls": []}
+    if tool_call.name == "edit_images":
+        raw_edits = args.get("edits") or []
+        if not isinstance(raw_edits, list):
+            return {"edits": []}
+
+        edits = []
+        for raw_edit in raw_edits:
+            if not isinstance(raw_edit, dict):
+                continue
+            image_urls = raw_edit.get("image_urls") or []
+            edits.append(
+                {
+                    "prompt": ensure_str(raw_edit.get("prompt")),
+                    "image_urls": (
+                        [ensure_str(url) for url in image_urls]
+                        if isinstance(image_urls, list)
+                        else []
+                    ),
+                    "aspect_ratio": raw_edit.get("aspect_ratio")
+                    or "match_input_image",
+                }
+            )
+        return {"count": len(raw_edits), "edits": edits}
 
     if tool_call.name == "extract_assets":
         descriptions = args.get("asset_descriptions") or args.get("descriptions") or []

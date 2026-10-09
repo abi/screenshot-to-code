@@ -1,10 +1,15 @@
 # pyright: reportUnknownVariableType=false
+import asyncio
 import base64
 import copy
+import io
 import json
+import math
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+from PIL import Image
 
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -23,6 +28,61 @@ from agent.tools import CanonicalToolDefinition, ToolCall, parse_json_arguments
 from fs_logging.agent_runs import AgentRunRecorder
 from fs_logging.prompt_reports import PromptReportLogger
 from llm import Llm, get_openai_api_name, get_openai_reasoning_effort
+
+
+# gpt-6.1-sol rejects "original"-detail images that need more than 30,000
+# 32x32 patches (a 2724x11746 landing-page screenshot needs 31,648).
+IMAGE_PATCH_SIZE = 32
+PATCH_LIMITED_MODEL_MAX_PATCHES: Dict[str, int] = {"gpt-6.1-sol": 30000}
+
+
+def _patch_count(width: int, height: int) -> int:
+    return math.ceil(width / IMAGE_PATCH_SIZE) * math.ceil(height / IMAGE_PATCH_SIZE)
+
+
+def _fit_image_to_patch_limit(image_url: str, max_patches: Optional[int]) -> str:
+    """Downscale a base64 data-URL image that exceeds the model's patch limit.
+
+    Remote URLs and undecodable data are returned unchanged.
+    """
+    if max_patches is None or not image_url.startswith("data:"):
+        return image_url
+    try:
+        header, encoded = image_url.split(",", 1)
+        image = Image.open(io.BytesIO(base64.b64decode(encoded)))
+        width, height = image.size
+    except Exception:
+        return image_url
+    if _patch_count(width, height) <= max_patches:
+        return image_url
+
+    scale = math.sqrt(max_patches / _patch_count(width, height))
+    new_width, new_height = width, height
+    while _patch_count(new_width, new_height) > max_patches:
+        new_width = max(1, math.floor(width * scale))
+        new_height = max(1, math.floor(height * scale))
+        scale *= 0.99
+    resized = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    output_format = image.format if image.format in ("PNG", "JPEG", "WEBP") else "PNG"
+    if output_format == "JPEG" and resized.mode not in ("RGB", "L"):
+        resized = resized.convert("RGB")
+    buffer = io.BytesIO()
+    resized.save(buffer, format=output_format)
+    mime_type = f"image/{output_format.lower()}"
+    print(
+        f"[OPENAI IMAGE] Downscaled {width}x{height} -> {new_width}x{new_height} "
+        f"to fit {max_patches} patches ({header})"
+    )
+    return f"data:{mime_type};base64,{base64.b64encode(buffer.getvalue()).decode('ascii')}"
+
+
+def _get_max_patches_for_model(model: Llm) -> Optional[int]:
+    return PATCH_LIMITED_MODEL_MAX_PATCHES.get(get_openai_api_name(model))
+
+
+async def _fit_image_off_loop(image_url: str, max_patches: int) -> str:
+    # Resizing a tall screenshot takes ~2s, so keep it off the event loop.
+    return await asyncio.to_thread(_fit_image_to_patch_limit, image_url, max_patches)
 
 
 def _convert_message_to_responses_input(
@@ -60,6 +120,7 @@ def _get_image_detail_for_model(model: Llm) -> str:
         "gpt-5.5",
         "gpt-5.6-sol",
         "gpt-5.6-terra",
+        "gpt-6.1-sol",
     }:
         return "original"
     return "high"
@@ -440,8 +501,26 @@ class OpenAIProviderSession(ProviderSession):
             _convert_message_to_responses_input(message, image_detail=image_detail)
             for message in prompt_messages
         ]
+        self._max_patches = _get_max_patches_for_model(model)
+        # Prompt images are fitted on the first turn, where we can await.
+        self._prompt_images_fitted = self._max_patches is None
+
+    async def _fit_prompt_images(self) -> None:
+        if self._prompt_images_fitted or self._max_patches is None:
+            return
+        for item in self._input_items:
+            content = item.get("content")
+            if not isinstance(content, list):
+                continue
+            for part in content:
+                if part.get("type") == "input_image":
+                    part["image_url"] = await _fit_image_off_loop(
+                        part["image_url"], self._max_patches
+                    )
+        self._prompt_images_fitted = True
 
     async def stream_turn(self, on_event: EventSink) -> ProviderTurn:
+        await self._fit_prompt_images()
         model_name = get_openai_api_name(self._model)
         params: Dict[str, Any] = {
             "model": model_name,
@@ -517,6 +596,10 @@ class OpenAIProviderSession(ProviderSession):
                     image_url = self._image_ref(part)
                     if image_url is None:
                         continue
+                    if self._max_patches is not None:
+                        image_url = await _fit_image_off_loop(
+                            image_url, self._max_patches
+                        )
                     output.append(
                         {
                             "type": "input_image",

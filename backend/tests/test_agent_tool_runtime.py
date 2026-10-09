@@ -73,6 +73,67 @@ async def test_execute_edit_file_uses_updated_result_shape() -> None:
 
 
 @pytest.mark.asyncio
+async def test_edit_images_persists_each_successful_edit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_edit_image(prompt: str, **_kwargs: Any) -> str:
+        if prompt == "fail":
+            raise RuntimeError("replicate error")
+        return f"https://replicate.delivery/{prompt}.png"
+
+    persisted: list[dict[str, Any]] = []
+
+    async def fake_persist_asset_image_url(**kwargs: Any) -> str:
+        persisted.append(kwargs)
+        return str(kwargs["source_url"]).replace(
+            "https://replicate.delivery", "https://cdn.example.com"
+        )
+
+    monkeypatch.setattr("agent.tools.runtime.edit_image_once", fake_edit_image)
+    monkeypatch.setattr(
+        "agent.tools.runtime.persist_asset_image_url",
+        fake_persist_asset_image_url,
+    )
+
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(),
+        should_generate_images=True,
+        openai_api_key=None,
+        openai_base_url=None,
+        replicate_api_key="replicate-key",
+        generation_group_id="group-1",
+        user_id="user-1",
+    )
+
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="edit_images",
+            arguments={
+                "edits": [
+                    {"prompt": "hero", "image_urls": ["https://example.com/a.png"]},
+                    {"prompt": "fail", "image_urls": ["https://example.com/b.png"]},
+                    {"prompt": "logo", "image_urls": ["https://example.com/c.png"]},
+                ]
+            },
+        )
+    )
+
+    images = result.result["images"]
+    assert [image["status"] for image in images] == ["ok", "error", "ok"]
+    assert images[0]["result_url"] == "https://cdn.example.com/hero.png"
+    assert images[1]["result_url"] is None
+    assert images[2]["result_url"] == "https://cdn.example.com/logo.png"
+    # Only successful edits are persisted, each with its own prompt.
+    assert sorted(call["prompt"] for call in persisted) == ["hero", "logo"]
+    assert {call["source_type"] for call in persisted} == {"edited"}
+    assert [part.image_url for part in result.multimodal_parts or []] == [
+        "https://cdn.example.com/hero.png",
+        "https://cdn.example.com/logo.png",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_generate_images_returns_persisted_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -15,6 +15,24 @@ def test_canonical_tool_definitions_include_generate_images_when_enabled() -> No
     assert "generate_images" in tool_names
 
 
+def test_canonical_tool_definitions_use_plural_batch_image_tool_names() -> None:
+    tools = canonical_tool_definitions(True)
+    tool_names = [tool.name for tool in tools]
+
+    assert "remove_backgrounds" in tool_names
+    assert "edit_images" in tool_names
+    assert "remove_background" not in tool_names
+    assert "edit_image" not in tool_names
+    remove_backgrounds_tool = next(
+        tool for tool in tools if tool.name == "remove_backgrounds"
+    )
+    assert remove_backgrounds_tool.parameters["required"] == ["image_urls"]
+    assert (
+        remove_backgrounds_tool.parameters["properties"]["image_urls"]["type"]
+        == "array"
+    )
+
+
 def test_canonical_tool_definitions_exclude_generate_images_when_disabled() -> None:
     tool_names = [tool.name for tool in canonical_tool_definitions(False)]
     assert "generate_images" not in tool_names
@@ -224,45 +242,73 @@ def test_canonical_tool_definitions_exclude_screenshot_preview_when_disabled() -
     assert "screenshot_preview" not in tool_names
 
 
-def test_canonical_tool_definitions_include_edit_image() -> None:
+def test_canonical_tool_definitions_include_batched_edit_images() -> None:
     tools = canonical_tool_definitions(True)
     tool_names = [tool.name for tool in tools]
-    assert "edit_image" in tool_names
-    edit_image_tool = next(tool for tool in tools if tool.name == "edit_image")
-    assert "upscale" in edit_image_tool.description.lower()
-    assert edit_image_tool.parameters["required"] == ["prompt", "image_urls"]
-    properties = edit_image_tool.parameters["properties"]
+    assert "edit_images" in tool_names
+    edit_images_tool = next(tool for tool in tools if tool.name == "edit_images")
+    assert "upscale" in edit_images_tool.description.lower()
+    assert edit_images_tool.parameters["required"] == ["edits"]
+    edits_schema = edit_images_tool.parameters["properties"]["edits"]
+    assert edits_schema["type"] == "array"
+    assert edits_schema["minItems"] == 1
+    edit_schema = edits_schema["items"]
+    assert edit_schema["required"] == ["prompt", "image_urls"]
+    properties = edit_schema["properties"]
     assert properties["image_urls"]["type"] == "array"
     assert "turbo" not in properties
     assert "seed" not in properties
     assert properties["aspect_ratio"]["enum"] == list(P_IMAGE_EDIT_ASPECT_RATIOS)
 
 
-def test_canonical_tool_definitions_exclude_edit_image_when_disabled() -> None:
+def test_canonical_tool_definitions_exclude_edit_images_when_disabled() -> None:
     tool_names = [
         tool.name
         for tool in canonical_tool_definitions(True, image_editing_enabled=False)
     ]
-    assert "edit_image" not in tool_names
+    assert "edit_images" not in tool_names
 
 
-def test_edit_image_tool_input_summary_uses_prompt_and_image_urls() -> None:
+def test_edit_images_tool_input_summary_preserves_edit_and_image_order() -> None:
     summary = summarize_tool_input(
         ToolCall(
             id="call-1",
-            name="edit_image",
+            name="edit_images",
             arguments={
-                "prompt": "Make image 1 monochrome",
-                "image_urls": ["https://example.com/input.png"],
-                "aspect_ratio": "match_input_image",
+                "edits": [
+                    {
+                        "prompt": "Make image 1 monochrome",
+                        "image_urls": [
+                            "https://example.com/main.png",
+                            "https://example.com/reference.png",
+                        ],
+                        "aspect_ratio": "16:9",
+                    },
+                    {
+                        "prompt": "Upscale the logo",
+                        "image_urls": ["https://example.com/logo.png"],
+                    },
+                ]
             },
         ),
         AgentFileState(),
     )
 
     assert summary == {
-        "count": 1,
-        "prompt": "Make image 1 monochrome",
-        "image_urls": ["https://example.com/input.png"],
-        "aspect_ratio": "match_input_image",
+        "count": 2,
+        "edits": [
+            {
+                "prompt": "Make image 1 monochrome",
+                "image_urls": [
+                    "https://example.com/main.png",
+                    "https://example.com/reference.png",
+                ],
+                "aspect_ratio": "16:9",
+            },
+            {
+                "prompt": "Upscale the logo",
+                "image_urls": ["https://example.com/logo.png"],
+                "aspect_ratio": "match_input_image",
+            },
+        ],
     }
