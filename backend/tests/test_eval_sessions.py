@@ -395,6 +395,10 @@ async def test_session_matrix_text_set(
     assert ("pdp", Llm.GPT_5_5_HIGH.value) in cells
     assert matrix.unmatched_run_count == 0
 
+    from routes.model_choice_sets import ALL_KEYS_MODELS_TEXT_CREATE
+
+    assert matrix.default_models == [m.value for m in ALL_KEYS_MODELS_TEXT_CREATE]
+
 
 @pytest.mark.asyncio
 async def test_session_matrix_missing_set(
@@ -504,3 +508,17 @@ def test_count_pending_eval_tasks_with_set(
         eval_set="set-a",
     )
     assert (pending, skipped) == (3, 0)
+
+
+@pytest.mark.asyncio
+async def test_session_matrix_default_models(
+    logs_path: Path, evals_dir: Path
+) -> None:
+    from routes.eval_sets import get_session_matrix
+    from routes.model_choice_sets import ALL_KEYS_MODELS_DEFAULT
+
+    _make_set(evals_dir, "set-a", {"one.png": b"image-one"})
+    session = create_session("set-a")
+
+    matrix = await get_session_matrix(session.session_id)
+    assert matrix.default_models == [m.value for m in ALL_KEYS_MODELS_DEFAULT]

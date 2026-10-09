@@ -332,3 +332,138 @@ async def test_openai_provider_session_keeps_high_image_detail_for_non_gpt_5_5()
 
     assert image_part["type"] == "input_image"
     assert image_part["detail"] == "high"
+
+
+def _png_data_url(width: int, height: int) -> str:
+    import base64
+    import io
+
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (width, height), (255, 255, 255)).save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+
+def _data_url_size(url: str) -> tuple[int, int]:
+    import base64
+    import io
+
+    from PIL import Image
+
+    return Image.open(io.BytesIO(base64.b64decode(url.split(",", 1)[1]))).size
+
+
+@pytest.mark.asyncio
+async def test_gpt_6_1_sol_downscales_images_over_patch_limit() -> None:
+    import base64
+
+    from agent.providers.openai import _patch_count
+    from agent.tools.types import ToolMultimodalPart
+
+    client = _FakeOpenAIClient()
+    tall = _png_data_url(2724, 11746)  # 31,648 patches; the limit is 30,000
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_6_1_SOL_HIGH,
+        prompt_messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Build from this screenshot."},
+                    {"type": "image_url", "image_url": {"url": tall}},
+                ],
+            }
+        ],
+        tools=_test_tools(),
+    )
+    await session.stream_turn(_noop_event_sink)
+
+    image_part = client.responses.calls[0]["input"][0]["content"][1]
+    assert image_part["detail"] == "original"
+    width, height = _data_url_size(image_part["image_url"])
+    assert _patch_count(width, height) <= 30000
+    assert abs(width / height - 2724 / 11746) < 0.01
+
+    # Tool-result images (e.g. preview screenshots) are fitted too.
+    await session.append_tool_results(
+        ProviderTurn(assistant_text="", tool_calls=[], assistant_turn=[]),
+        [
+            ExecutedToolCall(
+                tool_call=ToolCall(id="call_1", name="screenshot_preview", arguments={}),
+                result=ToolExecutionResult(
+                    ok=True,
+                    result={"status": "ok"},
+                    summary={},
+                    multimodal_parts=[
+                        ToolMultimodalPart(
+                            display_name="preview.png",
+                            mime_type="image/png",
+                            data=base64.b64decode(tall.split(",", 1)[1]),
+                        )
+                    ],
+                ),
+            )
+        ],
+    )
+    await session.stream_turn(_noop_event_sink)
+    tool_output = client.responses.calls[1]["input"][-1]["output"]
+    width, height = _data_url_size(tool_output[1]["image_url"])
+    assert _patch_count(width, height) <= 30000
+
+
+@pytest.mark.asyncio
+async def test_images_under_patch_limit_and_other_models_are_untouched() -> None:
+    small = _png_data_url(1280, 4000)
+    tall = _png_data_url(2724, 11746)
+    for model, url in ((Llm.GPT_6_1_SOL_HIGH, small), (Llm.GPT_5_6_SOL_MAX, tall)):
+        client = _FakeOpenAIClient()
+        session = OpenAIProviderSession(
+            client=client,  # type: ignore[arg-type]
+            model=model,
+            prompt_messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "image_url", "image_url": {"url": url}}],
+                }
+            ],
+            tools=_test_tools(),
+        )
+        await session.stream_turn(_noop_event_sink)
+        assert client.responses.calls[0]["input"][0]["content"][0]["image_url"] == url
+
+
+@pytest.mark.asyncio
+async def test_gpt_6_1_sol_fits_images_off_the_event_loop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import asyncio
+
+    import agent.providers.openai as openai_provider
+
+    offloaded: list[Any] = []
+    real_to_thread = asyncio.to_thread
+
+    async def recording_to_thread(func: Any, *args: Any) -> Any:
+        offloaded.append(func)
+        return await real_to_thread(func, *args)
+
+    monkeypatch.setattr(openai_provider.asyncio, "to_thread", recording_to_thread)
+
+    client = _FakeOpenAIClient()
+    session = OpenAIProviderSession(
+        client=client,  # type: ignore[arg-type]
+        model=Llm.GPT_6_1_SOL_HIGH,
+        prompt_messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": _png_data_url(64, 64)}}
+                ],
+            }
+        ],
+        tools=_test_tools(),
+    )
+    assert offloaded == []  # nothing is decoded while constructing the session
+    await session.stream_turn(_noop_event_sink)
+    assert offloaded == [openai_provider._fit_image_to_patch_limit]

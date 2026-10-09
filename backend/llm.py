@@ -23,8 +23,18 @@ class Llm(Enum):
     GPT_5_6_SOL_XHIGH = "gpt-5.6-sol (xhigh thinking)"
     GPT_5_6_SOL_MAX = "gpt-5.6-sol (max thinking)"
     GPT_5_6_TERRA_LOW = "gpt-5.6-terra (low thinking)"
+    GPT_6_1_SOL_LOW = "gpt-6.1-sol (low thinking)"
+    GPT_6_1_SOL_MEDIUM = "gpt-6.1-sol (medium thinking)"
+    GPT_6_1_SOL_HIGH = "gpt-6.1-sol (high thinking)"
+    GPT_6_1_SOL_XHIGH = "gpt-6.1-sol (xhigh thinking)"
+    GPT_6_1_SOL_MAX = "gpt-6.1-sol (max thinking)"
     # Claude
     CLAUDE_SONNET_4_6 = "claude-sonnet-4-6"
+    CLAUDE_OPUS_5_5_LOW = "claude-opus-5-5 (low effort)"
+    CLAUDE_OPUS_5_5_MEDIUM = "claude-opus-5-5 (medium effort)"
+    CLAUDE_OPUS_5_5_HIGH = "claude-opus-5-5 (high effort)"
+    CLAUDE_OPUS_5_5_XHIGH = "claude-opus-5-5 (xhigh effort)"
+    CLAUDE_OPUS_5_5_MAX = "claude-opus-5-5 (max effort)"
     CLAUDE_OPUS_5_LOW = "claude-opus-5 (low effort)"
     CLAUDE_OPUS_5_MEDIUM = "claude-opus-5 (medium effort)"
     CLAUDE_OPUS_5_HIGH = "claude-opus-5 (high effort)"
@@ -84,8 +94,18 @@ MODEL_PROVIDER: dict[Llm, str] = {
     Llm.GPT_5_6_SOL_XHIGH: "openai",
     Llm.GPT_5_6_SOL_MAX: "openai",
     Llm.GPT_5_6_TERRA_LOW: "openai",
+    Llm.GPT_6_1_SOL_LOW: "openai",
+    Llm.GPT_6_1_SOL_MEDIUM: "openai",
+    Llm.GPT_6_1_SOL_HIGH: "openai",
+    Llm.GPT_6_1_SOL_XHIGH: "openai",
+    Llm.GPT_6_1_SOL_MAX: "openai",
     # Anthropic models
     Llm.CLAUDE_SONNET_4_6: "anthropic",
+    Llm.CLAUDE_OPUS_5_5_LOW: "anthropic",
+    Llm.CLAUDE_OPUS_5_5_MEDIUM: "anthropic",
+    Llm.CLAUDE_OPUS_5_5_HIGH: "anthropic",
+    Llm.CLAUDE_OPUS_5_5_XHIGH: "anthropic",
+    Llm.CLAUDE_OPUS_5_5_MAX: "anthropic",
     Llm.CLAUDE_OPUS_5_LOW: "anthropic",
     Llm.CLAUDE_OPUS_5_MEDIUM: "anthropic",
     Llm.CLAUDE_OPUS_5_HIGH: "anthropic",
@@ -156,6 +176,12 @@ OPENAI_MODEL_CONFIG: dict[Llm, dict[str, str]] = {
     Llm.GPT_5_6_SOL_XHIGH: {"api_name": "gpt-5.6-sol", "reasoning_effort": "xhigh"},
     Llm.GPT_5_6_SOL_MAX: {"api_name": "gpt-5.6-sol", "reasoning_effort": "max"},
     Llm.GPT_5_6_TERRA_LOW: {"api_name": "gpt-5.6-terra", "reasoning_effort": "low"},
+    # gpt-6.1-sol does not support the "none" reasoning effort.
+    Llm.GPT_6_1_SOL_LOW: {"api_name": "gpt-6.1-sol", "reasoning_effort": "low"},
+    Llm.GPT_6_1_SOL_MEDIUM: {"api_name": "gpt-6.1-sol", "reasoning_effort": "medium"},
+    Llm.GPT_6_1_SOL_HIGH: {"api_name": "gpt-6.1-sol", "reasoning_effort": "high"},
+    Llm.GPT_6_1_SOL_XHIGH: {"api_name": "gpt-6.1-sol", "reasoning_effort": "xhigh"},
+    Llm.GPT_6_1_SOL_MAX: {"api_name": "gpt-6.1-sol", "reasoning_effort": "max"},
 }
 
 
