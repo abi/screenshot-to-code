@@ -25,3 +25,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
+    environment:
+      - VITE_HTTP_BACKEND_URL=http://localhost:7001
+      - VITE_WS_BACKEND_URL=ws://localhost:7001
