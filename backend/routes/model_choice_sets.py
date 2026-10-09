@@ -34,7 +34,7 @@ ALL_KEYS_MODELS_TEXT_CREATE = (
 
 ALL_KEYS_MODELS_UPDATE = (
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
-    Llm.GPT_5_6_TERRA_LOW,
+    Llm.GPT_6_1_SOL_LOW,
 )
 
 # Key subset fallbacks.

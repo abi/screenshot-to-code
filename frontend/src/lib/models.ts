@@ -29,6 +29,7 @@ export enum CodeGenerationModel {
   GPT_5_6_SOL_XHIGH = "gpt-5.6-sol (xhigh thinking)",
   GPT_5_6_SOL_MAX = "gpt-5.6-sol (max thinking)",
   GPT_5_6_TERRA_LOW = "gpt-5.6-terra (low thinking)",
+  GPT_6_1_SOL_LOW = "gpt-6.1-sol (low thinking)",
   GPT_6_1_SOL_HIGH = "gpt-6.1-sol (high thinking)",
   GPT_6_1_SOL_XHIGH = "gpt-6.1-sol (xhigh thinking)",
   GPT_6_1_SOL_MAX = "gpt-6.1-sol (max thinking)",
@@ -88,6 +89,9 @@ export function getVariantLabel(
 export const CODE_GENERATION_MODEL_DESCRIPTIONS: {
   [key in CodeGenerationModel]: { name: string };
 } = {
+  "gpt-6.1-sol (low thinking)": {
+    name: "GPT 6.1 Sol (low)",
+  },
   "gpt-6.1-sol (high thinking)": {
     name: "GPT 6.1 Sol (high)",
   },
