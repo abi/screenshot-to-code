@@ -27,6 +27,7 @@ async def _run_eval_agent(
     eval_set: str | None,
     eval_session_id: str | None,
     input_file: str | None,
+    skip_screenshot_preview: bool = False,
 ) -> str:
     async def send_message(
         _: str,
@@ -75,6 +76,7 @@ async def _run_eval_agent(
         initial_file_state=None,
         option_codes=None,
         recorder=recorder,
+        skip_screenshot_preview=skip_screenshot_preview,
     )
     return await runner.run(model, prompt_messages)
 
@@ -87,6 +89,7 @@ async def generate_code_for_image(
     eval_set: str | None = None,
     eval_session_id: str | None = None,
     input_file: str | None = None,
+    skip_screenshot_preview: bool = False,
 ) -> str:
     prompt_messages = build_image_prompt_messages(
         image_data_urls=[image_url],
@@ -102,6 +105,7 @@ async def generate_code_for_image(
         eval_set=eval_set,
         eval_session_id=eval_session_id,
         input_file=input_file,
+        skip_screenshot_preview=skip_screenshot_preview,
     )
 
 
@@ -113,6 +117,7 @@ async def generate_code_for_text(
     eval_set: str | None = None,
     eval_session_id: str | None = None,
     input_file: str | None = None,
+    skip_screenshot_preview: bool = False,
 ) -> str:
     """Text-create eval: same prompt construction as the app's text flow."""
     prompt_messages = build_text_prompt_messages(
@@ -128,4 +133,5 @@ async def generate_code_for_text(
         eval_set=eval_set,
         eval_session_id=eval_session_id,
         input_file=input_file,
+        skip_screenshot_preview=skip_screenshot_preview,
     )

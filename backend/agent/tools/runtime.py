@@ -38,6 +38,7 @@ class AgentToolRuntime:
         asset_base_url: str = "",
         user_id: Optional[str] = None,
         option_codes: Optional[List[str]] = None,
+        skip_screenshot_preview: bool = False,
     ):
         self.file_state = file_state
         self.should_generate_images = should_generate_images
@@ -49,6 +50,7 @@ class AgentToolRuntime:
         self.asset_base_url = asset_base_url
         self.user_id = user_id
         self.option_codes = option_codes or []
+        self.skip_screenshot_preview = skip_screenshot_preview
 
     def _effective_replicate_api_key(self) -> str | None:
         return self.replicate_api_key or REPLICATE_API_KEY
@@ -84,6 +86,21 @@ class AgentToolRuntime:
                 user_id=self.user_id,
             )
         if tool_call.name == "screenshot_preview":
+            if self.skip_screenshot_preview:
+                # Offline eval mode: return a placeholder that satisfies the tool
+                # contract without requiring a running Playwright instance.
+                return ToolExecutionResult(
+                    ok=True,
+                    result={
+                        "content": (
+                            "Screenshot preview is unavailable in offline eval mode. "
+                            "Code quality is evaluated without visual rendering."
+                        ),
+                        "details": {"screenshots": []},
+                    },
+                    summary={"status": "skipped_offline"},
+                    multimodal_parts=[],
+                )
             return await run_screenshot_preview(
                 tool_call.arguments,
                 file_state=self.file_state,

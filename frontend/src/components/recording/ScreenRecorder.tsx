@@ -1,4 +1,25 @@
 import { useState } from "react";
+
+/**
+ * Returns the best supported video MIME type for MediaRecorder on this browser.
+ * `video/webm;codecs=vp9` is preferred (smaller files, cross-browser on desktop),
+ * falling back to plain `video/webm` and finally `video/mp4` (Safari).
+ */
+function pickMimeType(): string {
+  const candidates = [
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
+    "video/webm",
+    "video/mp4",
+  ] as const;
+  for (const mimeType of candidates) {
+    if (MediaRecorder.isTypeSupported(mimeType)) {
+      return mimeType;
+    }
+  }
+  // Last resort — let the browser pick whatever it can.
+  return "";
+}
 import { Button } from "../ui/button";
 import { ScreenRecorderState } from "../../types";
 import { blobToBase64DataUrl } from "./utils";
@@ -45,9 +66,9 @@ function ScreenRecorder({
       });
       setMediaStream(stream);
 
-      // TODO: Test across different browsers
-      // Create the media recorder
-      const options = { mimeType: "video/webm" };
+      // Pick the best supported MIME type for this browser.
+      const mimeType = pickMimeType();
+      const options = { mimeType };
       const mediaRecorder = new MediaRecorder(stream, options);
       setMediaRecorder(mediaRecorder);
 
@@ -58,11 +79,12 @@ function ScreenRecorder({
 
       // When media recorder is stopped, create a data URL
       mediaRecorder.onstop = async () => {
-        // TODO: Do I need to fix duration if it's not a webm?
-        const completeBlob = await fixWebmDuration(
-          new Blob(chunks, {
-            type: options.mimeType,
-          })
+        const recordedBlob = new Blob(chunks, { type: mimeType });
+        // fixWebmDuration corrects a Chrome/Safari quirk where the webm duration
+        // header is unknown until the stream closes. It is a no-op for non-WebM
+        // blobs (e.g. video/mp4 on Safari) so calling it unconditionally is safe.
+        const completeBlob = await fixWebmDuration(recordedBlob).catch(
+          () => recordedBlob
         );
 
         const dataUrl = await blobToBase64DataUrl(completeBlob);

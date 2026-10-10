@@ -64,6 +64,7 @@ function App() {
     updateVariantStatus,
     resizeVariants,
     setVariantModels,
+    setVariantCost,
     appendVariantHistoryMessage,
     startAgentEvent,
     appendAgentEventContent,
@@ -101,6 +102,8 @@ function App() {
       selectedDesignSystemId: null,
       // Only relevant for hosted version
       isTermOfServiceAccepted: false,
+      showCostTracker: false,
+      babelVersion: import.meta.env.VITE_BABEL_VERSION ?? "7.25.9",
     },
     "setting"
   );
@@ -476,6 +479,9 @@ function App() {
       },
       onVariantModels: (models) => {
         setVariantModels(commit.hash, models);
+      },
+      onVariantCost: (variantIndex, costUsd, inputTokens, outputTokens) => {
+        setVariantCost(commit.hash, variantIndex, costUsd, inputTokens, outputTokens);
       },
       onThinking: (content, variantIndex, eventId) => {
         if (!eventId) return;

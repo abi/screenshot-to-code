@@ -159,20 +159,23 @@ function PreviewComponent({
 
   // Apply/remove select-mode side effects (cursor, hover and selection
   // rings) when the mode toggles.
+  const exitSelectMode = useCallback(() => {
+    hoveredElementRef.current = null;
+    const doc = iframeRef.current?.contentWindow?.document;
+    removeHoverOverlay(doc);
+    removeSelectionOverlay(doc);
+    removeSelectModeCursor(doc);
+    setSelectedElement(null);
+  }, [setSelectedElement]);
+
   useEffect(() => {
     const doc = iframeRef.current?.contentWindow?.document;
     if (inSelectAndEditMode) {
       applySelectModeCursor(doc);
-      return;
+    } else {
+      exitSelectMode();
     }
-    if (selectedElement) {
-      setSelectedElement(null);
-    }
-    hoveredElementRef.current = null;
-    removeHoverOverlay(doc);
-    removeSelectionOverlay(doc);
-    removeSelectModeCursor(doc);
-  }, [inSelectAndEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [inSelectAndEditMode, exitSelectMode]);
 
   // Apply a fixed viewport per device and scale to fit the available pane.
   useEffect(() => {
