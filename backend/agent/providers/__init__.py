@@ -8,6 +8,7 @@ from agent.providers.base import (
 )
 from agent.providers.factory import create_provider_session
 from agent.providers.gemini import GeminiProviderSession, serialize_gemini_tools
+from agent.providers.nvidia import NvidiaProviderSession, serialize_nvidia_tools
 from agent.providers.openai import OpenAIProviderSession, parse_event, serialize_openai_tools
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "EventSink",
     "ExecutedToolCall",
     "GeminiProviderSession",
+    "NvidiaProviderSession",
     "OpenAIProviderSession",
     "ProviderSession",
     "ProviderTurn",
@@ -23,5 +25,6 @@ __all__ = [
     "parse_event",
     "serialize_anthropic_tools",
     "serialize_gemini_tools",
+    "serialize_nvidia_tools",
     "serialize_openai_tools",
 ]
