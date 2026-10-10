@@ -52,6 +52,7 @@ MessageType = Literal[
     "assistant",
     "toolStart",
     "toolResult",
+    "budgetExceeded",
 ]
 from prompts.pipeline import build_prompt_messages
 from prompts.request_parsing import parse_prompt_content, parse_prompt_history
@@ -62,6 +63,7 @@ from uploaded_assets import (
     infer_local_asset_base_url,
 )
 from agent.runner import Agent
+from agent.engine import BudgetExceededError, PerStepBudgetExceededError
 from fs_logging.agent_runs import AgentRunRecorder
 from routes.model_choice_sets import (
     ALL_KEYS_MODELS_DEFAULT,
@@ -705,6 +707,23 @@ class AgenticGenerationStage:
                 )
             )
             await self.send_message("variantError", error_message, index, None, None)
+            return ""
+        except (BudgetExceededError, PerStepBudgetExceededError) as exc:
+            # ``BudgetExceededError`` carries a typed human-readable message
+            # delivered as a distinct ``budgetExceeded`` message so the frontend
+            # can render a distinct UI banner.  The WebSocket session stays alive
+            # (unlike ``variantError``) so the user can try again immediately.
+            print(
+                f"[VARIANT {index + 1}] Budget exceeded "
+                f"(per_step={exc.is_per_step}): {exc.typed_message}"
+            )
+            await self.send_message(
+                "budgetExceeded",
+                exc.typed_message,
+                index,
+                {"is_per_step": exc.is_per_step},
+                None,
+            )
             return ""
         except Exception as e:
             print(f"Error in variant {index + 1}: {e}")
