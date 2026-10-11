@@ -23,6 +23,8 @@ import { downloadCode } from "./download";
 import { SelectAndEditToolbarButton } from "../select-and-edit/SelectAndEditControls";
 import { normalizeBabelCdn } from "../../lib/babelCdn";
 import ImageScanningPreview from "./ImageScanningPreview";
+import { TemporaryPreviewButton } from "./TemporaryPreviewButton";
+import { getProjectKey } from "./tempPreviewStorage";
 
 function prepareHtmlForNewTab(code: string) {
   const html = normalizeBabelCdn(code);
@@ -88,6 +90,10 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
 
   const canSelectAndEdit =
     appState === AppState.CODE_READY || !!isSelectedVariantComplete;
+  const projectKey = useMemo(
+    () => getProjectKey(commits, head),
+    [commits, head]
+  );
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -204,16 +210,22 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
                 <SelectAndEditToolbarButton />
               )}
             {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
-              <Button
-                onClick={() => downloadCode(previewCode)}
-                variant="ghost"
-                size="icon"
-                title="Download Code"
-                className="h-9 w-9"
-                data-testid="download-code"
-              >
-                <LuDownload />
-              </Button>
+              <>
+                <TemporaryPreviewButton
+                  code={previewCode}
+                  projectKey={projectKey}
+                />
+                <Button
+                  onClick={() => downloadCode(previewCode)}
+                  variant="ghost"
+                  size="icon"
+                  title="Download Code"
+                  className="h-9 w-9"
+                  data-testid="download-code"
+                >
+                  <LuDownload />
+                </Button>
+              </>
             )}
             <Button
               onClick={() => {

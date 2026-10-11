@@ -173,7 +173,7 @@ describeE2E("qa e2e flows", () => {
     );
   });
 
-  // Buttons (Download Code, Copy Code, Open in Codepen)
+  // Buttons (Download Code, Copy Code, Open in Codepen, Temporary Preview)
   models.forEach((model) => {
     it(
       `code action buttons: ${model}`,
@@ -350,16 +350,24 @@ class App {
     await this.page.click('[data-testid="copy-code"]');
     await this.page.click('[data-testid="open-codepen"]');
     await this.page.click('[data-testid="download-code"]');
+    await this.page.click('[data-testid="temporary-preview-trigger"]');
+    await this.page.click('[data-testid="publish-temp-preview"]');
+    await this.page.waitForFunction(
+      () => document.body.innerText.includes("https://qa-preview.temp.md"),
+      { timeout: 10000 }
+    );
 
     const results = await this.page.evaluate(() => ({
       downloads: window.__qaDownloads,
       submits: window.__qaFormSubmits,
       clipboard: window.__qaClipboardCalls,
+      previews: localStorage.getItem("screenshot-to-code.temp-previews.v1"),
     }));
 
     expect(results.downloads).toContain("index.html");
     expect(results.submits).toContain("https://codepen.io/pen/define");
     expect(results.clipboard).toContain("copy");
+    expect(results.previews).toContain("https://qa-preview.temp.md");
   }
 }
 
@@ -398,6 +406,23 @@ async function setupRequestInterception(
             'attachment; filename="screenshot-to-code-export.zip"',
         },
         body: "mock export",
+      });
+      return;
+    }
+    if (url === "https://api.temp.md/temps") {
+      request.respond({
+        status: 201,
+        contentType: "application/json",
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "*",
+        },
+        body: JSON.stringify({
+          tempId: "qa-temp",
+          canonicalUrl: "https://qa-preview.temp.md",
+          updateToken: "qa-update-token",
+          expiresAt: "2026-08-31T00:00:00.000Z",
+        }),
       });
       return;
     }
