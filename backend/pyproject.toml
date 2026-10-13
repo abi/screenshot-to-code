@@ -8,8 +8,8 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "^0.115.6"
-uvicorn = "^0.25.0"
+fastapi = "^0.116.2"
+uvicorn = "^0.31.1"
 websockets = "^14.1"
 openai = "2.16.0"
 python-dotenv = "^1.0.0"
@@ -26,6 +26,12 @@ google-genai = "^1.16.1"
 langfuse = "^3.0.2"
 playwright = "^1.61.0"
 pillow-heif = "^0.18.0"
+
+[tool.poetry.group.mcp]
+optional = true
+
+[tool.poetry.group.mcp.dependencies]
+mcp = ">=2,<3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

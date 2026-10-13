@@ -103,6 +103,32 @@ docker-compose up -d --build
 
 The app will be up and running at http://localhost:5173. Note that you can't develop the application with this setup, as file changes won't trigger a rebuild.
 
+## MCP (Astron Agent and other clients)
+
+The backend includes an optional Streamable HTTP MCP server that exposes one
+`generate_code_from_screenshot` tool. It uses the same prompt, model selection,
+and agentic generation stages as the web app, but generates one variant per tool
+call to keep latency and model cost bounded.
+
+Install the optional dependency group and start the server:
+
+```bash
+cd backend
+poetry install --with mcp
+poetry run python mcp_server.py
+```
+
+Connect an MCP client to `http://127.0.0.1:8000/mcp`. Configure the model
+provider keys in `backend/.env` just as you would for the web app. The tool
+accepts a screenshot path on the MCP server host and supports every stack in
+the web app. Image generation and asset extraction are opt-in tool arguments
+because they can require additional provider credentials.
+
+Set `SCREENSHOT_TO_CODE_MCP_PORT` to change the default port. The server
+intentionally binds to loopback because it has no authentication. A remote
+deployment should add MCP transport security and authentication rather than
+exposing this development entry point directly.
+
 ## 🙋‍♂️ FAQs
 
 - **I'm running into an error when setting up the backend. How can I fix it?** [Try this](https://github.com/abi/screenshot-to-code/issues/3#issuecomment-1814777959). If that still doesn't work, open an issue.
