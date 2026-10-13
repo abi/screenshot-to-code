@@ -415,6 +415,15 @@ function App() {
       });
     };
 
+    const markGeneratingVariantsErrored = (message: string) => {
+      const latestCommit = useProjectStore.getState().commits[commit.hash];
+      latestCommit?.variants.forEach((variant, variantIndex) => {
+        if (variant.status === "generating") {
+          updateVariantStatus(commit.hash, variantIndex, "error", message);
+        }
+      });
+    };
+
     generateCode(wsRef, updatedParams, {
       onChange: (token, variantIndex) => {
         appendCommitCode(commit.hash, variantIndex, token);
@@ -537,20 +546,21 @@ function App() {
 
         // Close any running agent events when the socket ends without per-event
         // terminal messages, otherwise they remain stuck in "running" state.
-        finishInFlightEvents(reason === "request_failed" ? "error" : "complete");
+        finishInFlightEvents(reason === "user_cancelled" ? "complete" : "error");
+
+        if (reason === "connection_error") {
+          markGeneratingVariantsErrored(
+            errorMessage ||
+              "Connection lost before generation completed. Partial output was preserved."
+          );
+          setAppState(AppState.CODE_READY);
+          return;
+        }
 
         if (reason === "request_failed" && commit.type === "ai_create") {
-          const latestCreateCommit = useProjectStore.getState().commits[commit.hash];
-          latestCreateCommit?.variants.forEach((variant, variantIndex) => {
-            if (variant.status === "generating") {
-              updateVariantStatus(
-                commit.hash,
-                variantIndex,
-                "error",
-                errorMessage || "Generation failed. Please retry."
-              );
-            }
-          });
+          markGeneratingVariantsErrored(
+            errorMessage || "Generation failed. Please retry."
+          );
           setAppState(AppState.CODE_READY);
           return;
         }
