@@ -4,6 +4,10 @@ import App from "./App.tsx";
 import "./index.css";
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { resolveBabelCdnUrl } from "./lib/babelCdn";
+
+// Eagerly resolve the Babel CDN URL so it is cached before the first preview renders.
+resolveBabelCdnUrl().catch((err) => console.warn("[babelCdn]", err));
 import RunEvalsPage from "./components/evals/RunEvalsPage.tsx";
 import BestOfNEvalsPage from "./components/evals/BestOfNEvalsPage.tsx";
 import AllEvalsPage from "./components/evals/AllEvalsPage.tsx";
