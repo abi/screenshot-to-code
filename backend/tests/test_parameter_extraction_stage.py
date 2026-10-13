@@ -96,6 +96,42 @@ async def test_extracts_replicate_api_key_from_env_when_not_in_request(
 
 
 @pytest.mark.asyncio
+async def test_normalizes_openrouter_base_url_from_settings() -> None:
+    stage = ParameterExtractionStage(AsyncMock())
+
+    extracted = await stage.extract_and_validate(
+        {
+            "generatedCodeConfig": "html_tailwind",
+            "inputMode": "text",
+            "openAiBaseURL": "https://openrouter.ai",
+            "prompt": {"text": "hello"},
+        }
+    )
+
+    assert extracted.openai_base_url == "https://openrouter.ai/api/v1"
+
+
+@pytest.mark.asyncio
+async def test_normalizes_openrouter_base_url_from_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "routes.generate_code.OPENAI_BASE_URL", "https://openrouter.ai/api"
+    )
+    stage = ParameterExtractionStage(AsyncMock())
+
+    extracted = await stage.extract_and_validate(
+        {
+            "generatedCodeConfig": "html_tailwind",
+            "inputMode": "text",
+            "prompt": {"text": "hello"},
+        }
+    )
+
+    assert extracted.openai_base_url == "https://openrouter.ai/api/v1"
+
+
+@pytest.mark.asyncio
 async def test_extracts_design_system_from_request() -> None:
     stage = ParameterExtractionStage(AsyncMock())
 
