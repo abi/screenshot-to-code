@@ -3,14 +3,17 @@ FROM node:22-bullseye-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and yarn.lock
-COPY package.json yarn.lock /app/
+# Enable Corepack for pnpm support
+RUN corepack enable
+
+# Copy package.json and pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml /app/
 
 # Set the environment variable to skip Puppeteer download
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Install dependencies
-RUN yarn install
+RUN pnpm install
 
 # Copy the current directory contents into the container at /app
 COPY ./ /app/
@@ -19,4 +22,5 @@ COPY ./ /app/
 EXPOSE 5173
 
 # Command to run the application
-CMD ["yarn", "dev", "--host", "0.0.0.0"]
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]
+
