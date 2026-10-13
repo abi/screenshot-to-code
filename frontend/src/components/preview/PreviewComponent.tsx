@@ -24,6 +24,14 @@ interface Props {
 const MOBILE_VIEWPORT_WIDTH = 375;
 export const DESKTOP_VIEWPORT_WIDTH = 1366;
 
+// Chrome dimensions, measured at the *unscaled* viewport size so they
+// scale down together with the rest of the frame (a shrunk browser
+// window should look like a shrunk browser window, toolbar included).
+const BROWSER_TOOLBAR_HEIGHT = 36;
+const PHONE_BEZEL_WIDTH = 10;
+const PHONE_NOTCH_HEIGHT = 24;
+const PHONE_HOME_INDICATOR_HEIGHT = 20;
+
 function PreviewComponent({
   code,
   device,
@@ -31,6 +39,7 @@ function PreviewComponent({
   viewMode,
 }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const frameRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   // Don't update code more often than every 200ms.
@@ -175,11 +184,14 @@ function PreviewComponent({
   }, [inSelectAndEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apply a fixed viewport per device and scale to fit the available pane.
+  // The transform/size is applied to the *frame* (chrome + iframe together)
+  // so the browser toolbar / phone bezel scale down in proportion, the same
+  // way a real shrunk browser window looks.
   useEffect(() => {
     const updateScale = () => {
       const wrapper = wrapperRef.current;
-      const iframe = iframeRef.current;
-      if (!wrapper || !iframe) return;
+      const frame = frameRef.current;
+      if (!wrapper || !frame) return;
 
       const viewportWidth = wrapper.clientWidth;
       const viewportHeight = wrapper.clientHeight;
@@ -189,21 +201,21 @@ function PreviewComponent({
           activeMode === "fit"
             ? Math.min(1, viewportWidth / DESKTOP_VIEWPORT_WIDTH)
             : 1;
-        const iframeHeight = scaleValue > 0 ? viewportHeight / scaleValue : viewportHeight;
+        const frameHeight = scaleValue > 0 ? viewportHeight / scaleValue : viewportHeight;
 
         onScaleChange?.(scaleValue);
-        iframe.style.width = `${DESKTOP_VIEWPORT_WIDTH}px`;
-        iframe.style.height = `${iframeHeight}px`;
-        iframe.style.transform = `scale(${scaleValue})`;
-        iframe.style.transformOrigin = "top left";
+        frame.style.width = `${DESKTOP_VIEWPORT_WIDTH}px`;
+        frame.style.height = `${frameHeight}px`;
+        frame.style.transform = `scale(${scaleValue})`;
+        frame.style.transformOrigin = "top left";
         return;
       }
 
       onScaleChange?.(1);
-      iframe.style.width = `${MOBILE_VIEWPORT_WIDTH}px`;
-      iframe.style.height = `${viewportHeight}px`;
-      iframe.style.transform = "scale(1)";
-      iframe.style.transformOrigin = "top left";
+      frame.style.width = `${MOBILE_VIEWPORT_WIDTH}px`;
+      frame.style.height = `${viewportHeight}px`;
+      frame.style.transform = "scale(1)";
+      frame.style.transformOrigin = "top left";
     };
 
     updateScale();
@@ -306,16 +318,56 @@ function PreviewComponent({
         ref={wrapperRef}
         className={`w-full h-full ${device === "mobile" ? "flex justify-center" : ""}`}
       >
-        <iframe
-          id={`preview-${device}`}
-          ref={iframeRef}
-          title="Preview"
-          className={classNames(
-            {
-              "border-0": true,
-            }
+        <div
+          ref={frameRef}
+          className={classNames("flex flex-col", {
+            // Desktop: a macOS-style browser window - rounded corners,
+            // subtle shadow, and a traffic-light toolbar above the page.
+            "rounded-xl shadow-xl border border-gray-200 dark:border-zinc-700 overflow-hidden bg-white dark:bg-zinc-900":
+              device === "desktop",
+            // Mobile: a phone bezel - dark border, notch, home indicator.
+            "rounded-[2.5rem] shadow-xl bg-black overflow-hidden":
+              device === "mobile",
+          })}
+          style={
+            device === "mobile"
+              ? { padding: `${PHONE_BEZEL_WIDTH}px`, boxSizing: "border-box" }
+              : { boxSizing: "border-box" }
+          }
+        >
+          {device === "desktop" && (
+            <div
+              className="shrink-0 flex items-center gap-1.5 px-3 bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700"
+              style={{ height: BROWSER_TOOLBAR_HEIGHT }}
+            >
+              <span className="w-3 h-3 rounded-full bg-red-400" />
+              <span className="w-3 h-3 rounded-full bg-yellow-400" />
+              <span className="w-3 h-3 rounded-full bg-green-400" />
+            </div>
           )}
-        ></iframe>
+          {device === "mobile" && (
+            <div
+              className="shrink-0 mx-auto bg-black rounded-b-2xl"
+              style={{ height: PHONE_NOTCH_HEIGHT, width: "40%" }}
+            />
+          )}
+          <iframe
+            id={`preview-${device}`}
+            ref={iframeRef}
+            title="Preview"
+            className={classNames("border-0 w-full flex-1 min-h-0", {
+              "rounded-b-lg": device === "mobile",
+            })}
+          ></iframe>
+          {device === "mobile" && (
+            <div
+              className="shrink-0 flex items-center justify-center"
+              style={{ height: PHONE_HOME_INDICATOR_HEIGHT }}
+            >
+              <span className="w-24 h-1 rounded-full bg-white/70" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
