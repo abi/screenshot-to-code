@@ -19,7 +19,7 @@ Default AI models:
 
 - Gemini 3 Flash Preview and Gemini 3.1 Pro Preview - the best models
 - GPT-5.5 and GPT-5.4 Mini
-- Claude Opus 4.6, Claude Opus 4.8
+- Claude Opus 5, Claude Opus 4.8
 - z-image-turbo (using Replicate) for image generation
 
 See the [Examples](#-examples) section below for more demos.
