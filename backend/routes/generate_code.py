@@ -67,6 +67,7 @@ from routes.model_choice_sets import (
     ALL_KEYS_MODELS_DEFAULT,
     ALL_KEYS_MODELS_TEXT_CREATE,
     ALL_KEYS_MODELS_UPDATE,
+    ALL_KEYS_MODELS_UPDATE_LARGE_PAGE,
     ANTHROPIC_ONLY_MODELS,
     GEMINI_ANTHROPIC_MODELS,
     GEMINI_OPENAI_MODELS,
@@ -74,6 +75,7 @@ from routes.model_choice_sets import (
     OPENAI_ANTHROPIC_MODELS,
     OPENAI_ONLY_MODELS,
     VIDEO_VARIANT_MODELS,
+    LARGE_PAGE_UPDATE_MIN_CHARS,
 )
 
 # from utils import pprint_prompt
@@ -421,6 +423,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
+        current_code_chars: int = 0,
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
@@ -432,6 +435,7 @@ class ModelSelectionStage:
                 openai_api_key,
                 anthropic_api_key,
                 gemini_api_key,
+                current_code_chars,
             )
 
             # Print the variant models (one per line)
@@ -456,6 +460,7 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None,
+        current_code_chars: int = 0,
     ) -> List[Llm]:
         """Simple model cycling that scales with num_variants"""
 
@@ -472,6 +477,11 @@ class ModelSelectionStage:
         if gemini_api_key and anthropic_api_key and openai_api_key:
             if input_mode == "text" and generation_type == "create":
                 models = list(ALL_KEYS_MODELS_TEXT_CREATE)
+            elif (
+                generation_type == "update"
+                and current_code_chars > LARGE_PAGE_UPDATE_MIN_CHARS
+            ):
+                models = list(ALL_KEYS_MODELS_UPDATE_LARGE_PAGE)
             elif generation_type == "update":
                 models = list(ALL_KEYS_MODELS_UPDATE)
             else:
@@ -815,6 +825,9 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                current_code_chars=len(
+                    (context.extracted_params.file_state or {}).get("content", "")
+                ),
             )
             if IS_DEBUG_ENABLED:
                 await context.send_message(
