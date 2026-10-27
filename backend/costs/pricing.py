@@ -40,6 +40,11 @@ MODEL_PRICING: Dict[str, ModelPricing] = {
     "gpt-6.1-sol": ModelPricing(
         input=2.00, output=10.00, cache_read=0.10
     ),
+    # From OpenRouter's listing on 2026-10-26; not yet checked against
+    # OpenAI's pricing page.
+    "gpt-6-luna": ModelPricing(
+        input=0.10, output=0.50, cache_read=0.01
+    ),
     # --- Anthropic ---
     # Verified against platform.claude.com/docs/en/about-claude/pricing on
     # 2026-10-09. cache_write is the 5-minute cache-write rate (1.25x input).

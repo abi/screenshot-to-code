@@ -85,6 +85,56 @@ class TestModelSelectionAllKeys:
         assert models == expected
 
     @pytest.mark.asyncio
+    async def test_update_large_page_uses_luna(self):
+        """All keys update on a page over 150k chars swaps Sol low for Luna."""
+        models = await self.model_selector.select_models(
+            generation_type="update",
+            input_mode="image",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+            current_code_chars=150_001,
+        )
+
+        expected = [
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+            Llm.GPT_6_LUNA_MEDIUM,
+        ]
+        assert models == expected
+
+    @pytest.mark.asyncio
+    async def test_update_at_large_page_threshold_keeps_sol(self):
+        """A page of exactly 150k chars still uses the regular edit set."""
+        models = await self.model_selector.select_models(
+            generation_type="update",
+            input_mode="text",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+            current_code_chars=150_000,
+        )
+
+        expected = [
+            Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+            Llm.GPT_6_1_SOL_LOW,
+        ]
+        assert models == expected
+
+    @pytest.mark.asyncio
+    async def test_create_ignores_page_size(self):
+        """Page size only affects updates."""
+        models = await self.model_selector.select_models(
+            generation_type="create",
+            input_mode="image",
+            openai_api_key="key",
+            anthropic_api_key="key",
+            gemini_api_key="key",
+            current_code_chars=500_000,
+        )
+
+        assert Llm.GPT_6_LUNA_MEDIUM not in models
+
+    @pytest.mark.asyncio
     async def test_video_create_prefers_gemini_minimal_then_3_1_high(self):
         """Video create always uses two Gemini variants in fixed order."""
         models = await self.model_selector.select_models(

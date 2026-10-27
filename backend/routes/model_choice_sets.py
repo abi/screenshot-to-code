@@ -37,6 +37,15 @@ ALL_KEYS_MODELS_UPDATE = (
     Llm.GPT_6_1_SOL_LOW,
 )
 
+# Edits re-read the whole page on every agent turn, so cost grows with page
+# size: on pages over 150k chars a GPT-6.1 Sol low edit averaged ~$0.64
+# (Oct 2026). GPT-6 Luna takes the OpenAI slot there.
+LARGE_PAGE_UPDATE_MIN_CHARS = 150_000
+ALL_KEYS_MODELS_UPDATE_LARGE_PAGE = (
+    Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
+    Llm.GPT_6_LUNA_MEDIUM,
+)
+
 # Key subset fallbacks.
 GEMINI_ANTHROPIC_MODELS = (
     Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL,
