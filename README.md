@@ -1,6 +1,6 @@
 # screenshot-to-code
 
-Convert screenshots, mockups, Figma designs, and screen recordings into clean, functional code using AI. The easiest way to try this is using <a href="https://screenshottocode.com/?utm_source=github&utm_medium=readme&utm_campaign=oss_readme&utm_content=top_cta" target="_blank" rel="noopener noreferrer">the [hosted version at screenshottocode.com](https://screenshottocode.com), independently run by evolvAI US LLC →</a>
+Convert screenshots, mockups, Figma designs, and screen recordings into clean, functional code using AI. The easiest way to try this is using [the hosted version at screenshottocode.com](https://screenshottocode.com), independently run by evolvAI US LLC.
 
 https://github.com/user-attachments/assets/ec08a5e6-9606-41c5-b03a-1bf47dfeba75
 
