@@ -278,6 +278,13 @@ function getEventTitle(event: AgentEvent): string {
         : "Extracted asset";
     }
     if (event.toolName === "screenshot_preview") {
+      const actionCount = getArrayField(event.input, "actions")?.length || 0;
+      if (actionCount > 0) {
+        const steps = `${actionCount} action${actionCount === 1 ? "" : "s"}`;
+        return event.status === "running"
+          ? `Replaying ${steps} on preview`
+          : `Replayed ${steps} on preview`;
+      }
       return event.status === "running"
         ? "Screenshotting preview"
         : "Screenshotted preview";
@@ -328,6 +335,12 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
     output && Array.isArray(output.screenshots)
       ? (output.screenshots as Array<unknown>)
       : [];
+  // Replays (screenshot_preview with actions) label each screenshot; plain
+  // previews are one desktop and one mobile screenshot labeled "initial".
+  const replayedActions = getArrayField(output, "actions");
+  const previewErrors = (getArrayField(output, "errors") || []).filter(
+    (item): item is string => typeof item === "string"
+  );
 
   return (
     <div className="text-sm text-gray-700 dark:text-gray-200">
@@ -835,10 +848,68 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
         <div>
           {event.status === "running" && (
             <div className="text-xs text-gray-600 dark:text-gray-400 py-1.5">
-              Rendering desktop and mobile previews...
+              {getArrayField(event.input, "actions")?.length
+                ? "Replaying actions on the desktop preview..."
+                : "Rendering desktop and mobile previews..."}
             </div>
           )}
-          {event.status !== "running" && (
+          {event.status !== "running" && replayedActions && (
+            <div className="space-y-3 py-2">
+              <ol className="space-y-0.5 text-xs font-mono text-gray-600 dark:text-gray-300">
+                {replayedActions.map((line, index) => (
+                  <li
+                    key={index}
+                    className={
+                      String(line).includes("FAILED")
+                        ? "text-red-600 dark:text-red-400"
+                        : undefined
+                    }
+                  >
+                    {String(line)}
+                  </li>
+                ))}
+              </ol>
+              {typeof output?.final_url === "string" && (
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Ended at <span className="font-mono">{output.final_url}</span>
+                  {typeof output?.title === "string" && output.title
+                    ? ` — "${output.title}"`
+                    : ""}
+                </div>
+              )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {screenshotPreviews.map((item, index) => {
+                  const record = getRecord(item);
+                  const imageUrl =
+                    typeof record?.image_url === "string" ? record.image_url : null;
+                  const label =
+                    typeof record?.label === "string" ? record.label : `Step ${index + 1}`;
+                  return (
+                    <div key={index}>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        {label}
+                      </div>
+                      {imageUrl ? (
+                        <div className="max-h-96 overflow-y-auto rounded border border-gray-200 dark:border-gray-700">
+                          <img
+                            src={imageUrl}
+                            alt={`Preview after replaying actions: ${label}`}
+                            className="w-full"
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        <div className="aspect-square rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                          Missing
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {event.status !== "running" && !replayedActions && (
             <div className="grid gap-3 py-2 sm:grid-cols-2">
               {(["desktop", "mobile"] as const).map((viewport) => {
                 const screenshot = screenshotPreviews.find((item) => {
@@ -872,6 +943,18 @@ function renderToolDetails(event: AgentEvent, variantCode?: string) {
                   </div>
                 );
               })}
+            </div>
+          )}
+          {event.status !== "running" && previewErrors.length > 0 && (
+            <div className="rounded-md border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 p-2">
+              <div className="text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                Script errors
+              </div>
+              <ul className="mt-1 space-y-0.5 text-xs font-mono text-amber-800 dark:text-amber-200">
+                {previewErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

@@ -13,7 +13,7 @@ from agent.tools import canonical_tool_definitions
 from config import REPLICATE_API_KEY
 from fs_logging.agent_runs import AgentRunRecorder
 from llm import ANTHROPIC_MODELS, GEMINI_MODELS, OPENAI_MODELS, Llm
-from preview_screenshot import is_screenshot_preview_available
+from preview_screenshot import is_screenshot_preview_available, supports_preview_actions
 
 
 def create_provider_session(
@@ -36,6 +36,8 @@ def create_provider_session(
         asset_extraction_enabled=should_extract_assets and bool(gemini_api_key),
         # screenshot_preview needs headless Chromium; skip it if it can't launch.
         screenshot_enabled=is_screenshot_preview_available(),
+        # Capture-only screenshot backends can't replay user actions.
+        screenshot_actions_enabled=supports_preview_actions(),
     )
 
     if model in OPENAI_MODELS:

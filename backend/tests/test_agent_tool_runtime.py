@@ -7,6 +7,7 @@ import pytest
 from agent.state import AgentFileState
 from agent.tools.runtime import AgentToolRuntime
 from agent.tools.types import ToolCall
+from preview_screenshot import PreviewAction, PreviewRender, PreviewShot
 from uploaded_assets import persist_data_url_as_temporary_asset
 
 
@@ -373,6 +374,37 @@ async def test_screenshot_preview_requires_file_content() -> None:
     assert "create_file" in result.result["error"]
 
 
+def _fake_render_recorder(
+    captured: list[dict[str, Any]],
+    errors: list[str] | None = None,
+):
+    async def fake_render(
+        html: str,
+        device: str = "desktop",
+        full_page: bool = True,
+        actions: list[PreviewAction] | None = None,
+    ) -> PreviewRender:
+        captured.append(
+            {"html": html, "device": device, "full_page": full_page, "actions": actions}
+        )
+        shots = [
+            PreviewShot(label=str(a.get("value")), png=f"{device}-mid".encode(), full_page=False)
+            for a in actions or []
+            if a.get("type") == "screenshot"
+        ]
+        label = "after actions" if actions else "initial"
+        shots.append(PreviewShot(label=label, png=f"{device}-png-bytes".encode(), full_page=full_page))
+        return PreviewRender(
+            shots=shots,
+            action_log=[f"{i}. {a.get('type')}: ok" for i, a in enumerate(actions or [], 1)],
+            errors=list(errors or []),
+            url="/index.html#history",
+            title="History",
+        )
+
+    return fake_render
+
+
 @pytest.mark.asyncio
 async def test_screenshot_preview_returns_image_part(
     monkeypatch: pytest.MonkeyPatch,
@@ -383,18 +415,9 @@ async def test_screenshot_preview_returns_image_part(
     monkeypatch.setattr("uploaded_assets.store.TEMP_ASSET_DIR", str(temp_dir))
     monkeypatch.setattr("uploaded_assets.store.LOCAL_ASSET_DIR", str(asset_dir))
 
-    captured: list[dict[str, object]] = []
-
-    async def fake_capture(
-        html: str,
-        device: str = "desktop",
-        full_page: bool = True,
-    ) -> bytes:
-        captured.append({"html": html, "device": device, "full_page": full_page})
-        return f"{device}-png-bytes".encode("ascii")
-
+    captured: list[dict[str, Any]] = []
     monkeypatch.setattr(
-        "agent.tools.screenshot_preview.capture_preview_screenshot", fake_capture
+        "agent.tools.screenshot_preview.render_preview", _fake_render_recorder(captured)
     )
     runtime = AgentToolRuntime(
         file_state=AgentFileState(path="index.html", content="<main>hi</main>"),
@@ -414,25 +437,30 @@ async def test_screenshot_preview_returns_image_part(
 
     assert result.ok is True
     assert captured == [
-        {"html": "<main>hi</main>", "device": "desktop", "full_page": True},
-        {"html": "<main>hi</main>", "device": "mobile", "full_page": True},
+        {"html": "<main>hi</main>", "device": "desktop", "full_page": True, "actions": None},
+        {"html": "<main>hi</main>", "device": "mobile", "full_page": True, "actions": None},
     ]
-    assert result.result["details"]["screenshots"] == [
-        {
-            "viewport": "desktop",
-            "full_page": True,
-            "image_part_index": 0,
-            "image_display_name": "preview_desktop.png",
-            "image_bytes": len(b"desktop-png-bytes"),
-        },
-        {
-            "viewport": "mobile",
-            "full_page": True,
-            "image_part_index": 1,
-            "image_display_name": "preview_mobile.png",
-            "image_bytes": len(b"mobile-png-bytes"),
-        },
-    ]
+    assert result.result["details"] == {
+        "screenshots": [
+            {
+                "viewport": "desktop",
+                "label": "initial",
+                "full_page": True,
+                "image_part_index": 0,
+                "image_display_name": "preview_desktop.png",
+                "image_bytes": len(b"desktop-png-bytes"),
+            },
+            {
+                "viewport": "mobile",
+                "label": "initial",
+                "full_page": True,
+                "image_part_index": 1,
+                "image_display_name": "preview_mobile.png",
+                "image_bytes": len(b"mobile-png-bytes"),
+            },
+        ],
+        "errors": [],
+    }
     assert result.summary["status"] == "ok"
     screenshots = cast(list[dict[str, Any]], result.summary["screenshots"])
     # Previews are inlined as data URLs for the UI, not persisted as assets.
@@ -461,18 +489,95 @@ async def test_screenshot_preview_returns_image_part(
 
 
 @pytest.mark.asyncio
+async def test_screenshot_preview_replays_actions_on_desktop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        "agent.tools.screenshot_preview.render_preview",
+        _fake_render_recorder(captured, errors=["ReferenceError: x is not defined"]),
+    )
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(path="index.html", content="<main>hi</main>"),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+    )
+    actions: list[dict[str, Any]] = [
+        {"type": "type", "target": "Search", "value": "DDDD"},
+        {"type": "screenshot", "target": None, "value": "typed"},
+        {"type": "click", "target": "View history", "value": None},
+    ]
+
+    result = await runtime.execute(
+        ToolCall(id="call-1", name="screenshot_preview", arguments={"actions": actions})
+    )
+
+    assert result.ok is True
+    # Actions run once, on desktop, with viewport (not full-page) captures.
+    assert captured == [
+        {"html": "<main>hi</main>", "device": "desktop", "full_page": False, "actions": actions}
+    ]
+    details = result.result["details"]
+    assert [s["image_display_name"] for s in details["screenshots"]] == [
+        "preview_desktop_typed.png",
+        "preview_desktop_after_actions.png",
+    ]
+    assert details["actions"] == ["1. type: ok", "2. screenshot: ok", "3. click: ok"]
+    assert details["final_url"] == "/index.html#history"
+    assert details["title"] == "History"
+    # The UI summary carries the same replay details as the model-facing result.
+    assert result.summary["actions"] == details["actions"]
+    assert result.summary["final_url"] == "/index.html#history"
+    assert result.summary["errors"] == ["ReferenceError: x is not defined"]
+    assert details["errors"] == ["ReferenceError: x is not defined"]
+    assert "script errors" in result.result["content"]
+    assert result.multimodal_parts is not None
+    assert [p.data for p in result.multimodal_parts] == [b"desktop-mid", b"desktop-png-bytes"]
+
+
+@pytest.mark.asyncio
+async def test_screenshot_preview_rejects_invalid_actions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        "agent.tools.screenshot_preview.render_preview", _fake_render_recorder(captured)
+    )
+    runtime = AgentToolRuntime(
+        file_state=AgentFileState(path="index.html", content="<main>hi</main>"),
+        should_generate_images=False,
+        openai_api_key=None,
+        openai_base_url=None,
+    )
+
+    result = await runtime.execute(
+        ToolCall(
+            id="call-1",
+            name="screenshot_preview",
+            arguments={"actions": [{"type": "drag", "target": "x"}]},
+        )
+    )
+
+    assert result.ok is False
+    assert "unknown type 'drag'" in result.result["error"]
+    assert captured == []
+
+
+@pytest.mark.asyncio
 async def test_screenshot_preview_reports_capture_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def failing_capture(
+    async def failing_render(
         html: str,
         device: str = "desktop",
         full_page: bool = True,
-    ) -> bytes:
+        actions: list[PreviewAction] | None = None,
+    ) -> PreviewRender:
         raise Exception("boom")
 
     monkeypatch.setattr(
-        "agent.tools.screenshot_preview.capture_preview_screenshot", failing_capture
+        "agent.tools.screenshot_preview.render_preview", failing_render
     )
     runtime = AgentToolRuntime(
         file_state=AgentFileState(path="index.html", content="<main>hi</main>"),

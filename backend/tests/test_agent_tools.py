@@ -231,7 +231,21 @@ def test_canonical_tool_definitions_include_screenshot_preview() -> None:
     screenshot_tool = next(
         tool for tool in tools if tool.name == "screenshot_preview"
     )
-    assert screenshot_tool.parameters["properties"] == {}
+    # Actions are optional: a bare call still returns the initial screenshots.
+    assert "required" not in screenshot_tool.parameters
+    actions = screenshot_tool.parameters["properties"]["actions"]
+    assert actions["type"] == "array"
+    assert actions["items"]["required"] == ["type"]
+    assert actions["items"]["properties"]["type"]["enum"] == [
+        "click",
+        "type",
+        "press",
+        "select",
+        "hover",
+        "scroll",
+        "wait",
+        "screenshot",
+    ]
 
 
 def test_canonical_tool_definitions_exclude_screenshot_preview_when_disabled() -> None:
