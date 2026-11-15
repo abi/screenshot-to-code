@@ -1,0 +1,10 @@
+{
+  "devices": ["desktop", "mobile"],
+  "requirements": [
+    {"id": "no-horizontal-overflow", "check": "viewport-overflow"},
+    {"id": "headline-text", "check": "visible-text", "selector": "h1", "text": "Plan your trip"},
+    {"id": "pricing-note", "check": "visible-text", "selector": ".note", "text": "Free cancellation up to 24 hours before departure"},
+    {"id": "cta-contrast", "check": "text-contrast", "selector": ".cta", "minRatio": 4.5},
+    {"id": "body-font-size", "check": "style-equals", "selector": "body", "property": "font-size", "expected": "16px"}
+  ]
+}
