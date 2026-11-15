@@ -48,6 +48,14 @@ interface ProjectStore {
     message: VariantHistoryMessage
   ) => void;
   updateSelectedVariantIndex: (hash: CommitHash, index: number) => void;
+  /** Records cost and token usage for a specific variant after generation completes. */
+  setVariantCost: (
+    hash: CommitHash,
+    numVariant: number,
+    costUsd: number,
+    inputTokens: number,
+    outputTokens: number
+  ) => void;
   updateVariantStatus: (
     hash: CommitHash,
     numVariant: number,
@@ -272,6 +280,28 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           [hash]: {
             ...commit,
             selectedVariantIndex: index,
+          },
+        },
+      };
+    }),
+  setVariantCost: (hash, numVariant, costUsd, inputTokens, outputTokens) =>
+    set((state) => {
+      const commit = state.commits[hash];
+      if (!commit) return state;
+      return {
+        commits: {
+          ...state.commits,
+          [hash]: {
+            ...commit,
+            variants: commit.variants.map((variant, index) =>
+              index === numVariant
+                ? {
+                    ...variant,
+                    costUsd,
+                    tokens: { input: inputTokens, output: outputTokens },
+                  }
+                : variant
+            ),
           },
         },
       };
