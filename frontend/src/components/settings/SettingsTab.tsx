@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BsCheckCircleFill, BsExclamationTriangleFill } from "react-icons/bs";
 import { AppTheme, EditorTheme, Settings } from "../../types";
 import { capitalize } from "../../lib/utils";
+import { resolveBabelCdnUrl } from "../../lib/babelCdn";
 import {
   Select,
   SelectContent,
@@ -359,6 +360,63 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                   }))
                 }
               />
+            </div>
+          </div>
+
+          {/* Advanced */}
+          <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">
+              <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                Advanced
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-100 dark:divide-zinc-700">
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <span className="text-sm text-gray-700 dark:text-zinc-300">
+                    Show Cost Tracker
+                  </span>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
+                    Display a live cost bar below the preview pane during generation.
+                  </p>
+                </div>
+                <Switch
+                  id="show-cost-tracker"
+                  checked={settings.showCostTracker}
+                  onCheckedChange={(checked) =>
+                    setSettings((s) => ({ ...s, showCostTracker: checked }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between px-4 py-3 gap-4">
+                <div className="min-w-0">
+                  <span className="text-sm text-gray-700 dark:text-zinc-300">
+                    Babel Version
+                  </span>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
+                    Babel 7 version used to transform React pages in the preview
+                    iframe. Keep at a 7.x version to avoid the Babel 8 automatic
+                    JSX runtime, which breaks in-browser transforms.
+                  </p>
+                </div>
+                <Input
+                  id="babel-version"
+                  className="w-28 shrink-0"
+                  placeholder="7.25.9"
+                  value={settings.babelVersion}
+                  onChange={(e) => {
+                    const version = e.target.value.trim();
+                    setSettings((s) => ({ ...s, babelVersion: version }));
+                  }}
+                  onBlur={() => {
+                    // Re-resolve the Babel URL using the runtime setting as priority.
+                    const version = settings.babelVersion.trim();
+                    resolveBabelCdnUrl(version || undefined, true).catch((err) =>
+                      console.warn("[babelCdn] re-resolution failed:", err)
+                    );
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
