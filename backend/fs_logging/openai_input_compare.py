@@ -72,23 +72,18 @@ def _find_first_value_difference(
         right_dict = _as_json_dict(right)
         left_keys = list(left_dict.keys())
         right_keys = list(right_dict.keys())
-        for index in range(min(len(left_keys), len(right_keys))):
-            left_key = left_keys[index]
-            right_key = right_keys[index]
-            if left_key != right_key:
-                key_path = _append_dict_path(path, left_key)
-                return key_path, left, right
 
-        if len(left_keys) != len(right_keys):
-            extra_key = (
-                left_keys[len(right_keys)]
-                if len(left_keys) > len(right_keys)
-                else right_keys[len(left_keys)]
-            )
-            key_path = _append_dict_path(path, extra_key)
-            left_value = left_dict.get(extra_key)
-            right_value = right_dict.get(extra_key)
-            return key_path, cast(JSONValue, left_value), cast(JSONValue, right_value)
+        # Dict equality is order-independent, so compare by key name rather
+        # than position. A key present on only one side is the difference;
+        # report its value on that side and ``None`` on the other.
+        for key in left_keys:
+            if key not in right_dict:
+                key_path = _append_dict_path(path, key)
+                return key_path, left_dict[key], None
+        for key in right_keys:
+            if key not in left_dict:
+                key_path = _append_dict_path(path, key)
+                return key_path, None, right_dict[key]
 
         for key in left_keys:
             nested = _find_first_value_difference(
