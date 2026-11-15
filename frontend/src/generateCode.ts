@@ -10,6 +10,16 @@ const ERROR_MESSAGE =
   "Error generating code. Check the Developer Console AND the backend logs for details. Feel free to open a Github issue.";
 
 const CANCEL_MESSAGE = "Code generation cancelled";
+const CONNECTION_LOST_MESSAGE =
+  "Connection lost while generating. Partial output was preserved.";
+
+type WebSocketResponseData = {
+  models?: string[];
+  name?: string;
+  input?: unknown;
+  ok?: boolean;
+  output?: unknown;
+};
 
 type WebSocketResponse = {
   type:
@@ -26,7 +36,7 @@ type WebSocketResponse = {
     | "toolStart"
     | "toolResult";
   value?: string;
-  data?: any;
+  data?: WebSocketResponseData;
   eventId?: string;
   variantIndex: number;
 };
@@ -41,8 +51,16 @@ interface CodeGenerationCallbacks {
   onVariantModels: (models: string[]) => void;
   onThinking: (content: string, variantIndex: number, eventId?: string) => void;
   onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
-  onToolStart: (data: any, variantIndex: number, eventId?: string) => void;
-  onToolResult: (data: any, variantIndex: number, eventId?: string) => void;
+  onToolStart: (
+    data: WebSocketResponseData | undefined,
+    variantIndex: number,
+    eventId?: string
+  ) => void;
+  onToolResult: (
+    data: WebSocketResponseData | undefined,
+    variantIndex: number,
+    eventId?: string
+  ) => void;
   onCancel: (
     reason: "user_cancelled" | "request_failed" | "connection_error",
     errorMessage?: string
@@ -105,8 +123,11 @@ export function generateCode(
       callbacks.onCancel("request_failed", event.reason || ERROR_MESSAGE);
     } else if (event.code !== 1000) {
       console.error("Unknown server or connection error", event);
-      toast.error(ERROR_MESSAGE);
-      callbacks.onCancel("connection_error", event.reason || ERROR_MESSAGE);
+      toast.error(CONNECTION_LOST_MESSAGE);
+      callbacks.onCancel(
+        "connection_error",
+        event.reason || CONNECTION_LOST_MESSAGE
+      );
     } else {
       callbacks.onComplete();
     }
