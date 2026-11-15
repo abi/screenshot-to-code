@@ -1,5 +1,7 @@
 import argparse
+import asyncio
 import socket
+import sys
 
 import uvicorn
 
@@ -26,6 +28,12 @@ def find_available_port(host: str, start_port: int, max_attempts: int) -> int:
     )
 
 
+def configure_event_loop() -> None:
+    """Use a subprocess-capable event loop for Playwright on Windows."""
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1")
@@ -37,4 +45,8 @@ if __name__ == "__main__":
     if port != args.port:
         print(f"Port {args.port} is in use. Starting backend on port {port}.")
 
-    uvicorn.run("main:app", host=args.host, port=port, reload=True)
+    configure_event_loop()
+    # Uvicorn's asyncio setup deliberately switches to SelectorEventLoop when
+    # reload is enabled on Windows. Playwright needs ProactorEventLoop for its
+    # child-process transport, so leave loop setup to configure_event_loop().
+    uvicorn.run("main:app", host=args.host, port=port, reload=True, loop="none")
