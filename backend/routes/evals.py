@@ -112,6 +112,9 @@ class RunEvalsRequest(BaseModel):
     # When set, inputs come from {EVALS_DIR}/sets/{set_name}/inputs and runs
     # attach to the active eval session (auto-created when none exists).
     set_name: Optional[str] = None
+    # When True, skip screenshot_preview tool calls (no Playwright required).
+    # Useful for offline/CI benchmarking of code quality without rendering.
+    offline: bool = False
 
 
 def _resolve_set_run(
@@ -237,6 +240,7 @@ async def run_evals(request: RunEvalsRequest) -> List[str]:
             eval_set=eval_set,
             eval_session_id=session.session_id if session else None,
             skip_input_files=skip_per_model.get(model),
+            offline=request.offline,
         )
         all_output_files.extend(output_files)
 
@@ -354,6 +358,7 @@ async def run_evals_stream(request: RunEvalsRequest):
                         eval_set=eval_set,
                         eval_session_id=session.session_id if session else None,
                         skip_input_files=skip_per_model.get(model),
+                        offline=request.offline,
                     )
                     all_output_files.extend(output_files)
                     completed_offset += model_task_count

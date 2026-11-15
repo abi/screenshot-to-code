@@ -52,6 +52,8 @@ MessageType = Literal[
     "assistant",
     "toolStart",
     "toolResult",
+    "budgetExceeded",
+    "variantCost",
 ]
 from prompts.pipeline import build_prompt_messages
 from prompts.request_parsing import parse_prompt_content, parse_prompt_history
@@ -62,6 +64,7 @@ from uploaded_assets import (
     infer_local_asset_base_url,
 )
 from agent.runner import Agent
+from agent.engine import BudgetExceededError, PerStepBudgetExceededError
 from fs_logging.agent_runs import AgentRunRecorder
 from routes.model_choice_sets import (
     ALL_KEYS_MODELS_DEFAULT,
@@ -158,16 +161,55 @@ class Pipeline:
 
 
 class WebSocketCommunicator:
-    """Handles WebSocket communication with consistent error handling"""
+    """Handles WebSocket communication with consistent error handling and heartbeat."""
+
+    # Heartbeat interval in seconds. Corporate proxies often timeout at 30 s, so
+    # a 25 s ping interval gives 5 s of headroom before the connection is killed.
+    PING_INTERVAL_SECONDS = 25.0
 
     def __init__(self, websocket: WebSocket):
         self.websocket = websocket
         self.is_closed = False
+        self._heartbeat_task: asyncio.Task[None] | None = None
 
     async def accept(self) -> None:
-        """Accept the WebSocket connection"""
+        """Accept the WebSocket connection and start the heartbeat."""
         await self.websocket.accept()
         print("Incoming websocket connection...")
+        self._heartbeat_task = asyncio.create_task(self._run_heartbeat())
+
+    async def _run_heartbeat(self) -> None:
+        """Background task: send a ping frame every PING_INTERVAL_SECONDS.
+
+        If the connection is dead, the next ping will raise a
+        WebSocketDisconnect / ConnectionClosedError and we clean up.
+        """
+        try:
+            while not self.is_closed:
+                await asyncio.sleep(self.PING_INTERVAL_SECONDS)
+                if self.is_closed:
+                    break
+                try:
+                    await self.websocket.send_text("")  # Starlette does not expose ping();
+                    # sending an empty TEXT frame is a no-op keepalive that exercises
+                    # the TCP connection.  A real ping/pong API was added in Starlette
+                    # 0.40; once upgraded, replace with:  await self.websocket.ping(b"heartbeat")
+                except (ConnectionClosedOK, ConnectionClosedError, WebSocketDisconnect):
+                    break
+        except asyncio.CancelledError:  # clean shutdown
+            pass
+        finally:
+            await self._cleanup()
+
+    async def _cleanup(self) -> None:
+        """Stop the heartbeat and mark the connection closed."""
+        if self._heartbeat_task is not None and not self._heartbeat_task.done():
+            self._heartbeat_task.cancel()
+            try:
+                await self._heartbeat_task
+            except asyncio.CancelledError:
+                pass
+        self.is_closed = True
 
     async def send_message(
         self,
@@ -224,6 +266,7 @@ class WebSocketCommunicator:
             ):
                 print("WebSocket already closed by client")
             self.is_closed = True
+            await self._cleanup()
 
     async def receive_params(self) -> Dict[str, Any]:
         """Receive parameters from the client"""
@@ -236,7 +279,7 @@ class WebSocketCommunicator:
         return params
 
     async def close(self) -> None:
-        """Close the WebSocket connection"""
+        """Close the WebSocket connection and stop the heartbeat task."""
         if not self.is_closed:
             try:
                 await self.websocket.close()
@@ -247,7 +290,7 @@ class WebSocketCommunicator:
                 WebSocketDisconnect,
             ):
                 pass  # Already closed by client
-            self.is_closed = True
+        await self._cleanup()
 
 
 @dataclass
@@ -656,6 +699,18 @@ class AgenticGenerationStage:
                 recorder=recorder,
             )
             completion = await runner.run(model, prompt_messages)
+            # Emit per-variant cost attribution once the session is finalised.
+            # Only sent when the backend can compute a dollar figure (i.e. when
+            # the provider session had token-usage data and a pricing entry).
+            final_cost = runner.last_cost_usd
+            if final_cost is not None:
+                await self.send_message(
+                    "variantCost",
+                    None,
+                    index,
+                    {"costUsd": final_cost},
+                    None,
+                )
             if completion:
                 await self.send_message("setCode", completion, index, None, None)
             await self.send_message(
@@ -705,6 +760,23 @@ class AgenticGenerationStage:
                 )
             )
             await self.send_message("variantError", error_message, index, None, None)
+            return ""
+        except (BudgetExceededError, PerStepBudgetExceededError) as exc:
+            # ``BudgetExceededError`` carries a typed human-readable message
+            # delivered as a distinct ``budgetExceeded`` message so the frontend
+            # can render a distinct UI banner.  The WebSocket session stays alive
+            # (unlike ``variantError``) so the user can try again immediately.
+            print(
+                f"[VARIANT {index + 1}] Budget exceeded "
+                f"(per_step={exc.is_per_step}): {exc.typed_message}"
+            )
+            await self.send_message(
+                "budgetExceeded",
+                exc.typed_message,
+                index,
+                {"is_per_step": exc.is_per_step},
+                None,
+            )
             return ""
         except Exception as e:
             print(f"Error in variant {index + 1}: {e}")

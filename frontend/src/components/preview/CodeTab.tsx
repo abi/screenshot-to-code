@@ -5,12 +5,53 @@ import { Settings } from "../../types";
 import copy from "copy-to-clipboard";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { Stack } from "../../lib/stacks";
 
 interface Props {
   code: string;
   setCode: React.Dispatch<React.SetStateAction<string>>;
   settings: Settings;
 }
+
+/** CDN links for each stack, keyed by Stack enum value. */
+const STACK_CDN: Record<string, { css: string[]; js: string[] }> = {
+  [Stack.HTML_TAILWIND]: {
+    css: ["https://cdn.tailwindcss.com"],
+    js: [],
+  },
+  [Stack.HTML_CSS]: {
+    css: ["https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"],
+    js: [],
+  },
+  [Stack.BOOTSTRAP]: {
+    css: [
+      "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css",
+      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
+    ],
+    js: ["https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"],
+  },
+  [Stack.IONIC_TAILWIND]: {
+    css: [
+      "https://cdn.tailwindcss.com",
+      "https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css",
+    ],
+    js: [
+      "https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js",
+      "https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js",
+    ],
+  },
+  // React and Vue cannot be expressed in a single HTML file without a bundler;
+  // they are listed here so the UI is self-consistent, but CodePen will render
+  // the raw JSX/Vue SFC which the browser cannot execute as-is.
+  [Stack.REACT_TAILWIND]: {
+    css: ["https://cdn.tailwindcss.com"],
+    js: ["https://unpkg.com/react@18/umd/react.production.min.js"],
+  },
+  [Stack.VUE_TAILWIND]: {
+    css: ["https://cdn.tailwindcss.com"],
+    js: [],
+  },
+};
 
 function CodeTab({ code, setCode, settings }: Props) {
   const copyCode = useCallback(() => {
@@ -19,21 +60,18 @@ function CodeTab({ code, setCode, settings }: Props) {
   }, [code]);
 
   const doOpenInCodepenio = useCallback(async () => {
-    // TODO: Update CSS and JS external links depending on the framework being used
+    const stack = settings.generatedCodeConfig ?? Stack.HTML_TAILWIND;
+    const cdn = STACK_CDN[stack] ?? STACK_CDN[Stack.HTML_TAILWIND];
+
+    const cssExternal = cdn.css.join(",");
+    const jsExternal = cdn.js.join(",");
+
     const data = {
       html: code,
       editors: "100", // 1: Open HTML, 0: Close CSS, 0: Close JS
       layout: "left",
-      css_external:
-        "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" +
-        (code.includes("<ion-")
-          ? ",https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css"
-          : ""),
-      js_external:
-        "https://cdn.tailwindcss.com " +
-        (code.includes("<ion-")
-          ? ",https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js,https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"
-          : ""),
+      css_external: cssExternal,
+      js_external: jsExternal,
     };
 
     // Create a hidden form and submit it to open the code in CodePen
@@ -51,7 +89,7 @@ function CodeTab({ code, setCode, settings }: Props) {
 
     document.body.appendChild(form);
     form.submit();
-  }, [code]);
+  }, [code, settings.generatedCodeConfig]);
 
   return (
     <div className="relative">

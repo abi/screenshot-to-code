@@ -24,7 +24,8 @@ type WebSocketResponse = {
     | "thinking"
     | "assistant"
     | "toolStart"
-    | "toolResult";
+    | "toolResult"
+    | "variantCost";
   value?: string;
   data?: any;
   eventId?: string;
@@ -43,6 +44,13 @@ interface CodeGenerationCallbacks {
   onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
   onToolStart: (data: any, variantIndex: number, eventId?: string) => void;
   onToolResult: (data: any, variantIndex: number, eventId?: string) => void;
+  /** Called with the final cost for a variant after its agent run completes. */
+  onVariantCost: (
+    variantIndex: number,
+    costUsd: number,
+    inputTokens: number,
+    outputTokens: number
+  ) => void;
   onCancel: (
     reason: "user_cancelled" | "request_failed" | "connection_error",
     errorMessage?: string
@@ -92,6 +100,13 @@ export function generateCode(
     } else if (response.type === "error") {
       console.error("Error generating code", response.value);
       toast.error(response.value || ERROR_MESSAGE);
+    } else if (response.type === "variantCost") {
+      callbacks.onVariantCost(
+        response.variantIndex,
+        response.data?.costUsd ?? 0,
+        response.data?.inputTokens ?? 0,
+        response.data?.outputTokens ?? 0
+      );
     }
   });
 

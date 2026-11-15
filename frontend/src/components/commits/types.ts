@@ -38,6 +38,13 @@ export type Variant = {
   thinkingDuration?: number;
   agentEvents?: AgentEvent[];
   model?: string;
+  /** USD cost for this variant, populated after generation completes. */
+  costUsd?: number;
+  /** Token usage for this variant, populated after generation completes. */
+  tokens?: {
+    input: number;
+    output: number;
+  };
 };
 
 export type BaseCommit = {
