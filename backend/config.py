@@ -11,6 +11,7 @@ OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", None)
 
 # Image generation (optional)
 REPLICATE_API_KEY = os.environ.get("REPLICATE_API_KEY", None)
+NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", None)
 
 # Debugging-related
 IS_DEBUG_ENABLED = bool(os.environ.get("IS_DEBUG_ENABLED", False))

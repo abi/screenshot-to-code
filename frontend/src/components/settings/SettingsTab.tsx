@@ -224,6 +224,28 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
                 />
               </div>
 
+              <div>
+                <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                  NVIDIA API key
+                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                  Only stored in your browser. Never stored on servers. Overrides
+                  your .env config. Get a key at build.nvidia.com.
+                </p>
+                <Input
+                  id="nvidia-api-key"
+                  className="mt-2"
+                  placeholder="NVIDIA API key"
+                  value={settings.nvidiaApiKey || ""}
+                  onChange={(e) =>
+                    setSettings((s) => ({
+                      ...s,
+                      nvidiaApiKey: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
               {!IS_RUNNING_ON_CLOUD && (
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">
