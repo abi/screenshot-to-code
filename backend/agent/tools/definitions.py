@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from agent.tools.types import CanonicalToolDefinition
+from preview_screenshot import ACTION_TYPES
 from image_generation.replicate import P_IMAGE_EDIT_ASPECT_RATIOS
 from uploaded_assets.tools import SAVE_ASSETS_TOOL_DEFINITION
 
@@ -165,10 +166,55 @@ def _extract_assets_schema() -> Dict[str, Any]:
     }
 
 
-def _screenshot_preview_schema() -> Dict[str, Any]:
+def _screenshot_preview_schema(actions_enabled: bool) -> Dict[str, Any]:
+    if not actions_enabled:
+        return {
+            "type": "object",
+            "properties": {},
+        }
     return {
         "type": "object",
-        "properties": {},
+        "properties": {
+            "actions": {
+                "type": "array",
+                "description": (
+                    "Optional user actions to replay, in order, on the desktop "
+                    "preview before capturing. Omit to get the initial full-page "
+                    "desktop and mobile screenshots."
+                ),
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": list(ACTION_TYPES),
+                            "description": (
+                                "click, type (clear then type value), press (a key "
+                                "such as Enter), select (an option of a <select> or "
+                                "custom dropdown), hover, scroll (by value pixels, "
+                                "or to target), wait (value ms), or screenshot "
+                                "(capture the viewport now, value is a label)."
+                            ),
+                        },
+                        "target": {
+                            "type": "string",
+                            "description": (
+                                "Element to act on: a CSS selector, or its visible "
+                                "text, placeholder or label."
+                            ),
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": (
+                                "Text to type, option to select, key to press, "
+                                "pixels to scroll, ms to wait, or a screenshot label."
+                            ),
+                        },
+                    },
+                    "required": ["type"],
+                },
+            },
+        },
     }
 
 
@@ -185,11 +231,34 @@ def _retrieve_option_schema() -> Dict[str, Any]:
     }
 
 
+SCREENSHOT_PREVIEW_DESCRIPTION = (
+    "Render the current HTML file in a headless browser and return "
+    "full-page desktop and mobile screenshots so you can visually "
+    "verify your work. Use after creating or substantially editing "
+    "the file to check layout, spacing, and fidelity to the "
+    "requested design. Screenshots are returned as attached images."
+)
+
+SCREENSHOT_PREVIEW_ACTIONS_DESCRIPTION = (
+    "Render the current HTML file in a headless browser and return "
+    "screenshots so you can verify your work. Without actions it "
+    "returns full-page desktop and mobile screenshots of the initial "
+    "page: use it after creating or substantially editing the file to "
+    "check layout, spacing, and fidelity to the requested design. "
+    "With actions it replays them like a user (click, type, select, "
+    "scroll, ...) and returns viewport screenshots of the resulting "
+    "state, the action log, the final URL and title, and any script "
+    "errors: use it to check that interactions behave as intended. "
+    "Screenshots are returned as attached images."
+)
+
+
 def canonical_tool_definitions(
     image_generation_enabled: bool = True,
     image_editing_enabled: bool = True,
     asset_extraction_enabled: bool = True,
     screenshot_enabled: bool = True,
+    screenshot_actions_enabled: bool = True,
 ) -> List[CanonicalToolDefinition]:
     tools: List[CanonicalToolDefinition] = [
         CanonicalToolDefinition(
@@ -271,13 +340,11 @@ def canonical_tool_definitions(
             CanonicalToolDefinition(
                 name="screenshot_preview",
                 description=(
-                    "Render the current HTML file in a headless browser and return "
-                    "full-page desktop and mobile screenshots so you can visually "
-                    "verify your work. Use after creating or substantially editing "
-                    "the file to check layout, spacing, and fidelity to the "
-                    "requested design. Screenshots are returned as attached images."
+                    SCREENSHOT_PREVIEW_ACTIONS_DESCRIPTION
+                    if screenshot_actions_enabled
+                    else SCREENSHOT_PREVIEW_DESCRIPTION
                 ),
-                parameters=_screenshot_preview_schema(),
+                parameters=_screenshot_preview_schema(screenshot_actions_enabled),
             )
         )
     tools.extend(

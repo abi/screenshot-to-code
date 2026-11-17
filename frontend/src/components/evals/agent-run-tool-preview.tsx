@@ -400,6 +400,41 @@ function ToolPreview({
 
   if (name === "screenshot_preview") {
     const screenshots = getArray(summary, "screenshots") ?? [];
+    const replayedActions = getArray(summary, "actions");
+    if (replayedActions) {
+      // A replay: show the step log and every labeled screenshot in order.
+      return (
+        <div className="space-y-2 py-1">
+          <ol className="space-y-0.5 font-mono text-xs text-zinc-400">
+            {replayedActions.map((line, index) => (
+              <li key={index}>{String(line)}</li>
+            ))}
+          </ol>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {screenshots.map((item, index) => {
+              const imageUrl = getString(item, "image_url");
+              const label = getString(item, "label") ?? `Step ${index + 1}`;
+              return (
+                <div key={index}>
+                  <FieldLabel>{label}</FieldLabel>
+                  {imageUrl ? (
+                    <div className="max-h-48 overflow-y-auto rounded border border-zinc-800">
+                      <LightboxImage
+                        src={imageUrl}
+                        alt={`Replay screenshot: ${label}`}
+                        className="w-full"
+                      />
+                    </div>
+                  ) : (
+                    <MissingBox />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="grid gap-3 py-1 sm:grid-cols-2">
         {(["desktop", "mobile"] as const).map((viewport) => {

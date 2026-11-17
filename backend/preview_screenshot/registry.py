@@ -1,7 +1,13 @@
-from typing import Optional
+from typing import List, Optional, cast
 
 from babel_cdn import normalize_babel_cdn
-from preview_screenshot.base import ScreenshotBackend
+from preview_screenshot.base import (
+    InteractiveScreenshotBackend,
+    PreviewAction,
+    PreviewRender,
+    PreviewShot,
+    ScreenshotBackend,
+)
 from preview_screenshot.playwright_backend import PlaywrightBackend
 
 # The active backend. Defaults to local Chromium; a deployment can swap in an
@@ -27,6 +33,15 @@ async def probe_screenshot_preview() -> bool:
     return _available
 
 
+def supports_preview_actions() -> bool:
+    """Whether the active backend can replay user actions before capturing.
+
+    Capture-only backends (e.g. an external screenshot API) still serve plain
+    previews; the tool simply doesn't offer ``actions`` with them.
+    """
+    return hasattr(_backend, "render")
+
+
 def is_screenshot_preview_available() -> bool:
     """Synchronous accessor for the cached probe result.
 
@@ -49,3 +64,24 @@ async def capture_preview_screenshot(
     pages (old and new) actually mount before we capture.
     """
     return await _backend.capture(normalize_babel_cdn(html), device, full_page)
+
+
+async def render_preview(
+    html: str,
+    device: str = "desktop",
+    full_page: bool = True,
+    actions: Optional[List[PreviewAction]] = None,
+) -> PreviewRender:
+    """Render HTML, replaying ``actions`` first when given.
+
+    Backends without action support still serve plain captures; asking them
+    to replay actions is an error rather than a silent no-op.
+    """
+    html = normalize_babel_cdn(html)
+    if supports_preview_actions():
+        backend = cast(InteractiveScreenshotBackend, _backend)
+        return await backend.render(html, device, full_page, actions or [])
+    if actions:
+        raise RuntimeError("The active screenshot backend cannot replay actions.")
+    png = await _backend.capture(html, device, full_page)
+    return PreviewRender(shots=[PreviewShot(label="initial", png=png, full_page=full_page)])
